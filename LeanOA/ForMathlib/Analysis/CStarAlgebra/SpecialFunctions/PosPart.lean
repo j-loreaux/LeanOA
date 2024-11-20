@@ -8,7 +8,7 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Isometric
 
 /-! # C⋆-algebraic facts about `a⁺` and `a⁻`.
 
-[PR #18056](https://github.com/leanprover-community/mathlib4/pull/18506)
+[PR #18056](https://github.com/leanprover-community/mathlib4/pull/18506) upstreams the material about `span` to Mathlib.
 -/
 
 variable {A : Type*}
