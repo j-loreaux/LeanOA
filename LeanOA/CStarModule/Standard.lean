@@ -1,5 +1,13 @@
+/-
+Copyright (c) 2024 Jireh Loreaux. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Jireh Loreaux
+-/
+import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.CStarAlgebra.Module.Defs
 import Mathlib.Analysis.Normed.Lp.lpSpace
+
+/-! # The standard C⋆-module -/
 
 open scoped InnerProductSpace
 
@@ -56,6 +64,9 @@ lemma dominated_convergence {x y : ι → A} (hx : Summable x) (hy_nonneg : ∀ 
   gcongr
   exact h_le _
 
+lemma MemStandard.zero : MemStandard (0 : Π i, E i) := by
+  simpa [MemStandard] using summable_zero
+
 lemma MemStandard.add {x y : Π i, E i} (hx : MemStandard x) (hy : MemStandard y) :
     MemStandard (x + y) := by
   rw [MemStandard] at hx hy ⊢
@@ -74,13 +85,13 @@ lemma MemStandard.sub {x y : Π i, E i} (hx : MemStandard x) (hy : MemStandard y
   rw [sub_eq_add_neg]
   exact hx.add hy.neg
 
-lemma MemStandard.smul {x : Π i, E i} (hx : MemStandard x) (z : ℂ) :
+lemma MemStandard.smul (z : ℂ) {x : Π i, E i} (hx : MemStandard x) :
     MemStandard (z • x) := by
   simpa [MemStandard] using (hx.const_smul _).const_smul _
 
 open scoped RightActions
 
-lemma MemStandard.smul_right {x : Π i, E i} (hx : MemStandard x) (a : A) :
+lemma MemStandard.smul_right (a : A) {x : Π i, E i} (hx : MemStandard x) :
     MemStandard (x <• a) := by
   simpa [MemStandard] using hx.mul_left (star a) |>.mul_right a
 
@@ -103,5 +114,78 @@ lemma MemStandard.summable_inner {x y : Π i, E i} (hx : MemStandard x) (hy : Me
   · exact hy.sub hx
   · exact hy.add (hx.smul _)
   · exact hy.sub (hx.smul _)
+
+variable (E) in
+/-- The standard C⋆-module  -/
+def Standard : Type _ :=
+  { carrier := {x | MemStandard x}
+    zero_mem' := .zero
+    add_mem' := .add
+    smul_mem' := .smul : Submodule ℂ (Π i, E i) }
+
+scoped[CStarAlgebra] notation "ℓ²(" E ")" => CStarModule.Standard E
+
+open scoped CStarAlgebra
+
+namespace Standard
+
+instance : AddCommGroup ℓ²(E) := Submodule.addCommGroup _
+
+instance : Module ℂ ℓ²(E) := Submodule.module _
+
+/-- The map from `ℓ²(E)` to `Π i, E i`. -/
+@[coe]
+def toPi (x : ℓ²(E)) : Π i, E i := Subtype.val x
+
+instance : DFunLike ℓ²(E) ι (fun i ↦ E i) where
+  coe := Standard.toPi
+  coe_injective' := Subtype.val_injective
+
+instance : SMul Aᵐᵒᵖ ℓ²(E) where
+  smul a x := ⟨_, x.property.smul_right (MulOpposite.unop a)⟩
+
+noncomputable instance : Norm ℓ²(E) where
+  norm x := √‖∑' i, ⟪x i, x i⟫_A‖
+
+lemma norm_def {x : ℓ²(E)} : ‖x‖ = √‖∑' i, ⟪x i, x i⟫_A‖ := rfl
+
+@[simp] lemma memStandard (x : ℓ²(E)) : MemStandard ⇑x := x.property
+@[simp] lemma coe_zero : ⇑(0 : ℓ²(E)) = (0 : Π i, E i) := rfl
+@[simp] lemma coe_add {x y : ℓ²(E)} : ⇑(x + y) = (x + y : Π i, E i) := rfl
+@[simp] lemma coe_neg {x : ℓ²(E)} : ⇑(-x) = (-x : Π i, E i) := rfl
+@[simp] lemma coe_sub {x y : ℓ²(E)} : ⇑(x - y) = (x - y : Π i, E i) := rfl
+@[simp] lemma coe_smul {c : ℂ} {x : ℓ²(E)} : ⇑(c • x) = (c • x : Π i, E i) := rfl
+@[simp] lemma coe_nsmul {n : ℕ} {x : ℓ²(E)} : ⇑(n • x) = (n • x : Π i, E i) := rfl
+@[simp] lemma coe_zsmul {n : ℤ} {x : ℓ²(E)} : ⇑(n • x) = (n • x : Π i, E i) := rfl
+@[simp] lemma coe_smul_right {a : A} {x : ℓ²(E)} : ⇑(x <• a) = (x <• a : Π i, E i) := rfl
+
+@[ext] lemma ext {x y : ℓ²(E)} (h : ∀ i, x i = y i) : x = y := DFunLike.ext _ _ h
+
+noncomputable instance : CStarModule A ℓ²(E) where
+  inner x y := ∑' i, ⟪x i, y i⟫_A
+  inner_add_right {x y z} := by
+    simpa using tsum_add (x.memStandard.summable_inner y.memStandard)
+      (x.memStandard.summable_inner z.memStandard)
+  inner_self_nonneg := tsum_nonneg fun i => inner_self_nonneg
+  inner_self {x} := by
+    refine ⟨fun hx ↦ ?_, fun h ↦ by simp [h]⟩
+    ext i
+    rw [coe_zero, Pi.zero_apply, ← inner_self]
+    refine le_antisymm (hx ▸ ?_) inner_self_nonneg
+    exact le_tsum x.memStandard _ fun j _ ↦ inner_self_nonneg
+  inner_op_smul_right {a x y} := by
+    simpa only [coe_smul_right, Pi.smul_apply, inner_op_smul_right]
+      using x.memStandard.summable_inner y.memStandard |>.tsum_mul_right a
+  inner_smul_right_complex {c x y} := by
+    simpa only [coe_smul, Pi.smul_apply, inner_smul_right_complex]
+      using tsum_const_smul c <| x.memStandard.summable_inner y.memStandard
+  star_inner x y := by simpa using (starL ℂ).map_tsum (f := fun i ↦ ⟪x i, y i⟫_A)
+  norm_eq_sqrt_norm_inner_self _ := rfl
+
+noncomputable instance : NormedAddCommGroup ℓ²(E) := normedAddCommGroup
+
+instance : NormedSpace ℂ ℓ²(E) := .ofCore normedSpaceCore
+
+end Standard
 
 end CStarModule
