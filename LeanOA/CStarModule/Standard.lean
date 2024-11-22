@@ -37,7 +37,7 @@ end Polarization
 
 variable {ι : Type*} {E : ι → Type*}
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-variable [∀ i, NormedAddCommGroup (E i)] [∀ i, Module ℂ (E i)] [∀ i, SMul Aᵐᵒᵖ (E i)]
+variable [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace ℂ (E i)] [∀ i, SMul Aᵐᵒᵖ (E i)]
 variable [∀ i, CStarModule A (E i)]
 
 /-- The property that for `x : Π i, E i`, the sum `∑' i, ⟪x i, x i⟫_A` converges.
@@ -129,6 +129,13 @@ open scoped CStarAlgebra
 
 namespace Standard
 
+/-- Create a term of `ℓ²(E)` from an `x : Π i, E i` and a proof `hx : MemStandard x`.
+
+Note, because `ℓ²(E)` is defeq to the subtype `{x : Π i, E i /‌/ MemStandard x}`, Lean will accept
+anonymous constructor syntax `⟨x, hx⟩ : ℓ²(E)`, but this is defeq abuse, and can make it hard to work
+with the resulting term. Instead, users should be prefer to use this bespoke `Standard.mk` function. -/
+def mk (x : Π i, E i) (hx : MemStandard x) : ℓ²(E) := ⟨x, hx⟩
+
 /-- The map from `ℓ²(E)` to `Π i, E i`. -/
 @[coe]
 def toPi (x : ℓ²(E)) : Π i, E i := Subtype.val x
@@ -138,6 +145,8 @@ instance : DFunLike ℓ²(E) ι (fun i ↦ E i) where
   coe_injective' := Subtype.val_injective
 
 @[ext] lemma ext {x y : ℓ²(E)} (h : ∀ i, x i = y i) : x = y := DFunLike.ext _ _ h
+
+@[simp] lemma coe_mk {x : Π i, E i} (hx) : ⇑(mk x hx) = x := rfl
 
 instance : AddCommGroup ℓ²(E) := Submodule.addCommGroup _
 
@@ -197,7 +206,7 @@ noncomputable instance : NormedAddCommGroup ℓ²(E) := normedAddCommGroup
 
 instance : NormedSpace ℂ ℓ²(E) := .ofCore normedSpaceCore
 
-lemma norm_appiy_le (x : ℓ²(E)) (i : ι) : ‖x i‖ ≤ ‖x‖ := by
+lemma norm_apply_le (x : ℓ²(E)) (i : ι) : ‖x i‖ ≤ ‖x‖ := by
   refine Real.le_sqrt_of_sq_le ?_
   rw [norm_sq_eq]
   exact CStarAlgebra.norm_le_norm_of_nonneg_of_le inner_self_nonneg (inner_apply_self_le_inner x i)
@@ -208,7 +217,92 @@ lemma norm_sum_inner_apply_le (x : ℓ²(E)) (s : Finset ι) :
   exact CStarAlgebra.norm_le_norm_of_nonneg_of_le (s.sum_nonneg fun _ _ ↦ inner_self_nonneg)
     (sum_inner_apply_self_le_inner x s)
 
-proof_wanted instCompletSpace : CompleteSpace ℓ²(E)
+/-- The coercion from `ℓ²(E)` to `Π i, E i` is uniformly continuous. -/
+theorem uniformContinuous_coe :
+    UniformContinuous ((↑) : ℓ²(E) → Π i, E i) := by
+  rw [uniformContinuous_pi]
+  intro i
+  rw [NormedAddCommGroup.uniformity_basis_dist.uniformContinuous_iff
+    NormedAddCommGroup.uniformity_basis_dist]
+  refine fun ε hε ↦ ⟨ε, hε, fun f g (hfg : ‖f - g‖ < ε) ↦ ?_⟩
+  exact norm_apply_le (f - g) i |>.trans_lt hfg
+
+open Filter
+
+instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(E) :=
+  Metric.complete_of_cauchySeq_tendsto <| by
+    intro x hx
+    -- A Cauchy sequence in `ℓ²(E)` is pointwise convergent; let `y` be the pointwise limit.
+    obtain ⟨y, hy⟩ := cauchySeq_tendsto_of_complete
+      (uniformContinuous_coe.comp_cauchySeq hx)
+    -- Since the Cauchy sequence is bounded, its pointwise limit `y` is in `ℓ²(E)`.
+    have hy' : MemStandard y := by
+      rw [MemStandard, summable_iff_cauchySeq_finset, cauchySeq_finset_iff_vanishing_norm]
+      intro ε hε
+      rw [NormedAddCommGroup.cauchySeq_iff] at hx
+      have hε8 : 0 < ε / 8 := by positivity
+      specialize hx √(ε / 8) (by positivity)
+      obtain ⟨N, hN⟩ := hx
+      have hxN := (x N).memStandard
+      rw [MemStandard, summable_iff_cauchySeq_finset, cauchySeq_finset_iff_vanishing_norm] at hxN
+      specialize hxN (ε / 8) hε8
+      obtain ⟨s, hs⟩ := hxN
+      use s
+      peel hs with t ht hxN
+      simp only [Function.comp_def, tendsto_pi_nhds] at hy
+      refine lt_of_le_of_lt ?_ (half_lt_self hε)
+      refine le_of_tendsto (f := fun n ↦ ‖∑ i ∈ t, ⟪x n i, x n i⟫_A‖) (x := atTop) ?_ ?_
+      · exact tendsto_norm.comp <| tendsto_finset_sum t fun i hi ↦
+          (continuous_inner.tendsto _).comp ((hy i).prod_mk_nhds (hy i))
+      · filter_upwards [Ici_mem_atTop N] with m hm
+        replace hN := (hN N le_rfl m hm).le
+        have (j : ι) (a b : E j) :
+            ⟪b, b⟫_A = ⟪a - b, a - b⟫_A + ⟪a, b - a⟫_A + ⟪b - a, a⟫_A + ⟪a, a⟫_A := by
+          simp; abel
+        conv =>
+          enter [1, 1, 2, i]
+          rw [this i (x N i) (x m i)]
+          simp only [← Pi.sub_apply]
+        simp only [Finset.sum_add_distrib, Finset.sum_sub_distrib]
+        have h₁ : ‖∑ i ∈ t, ⟪(x N - x m) i, (x N - x m) i⟫_A‖ ≤ ε / 8 := by
+          refine norm_sum_inner_apply_le (x N - x m) t |>.trans ?_
+          exact Real.le_sqrt (by positivity) (by positivity) |>.mp hN
+        have h₂ : ‖∑ i ∈ t, ⟪x N i, (x m - x N) i⟫_A‖ ≤ ε / 8 := by
+          classical
+          let x' : ℓ²(E) := mk (fun i ↦ if i ∈ t then x N i else 0) <| by
+            refine (MemStandard.zero (E := E)).congr_cofinite ?_
+            filter_upwards [show (tᶜ : Set ι) ∈ cofinite by simp] with i (hi : i ∉ t)
+            simp [hi]
+          calc
+            _ ≤ ‖x'‖ * ‖x m - x N‖ := by
+              refine le_of_eq_of_le ?_ (norm_inner_le ℓ²(E))
+              rw [inner_def, tsum_eq_sum fun i (hi : i ∉ t) ↦ by simp [x', hi]]
+              congr! 3 with i hi
+              simp [x', hi]
+            _ ≤ ε / 8 := by
+              rw [← Real.mul_self_sqrt hε8.le]
+              refine mul_le_mul ?_ (by rwa [← norm_neg, neg_sub]) (by positivity) (by positivity)
+              simp only [x', norm_def]
+              convert Real.sqrt_le_sqrt hxN.le using 3
+              rw [tsum_eq_sum fun i (hi : i ∉ t) ↦ by simp [x', hi]]
+              congr! 2 with i hi
+              all_goals simp [hi]
+        -- ooh, we *really* want the `setm` tactic below, that would be *sooo* much nicer
+        calc
+          ‖∑ i ∈ t, ⟪(x N - x m) i, (x N - x m) i⟫_A + ∑ i ∈ t, ⟪x N i, (x m - x N) i⟫_A +
+              ∑ i ∈ t, ⟪(x m - x N) i, x N i⟫_A + ∑ i ∈ t, ⟪x N i, x N i⟫_A‖
+            ≤ ‖∑ i ∈ t, ⟪(x N - x m) i, (x N - x m) i⟫_A‖ + ‖∑ i ∈ t, ⟪x N i, (x m - x N) i⟫_A‖ +
+                ‖∑ i ∈ t, ⟪(x m - x N) i, x N i⟫_A‖ + ‖∑ i ∈ t, ⟪x N i, x N i⟫_A‖ :=
+            norm_add_le _ _ |>.trans <| add_le_add_right norm_add₃_le _
+          _ ≤ ε / 8 + ε / 8 + ε / 8 + ε / 8 := by
+            gcongr
+            rw [← norm_star, star_sum]
+            simpa only [star_inner]
+          _ = ε / 2 := by ring
+      --memℓp_of_tendsto hF.isBounded_range hf
+    -- And therefore `f` is its limit in the `ℓ²(E)` topology as well as pointwise.
+    -- exact ⟨⟨f, hf'⟩, tendsto_lp_of_tendsto_pi hF hf⟩
+    sorry
 
 end Standard
 
