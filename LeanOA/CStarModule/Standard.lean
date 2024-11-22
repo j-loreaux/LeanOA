@@ -129,10 +129,6 @@ open scoped CStarAlgebra
 
 namespace Standard
 
-instance : AddCommGroup ℓ²(E) := Submodule.addCommGroup _
-
-instance : Module ℂ ℓ²(E) := Submodule.module _
-
 /-- The map from `ℓ²(E)` to `Π i, E i`. -/
 @[coe]
 def toPi (x : ℓ²(E)) : Π i, E i := Subtype.val x
@@ -141,13 +137,14 @@ instance : DFunLike ℓ²(E) ι (fun i ↦ E i) where
   coe := Standard.toPi
   coe_injective' := Subtype.val_injective
 
+@[ext] lemma ext {x y : ℓ²(E)} (h : ∀ i, x i = y i) : x = y := DFunLike.ext _ _ h
+
+instance : AddCommGroup ℓ²(E) := Submodule.addCommGroup _
+
+instance : Module ℂ ℓ²(E) := Submodule.module _
+
 instance : SMul Aᵐᵒᵖ ℓ²(E) where
   smul a x := ⟨_, x.property.smul_right (MulOpposite.unop a)⟩
-
-noncomputable instance : Norm ℓ²(E) where
-  norm x := √‖∑' i, ⟪x i, x i⟫_A‖
-
-lemma norm_def {x : ℓ²(E)} : ‖x‖ = √‖∑' i, ⟪x i, x i⟫_A‖ := rfl
 
 @[simp] lemma memStandard (x : ℓ²(E)) : MemStandard ⇑x := x.property
 @[simp] lemma coe_zero : ⇑(0 : ℓ²(E)) = (0 : Π i, E i) := rfl
@@ -159,32 +156,59 @@ lemma norm_def {x : ℓ²(E)} : ‖x‖ = √‖∑' i, ⟪x i, x i⟫_A‖ := r
 @[simp] lemma coe_zsmul {n : ℤ} {x : ℓ²(E)} : ⇑(n • x) = (n • x : Π i, E i) := rfl
 @[simp] lemma coe_smul_right {a : A} {x : ℓ²(E)} : ⇑(x <• a) = (x <• a : Π i, E i) := rfl
 
-@[ext] lemma ext {x y : ℓ²(E)} (h : ∀ i, x i = y i) : x = y := DFunLike.ext _ _ h
+noncomputable instance : Norm ℓ²(E) where
+  norm x := √‖∑' i, ⟪x i, x i⟫_A‖
+
+lemma norm_def {x : ℓ²(E)} : ‖x‖ = √‖∑' i, ⟪x i, x i⟫_A‖ := rfl
+
+lemma summable_inner (x y : ℓ²(E)) : Summable fun i ↦ ⟪x i, y i⟫_A :=
+  x.memStandard.summable_inner y.memStandard
+
+noncomputable instance : Inner A ℓ²(E) where
+  inner x y := ∑' i, ⟪x i, y i⟫_A
+
+lemma inner_def {x y : ℓ²(E)} : ⟪x, y⟫_A = ∑' i, ⟪x i, y i⟫_A := rfl
+
+lemma inner_apply_self_le_inner (x : ℓ²(E)) (i : ι) : ⟪x i, x i⟫_A ≤ ⟪x, x⟫_A :=
+  le_tsum x.memStandard _ fun _ _ ↦ inner_self_nonneg
+
+lemma sum_inner_apply_self_le_inner (x : ℓ²(E)) (s : Finset ι) : ∑ i in s, ⟪x i, x i⟫_A ≤ ⟪x, x⟫_A :=
+  sum_le_tsum s (fun _ _ ↦ inner_self_nonneg) x.memStandard
 
 noncomputable instance : CStarModule A ℓ²(E) where
-  inner x y := ∑' i, ⟪x i, y i⟫_A
   inner_add_right {x y z} := by
-    simpa using tsum_add (x.memStandard.summable_inner y.memStandard)
-      (x.memStandard.summable_inner z.memStandard)
+    simpa [inner_def] using tsum_add (x.summable_inner y) (x.summable_inner z)
   inner_self_nonneg := tsum_nonneg fun i => inner_self_nonneg
   inner_self {x} := by
-    refine ⟨fun hx ↦ ?_, fun h ↦ by simp [h]⟩
+    refine ⟨fun hx ↦ ?_, fun h ↦ by simp [h, inner_def]⟩
     ext i
     rw [coe_zero, Pi.zero_apply, ← inner_self]
-    refine le_antisymm (hx ▸ ?_) inner_self_nonneg
-    exact le_tsum x.memStandard _ fun j _ ↦ inner_self_nonneg
+    exact le_antisymm (hx ▸ inner_apply_self_le_inner x i) inner_self_nonneg
   inner_op_smul_right {a x y} := by
-    simpa only [coe_smul_right, Pi.smul_apply, inner_op_smul_right]
-      using x.memStandard.summable_inner y.memStandard |>.tsum_mul_right a
+    simpa only [coe_smul_right, Pi.smul_apply, inner_op_smul_right, inner_def]
+      using x.summable_inner y |>.tsum_mul_right a
   inner_smul_right_complex {c x y} := by
-    simpa only [coe_smul, Pi.smul_apply, inner_smul_right_complex]
-      using tsum_const_smul c <| x.memStandard.summable_inner y.memStandard
+    simpa only [coe_smul, Pi.smul_apply, inner_smul_right_complex, inner_def]
+      using tsum_const_smul c <| x.summable_inner y
   star_inner x y := by simpa using (starL ℂ).map_tsum (f := fun i ↦ ⟪x i, y i⟫_A)
   norm_eq_sqrt_norm_inner_self _ := rfl
 
 noncomputable instance : NormedAddCommGroup ℓ²(E) := normedAddCommGroup
 
 instance : NormedSpace ℂ ℓ²(E) := .ofCore normedSpaceCore
+
+lemma norm_appiy_le (x : ℓ²(E)) (i : ι) : ‖x i‖ ≤ ‖x‖ := by
+  refine Real.le_sqrt_of_sq_le ?_
+  rw [norm_sq_eq]
+  exact CStarAlgebra.norm_le_norm_of_nonneg_of_le inner_self_nonneg (inner_apply_self_le_inner x i)
+
+lemma norm_sum_inner_apply_le (x : ℓ²(E)) (s : Finset ι) :
+    ‖∑ i in s, ⟪x i, x i⟫_A‖ ≤ ‖x‖ ^ 2 := by
+  rw [norm_def, Real.sq_sqrt (by positivity)]
+  exact CStarAlgebra.norm_le_norm_of_nonneg_of_le (s.sum_nonneg fun _ _ ↦ inner_self_nonneg)
+    (sum_inner_apply_self_le_inner x s)
+
+proof_wanted instCompletSpace : CompleteSpace ℓ²(E)
 
 end Standard
 
