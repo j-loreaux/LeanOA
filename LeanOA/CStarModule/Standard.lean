@@ -116,6 +116,10 @@ lemma MemStandard.summable_inner {x y : Π i, E i} (hx : MemStandard x) (hy : Me
   · exact hy.add (hx.smul _)
   · exact hy.sub (hx.smul _)
 
+lemma MemStandard.subtype {x : Π i, E i} (hx : MemStandard x) (s : Set ι) :
+    MemStandard (fun i : s ↦ x i) := by
+  simpa [Function.comp_def] using Summable.subtype hx s
+
 variable (E) in
 /-- The standard C⋆-module  -/
 def Standard : Type _ :=
@@ -182,8 +186,13 @@ lemma inner_def {x y : ℓ²(E)} : ⟪x, y⟫_A = ∑' i, ⟪x i, y i⟫_A := rf
 lemma inner_apply_self_le_inner (x : ℓ²(E)) (i : ι) : ⟪x i, x i⟫_A ≤ ⟪x, x⟫_A :=
   le_tsum x.memStandard _ fun _ _ ↦ inner_self_nonneg
 
-lemma sum_inner_apply_self_le_inner (x : ℓ²(E)) (s : Finset ι) : ∑ i in s, ⟪x i, x i⟫_A ≤ ⟪x, x⟫_A :=
+lemma sum_inner_apply_self_le_inner (x : ℓ²(E)) (s : Finset ι) :
+    ∑ i in s, ⟪x i, x i⟫_A ≤ ⟪x, x⟫_A :=
   sum_le_tsum s (fun _ _ ↦ inner_self_nonneg) x.memStandard
+
+lemma tsum_inner_apply_self_le_inner (x : ℓ²(E)) (s : Set ι) :
+    ∑' i : s, ⟪x i, x i⟫_A ≤ ⟪x, x⟫_A :=
+  tsum_subtype_le _ _ (fun _ ↦ inner_self_nonneg) x.memStandard
 
 noncomputable instance : CStarModule A ℓ²(E) where
   inner_add_right {x y z} := by
@@ -270,10 +279,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(E) 
       obtain ⟨N, hN⟩ := hx
       have hxN := (x N).memStandard
       rw [MemStandard, summable_iff_cauchySeq_finset, cauchySeq_finset_iff_vanishing_norm] at hxN
-      specialize hxN (ε / 8) hε8
-      obtain ⟨s, hs⟩ := hxN
-      use s
-      peel hs with t ht hxN
+      peel hxN (ε / 8) hε8 with s t ht hxN
       simp only [Function.comp_def, tendsto_pi_nhds] at hy
       refine lt_of_le_of_lt ?_ (half_lt_self hε)
       refine le_of_tendsto (f := fun n ↦ ‖∑ i ∈ t, ⟪x n i, x n i⟫_A‖) (x := atTop) ?_ ?_
