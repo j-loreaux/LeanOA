@@ -5,7 +5,6 @@ Authors: Jireh Loreaux
 -/
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.CStarAlgebra.Module.Defs
-import Mathlib.Analysis.CStarAlgebra.Module.Constructions
 import Mathlib.Analysis.Normed.Lp.lpSpace
 
 /-! # The standard C⋆-module -/
