@@ -5,6 +5,7 @@ Authors: Jireh Loreaux
 -/
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.CStarAlgebra.Module.Defs
+import Mathlib.Analysis.CStarAlgebra.Module.Constructions
 import Mathlib.Analysis.Normed.Lp.lpSpace
 
 /-! # The standard C⋆-module -/
@@ -227,7 +228,31 @@ theorem uniformContinuous_coe :
   refine fun ε hε ↦ ⟨ε, hε, fun f g (hfg : ‖f - g‖ < ε) ↦ ?_⟩
   exact norm_apply_le (f - g) i |>.trans_lt hfg
 
-open Filter
+open Filter Topology
+
+theorem tendsto_of_tendsto_pi {F : ℕ → ℓ²(E)} (hF : CauchySeq F) {f : ℓ²(E)}
+    (hf : Tendsto (fun i ↦ ⇑(F i)) atTop (𝓝 f)) : Tendsto F atTop (𝓝 f) := by
+  rw [Metric.nhds_basis_closedBall.tendsto_right_iff]
+  intro ε hε
+  have hε' : { p : ℓ²(E) × ℓ²(E) | ‖p.1 - p.2‖ < ε / √2 } ∈ uniformity ℓ²(E) :=
+    NormedAddCommGroup.uniformity_basis_dist.mem_of_mem (by positivity)
+  refine (hF.eventually_eventually hε').mono ?_
+  rintro n (hn : ∀ᶠ l in atTop, ‖F n - F l‖ < ε / √2)
+  simp only [Metric.mem_closedBall, dist_eq_norm, norm_def, Real.sqrt_le_iff, hε.le, true_and]
+  obtain ⟨s, hs⟩ := (F n - f).memStandard.tsum_vanishing (Metric.ball_mem_nhds 0 (by positivity : 0 < ε ^ 2 / 2))
+  rw [← sum_add_tsum_compl (s := s) (F n - f).memStandard, ← add_halves (ε ^ 2)]
+  apply norm_add_le _ _ |>.trans ?_
+  gcongr
+  · apply le_of_tendsto (f := fun l ↦ ‖∑ x ∈ s, ⟪(F n - F l) x, (F n - F l) x⟫_A‖) (x := atTop) ?_ ?_
+    · refine tendsto_norm.comp <| tendsto_finset_sum s fun i hi ↦ ?_
+      rw [tendsto_pi_nhds] at hf
+      have := tendsto_const_nhds (x := F n i) |>.sub (hf i)
+      refine (continuous_inner.tendsto _).comp (this.prod_mk_nhds this)
+    · filter_upwards [hn] with m hm
+      rw [← Real.sqrt_sq (norm_nonneg _), Real.sqrt_lt (by positivity) (by positivity)] at hm
+      refine norm_sum_inner_apply_le _ s |>.trans hm.le |>.trans <| by simp [div_pow]
+  · simp only [Metric.mem_ball, dist_zero_right] at hs
+    exact (hs _ disjoint_compl_left).le
 
 instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(E) :=
   Metric.complete_of_cauchySeq_tendsto <| by
@@ -299,10 +324,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(E) 
             rw [← norm_star, star_sum]
             simpa only [star_inner]
           _ = ε / 2 := by ring
-      --memℓp_of_tendsto hF.isBounded_range hf
-    -- And therefore `f` is its limit in the `ℓ²(E)` topology as well as pointwise.
-    -- exact ⟨⟨f, hf'⟩, tendsto_lp_of_tendsto_pi hF hf⟩
-    sorry
+    exact ⟨⟨y, hy'⟩, tendsto_of_tendsto_pi hx hy⟩
 
 end Standard
 
