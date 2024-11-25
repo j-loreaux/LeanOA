@@ -81,10 +81,20 @@ lemma abs_eq_zero_iff {a : A} : abs a = 0 ↔ a = 0 := by
 theorem IsSelfAdjoint.mul_self_nonneg {a : A} (ha : IsSelfAdjoint a) : 0 ≤ a * a := by
   simpa [ha.star_eq] using star_mul_self_nonneg a
 
+open ComplexConjugate in
 lemma abs_sq_eq_cfcₙ_norm_sq_complex (a : A) (ha : IsStarNormal a) :
     abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
-  sorry
-
+  rw [abs]
+  conv_rhs =>
+   lhs
+   ext
+   rw [← Complex.conj_mul']
+  simp only [nnrpow_sqrt, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, div_self]
+  refine (nnrpow_inv_eq (cfcₙ (fun x => (starRingEnd ℂ) x * x) a) (star a * a) ?hx ?ha ?hb).mp ?_
+  · exact Ne.symm (zero_ne_one' ℝ≥0)
+  · sorry
+  · exact star_mul_self_nonneg a
+  · sorry
 
 #exit
 
@@ -112,7 +122,6 @@ lemma abs_eq_cfcₙ_norm_complex (a : A) [ha : IsStarNormal a] :
           rfl
   have LL (z : ℂ) := (L <| star z * z).mp <| K z
   have LLL (x : ℝ) : Complex.ofReal (x ^ 2) = (Complex.ofReal x) ^ 2 := Complex.ofReal_pow x 2
-  --this is fun...it's easy to find the right proofs using the automation...
   --using this last lemma, the entire proof can probably be simplified using some real
   --squareroot lemma...
 
