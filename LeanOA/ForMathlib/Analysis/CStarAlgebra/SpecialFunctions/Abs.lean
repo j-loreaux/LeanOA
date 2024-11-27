@@ -82,29 +82,18 @@ lemma abs_eq_zero_iff {a : A} : abs a = 0 ↔ a = 0 := by
 theorem IsSelfAdjoint.mul_self_nonneg {a : A} (ha : IsSelfAdjoint a) : 0 ≤ a * a := by
   simpa [ha.star_eq] using star_mul_self_nonneg a
 
-lemma cfcₙ_norm_sq_nonneg {a : A} (ha : IsStarNormal a) : 0 ≤ cfcₙ (fun z : ℂ ↦ (star z * z : ℂ)) a := by
-  apply (nonneg_iff_isSelfAdjoint_and_quasispectrumRestricts).mpr
-  constructor
-  · sorry
-  · --have := spectrum_star_mul_self_nonneg
-    sorry
+open ComplexOrder in
+lemma cfcₙ_norm_sq_nonneg {f : ℂ → ℂ} {a : A} : 0 ≤ cfcₙ (fun z ↦ star (f z) * (f z)) a :=
+  cfcₙ_nonneg fun _ _ ↦ star_mul_self_nonneg _
 
 open ComplexConjugate in
 lemma abs_sq_eq_cfcₙ_norm_sq_complex (a : A) (ha : IsStarNormal a) :
     abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
-  rw [abs]
   conv_rhs =>
    lhs
    ext
-   rw [← Complex.conj_mul']
-  simp only [nnrpow_sqrt, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, div_self]
-  refine (nnrpow_inv_eq (cfcₙ (fun x => star x * x) a) (star a * a) ?hx ?ha ?hb).mp ?_
-  · exact Ne.symm (zero_ne_one' ℝ≥0)
-  · exact cfcₙ_norm_sq_nonneg ha
-  · exact star_mul_self_nonneg a
-  · sorry --So this really doesn't do anything at all...notice that it just recasts uselessly.
-
-#exit
+   rw [← Complex.conj_mul', ← Complex.star_def]
+  rw [cfcₙ_mul .., cfcₙ_star .., cfcₙ_id' .., abs_sq_eq_star_mul_self a]
 
 /- The result above may be easier to begin with. -/
 open ComplexConjugate in
