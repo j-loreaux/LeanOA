@@ -87,7 +87,7 @@ lemma cfcₙ_norm_sq_nonneg {f : ℂ → ℂ} {a : A} : 0 ≤ cfcₙ (fun z ↦ 
   cfcₙ_nonneg fun _ _ ↦ star_mul_self_nonneg _
 
 open ComplexConjugate in
-lemma abs_sq_eq_cfcₙ_norm_sq_complex (a : A) (ha : IsStarNormal a) :
+lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
     abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
   conv_rhs =>
    lhs
@@ -95,32 +95,20 @@ lemma abs_sq_eq_cfcₙ_norm_sq_complex (a : A) (ha : IsStarNormal a) :
    rw [← Complex.conj_mul', ← Complex.star_def]
   rw [cfcₙ_mul .., cfcₙ_star .., cfcₙ_id' .., abs_sq_eq_star_mul_self a]
 
-/- The result above may be easier to begin with. -/
 open ComplexConjugate in
-lemma abs_eq_cfcₙ_norm_complex (a : A) [ha : IsStarNormal a] :
+lemma abs_eq_cfcₙ_norm_complex {a : A} [ha : IsStarNormal a] :
     abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
-  simp only [abs, Real.norm_eq_abs, ← Real.sqrt_sq_eq_abs, sq, Complex.conj_mul', Complex.ofReal_pow _ 2]
-  --abs a becomes √(star a * a).
-  --We need that ‖z‖ = √(star z * z), where star z is the complex conjugate of z.
-  --Somehow the square root should be real, but our theorem above might handle this.
-  have H (z : ℂ) := (Complex.conj_mul' z)--note complex hPow.
-  have K (z : ℂ) : Complex.im (star z * z) = 0 := by
-    simp only [RCLike.star_def, Complex.mul_im, Complex.conj_re, Complex.conj_im, neg_mul]
-    rw [mul_comm, add_neg_cancel]--I can't believe this isn't in the library already!
-  rw [sqrt_eq_cfcₙ_real_sqrt (star_mul_self_nonneg a)]
-  have L (z : ℂ) : Complex.im z = 0 ↔ z = Complex.re z := by
-    constructor
-    · intro h
-      exact Eq.symm (Complex.ext rfl (id (Eq.symm h)))
-    · intro h
-      exact
-        (AddSemiconjBy.eq_zero_iff (z.re : ℂ).im
-            (congrFun (congrArg HAdd.hAdd (congrArg Complex.im (id (Eq.symm h)))) (z.re : ℂ).im)).mp
-          rfl
-  have LL (z : ℂ) := (L <| star z * z).mp <| K z
-  have LLL (x : ℝ) : Complex.ofReal (x ^ 2) = (Complex.ofReal x) ^ 2 := Complex.ofReal_pow x 2
-  --using this last lemma, the entire proof can probably be simplified using some real
-  --squareroot lemma...
+  have J : (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) ^ (2 : NNReal) = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) * (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) := by
+    sorry
+  have K : cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) ^ (2 : NNReal) := by
+    conv_lhs =>
+      lhs
+      ext
+      rw [sq]
+    rw [cfcₙ_mul .., J]
+  have L := abs_sq_eq_cfcₙ_norm_sq_complex ha
+  rw [K] at L
+  sorry
 
 #exit
 
