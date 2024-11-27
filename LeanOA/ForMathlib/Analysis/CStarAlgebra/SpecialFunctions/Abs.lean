@@ -82,8 +82,12 @@ lemma abs_eq_zero_iff {a : A} : abs a = 0 ↔ a = 0 := by
 theorem IsSelfAdjoint.mul_self_nonneg {a : A} (ha : IsSelfAdjoint a) : 0 ≤ a * a := by
   simpa [ha.star_eq] using star_mul_self_nonneg a
 
-
-lemma cfcₙ_norm_sq_nonneg {a : A} (ha : IsStarNormal a) : 0 ≤ cfcₙ (fun z : ℂ ↦ (star z * z : ℂ)) a := by sorry
+lemma cfcₙ_norm_sq_nonneg {a : A} (ha : IsStarNormal a) : 0 ≤ cfcₙ (fun z : ℂ ↦ (star z * z : ℂ)) a := by
+  apply (nonneg_iff_isSelfAdjoint_and_quasispectrumRestricts).mpr
+  constructor
+  · sorry
+  · --have := spectrum_star_mul_self_nonneg
+    sorry
 
 open ComplexConjugate in
 lemma abs_sq_eq_cfcₙ_norm_sq_complex (a : A) (ha : IsStarNormal a) :
@@ -98,7 +102,7 @@ lemma abs_sq_eq_cfcₙ_norm_sq_complex (a : A) (ha : IsStarNormal a) :
   · exact Ne.symm (zero_ne_one' ℝ≥0)
   · exact cfcₙ_norm_sq_nonneg ha
   · exact star_mul_self_nonneg a
-  · sorry
+  · sorry --So this really doesn't do anything at all...notice that it just recasts uselessly.
 
 #exit
 
