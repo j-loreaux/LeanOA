@@ -117,7 +117,13 @@ lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
 
 --The following results seem to amount to translating over to functions.
 
-lemma abs_eq_posPart_add_negPart (a : A) (ha : IsSelfAdjoint a) : abs a = a⁺ + a⁻ := sorry
+/- This is broken. Fix it. -/
+lemma abs_eq_posPart_add_negPart (a : A) (ha : IsSelfAdjoint a) : abs a = a⁺ + a⁻ := by
+  rw [abs_eq_cfcₙ_norm]
+  conv => lhs; lhs; ext; rw [Real.norm_eq_abs ,← posPart_add_negPart]
+  rw [cfcₙ_add ..]
+  exact rfl
+  exact ha
 
 lemma abs_sub_self (a : A) (ha : IsSelfAdjoint a) : abs a - a = 2 • a⁻ := sorry
 
