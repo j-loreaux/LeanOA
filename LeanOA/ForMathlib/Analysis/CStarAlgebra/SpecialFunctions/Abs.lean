@@ -86,6 +86,10 @@ open ComplexOrder in
 lemma cfcₙ_norm_sq_nonneg {f : ℂ → ℂ} {a : A} : 0 ≤ cfcₙ (fun z ↦ star (f z) * (f z)) a :=
   cfcₙ_nonneg fun _ _ ↦ star_mul_self_nonneg _
 
+open ComplexOrder in
+lemma cfcₙ_norm_nonneg {a : A} : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a :=
+  cfcₙ_nonneg fun _ _ ↦ by simp only [Complex.norm_eq_abs, Complex.zero_le_real, apply_nonneg]
+
 open ComplexConjugate in
 lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
     (abs a) ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
@@ -105,29 +109,8 @@ lemma abs_eq_cfcₙ_norm_complex {a : A} [ha : IsStarNormal a] :
          rw [sq]
        _ = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) := by
          rw [← CFC.nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _,CFC.sqrt_nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _]
-         sorry --it seems we need a norm_nonneg lemma...
-         sorry
+         <;> exact cfcₙ_norm_nonneg
 
-  --have H : cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) * (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) := by
-  --  rw [← cfcₙ_mul ..]
-  --  conv_rhs => lhs; ext; rw [← sq]
-
-
-  sorry
-
-/-
-  have J : (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) ^ (2 : NNReal) = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) * (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) := by
-    sorry
-  have K : cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) ^ (2 : NNReal) := by
-    conv_lhs =>
-      lhs
-      ext
-      rw [sq]
-    rw [cfcₙ_mul .., J]
-  have L := abs_sq_eq_cfcₙ_norm_sq_complex ha
-  rw [K] at L
-  sorry
--/
 #exit
 
 lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
