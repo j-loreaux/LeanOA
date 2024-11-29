@@ -103,11 +103,10 @@ lemma abs_eq_cfcₙ_norm_complex {a : A} [ha : IsStarNormal a] :
          conv => enter [2,1]; rw [← cfcₙ_mul ..]
          congr!
          rw [sq]
-       _ = sqrt ((cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) ^ 2) := by
-         congr!
-         --rw[← CFC.nnrpow_two (ha := cfcₙ_norm_sq_nonneg)]
-         --do we need a "CFC.norm_nonneg?"
-         sorry --rw [← sq]
+       _ = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) := by
+         rw [← CFC.nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _,CFC.sqrt_nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _]
+         sorry --it seems we need a norm_nonneg lemma...
+         sorry
 
   --have H : cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) * (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) := by
   --  rw [← cfcₙ_mul ..]
