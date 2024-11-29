@@ -96,6 +96,7 @@ lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
   conv_rhs => lhs; ext; rw [← Complex.conj_mul', ← Complex.star_def]
   rw [cfcₙ_mul .., cfcₙ_star .., cfcₙ_id' .., abs_sq_eq_star_mul_self ..]
 
+/- Golf this thing. -/
 open ComplexConjugate in
 lemma abs_eq_cfcₙ_norm_complex {a : A} [ha : IsStarNormal a] :
     abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
@@ -110,8 +111,6 @@ lemma abs_eq_cfcₙ_norm_complex {a : A} [ha : IsStarNormal a] :
        _ = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) := by
          rw [← CFC.nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _,CFC.sqrt_nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _]
          <;> exact cfcₙ_norm_nonneg
-
-#exit
 
 lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
