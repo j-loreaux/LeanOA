@@ -146,6 +146,8 @@ lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
   rfl
   exact ha
 
+/- Before moving on to the following, should fix the above nasty proofs. -/
+
 -- `r` of the appropriate kinds, so this is actually multiple lemmas
 lemma abs_smul : abs (r • a) = |r| • abs a := sorry
 
