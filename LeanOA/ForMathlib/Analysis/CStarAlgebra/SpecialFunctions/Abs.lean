@@ -122,10 +122,19 @@ lemma abs_eq_posPart_add_negPart (a : A) (ha : IsSelfAdjoint a) : abs a = a⁺ +
   rw [abs_eq_cfcₙ_norm]
   conv => lhs; lhs; ext; rw [Real.norm_eq_abs ,← posPart_add_negPart]
   rw [cfcₙ_add ..]
-  exact rfl
+  rfl
   exact ha
 
-lemma abs_sub_self (a : A) (ha : IsSelfAdjoint a) : abs a - a = 2 • a⁻ := sorry
+lemma abs_sub_self (a : A) (ha : IsSelfAdjoint a) : abs a - a = 2 • a⁻ := by
+  rw [abs_eq_cfcₙ_norm]
+  conv => lhs; rhs; rw [← cfcₙ_id' (R := ℝ) a]
+  conv => lhs; lhs; lhs; ext; rw [Real.norm_eq_abs]
+  conv => lhs; rw [← cfcₙ_sub ..]
+  conv => lhs; lhs; ext x; rw [abs_sub_eq_two_nsmul_negPart x]
+  conv => lhs; rw[cfcₙ_smul ..]
+  rfl
+  exact ha
+
 
 lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := sorry
 
