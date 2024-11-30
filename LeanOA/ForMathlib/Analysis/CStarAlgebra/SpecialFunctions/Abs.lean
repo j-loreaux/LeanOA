@@ -136,7 +136,15 @@ lemma abs_sub_self (a : A) (ha : IsSelfAdjoint a) : abs a - a = 2 • a⁻ := by
   exact ha
 
 
-lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := sorry
+lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
+  rw [abs_eq_cfcₙ_norm]
+  conv => lhs; rhs; rw [← cfcₙ_id' (R := ℝ) a]
+  conv => lhs; lhs; lhs; ext; rw [Real.norm_eq_abs]
+  conv => lhs; rw [← cfcₙ_add ..]
+  conv => lhs; lhs; ext x; rw [abs_add_eq_two_nsmul_posPart x]
+  conv => lhs; rw[cfcₙ_smul ..]
+  rfl
+  exact ha
 
 -- `r` of the appropriate kinds, so this is actually multiple lemmas
 lemma abs_smul : abs (r • a) = |r| • abs a := sorry
