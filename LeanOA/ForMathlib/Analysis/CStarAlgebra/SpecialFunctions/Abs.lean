@@ -92,7 +92,7 @@ lemma cfcₙ_norm_nonneg {a : A} : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)
 
 lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
     (abs a) ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
-  conv => enter [2 ,1]; ext; rw [← Complex.conj_mul', ← Complex.star_def]
+  conv => enter [2, 1]; ext; rw [← Complex.conj_mul', ← Complex.star_def]
   rw [cfcₙ_mul .., cfcₙ_star .., cfcₙ_id' .., abs_sq_eq_star_mul_self ..]
 
 /- Golf this thing. -/
