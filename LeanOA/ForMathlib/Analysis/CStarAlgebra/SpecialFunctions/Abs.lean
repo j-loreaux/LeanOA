@@ -71,17 +71,15 @@ lemma sqrt_eq_cfcₙ_real_sqrt {a : A} (ha : 0 ≤ a := by cfc_tac) :
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
 /-- This needs to be put in a better place with perfected assumptions. -/
-lemma cfcₙ_sq {a : A} {f : ℂ → ℂ} {hf : ContinuousOn f (quasispectrum ℂ a)} {hf0 : f 0 = 0}:
+lemma cfcₙ_sq {a : A} {f : ℂ → ℂ} (hf : ContinuousOn f (quasispectrum ℂ a) := by cfc_tac) (hf0 : f 0 = 0 := by cfc_tac):
   cfcₙ (fun z : ℂ ↦ ((f z) ^ 2 : ℂ)) a = (cfcₙ f a) * (cfcₙ f a) := by
   rw [← cfcₙ_mul ..]
   simp only [Complex.norm_eq_abs, sq]
 
-lemma cfcₙ_sq' {a : A} {f : ℂ → ℂ} {hf : ContinuousOn f (quasispectrum ℂ a)} {hf0 : f 0 = 0}:
+lemma cfcₙ_sq' {a : A} {f : ℂ → ℂ} (hf : ContinuousOn f (quasispectrum ℂ a) := by cfc_tac) (hf0 : f 0 = 0 := by cfc_tac):
   cfcₙ (fun z : ℂ ↦ ((f z) ^ 2 : ℂ)) a = cfcₙ (fun z : ℂ ↦ ((f z) * (f z) : ℂ)) a := by
   rw [cfcₙ_sq ..]
   apply Eq.symm (cfcₙ_mul f f a hf hf0 hf hf0)
-  aesop
-  exact hf0
 
 variable [PartialOrder A] [StarOrderedRing A]
 
