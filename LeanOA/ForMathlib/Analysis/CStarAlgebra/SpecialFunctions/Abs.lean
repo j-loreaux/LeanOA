@@ -68,7 +68,22 @@ lemma sqrt_eq_cfcₙ_real_sqrt {a : A} (ha : 0 ≤ a := by cfc_tac) :
   refine Real.mul_self_sqrt ?_
   exact quasispectrum_nonneg_of_nonneg a ha x hx
 
-variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+variable {A : Type*} [NonUnitalCStarAlgebra A]
+
+/-- This needs to be put in a better place with perfected assumptions. -/
+lemma cfcₙ_sq {a : A} {f : ℂ → ℂ} {hf : ContinuousOn f (quasispectrum ℂ a)} {hf0 : f 0 = 0}:
+  cfcₙ (fun z : ℂ ↦ ((f z) ^ 2 : ℂ)) a = (cfcₙ f a) * (cfcₙ f a) := by
+  rw [← cfcₙ_mul ..]
+  simp only [Complex.norm_eq_abs, sq]
+
+lemma cfcₙ_sq' {a : A} {f : ℂ → ℂ} {hf : ContinuousOn f (quasispectrum ℂ a)} {hf0 : f 0 = 0}:
+  cfcₙ (fun z : ℂ ↦ ((f z) ^ 2 : ℂ)) a = cfcₙ (fun z : ℂ ↦ ((f z) * (f z) : ℂ)) a := by
+  rw [cfcₙ_sq ..]
+  apply Eq.symm (cfcₙ_mul f f a hf hf0 hf hf0)
+  aesop
+  exact hf0
+
+variable [PartialOrder A] [StarOrderedRing A]
 
 lemma abs_eq_cfcₙ_norm {a : A} (ha : IsSelfAdjoint a) :
     abs a = cfcₙ (‖·‖) a := by
@@ -94,6 +109,11 @@ lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
     (abs a) ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
   conv => enter [2, 1]; ext; rw [← Complex.conj_mul', ← Complex.star_def]
   rw [cfcₙ_mul .., cfcₙ_star .., cfcₙ_id' .., abs_sq_eq_star_mul_self ..]
+
+example {a : A} (ha : IsStarNormal a) :
+    (abs a) ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
+  rw [cfcₙ_sq, ← cfcₙ_mul .., ← cfcₙ_sq']
+  --where are these five goals coming from?
 
 /- Golf this thing. One should be able to use some kind of congrFun or congrArg thing. -/
 open ComplexConjugate in
