@@ -142,7 +142,6 @@ lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
   rw [CFC.posPart_add_negPart a]
   abel
 
-
 -- `r` of the appropriate kinds, so this is actually multiple lemmas
 
 lemma abs_smul_real (r : ℝ) (a : A) (ha : IsSelfAdjoint a) : abs (r • a) = |r| • abs a := by
@@ -153,13 +152,15 @@ lemma abs_smul_real (r : ℝ) (a : A) (ha : IsSelfAdjoint a) : abs (r • a) = |
 
 lemma abs_smul_complex (r : ℂ) (a : A) (ha : IsStarNormal a) : abs (r • a) = ‖r‖  • abs a := by
   rw [abs_eq_cfcₙ_norm_complex ha, ← cfcₙ_smul ..]
-  conv => rhs; lhs; ext x; rw [norm_eq_abs , smul_eq_mul, ← abs_mul, ← smul_eq_mul]
-  rw [abs_eq_cfcₙ_norm (IsSelfAdjoint.smul (hr := by rfl) ha)]
-  exact Eq.symm (cfcₙ_comp_smul r _ a (by cfc_cont_tac) (_root_.abs_zero) ha)
+  have Grr (x : ℂ) : Complex.abs r • (‖x‖ : ℂ) = (‖r * x‖ : ℂ) := by
+    rw [← Complex.norm_eq_abs]
+    simp only [Complex.norm_eq_abs, Complex.real_smul, norm_mul, Complex.ofReal_mul]
+  conv => rhs; lhs; ext x; rw [Complex.norm_eq_abs, Grr]
+  rw [abs_eq_cfcₙ_norm_complex]
+  · apply Eq.symm (cfcₙ_comp_smul r _ a (by cfc_cont_tac) (by cfc_zero_tac) ha)
+  · sorry --it doesn't seem that we have an `IsStarNormal.smul` lemma anywhere.
 
 end NonUnital
-
-
 
 section Unital
 
