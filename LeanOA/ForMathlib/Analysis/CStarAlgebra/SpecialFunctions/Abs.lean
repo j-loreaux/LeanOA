@@ -70,13 +70,12 @@ lemma sqrt_eq_cfcₙ_real_sqrt {a : A} (ha : 0 ≤ a := by cfc_tac) :
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
-/-- This needs to be put in a better place with perfected assumptions. -/
-lemma cfcₙ_sq {a : A} {f : ℂ → ℂ} (hf : ContinuousOn f (quasispectrum ℂ a) := by cfc_tac) (hf0 : f 0 = 0 := by cfc_tac):
+lemma cfcₙ_sq {a : A} {f : ℂ → ℂ} (hf : ContinuousOn f (quasispectrum ℂ a) := by cfc_cont_tac) (hf0 : f 0 = 0 := by cfc_zero_tac):
   cfcₙ (fun z : ℂ ↦ ((f z) ^ 2 : ℂ)) a = (cfcₙ f a) * (cfcₙ f a) := by
   rw [← cfcₙ_mul ..]
   simp only [Complex.norm_eq_abs, sq]
 
-lemma cfcₙ_sq' {a : A} {f : ℂ → ℂ} (hf : ContinuousOn f (quasispectrum ℂ a) := by cfc_tac) (hf0 : f 0 = 0 := by cfc_tac):
+lemma cfcₙ_sq' {a : A} {f : ℂ → ℂ} (hf : ContinuousOn f (quasispectrum ℂ a) := by cfc_cont_tac) (hf0 : f 0 = 0 := by cfc_zero_tac):
   cfcₙ (fun z : ℂ ↦ ((f z) ^ 2 : ℂ)) a = cfcₙ (fun z : ℂ ↦ ((f z) * (f z) : ℂ)) a := by
   rw [cfcₙ_sq ..]
   apply Eq.symm (cfcₙ_mul f f a hf hf0 hf hf0)
@@ -104,73 +103,79 @@ lemma cfcₙ_norm_nonneg {a : A} : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)
   cfcₙ_nonneg fun _ _ ↦ by simp only [Complex.norm_eq_abs, Complex.zero_le_real, apply_nonneg]
 
 lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
-    (abs a) ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
+    abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
   conv => enter [2, 1]; ext; rw [← Complex.conj_mul', ← Complex.star_def]
   rw [cfcₙ_mul .., cfcₙ_star .., cfcₙ_id' .., abs_sq_eq_star_mul_self ..]
 
-example {a : A} (ha : IsStarNormal a) :
-    (abs a) ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
-  rw [cfcₙ_sq, ← cfcₙ_mul .., ← cfcₙ_sq']
-  --where are these five goals coming from?
+/-- Will omit this one. It can't possibly be useful. -/
+lemma abs_mul_self_eq_cfcₙ_norm_mul_self {a : A} (ha : IsStarNormal a) :
+    abs a * abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a * cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
+  rw [← cfcₙ_sq, abs_mul_self_eq_star_mul_self, ← abs_sq_eq_star_mul_self]
+  exact abs_sq_eq_cfcₙ_norm_sq_complex ha
 
-/- Golf this thing. One should be able to use some kind of congrFun or congrArg thing. -/
-open ComplexConjugate in
-lemma abs_eq_cfcₙ_norm_complex {a : A} [ha : IsStarNormal a] :
+/- One should be able to use some kind of congrFun or congrArg thing. -/
+lemma abs_eq_cfcₙ_norm_complex {a : A} (ha : IsStarNormal a) :
     abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
   calc
-   abs a = sqrt ((abs a) ^ (2 : NNReal)) := by rw [CFC.sqrt_nnrpow_two ..]
-       _ = sqrt (cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a) := by
-         conv => enter [1,1]; rw [abs_sq_eq_cfcₙ_norm_sq_complex ha]
-       _ = sqrt ((cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) * (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a)) := by
-         conv => enter [2,1]; rw [← cfcₙ_mul ..]
-         congr!
-         rw [sq]
-       _ = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) := by
-         rw [← CFC.nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _,CFC.sqrt_nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _]
-         <;> exact cfcₙ_norm_nonneg
+    abs a = sqrt ((abs a) ^ (2 : NNReal)) := by rw [CFC.sqrt_nnrpow_two ..]
+        _ = sqrt (cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a) := by
+          conv => enter [1,1]; rw [abs_sq_eq_cfcₙ_norm_sq_complex ha]
+        _ = sqrt ((cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) * (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a)) := by rw [cfcₙ_sq ..]
+        _ = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) := by
+          rw [← CFC.nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _,CFC.sqrt_nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _]
+          <;> exact cfcₙ_norm_nonneg
 
 lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
 
---The following results seem to amount to translating over to functions.
-
-/- This is broken. Fix it. -/
 lemma abs_eq_posPart_add_negPart (a : A) (ha : IsSelfAdjoint a) : abs a = a⁺ + a⁻ := by
-  rw [abs_eq_cfcₙ_norm]
-  conv => lhs; lhs; ext; rw [Real.norm_eq_abs ,← posPart_add_negPart]
-  rw [cfcₙ_add ..]
-  rfl
-  exact ha
+  rw [CFC.posPart_def, CFC.negPart_def, ← cfcₙ_add .., abs_eq_cfcₙ_norm ha]
+  exact cfcₙ_congr fun x hx ↦ (posPart_add_negPart x).symm
 
 lemma abs_sub_self (a : A) (ha : IsSelfAdjoint a) : abs a - a = 2 • a⁻ := by
-  rw [abs_eq_cfcₙ_norm]
-  conv => lhs; rhs; rw [← cfcₙ_id' (R := ℝ) a]
-  conv => lhs; lhs; lhs; ext; rw [Real.norm_eq_abs]
-  conv => lhs; rw [← cfcₙ_sub ..]
-  conv => lhs; lhs; ext x; rw [abs_sub_eq_two_nsmul_negPart x]
-  conv => lhs; rw[cfcₙ_smul ..]
+  rw [abs_eq_cfcₙ_norm ha, CFC.negPart_def]
+  conv => enter [1, 2]; rw [← cfcₙ_id' (R := ℝ) a]
+  conv => enter [1, 1, 1]; ext; rw [Real.norm_eq_abs]
+  conv => enter [1]; rw [← cfcₙ_sub ..]
+  conv => enter [1, 1]; ext; rw [abs_sub_eq_two_nsmul_negPart]
+  conv => enter [1]; rw[cfcₙ_smul ..]
   rfl
-  exact ha
 
+lemma abs_sub_self' (a : A) (ha : IsSelfAdjoint a) : abs a - a = 2 • a⁻ := by
+  calc
+    abs a - a = cfcₙ (fun x => ‖x‖) a - a := by rw [abs_eq_cfcₙ_norm ha]
+            _ = cfcₙ (fun x => ‖x‖) a - cfcₙ (fun x => x) a := by nth_rw 2 [← cfcₙ_id' (R := ℝ) a]
+            _ = cfcₙ (fun x => |x|) a - cfcₙ (fun x => x) a := by conv => enter [1, 1, 1]; ext; rw [Real.norm_eq_abs]
+            _ = cfcₙ (fun x => |x| - x) a := by rw [← cfcₙ_sub ..]
+            _ = cfcₙ (fun x => 2 • x⁻) a := by conv => enter [1, 1]; ext; rw [abs_sub_eq_two_nsmul_negPart]
+            _ = 2 • a⁻ := by rw[cfcₙ_smul ..]; rfl
 
 lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
-  rw [abs_eq_cfcₙ_norm]
+  rw [abs_eq_cfcₙ_norm ha]
   conv => lhs; rhs; rw [← cfcₙ_id' (R := ℝ) a]
   conv => lhs; lhs; lhs; ext; rw [Real.norm_eq_abs]
   conv => lhs; rw [← cfcₙ_add ..]
   conv => lhs; lhs; ext x; rw [abs_add_eq_two_nsmul_posPart x]
   conv => lhs; rw[cfcₙ_smul ..]
   rfl
-  exact ha
-
-/- Before moving on to the following, should fix the above nasty proofs. -/
-
-#exit
 
 -- `r` of the appropriate kinds, so this is actually multiple lemmas
-lemma abs_smul : abs (r • a) = |r| • abs a := sorry
+
+lemma abs_smul_real (r : ℝ) (a : A) (ha : IsSelfAdjoint a) : abs (r • a) = |r| • abs a := by
+  rw [abs_eq_cfcₙ_norm ha, ← cfcₙ_smul ..]
+  conv => rhs; lhs; ext x; rw [Real.norm_eq_abs , smul_eq_mul, ← abs_mul, ← smul_eq_mul]
+  rw [abs_eq_cfcₙ_norm (IsSelfAdjoint.smul (hr := by rfl) ha)]
+  exact Eq.symm (cfcₙ_comp_smul r _ a (by cfc_cont_tac) (_root_.abs_zero) ha)
+
+lemma abs_smul_complex (r : ℂ) (a : A) (ha : IsStarNormal a) : abs (r • a) = ‖r‖  • abs a := by
+  rw [abs_eq_cfcₙ_norm_complex ha, ← cfcₙ_smul ..]
+  conv => rhs; lhs; ext x; rw [norm_eq_abs , smul_eq_mul, ← abs_mul, ← smul_eq_mul]
+  rw [abs_eq_cfcₙ_norm (IsSelfAdjoint.smul (hr := by rfl) ha)]
+  exact Eq.symm (cfcₙ_comp_smul r _ a (by cfc_cont_tac) (_root_.abs_zero) ha)
 
 end NonUnital
+
+
 
 section Unital
 
