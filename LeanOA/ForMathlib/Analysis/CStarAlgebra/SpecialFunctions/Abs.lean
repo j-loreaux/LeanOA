@@ -128,36 +128,20 @@ lemma abs_eq_cfcₙ_norm_complex {a : A} (ha : IsStarNormal a) :
 lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
 
-lemma abs_eq_posPart_add_negPart (a : A) (ha : IsSelfAdjoint a) : abs a = a⁺ + a⁻ := by
+protected lemma posPart_add_negPart (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a = a⁺ + a⁻ := by
   rw [CFC.posPart_def, CFC.negPart_def, ← cfcₙ_add .., abs_eq_cfcₙ_norm ha]
   exact cfcₙ_congr fun x hx ↦ (posPart_add_negPart x).symm
 
 lemma abs_sub_self (a : A) (ha : IsSelfAdjoint a) : abs a - a = 2 • a⁻ := by
-  rw [abs_eq_cfcₙ_norm ha, CFC.negPart_def]
-  conv => enter [1, 2]; rw [← cfcₙ_id' (R := ℝ) a]
-  conv => enter [1, 1, 1]; ext; rw [Real.norm_eq_abs]
-  conv => enter [1]; rw [← cfcₙ_sub ..]
-  conv => enter [1, 1]; ext; rw [abs_sub_eq_two_nsmul_negPart]
-  conv => enter [1]; rw[cfcₙ_smul ..]
-  rfl
-
-lemma abs_sub_self' (a : A) (ha : IsSelfAdjoint a) : abs a - a = 2 • a⁻ := by
-  calc
-    abs a - a = cfcₙ (fun x => ‖x‖) a - a := by rw [abs_eq_cfcₙ_norm ha]
-            _ = cfcₙ (fun x => ‖x‖) a - cfcₙ (fun x => x) a := by nth_rw 2 [← cfcₙ_id' (R := ℝ) a]
-            _ = cfcₙ (fun x => |x|) a - cfcₙ (fun x => x) a := by conv => enter [1, 1, 1]; ext; rw [Real.norm_eq_abs]
-            _ = cfcₙ (fun x => |x| - x) a := by rw [← cfcₙ_sub ..]
-            _ = cfcₙ (fun x => 2 • x⁻) a := by conv => enter [1, 1]; ext; rw [abs_sub_eq_two_nsmul_negPart]
-            _ = 2 • a⁻ := by rw[cfcₙ_smul ..]; rfl
+  nth_rw 2 [← CFC.posPart_sub_negPart a]
+  rw [CFC.posPart_add_negPart a]
+  abel
 
 lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
-  rw [abs_eq_cfcₙ_norm ha]
-  conv => lhs; rhs; rw [← cfcₙ_id' (R := ℝ) a]
-  conv => lhs; lhs; lhs; ext; rw [Real.norm_eq_abs]
-  conv => lhs; rw [← cfcₙ_add ..]
-  conv => lhs; lhs; ext x; rw [abs_add_eq_two_nsmul_posPart x]
-  conv => lhs; rw[cfcₙ_smul ..]
-  rfl
+  nth_rw 2 [← CFC.posPart_sub_negPart a]
+  rw [CFC.posPart_add_negPart a]
+  abel
+
 
 -- `r` of the appropriate kinds, so this is actually multiple lemmas
 
