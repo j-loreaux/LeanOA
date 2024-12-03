@@ -142,7 +142,7 @@ lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
   rw [CFC.posPart_add_negPart a]
   abel
 
--- `r` of the appropriate kinds, so this is actually multiple lemmas
+-- `r` of the appropriate kinds, so this is actually multiple lemmas. Can we get RCLike?
 
 lemma abs_smul_real (r : ℝ) (a : A) (ha : IsSelfAdjoint a) : abs (r • a) = |r| • abs a := by
   rw [abs_eq_cfcₙ_norm ha, ← cfcₙ_smul ..]
@@ -152,10 +152,10 @@ lemma abs_smul_real (r : ℝ) (a : A) (ha : IsSelfAdjoint a) : abs (r • a) = |
 
 lemma abs_smul_complex (r : ℂ) (a : A) (ha : IsStarNormal a) : abs (r • a) = ‖r‖  • abs a := by
   rw [abs_eq_cfcₙ_norm_complex ha, ← cfcₙ_smul ..]
-  have Grr (x : ℂ) : Complex.abs r • (‖x‖ : ℂ) = (‖r * x‖ : ℂ) := by
+  have H (x : ℂ) : Complex.abs r • (‖x‖ : ℂ) = (‖r * x‖ : ℂ) := by
     rw [← Complex.norm_eq_abs]
     simp only [Complex.norm_eq_abs, Complex.real_smul, norm_mul, Complex.ofReal_mul]
-  conv => rhs; lhs; ext x; rw [Complex.norm_eq_abs, Grr]
+  conv => rhs; lhs; ext x; rw [Complex.norm_eq_abs, H] -- this use of H isn't so nice.
   rw [abs_eq_cfcₙ_norm_complex]
   · apply Eq.symm (cfcₙ_comp_smul r _ a (by cfc_cont_tac) (by cfc_zero_tac) ha)
   · refine {star_comm_self := ?star_comm_self}
