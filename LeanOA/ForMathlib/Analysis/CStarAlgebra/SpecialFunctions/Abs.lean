@@ -158,7 +158,11 @@ lemma abs_smul_complex (r : ℂ) (a : A) (ha : IsStarNormal a) : abs (r • a) =
   conv => rhs; lhs; ext x; rw [Complex.norm_eq_abs, Grr]
   rw [abs_eq_cfcₙ_norm_complex]
   · apply Eq.symm (cfcₙ_comp_smul r _ a (by cfc_cont_tac) (by cfc_zero_tac) ha)
-  · sorry --it doesn't seem that we have an `IsStarNormal.smul` lemma anywhere.
+  · refine {star_comm_self := ?star_comm_self}
+    simp only [star_smul, RCLike.star_def, smul_eq_mul]
+    refine Commute.smul_left ?star_comm_self.h ((starRingEnd ℂ) r)
+    refine Commute.symm (Commute.smul_left ?star_comm_self.h.h r)
+    exact Commute.symm ((fun x => (isStarNormal_iff x).mp) a ha) --it doesn't seem that we have an `IsStarNormal.smul` lemma anywhere.
 
 end NonUnital
 
