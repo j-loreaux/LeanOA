@@ -104,8 +104,8 @@ lemma cfcₙ_norm_nonneg {a : A} : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)
 
 lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
     abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
-  conv => enter [2, 1]; ext; rw [← Complex.conj_mul', ← Complex.star_def]
-  rw [cfcₙ_mul .., cfcₙ_star .., cfcₙ_id' .., abs_sq_eq_star_mul_self ..]
+  conv_lhs => rw [abs_sq_eq_star_mul_self, ← cfcₙ_id' ℂ a, ← cfcₙ_star, ← cfcₙ_mul ..]
+  exact cfcₙ_congr fun x hx ↦ Complex.conj_mul' x
 
 /-- Will omit this one. It can't possibly be useful. -/
 lemma abs_mul_self_eq_cfcₙ_norm_mul_self {a : A} (ha : IsStarNormal a) :
@@ -150,19 +150,18 @@ lemma abs_smul_real (r : ℝ) (a : A) (ha : IsSelfAdjoint a) : abs (r • a) = |
   rw [abs_eq_cfcₙ_norm (IsSelfAdjoint.smul (hr := by rfl) ha)]
   exact Eq.symm (cfcₙ_comp_smul r _ a (by cfc_cont_tac) (_root_.abs_zero) ha)
 
-lemma abs_smul_complex (r : ℂ) (a : A) (ha : IsStarNormal a) : abs (r • a) = ‖r‖  • abs a := by
-  rw [abs_eq_cfcₙ_norm_complex ha, ← cfcₙ_smul ..]
-  have H (x : ℂ) : Complex.abs r • (‖x‖ : ℂ) = (‖r * x‖ : ℂ) := by
-    rw [← Complex.norm_eq_abs]
-    simp only [Complex.norm_eq_abs, Complex.real_smul, norm_mul, Complex.ofReal_mul]
-  conv => rhs; lhs; ext x; rw [Complex.norm_eq_abs, H] -- this use of H isn't so nice.
-  rw [abs_eq_cfcₙ_norm_complex]
-  · apply Eq.symm (cfcₙ_comp_smul r _ a (by cfc_cont_tac) (by cfc_zero_tac) ha)
-  · refine {star_comm_self := ?star_comm_self}
-    simp only [star_smul, RCLike.star_def, smul_eq_mul]
-    refine Commute.smul_left ?star_comm_self.h ((starRingEnd ℂ) r)
-    refine Commute.symm (Commute.smul_left ?star_comm_self.h.h r)
-    exact Commute.symm ((fun x => (isStarNormal_iff x).mp) a ha) --it doesn't seem that we have an `IsStarNormal.smul` lemma anywhere.
+/- This belongs in a different file. -/
+instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
+    [StarModule R A] [SMulCommClass R A A] [IsScalarTower R A A]
+    (r : R) (a : A) [ha : IsStarNormal a] : IsStarNormal (r • a) where
+  star_comm_self := star_smul r a ▸ ha.star_comm_self.smul_left (star r) |>.smul_right r
+
+lemma abs_smul_complex (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := by
+  have : 0 ≤ ‖r‖ • abs a := smul_nonneg (by positivity) abs_nonneg
+  rw [abs, CFC.sqrt_eq_iff _ _ (star_mul_self_nonneg _) this]
+  simp only [mul_smul_comm, smul_mul_assoc, star_smul, abs_mul_self_eq_star_mul_self]
+  match_scalars
+  simp only [Complex.coe_algebraMap, ← sq, mul_one, RCLike.star_def, mul_comm r, Complex.conj_mul']
 
 end NonUnital
 
@@ -175,6 +174,14 @@ lemma abs_algebraMap_complex (z : ℂ) : abs (algebraMap ℂ A z) = algebraMap �
 lemma abs_algebraMap_real (x : ℝ) : abs (algebraMap ℝ A x) = algebraMap ℝ A |x| := sorry
 lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algebraMap ℝ≥0 A x := sorry
 lemma abs_natCast (n : ℕ) : abs (n : A) = n := sorry
+
+/- Not sure if the following need Unital. -/
+
+@[simp] lemma abs_neg (a : A) : abs (-a) = abs a := sorry
+lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := sorry
+@[simp] lemma abs_one : abs (1 : A) = 1 := sorry
+@[simp] lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := sorry
+lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := sorry
 
 end Unital
 
