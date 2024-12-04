@@ -113,17 +113,11 @@ lemma abs_mul_self_eq_cfcₙ_norm_mul_self {a : A} (ha : IsStarNormal a) :
   rw [← cfcₙ_sq, abs_mul_self_eq_star_mul_self, ← abs_sq_eq_star_mul_self]
   exact abs_sq_eq_cfcₙ_norm_sq_complex ha
 
-/- One should be able to use some kind of congrFun or congrArg thing. -/
 lemma abs_eq_cfcₙ_norm_complex {a : A} (ha : IsStarNormal a) :
     abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
-  calc
-    abs a = sqrt ((abs a) ^ (2 : NNReal)) := by rw [CFC.sqrt_nnrpow_two ..]
-        _ = sqrt (cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a) := by
-          conv => enter [1,1]; rw [abs_sq_eq_cfcₙ_norm_sq_complex ha]
-        _ = sqrt ((cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) * (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a)) := by rw [cfcₙ_sq ..]
-        _ = (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) := by
-          rw [← CFC.nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _,CFC.sqrt_nnrpow_two (cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a) _]
-          <;> exact cfcₙ_norm_nonneg
+  conv_lhs => rw [abs, ← abs_sq_eq_star_mul_self, sqrt_eq_cfcₙ_real_sqrt, cfcₙ_real_eq_complex,
+    abs_sq_eq_cfcₙ_norm_sq_complex ha, ← cfcₙ_comp' ..]
+  exact cfcₙ_congr fun x hx ↦ by simp [sq]
 
 lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
@@ -170,7 +164,14 @@ section Unital
 variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 -- for these you need the algebra to be unital
-lemma abs_algebraMap_complex (z : ℂ) : abs (algebraMap ℂ A z) = algebraMap ℝ A |z| := sorry
+lemma abs_algebraMap_complex (z : ℂ) : abs (algebraMap ℂ A z) = algebraMap ℝ A (Complex.abs z : ℝ) := by
+  simp only [abs, sqrt]
+  rw [← algebraMap_star_comm, ← algebraMap.coe_mul]
+
+sorry
+
+#exit
+
 lemma abs_algebraMap_real (x : ℝ) : abs (algebraMap ℝ A x) = algebraMap ℝ A |x| := sorry
 lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algebraMap ℝ≥0 A x := sorry
 lemma abs_natCast (n : ℕ) : abs (n : A) = n := sorry
