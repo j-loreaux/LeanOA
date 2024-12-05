@@ -165,19 +165,6 @@ variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 -- for these you need the algebra to be unital
 lemma abs_algebraMap_complex (z : ℂ) : abs (algebraMap ℂ A z) = algebraMap ℝ A (Complex.abs z : ℝ) := by
-/- What does this theorem say?
-   It says that if we map a complex number z into the CStarAlgebra A, and then compute the abs of this,
-   the resulting element will agree with the algebra map of the abs value of z into A.-/
-   --What is the algebraMap of z into A? It must be z ↦ z * (1 : A)
-   --Then we must do cfc_n NNSqrt (star (z * 1)) * (z * 1).
-   --How does this decompose? We also could just see this as sqrt (star (z * 1)) * (z * 1).
-   --How does one get under this and decompose the product?
-   --We can probably obtain that the inside thing is actually (conj z * z) * 1
-   --If we could get mul_eq_smul here we might write it as (conj z * z) • 1
-   --But wait. What if this isn't a unital C* algebra? Then there isn't a 1 at all.
-   --THIS is why we need Unital in this section.
-
-  --simp only [abs, abs_smul_complex (Complex.abs z) ^ 2 (1 : A) ]
   rw [abs, sqrt_eq_cfcₙ_real_sqrt, ← algebraMap_star_comm, ← algebraMap.coe_mul, RCLike.star_def, Complex.conj_mul']
   simp only [Complex.norm_eq_abs, map_pow, Algebra.algebraMap_eq_smul_one]
   conv_lhs => enter [2]; rw [sq, mul_smul_comm, mul_one, smul_smul, ← sq, ← Complex.ofReal_pow]
