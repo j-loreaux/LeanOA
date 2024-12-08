@@ -174,8 +174,8 @@ lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algeb
   simpa only [NNReal.abs_eq] using abs_algebraMap_real (NNReal.toReal _)
 
 lemma abs_natCast (n : ℕ) : abs (n : A) = n := by
-  sorry
-
+  have := abs_algebraMap_real (A := A) (n : ℝ)
+  simpa only [map_natCast, Nat.abs_cast] using abs_algebraMap_real (n : ℝ)
 
 /- Not sure if the following need Unital. -/
 
