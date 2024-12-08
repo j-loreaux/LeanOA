@@ -173,6 +173,10 @@ lemma abs_algebraMap_real (c : ℝ) : abs (algebraMap ℝ A c) = algebraMap ℝ 
   conv_lhs => rw[← cfcₙ_comp_smul (hf := by cfc_cont_tac)]
   conv_lhs => enter [1]; ext x; rw [smul_eq_mul, Real.sqrt_mul (hx := sq_nonneg c), Real.sqrt_sq_eq_abs, ← smul_eq_mul]
   rw [cfcₙ_smul ..]
+  conv_lhs => enter [2]; rw[cfcₙ_eq_cfc ,cfc_apply_one (f := Real.sqrt)]
+  simp only [Real.sqrt_one, map_one]
+
+--This can probably be done with cfc_algebraMap
 
 
 
