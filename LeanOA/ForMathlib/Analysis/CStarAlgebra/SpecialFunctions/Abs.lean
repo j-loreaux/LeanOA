@@ -174,14 +174,13 @@ lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algeb
   simpa only [NNReal.abs_eq] using abs_algebraMap_real (NNReal.toReal _)
 
 lemma abs_natCast (n : ℕ) : abs (n : A) = n := by
-  have := abs_algebraMap_real (A := A) (n : ℝ)
   simpa only [map_natCast, Nat.abs_cast] using abs_algebraMap_real (n : ℝ)
 
-/- Not sure if the following need Unital. -/
+@[simp]
+lemma abs_neg (a : A) : abs (-a) = abs a := by
+  rw [← neg_one_smul ℝ a, abs_smul_real, _root_.abs_neg, _root_.abs_one, one_smul]
 
-@[simp] lemma abs_neg (a : A) : abs (-a) = abs a := sorry
 lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := sorry
-@[simp] lemma abs_one : abs (1 : A) = 1 := sorry
 @[simp] lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := sorry
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := sorry
 
