@@ -184,7 +184,12 @@ lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
   simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
 
 @[simp]
-lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := sorry
+lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
+  have : ‖(abs a) ^ 2‖ = ‖a‖ * ‖a‖ := by
+    rw [abs, sq_sqrt ..]
+    exact CStarRing.norm_star_mul_self
+  sorry --can we use this lemma to get what we want? I am not sure it is at all needed. Maybe we need cfc to get into
+  --the square root.
 
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := sorry
 
