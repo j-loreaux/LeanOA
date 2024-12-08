@@ -66,12 +66,13 @@ lemma abs_sq_eq_star_mul_self (a : A) : (abs a) ^ (2 : NNReal) = star a * a := b
   apply abs_mul_self_eq_star_mul_self
 
 lemma abs_pow_eq_star_mul_self_pow (a : A) (x : ℝ≥0) :
-    (abs a) ^ (2 * x) = (star a * a) ^ x := by
-  sorry
+    (abs a) ^ (2 * x) = (star a * a) ^ x := by rw [← nnrpow_nnrpow, abs_sq_eq_star_mul_self]
 
 /-- This and the previous need new names. -/
 lemma abs_pow_eq_star_mul_self_pow_by_two (a : A) (x : ℝ≥0) :
-    (abs a) ^ x = (star a * a) ^ (x / 2) := by sorry
+    (abs a) ^ x = (star a * a) ^ (x / 2) := by
+  simp only [← abs_pow_eq_star_mul_self_pow, mul_div_left_comm, ne_eq, OfNat.ofNat_ne_zero,
+    not_false_eq_true, div_self, mul_one]
 
 end abs
 
