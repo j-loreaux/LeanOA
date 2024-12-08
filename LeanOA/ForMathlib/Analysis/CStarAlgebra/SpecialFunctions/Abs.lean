@@ -163,26 +163,33 @@ section Unital
 
 variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
--- for these you need the algebra to be unital
-lemma abs_algebraMap_complex (z : ℂ) : abs (algebraMap ℂ A z) = algebraMap ℝ A (Complex.abs z : ℝ) := by
-  rw [abs, sqrt_eq_cfcₙ_real_sqrt, ← algebraMap_star_comm, ← algebraMap.coe_mul, RCLike.star_def, Complex.conj_mul']
-  simp only [Complex.norm_eq_abs, map_pow, Algebra.algebraMap_eq_smul_one]
-  conv_lhs => enter [2]; rw [sq, mul_smul_comm, mul_one, smul_smul, ← sq, ← Complex.ofReal_pow]
+example (a : A) (ha : IsSelfAdjoint a) : abs a = cfcₙ NNReal.sqrt (a ^ 2) := by
+  rw [abs, sqrt, ha.star_eq, sq]
 
-  --← Complex.ofReal_re <| Complex.abs z
-
-
-  --Not sure how to get the complex absolute value to behave on the left hand side. Probably
-  --need to turn that into a real number somehow.
-  --rw [cfcₙ_smul ..]
+lemma abs_algebraMap_real (c : ℝ) : abs (algebraMap ℝ A c) = algebraMap ℝ A |c| := by
+  rw [abs, sqrt_eq_cfcₙ_real_sqrt, ← algebraMap_star_comm, star_trivial]
+  simp only [abs, algebraMap.coe_mul, Algebra.algebraMap_eq_smul_one, star_smul, star_trivial, star_one, sq]
+  rw [smul_mul_smul_comm, ← sq, one_mul]
+  conv_lhs => rw[← cfcₙ_comp_smul (hf := by cfc_cont_tac)]
+  conv_lhs => enter [1]; ext x; rw [smul_eq_mul, Real.sqrt_mul (hx := sq_nonneg c), Real.sqrt_sq_eq_abs, ← smul_eq_mul]
+  rw [cfcₙ_smul ..]
 
 
 
-sorry
 
 #exit
 
-lemma abs_algebraMap_real (x : ℝ) : abs (algebraMap ℝ A x) = algebraMap ℝ A |x| := sorry
+lemma abs_algebraMap_complex (z : ℂ) : abs (algebraMap ℂ A z) = algebraMap ℝ A (Complex.abs z : ℝ) := by
+  rw [abs, sqrt_eq_cfcₙ_real_sqrt, ← algebraMap_star_comm, ← algebraMap.coe_mul, RCLike.star_def, Complex.conj_mul']
+  simp only [Complex.norm_eq_abs, map_pow, Algebra.algebraMap_eq_smul_one]
+  conv_lhs => enter [2]; rw [sq, mul_smul_comm, mul_one, smul_smul, ← sq, ← Complex.ofReal_pow, ← cfcₙ_const_mul_id ..]
+  conv_lhs => enter [2,1]; ext x; rw [← smul_eq_mul]
+  conv_lhs => rw [cfcₙ_smul ..]
+  have : cfcₙ (R := ℂ) (fun x => x) (1 : A) = cfcₙ (id (α := ℂ)) 1 := rfl
+  conv_lhs => enter [2,2]; rw [this, cfcₙ_id ..]
+  sorry
+--sqrt_nnrpow_two
+
 lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algebraMap ℝ≥0 A x := sorry
 lemma abs_natCast (n : ℕ) : abs (n : A) = n := sorry
 
