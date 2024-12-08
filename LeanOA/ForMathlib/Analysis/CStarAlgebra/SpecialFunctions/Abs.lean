@@ -192,6 +192,7 @@ lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
     rw [LE.le.star_eq (abs_nonneg), sq]
   have L : ‖star (abs a) * (abs a)‖ = ‖abs a‖ * ‖abs a‖ := by exact
     CStarRing.norm_star_mul_self
+  sorry
   --everything is here, it just needs to be chained together...
 
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
