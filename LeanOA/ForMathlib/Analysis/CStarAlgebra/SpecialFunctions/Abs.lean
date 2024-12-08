@@ -194,10 +194,8 @@ lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
     CStarRing.norm_star_mul_self
   --everything is here, it just needs to be chained together...
 
-
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
-  rw [abs, star_comm_self, star_star, ← abs]
-
+  rw [abs, abs, star_comm_self, star_star]
 
 end Unital
 
