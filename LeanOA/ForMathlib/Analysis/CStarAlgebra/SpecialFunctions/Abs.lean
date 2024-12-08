@@ -183,7 +183,9 @@ lemma abs_neg (a : A) : abs (-a) = abs a := by
 lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
   simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
 
-@[simp] lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := sorry
+@[simp]
+lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := sorry
+
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := sorry
 
 end Unital
