@@ -167,14 +167,22 @@ variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 lemma abs_one : abs (1 : A) = 1 := by
   rw [abs, star_one , mul_one, sqrt_one]
 
-lemma abs_algebraMap_real (c : ℝ) : abs (algebraMap ℝ A c) = algebraMap ℝ A |c| := by
-  simp only [Algebra.algebraMap_eq_smul_one, IsSelfAdjoint.one, abs_smul_real, abs_one]
-
 lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap ℝ A (Complex.abs c : ℝ) := by
   simp only [Algebra.algebraMap_eq_smul_one, abs_smul_complex, Complex.norm_eq_abs, abs_one]
 
+lemma abs_algebraMap_real (c : ℝ) : abs (algebraMap ℝ A c) = algebraMap ℝ A |c| := by
+   simpa only [Complex.abs_ofReal] using abs_algebraMap_complex (Complex.ofReal _)
+
+
+  --simp [abs_algebraMap_complex, Complex.ofReal]
+  --simp only [Algebra.algebraMap_eq_smul_one, IsSelfAdjoint.one, abs_smul_real, abs_one]
+
 lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algebraMap ℝ≥0 A x := by
-  simp only [Algebra.algebraMap_eq_smul_one] --just needs NNReal version of this smul thing.
+  simp only [Algebra.algebraMap_eq_smul_one, abs_smul_real]
+  sorry
+
+--Need to get between NNReal and Real etc...
+
 
 lemma abs_natCast (n : ℕ) : abs (n : A) = n := sorry
 
