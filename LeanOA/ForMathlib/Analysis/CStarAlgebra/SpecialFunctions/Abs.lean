@@ -173,16 +173,8 @@ lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap �
 lemma abs_algebraMap_real (c : ℝ) : abs (algebraMap ℝ A c) = algebraMap ℝ A |c| := by
    simpa only [Complex.abs_ofReal] using abs_algebraMap_complex (Complex.ofReal _)
 
-
-  --simp [abs_algebraMap_complex, Complex.ofReal]
-  --simp only [Algebra.algebraMap_eq_smul_one, IsSelfAdjoint.one, abs_smul_real, abs_one]
-
 lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algebraMap ℝ≥0 A x := by
-  simp only [Algebra.algebraMap_eq_smul_one, abs_smul_real]
-  sorry
-
---Need to get between NNReal and Real etc...
-
+   simpa only [NNReal.abs_eq] using abs_algebraMap_real (NNReal.toReal _)
 
 lemma abs_natCast (n : ℕ) : abs (n : A) = n := sorry
 
