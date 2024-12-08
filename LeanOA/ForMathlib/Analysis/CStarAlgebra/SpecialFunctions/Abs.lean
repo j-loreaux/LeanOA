@@ -138,12 +138,6 @@ lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
 
 -- `r` of the appropriate kinds, so this is actually multiple lemmas. Can we get RCLike?
 
-lemma abs_smul_real (r : ℝ) (a : A) (ha : IsSelfAdjoint a) : abs (r • a) = |r| • abs a := by
-  rw [abs_eq_cfcₙ_norm ha, ← cfcₙ_smul ..]
-  conv => rhs; lhs; ext x; rw [Real.norm_eq_abs , smul_eq_mul, ← abs_mul, ← smul_eq_mul]
-  rw [abs_eq_cfcₙ_norm (IsSelfAdjoint.smul (hr := by rfl) ha)]
-  exact Eq.symm (cfcₙ_comp_smul r _ a (by cfc_cont_tac) (_root_.abs_zero) ha)
-
 /- This belongs in a different file. -/
 instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
     [StarModule R A] [SMulCommClass R A A] [IsScalarTower R A A]
@@ -156,6 +150,9 @@ lemma abs_smul_complex (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := 
   simp only [mul_smul_comm, smul_mul_assoc, star_smul, abs_mul_self_eq_star_mul_self]
   match_scalars
   simp only [Complex.coe_algebraMap, ← sq, mul_one, RCLike.star_def, mul_comm r, Complex.conj_mul']
+
+lemma abs_smul_real (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
+  simpa only [Complex.coe_smul, Complex.norm_real, Real.norm_eq_abs] using abs_smul_complex (Complex.ofReal r) _
 
 end NonUnital
 
@@ -171,12 +168,14 @@ lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap �
   simp only [Algebra.algebraMap_eq_smul_one, abs_smul_complex, Complex.norm_eq_abs, abs_one]
 
 lemma abs_algebraMap_real (c : ℝ) : abs (algebraMap ℝ A c) = algebraMap ℝ A |c| := by
-   simpa only [Complex.abs_ofReal] using abs_algebraMap_complex (Complex.ofReal _)
+  simpa only [Complex.abs_ofReal] using abs_algebraMap_complex (Complex.ofReal _)
 
 lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algebraMap ℝ≥0 A x := by
-   simpa only [NNReal.abs_eq] using abs_algebraMap_real (NNReal.toReal _)
+  simpa only [NNReal.abs_eq] using abs_algebraMap_real (NNReal.toReal _)
 
-lemma abs_natCast (n : ℕ) : abs (n : A) = n := sorry
+lemma abs_natCast (n : ℕ) : abs (n : A) = n := by
+  sorry
+
 
 /- Not sure if the following need Unital. -/
 
