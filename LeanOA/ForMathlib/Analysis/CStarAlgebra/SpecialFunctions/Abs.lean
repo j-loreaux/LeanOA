@@ -185,13 +185,19 @@ lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
 
 @[simp]
 lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
-  have : ‖(abs a) ^ 2‖ = ‖a‖ * ‖a‖ := by
+  have H : ‖(abs a) ^ 2‖ = ‖a‖ * ‖a‖ := by
     rw [abs, sq_sqrt ..]
     exact CStarRing.norm_star_mul_self
-  sorry --can we use this lemma to get what we want? I am not sure it is at all needed. Maybe we need cfc to get into
-  --the square root.
+  have K : ‖(abs a) ^ 2‖ = ‖star (abs a) * (abs a)‖ := by
+    rw [LE.le.star_eq (abs_nonneg), sq]
+  have L : ‖star (abs a) * (abs a)‖ = ‖abs a‖ * ‖abs a‖ := by exact
+    CStarRing.norm_star_mul_self
+  --everything is here, it just needs to be chained together...
 
-lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := sorry
+
+lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
+  rw [abs, star_comm_self, star_star, ← abs]
+
 
 end Unital
 
