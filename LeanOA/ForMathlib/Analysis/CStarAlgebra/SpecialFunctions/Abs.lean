@@ -136,8 +136,6 @@ lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
   rw [CFC.posPart_add_negPart a]
   abel
 
--- `r` of the appropriate kinds, so this is actually multiple lemmas. Can we get RCLike?
-
 /- This belongs in a different file. -/
 instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
     [StarModule R A] [SMulCommClass R A A] [IsScalarTower R A A]
