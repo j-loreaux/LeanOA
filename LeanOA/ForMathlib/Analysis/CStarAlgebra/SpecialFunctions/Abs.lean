@@ -189,7 +189,7 @@ lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
          _ = Real.sqrt ‖star (abs a) * abs a‖ := by rw [CStarRing.norm_star_mul_self]
          _ = Real.sqrt ‖abs a ^ 2‖ := by rw [sq, LE.le.star_eq (abs_nonneg)]
          _ = Real.sqrt (‖a‖ * ‖a‖) := by rw [abs, sq_sqrt .., CStarRing.norm_star_mul_self]
-         _ = ‖a‖ := by rw [← sq, Real.sqrt_sq (norm_nonneg a)]
+         _ = ‖a‖ := by rw [← sq, Real.sqrt_sq (norm_nonneg _)]
 
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
   rw [abs, abs, star_comm_self, star_star]
