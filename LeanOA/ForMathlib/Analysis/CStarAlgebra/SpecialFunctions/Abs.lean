@@ -184,11 +184,11 @@ lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
 @[simp]
 lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
   calc
-   ‖abs a‖ = Real.sqrt ‖abs a‖ ^ 2 := by simp only [norm_nonneg, Real.sq_sqrt]
-         _ = Real.sqrt (‖abs a‖ * ‖abs a‖) := by simp only [norm_nonneg, Real.sq_sqrt, Real.sqrt_mul_self]
-         _ = Real.sqrt ‖star (abs a) * abs a‖ := by rw [CStarRing.norm_star_mul_self]
-         _ = Real.sqrt ‖abs a ^ 2‖ := by rw [sq, LE.le.star_eq (abs_nonneg)]
-         _ = Real.sqrt (‖a‖ * ‖a‖) := by rw [abs, sq_sqrt .., CStarRing.norm_star_mul_self]
+   ‖abs a‖ = √‖abs a‖ ^ 2 := by simp only [norm_nonneg, Real.sq_sqrt]
+         _ = √(‖abs a‖ * ‖abs a‖) := by simp only [norm_nonneg, Real.sq_sqrt, Real.sqrt_mul_self]
+         _ = √‖star (abs a) * abs a‖ := by rw [CStarRing.norm_star_mul_self]
+         _ = √‖abs a ^ 2‖ := by rw [sq, LE.le.star_eq (abs_nonneg)]
+         _ = √(‖a‖ * ‖a‖) := by rw [abs, sq_sqrt .., CStarRing.norm_star_mul_self]
          _ = ‖a‖ := by rw [← sq, Real.sqrt_sq (norm_nonneg _)]
 
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
