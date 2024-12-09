@@ -14,20 +14,7 @@ This file defines the absolute value via the (unital and non unital) continuous 
 
 ## Main declarations
 
-+ `CFC.abs`: The absolute value declaration using...
-
-
-## Implementation notes
-
-None yet
-
-## Notation
-
-Not sure we will need this
-
-## TODO
-
-Not sure yet.
++ `CFC.abs`: The absolute value declaration as `abs a := sqrt (star a) * a`.
 
 -/
 

@@ -46,8 +46,7 @@ lemma mul_self_eq_mul_self {a : A} (ha : IsSelfAdjoint a) : a * a =
 
 variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
 
-/-- Needs a new name. -/
-lemma sqrt_mul_self_rfl {a : A} (ha : IsSelfAdjoint a) :
+lemma cfcₙ_sqrt_mul_self {a : A} (ha : IsSelfAdjoint a) :
     cfcₙ Real.sqrt (a * a) = cfcₙ (fun x ↦ √(x * x)) a := by
   rw [mul_self_eq_mul_self ha, ← cfcₙ_comp a (f := fun x ↦ x * x) (g := fun x ↦ √x),
      Function.comp_def]
@@ -84,7 +83,7 @@ variable [PartialOrder A] [StarOrderedRing A]
 lemma abs_eq_cfcₙ_norm {a : A} (ha : IsSelfAdjoint a) :
     abs a = cfcₙ (‖·‖) a := by
    simp only [abs, Real.norm_eq_abs, ← Real.sqrt_sq_eq_abs, sq]
-   rw [sqrt_eq_cfcₙ_real_sqrt (star_mul_self_nonneg a), ha.star_eq, sqrt_mul_self_rfl ha]
+   rw [sqrt_eq_cfcₙ_real_sqrt (star_mul_self_nonneg a), ha.star_eq, cfcₙ_sqrt_mul_self ha]
 
 lemma abs_eq_zero_iff {a : A} : abs a = 0 ↔ a = 0 := by
   rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
