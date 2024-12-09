@@ -12,8 +12,7 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 /-!
 # Absolute value of an operator defined via the continuous functional calculus
 
-This file provides API for the absolute value for (CFC) and (CFCₙ), and includes the associated
-basic API. THIS NEEDS UPDATING!
+This file provides basic API for `CFC.abs`
 
 ## Main declarations
 
@@ -107,12 +106,6 @@ lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
   conv_lhs => rw [abs_sq_eq_star_mul_self, ← cfcₙ_id' ℂ a, ← cfcₙ_star, ← cfcₙ_mul ..]
   exact cfcₙ_congr fun x hx ↦ Complex.conj_mul' x
 
-/-- Will omit this one. It can't possibly be useful. -/
-lemma abs_mul_self_eq_cfcₙ_norm_mul_self {a : A} (ha : IsStarNormal a) :
-    abs a * abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a * cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
-  rw [← cfcₙ_sq, abs_mul_self_eq_star_mul_self, ← abs_sq_eq_star_mul_self]
-  exact abs_sq_eq_cfcₙ_norm_sq_complex ha
-
 lemma abs_eq_cfcₙ_norm_complex {a : A} (ha : IsStarNormal a) :
     abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
   conv_lhs => rw [abs, ← abs_sq_eq_star_mul_self, sqrt_eq_cfcₙ_real_sqrt, cfcₙ_real_eq_complex,
@@ -136,7 +129,7 @@ lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
   rw [CFC.posPart_add_negPart a]
   abel
 
-/- This belongs in a different file. -/
+/- This belongs in a different file when brought to Mathlib. -/
 instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
     [StarModule R A] [SMulCommClass R A A] [IsScalarTower R A A]
     (r : R) (a : A) [ha : IsStarNormal a] : IsStarNormal (r • a) where
@@ -162,18 +155,6 @@ variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 lemma abs_one : abs (1 : A) = 1 := by
   rw [abs, star_one , mul_one, sqrt_one]
 
-lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap ℝ A (Complex.abs c : ℝ) := by
-  simp only [Algebra.algebraMap_eq_smul_one, abs_smul_complex, Complex.norm_eq_abs, abs_one]
-
-lemma abs_algebraMap_real (c : ℝ) : abs (algebraMap ℝ A c) = algebraMap ℝ A |c| := by
-  simpa only [Complex.abs_ofReal] using abs_algebraMap_complex (Complex.ofReal _)
-
-lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algebraMap ℝ≥0 A x := by
-  simpa only [NNReal.abs_eq] using abs_algebraMap_real (NNReal.toReal _)
-
-lemma abs_natCast (n : ℕ) : abs (n : A) = n := by
-  simpa only [map_natCast, Nat.abs_cast] using abs_algebraMap_real (n : ℝ)
-
 @[simp]
 lemma abs_neg (a : A) : abs (-a) = abs a := by
   rw [← neg_one_smul ℝ a, abs_smul_real, _root_.abs_neg, _root_.abs_one, one_smul]
@@ -188,6 +169,18 @@ lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
 
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
   rw [abs, abs, star_comm_self, star_star]
+
+lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap ℝ A (Complex.abs c : ℝ) := by
+  simp only [Algebra.algebraMap_eq_smul_one, abs_smul_complex, Complex.norm_eq_abs, abs_one]
+
+lemma abs_algebraMap_real (c : ℝ) : abs (algebraMap ℝ A c) = algebraMap ℝ A |c| := by
+  simpa only [Complex.abs_ofReal] using abs_algebraMap_complex (Complex.ofReal _)
+
+lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algebraMap ℝ≥0 A x := by
+  simpa only [NNReal.abs_eq] using abs_algebraMap_real (NNReal.toReal _)
+
+lemma abs_natCast (n : ℕ) : abs (n : A) = n := by
+  simpa only [map_natCast, Nat.abs_cast] using abs_algebraMap_real (n : ℝ)
 
 end Unital
 
