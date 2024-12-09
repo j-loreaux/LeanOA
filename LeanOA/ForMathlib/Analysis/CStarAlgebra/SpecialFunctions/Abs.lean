@@ -183,13 +183,8 @@ lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
 
 @[simp]
 lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
-  calc
-   ‖abs a‖ = √‖abs a‖ ^ 2 := by simp only [norm_nonneg, Real.sq_sqrt]
-         _ = √(‖abs a‖ * ‖abs a‖) := by simp only [norm_nonneg, Real.sq_sqrt, Real.sqrt_mul_self]
-         _ = √‖star (abs a) * abs a‖ := by rw [CStarRing.norm_star_mul_self]
-         _ = √‖abs a ^ 2‖ := by rw [sq, LE.le.star_eq (abs_nonneg)]
-         _ = √(‖a‖ * ‖a‖) := by rw [abs, sq_sqrt .., CStarRing.norm_star_mul_self]
-         _ = ‖a‖ := by rw [← sq, Real.sqrt_sq (norm_nonneg _)]
+  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, sq, ← CStarRing.norm_star_mul_self,
+    abs_nonneg.star_eq, abs_mul_self_eq_star_mul_self, CStarRing.norm_star_mul_self]
 
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
   rw [abs, abs, star_comm_self, star_star]
