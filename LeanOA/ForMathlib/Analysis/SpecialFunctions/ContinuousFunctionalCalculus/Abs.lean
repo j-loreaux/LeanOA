@@ -50,15 +50,15 @@ lemma abs_mul_self (a : A) : (abs a) * (abs a) = star a * a := by
 
 lemma abs_nnrpow_two (a : A) : (abs a) ^ (2 : NNReal) = star a * a := by
   simp only [abs_nonneg, nnrpow_two]
-  apply abs_mul_self_eq_star_mul_self
+  apply abs_mul_self
 
-lemma abs_pow_eq_star_mul_self_pow (a : A) (x : ℝ≥0) :
-    (abs a) ^ (2 * x) = (star a * a) ^ x := by rw [← nnrpow_nnrpow, abs_sq_eq_star_mul_self]
+lemma abs_nnrpow_two_mul (a : A) (x : ℝ≥0) :
+    (abs a) ^ (2 * x) = (star a * a) ^ x := by rw [← nnrpow_nnrpow, abs_nnrpow_two]
 
 /-- This and the previous need new names. -/
-lemma abs_pow_eq_star_mul_self_pow_by_two (a : A) (x : ℝ≥0) :
+lemma abs_nnrpow (a : A) (x : ℝ≥0) :
     (abs a) ^ x = (star a * a) ^ (x / 2) := by
-  simp only [← abs_pow_eq_star_mul_self_pow, mul_div_left_comm, ne_eq, OfNat.ofNat_ne_zero,
+  simp only [← abs_nnrpow_two_mul, mul_div_left_comm, ne_eq, OfNat.ofNat_ne_zero,
     not_false_eq_true, div_self, mul_one]
 
 end abs
