@@ -5,7 +5,7 @@ Authors: Jon Bannon, Jireh Loreaux
 -/
 
 import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
-import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart
+import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Instances
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 
