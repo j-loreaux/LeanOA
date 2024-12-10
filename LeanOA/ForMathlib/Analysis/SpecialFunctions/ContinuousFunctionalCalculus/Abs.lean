@@ -10,7 +10,7 @@ import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow
 # Absolute value of an operator defined via the continuous functional calculus
 
 This file defines the absolute value via the (unital and non unital) continuous functional calculus
-(CFC) and (CFCₙ), and includes the associated basic API.
+(CFC) and (CFCₙ), and includes foundational API.
 
 ## Main declarations
 

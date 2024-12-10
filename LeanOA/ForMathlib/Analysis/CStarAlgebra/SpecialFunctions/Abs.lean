@@ -12,21 +12,7 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 /-!
 # Absolute value of an operator defined via the continuous functional calculus
 
-This file provides basic API for `CFC.abs`
-
-## Main declarations
-
-## Implementation notes
-
-None yet
-
-## Notation
-
-Not sure we will need this
-
-## TODO
-
-Not sure yet.
+This file provides basic API for `CFC.abs` for `CStarAlgebra`s.
 
 -/
 
