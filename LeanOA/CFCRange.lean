@@ -1,7 +1,7 @@
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Topology.ContinuousMap.StoneWeierstrass
-import LeanOA.ForMathlib.Topology.Algebra.NonUnitalStarAlgebra
+import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
 import LeanOA.Notation
 import LeanOA.TopologicalAlgebra
 
