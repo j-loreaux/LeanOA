@@ -141,7 +141,7 @@ lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
 @[simp]
 lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
   rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, sq, ← CStarRing.norm_star_mul_self,
-    abs_nonneg.star_eq, abs_mul_self_eq_star_mul_self, CStarRing.norm_star_mul_self]
+    abs_nonneg.star_eq, abs_mul_self, CStarRing.norm_star_mul_self]
 
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
   rw [abs, abs, star_comm_self, star_star]
