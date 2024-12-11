@@ -25,15 +25,17 @@ open scoped NNReal
 
 namespace CFC
 
-section NonUnital
-
 variable {A : Type*} [NonUnitalNormedRing A] [StarRing A]
-  [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
-  [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+
+section IsSelfAdjoint
+
+variable [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
+variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
 
 lemma mul_self_eq_mul_self {a : A} (ha : IsSelfAdjoint a := by cfc_tac) : a * a =
     cfcₙ (fun (x : ℝ) ↦ x * x) a := by
   conv_lhs => rw [← cfcₙ_id' ℝ a, ← cfcₙ_mul ..]
+section Unique
 
 variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
 
@@ -42,11 +44,9 @@ lemma cfcₙ_sqrt_mul_self {a : A} (ha : IsSelfAdjoint a) :
   rw [mul_self_eq_mul_self ha, ← cfcₙ_comp a (f := fun x ↦ x * x) (g := fun x ↦ √x),
      Function.comp_def]
 
-variable {A : Type*} [PartialOrder A] [NonUnitalNormedRing A] [StarRing A]
-   [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
-   [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
-   [UniqueNonUnitalContinuousFunctionalCalculus ℝ≥0 A]
-   [StarOrderedRing A] [NonnegSpectrumClass ℝ A]
+section NonnegSpectrumClass
+
+variable [PartialOrder A] [StarOrderedRing A] [NonnegSpectrumClass ℝ A]
 
 lemma sqrt_eq_real_sqrt {a : A} (ha : 0 ≤ a := by cfc_tac) :
     CFC.sqrt a = cfcₙ Real.sqrt a := by
@@ -57,10 +57,6 @@ lemma sqrt_eq_real_sqrt {a : A} (ha : 0 ≤ a := by cfc_tac) :
   refine Real.mul_self_sqrt ?_
   exact quasispectrum_nonneg_of_nonneg a ha x hx
 
-variable {A : Type*} [NonUnitalCStarAlgebra A]
-
-variable [PartialOrder A] [StarOrderedRing A]
-
 lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
 
@@ -69,8 +65,25 @@ lemma abs_eq_norm {a : A} (ha : IsSelfAdjoint a) :
    simp only [abs, Real.norm_eq_abs, ← Real.sqrt_sq_eq_abs, sq]
    rw [sqrt_eq_real_sqrt (star_mul_self_nonneg a), ha.star_eq, cfcₙ_sqrt_mul_self ha]
 
+section CStarRing
+
+variable [CStarRing A]
+
 lemma abs_eq_zero_iff {a : A} : abs a = 0 ↔ a = 0 := by
   rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
+
+end CStarRing
+
+end NonnegSpectrumClass
+
+end Unique
+
+end IsSelfAdjoint
+
+section ComplexCFC
+
+variable [PartialOrder A] [StarOrderedRing A]
+variable [Module ℂ A] [IsScalarTower ℂ A A] [SMulCommClass ℂ A A] [NonUnitalContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
 
 open ComplexOrder in
 lemma cfcₙ_norm_sq_nonneg {f : ℂ → ℂ} {a : A} : 0 ≤ cfcₙ (fun z ↦ star (f z) * (f z)) a :=
@@ -80,16 +93,54 @@ open ComplexOrder in
 lemma cfcₙ_norm_nonneg {a : A} : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a :=
   cfcₙ_nonneg fun _ _ ↦ by simp only [Complex.norm_eq_abs, Complex.zero_le_real, apply_nonneg]
 
+section Nonneg
+
+variable [NonUnitalContinuousFunctionalCalculus ℝ≥0 (fun (a : A) => 0 ≤ a)]
+variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ≥0 A]
+
 lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
     abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
   conv_lhs => rw [abs_nnrpow_two, ← cfcₙ_id' ℂ a, ← cfcₙ_star, ← cfcₙ_mul ..]
   exact cfcₙ_congr fun x hx ↦ Complex.conj_mul' x
+
+section NonnegSpectrumClass
+
+variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
+variable [UniqueNonUnitalContinuousFunctionalCalculus ℂ A]
+variable [NonnegSpectrumClass ℝ A]
 
 lemma abs_eq_cfcₙ_norm_complex {a : A} (ha : IsStarNormal a) :
     abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
   conv_lhs => rw [abs, ← abs_nnrpow_two, sqrt_eq_real_sqrt, cfcₙ_real_eq_complex,
     abs_sq_eq_cfcₙ_norm_sq_complex ha, ← cfcₙ_comp' ..]
   exact cfcₙ_congr fun x hx ↦ by simp [sq]
+
+end NonnegSpectrumClass
+
+end Nonneg
+
+end ComplexCFC
+section NonUnital
+
+
+
+
+
+
+
+
+
+
+--variable [NonUnitalCStarAlgebra A]
+
+
+
+
+
+
+
+
+--Clarify with Jireh what is going on with this. Is this the correct lemma to make into an ℝ -algebra lemma?
 
 protected lemma posPart_add_negPart (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a = a⁺ + a⁻ := by
   rw [CFC.posPart_def, CFC.negPart_def, ← cfcₙ_add .., abs_eq_norm ha]
