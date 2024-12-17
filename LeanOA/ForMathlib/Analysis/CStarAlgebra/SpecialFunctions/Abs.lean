@@ -120,27 +120,14 @@ end NonnegSpectrumClass
 end Nonneg
 
 end ComplexCFC
-section NonUnital
 
+section RealAlgebra
 
-
-
-
-
-
-
-
-
---variable [NonUnitalCStarAlgebra A]
-
-
-
-
-
-
-
-
---Clarify with Jireh what is going on with this. Is this the correct lemma to make into an ℝ -algebra lemma?
+variable [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
+variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
+variable [PartialOrder A] [StarOrderedRing A]
+variable [NonnegSpectrumClass ℝ A]
 
 protected lemma posPart_add_negPart (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a = a⁺ + a⁻ := by
   rw [CFC.posPart_def, CFC.negPart_def, ← cfcₙ_add .., abs_eq_norm ha]
@@ -155,6 +142,20 @@ lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
   nth_rw 2 [← CFC.posPart_sub_negPart a]
   rw [CFC.posPart_add_negPart a]
   abel
+
+end RealAlgebra
+section NonUnital
+
+
+
+
+
+
+
+#exit
+
+
+--variable [NonUnitalCStarAlgebra A]
 
 /- This belongs in a different file when brought to Mathlib. -/
 instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
