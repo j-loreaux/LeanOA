@@ -83,7 +83,8 @@ end IsSelfAdjoint
 section ComplexCFC
 
 variable [PartialOrder A] [StarOrderedRing A]
-variable [Module ℂ A] [IsScalarTower ℂ A A] [SMulCommClass ℂ A A] [NonUnitalContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
+variable [Module ℂ A] [IsScalarTower ℂ A A] [SMulCommClass ℂ A A]
+variable [NonUnitalContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
 
 open ComplexOrder in
 lemma cfcₙ_norm_sq_nonneg {f : ℂ → ℂ} {a : A} : 0 ≤ cfcₙ (fun z ↦ star (f z) * (f z)) a :=
@@ -144,6 +145,31 @@ lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
   abel
 
 end RealAlgebra
+
+section AbsSMul
+
+variable [PartialOrder A] [StarOrderedRing A]
+variable [Module ℂ A] [IsScalarTower ℂ A A] [SMulCommClass ℂ A A]
+variable [NonUnitalContinuousFunctionalCalculus ℝ≥0 (fun (a : A) => 0 ≤ a)]
+variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ≥0 A]
+variable [OrderedSMul ℝ A] [StarModule ℂ A]
+
+instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
+    [StarModule R A] [SMulCommClass R A A] [IsScalarTower R A A]
+    (r : R) (a : A) [ha : IsStarNormal a] : IsStarNormal (r • a) where
+  star_comm_self := star_smul r a ▸ ha.star_comm_self.smul_left (star r) |>.smul_right r
+
+lemma abs_smul_complex (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := by
+  have : 0 ≤ ‖r‖ • abs a := smul_nonneg (by positivity) abs_nonneg
+  rw [abs, CFC.sqrt_eq_iff _ _ (star_mul_self_nonneg _) this]
+  simp only [mul_smul_comm, smul_mul_assoc, abs_mul_self, star_smul]
+  match_scalars
+  rw [mul_one, mul_one, ← sq, mul_comm, RCLike.star_def, Complex.conj_mul', Complex.norm_eq_abs, ← Complex.coe_algebraMap]
+
+lemma abs_smul_real (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
+  simpa only [Complex.coe_smul, Complex.norm_real, Real.norm_eq_abs] using abs_smul_complex (Complex.ofReal r) _
+
+end AbsSMul
 section NonUnital
 
 
