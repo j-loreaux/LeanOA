@@ -213,7 +213,7 @@ lemma abs_smul_real (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
   simpa only [Complex.coe_smul, Complex.norm_real, Real.norm_eq_abs] using abs_smul_complex (Complex.ofReal r) _
 
 lemma abs_smul_nnreal (r : ℝ≥0) (a : A) : abs (r • a) = r • abs a := by
-  sorry
+  simpa [NNReal.abs_eq] using abs_smul_real r _
 
 end AbsSMul
 
