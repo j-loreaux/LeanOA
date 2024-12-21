@@ -175,8 +175,6 @@ end NonUnital
 
 section Unital
 
---variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-
 variable {A : Type*} [NormedRing A] [StarRing A]
 variable  [NormedAlgebra ℂ A] [PartialOrder A]
 section CompleteSpaceCFCNonneg
