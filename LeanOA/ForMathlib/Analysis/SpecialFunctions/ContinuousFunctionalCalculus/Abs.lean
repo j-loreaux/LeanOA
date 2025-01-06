@@ -28,14 +28,35 @@ open scoped NNReal
 
 namespace CFC
 
+section Generic
+
+--The contents of this section belong in another file.
+variable {R : Type u_3} {A : Type u_4} {p : A → Prop} [CommSemiring R] [Nontrivial R] [StarRing R]
+  [MetricSpace R] [TopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A] [StarRing A] [TopologicalSpace A]
+  [Module R A] [IsScalarTower R A A] [SMulCommClass R A A] [instCFCₙ : NonUnitalContinuousFunctionalCalculus R p]
+
+lemma mul_self_eq_mul_self {a : A} (ha : p a := by cfc_tac) : a * a =
+    cfcₙ (fun (x : R)  ↦ x * x) a := by
+  conv_lhs => rw [← cfcₙ_id' R a , ← cfcₙ_mul ..]
+
+end Generic
+
 section NonUnital
 
-variable {A : Type*} [NonUnitalNormedRing A] [StarRing A]
+variable {A : Type*}
 
-section abs
+section YYN
 
-variable [PartialOrder A] [Module ℝ≥0 A] [SMulCommClass ℝ≥0 A A] [IsScalarTower ℝ≥0 A A]
-variable [NonUnitalContinuousFunctionalCalculus ℝ≥0 (fun (a : A) => 0 ≤ a)]
+-- Does this work for nonunital algebras? YES
+-- Does this work over ℝ? YES
+-- Does this involve the norm or metric structure? NO
+
+--variable [NonUnitalRing A][TopologicalSpace A] [Module ℝ A]
+
+variable [NonUnitalRing A] [StarRing A] [TopologicalSpace A]
+variable [PartialOrder A] [StarOrderedRing A] [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
+variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+variable [NonnegSpectrumClass ℝ A]
 
 /-- The absolute value of an operator, using the nonunital continuous functional calculus. -/
 noncomputable def abs (a : A) := sqrt (star a * a)
@@ -47,9 +68,7 @@ lemma abs_nonneg {a : A} : 0 ≤ abs a := sqrt_nonneg
 lemma abs_zero : abs (0 : A) = 0 := by
   rw [abs, star_zero, mul_zero, sqrt_zero]
 
--- It's likely that using these variables warrants a different section
-
-variable [StarOrderedRing A] [UniqueNonUnitalContinuousFunctionalCalculus ℝ≥0 A]
+variable [TopologicalRing A] [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
 
 lemma abs_mul_self (a : A) : (abs a) * (abs a) = star a * a := by
   refine sqrt_mul_sqrt_self _ <| star_mul_self_nonneg _
@@ -67,30 +86,6 @@ lemma abs_nnrpow (a : A) (x : ℝ≥0) :
   simp only [← abs_nnrpow_two_mul, mul_div_left_comm, ne_eq, OfNat.ofNat_ne_zero,
     not_false_eq_true, div_self, mul_one]
 
-end abs
-
-variable {A : Type*} [NonUnitalNormedRing A] [StarRing A]
-section IsSelfAdjoint
-
-variable [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
-variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
-
-lemma mul_self_eq_mul_self {a : A} (ha : IsSelfAdjoint a := by cfc_tac) : a * a =
-    cfcₙ (fun (x : ℝ) ↦ x * x) a := by
-  conv_lhs => rw [← cfcₙ_id' ℝ a, ← cfcₙ_mul ..]
-section Unique
-
-variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
-
-lemma cfcₙ_sqrt_mul_self {a : A} (ha : IsSelfAdjoint a) :
-    cfcₙ Real.sqrt (a * a) = cfcₙ (fun x ↦ √(x * x)) a := by
-  rw [mul_self_eq_mul_self ha, ← cfcₙ_comp a (f := fun x ↦ x * x) (g := fun x ↦ √x),
-     Function.comp_def]
-
-section NonnegSpectrumClass
-
-variable [PartialOrder A] [StarOrderedRing A] [NonnegSpectrumClass ℝ A]
-
 lemma sqrt_eq_real_sqrt {a : A} (ha : 0 ≤ a := by cfc_tac) :
     CFC.sqrt a = cfcₙ Real.sqrt a := by
   rw [sqrt_eq_iff _ (hb := cfcₙ_nonneg (A := A) (fun x _ ↦ Real.sqrt_nonneg x)),
@@ -106,7 +101,92 @@ lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
 lemma abs_eq_norm {a : A} (ha : IsSelfAdjoint a) :
     abs a = cfcₙ (‖·‖) a := by
    simp only [abs, Real.norm_eq_abs, ← Real.sqrt_sq_eq_abs, sq]
-   rw [sqrt_eq_real_sqrt (star_mul_self_nonneg a), ha.star_eq, cfcₙ_sqrt_mul_self ha]
+   have H : cfcₙ Real.sqrt (a * a) = cfcₙ (fun x ↦ √(x * x)) a := by
+     rw [mul_self_eq_mul_self (R := ℝ) ha, ← cfcₙ_comp a (f := fun x ↦ x * x) (g := fun x ↦ √x),
+     Function.comp_def]
+   rw [sqrt_eq_real_sqrt (star_mul_self_nonneg a), ha.star_eq, H]
+
+end YYN
+
+section YYY
+
+-- Does this work for nonunital algebras? YES
+-- Does this work over ℝ? YES
+-- Does this involve the norm or metric structure? YES
+
+variable [NonUnitalCStarAlgebra A]
+
+end YYY
+
+
+section YNY
+
+-- Does this work for nonunital algebras? YES
+-- Does this work over ℝ? NO
+-- Does this involve the norm or metric structure? YES
+
+
+variable [NonUnitalCStarAlgebra A]
+
+
+
+end YNY
+
+section YNN
+
+-- Does this work for nonunital algebras? YES
+-- Does this work over ℝ? NO
+-- Does this involve the norm or metric structure? NO
+
+variable [NonUnitalRing A] [TopologicalSpace A] [Module ℂ A]
+
+
+end YNN
+
+section NYY
+
+-- Does this work for nonunital algebras? NO
+-- Does this work over ℝ? YES
+-- Does this involve the norm or metric structure? YES
+
+variable [CStarAlgebra A]
+
+end NYY
+
+section NYN
+
+-- Does this work for nonunital algebras? NO
+-- Does this work over ℝ? YES
+-- Does this involve the norm or metric structure? NO
+
+variable [Ring A] [TopologicalSpace A] [Algebra ℝ A]
+--also might use `[TopologicalRing A]` as needed
+
+end NYN
+
+section NNY
+
+-- Does this work for nonunital algebras? NO
+-- Does this work over ℝ? NO
+-- Does this involve the norm or metric structure? YES
+
+variable [CStarAlgebra A]
+
+end NNY
+
+section NNN
+
+-- Does this work for nonunital algebras? NO
+-- Does this work over ℝ? NO
+-- Does this involve the norm or metric structure? NO
+
+variable [Ring A] [TopologicalSpace A] [Algebra ℂ A]
+
+end NNN
+
+section NonUnital
+
+variable {A : Type*} [NonUnitalNormedRing A] [StarRing A]
 
 section CStarRing
 
@@ -116,12 +196,6 @@ lemma abs_eq_zero_iff {a : A} : abs a = 0 ↔ a = 0 := by
   rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
 
 end CStarRing
-
-end NonnegSpectrumClass
-
-end Unique
-
-end IsSelfAdjoint
 
 section Complex
 
