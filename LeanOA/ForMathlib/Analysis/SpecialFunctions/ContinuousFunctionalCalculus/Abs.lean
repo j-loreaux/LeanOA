@@ -47,6 +47,8 @@ instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
 
 end Generic
 
+section NonUnital
+
 variable {A : Type*}
 
 section YYN
@@ -64,14 +66,7 @@ variable [NonnegSpectrumClass ℝ A]
 noncomputable def abs (a : A) := sqrt (star a * a)
 
 @[simp]
-lemma abs_neg (a : A) : abs (-a) = abs a := by
-  simp [abs]
-
-@[simp]
 lemma abs_nonneg {a : A} : 0 ≤ abs a := sqrt_nonneg
-
-lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
-  rw [abs, abs, star_comm_self, star_star]
 
 @[simp]
 lemma abs_zero : abs (0 : A) = 0 := by
@@ -106,9 +101,6 @@ lemma sqrt_eq_real_sqrt {a : A} (ha : 0 ≤ a := by cfc_tac) :
 
 lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
-
-lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
-  simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
 
 lemma abs_eq_norm {a : A} (ha : IsSelfAdjoint a) :
     abs a = cfcₙ (‖·‖) a := by
@@ -218,15 +210,6 @@ lemma abs_eq_cfcₙ_norm_complex {a : A} (ha : IsStarNormal a) :
     abs_sq_eq_cfcₙ_norm_sq_complex ha, ← cfcₙ_comp' ..]
   exact cfcₙ_congr fun x hx ↦ by simp [sq]
 
-variable [UniqueNonUnitalContinuousFunctionalCalculus ℂ A] in
-lemma cfcₙ_abs_complex (f : ℂ → ℂ) (a : A) (ha : IsStarNormal a := by cfc_tac)
-    (hf : ContinuousOn f ((fun z ↦ (‖z‖ : ℂ)) '' quasispectrum ℂ a) := by cfc_cont_tac) :
-    cfcₙ f (abs a) = cfcₙ (fun x ↦ f ‖x‖) a := by
-  rw [abs_eq_cfcₙ_norm_complex ha]
-  obtain (hf0 | hf0) := em (f 0 = 0)
-  · rw [← cfcₙ_comp' ..]
-  · rw [cfcₙ_apply_of_not_map_zero _ hf0, cfcₙ_apply_of_not_map_zero _ (fun h ↦ (hf0 <| by simpa using h).elim)]
-
 variable [StarModule ℂ A] in
 lemma abs_smul_complex (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := by
   have : 0 ≤ ‖r‖ • abs a := smul_nonneg (by positivity) abs_nonneg
@@ -262,16 +245,8 @@ variable [NonnegSpectrumClass ℝ A]
 lemma abs_one : abs (1 : A) = 1 := by
   rw [abs, star_one , mul_one, sqrt_one]
 
-variable [StarModule ℝ A]
-
-lemma abs_algebraMap_real (c : ℝ) : abs (algebraMap ℝ A c) = algebraMap ℝ A |c| := by
-  simp only [Algebra.algebraMap_eq_smul_one, abs_smul_real, abs_one]
-
-lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algebraMap ℝ≥0 A x := by
-  simpa only [NNReal.abs_eq] using abs_algebraMap_real (NNReal.toReal _)
-
-lemma abs_natCast (n : ℕ) : abs (n : A) = n := by
-  simpa only [map_natCast, Nat.abs_cast] using abs_algebraMap_real (n : ℝ)
+lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
+  simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
 
 end NYN
 
@@ -291,15 +266,79 @@ section NNN
 -- Does this work over ℝ? NO
 -- Does this involve the norm or metric structure? NO
 
-variable [Ring A] [StarRing A] [PartialOrder A] [StarOrderedRing A] [TopologicalSpace A] [Algebra ℂ A] [TopologicalRing A]
-variable [ContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
-variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
-variable [NonnegSpectrumClass ℝ A] [StarModule ℂ A]
+variable [Ring A] [TopologicalSpace A] [Algebra ℂ A]
+
+end NNN
+
+section NonUnital
+
+variable {A : Type*} [NonUnitalNormedRing A] [StarRing A]
+
+
+end NonUnital
+
+section Unital
+
+variable {A : Type*} [NormedRing A] [StarRing A]
+variable  [NormedAlgebra ℂ A] [PartialOrder A]
+section CompleteSpaceCFCNonneg
+
+variable [CompleteSpace A] [ContinuousFunctionalCalculus ℝ≥0 (fun (a : A) => 0 ≤ a)]
+
+
+variable  [StarModule ℂ A] [StarOrderedRing A]
+
+@[simp]
+lemma abs_neg (a : A) : abs (-a) = abs a := by
+  rw [← neg_one_smul ℝ a, abs_smul_real, _root_.abs_neg, _root_.abs_one, one_smul]
+
+variable [ContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+variable [NonnegSpectrumClass ℝ A]
+
+lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
+  simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
+
+lemma abs_smul_nnreal (r : ℝ≥0) (a : A) : abs (r • a) = r • abs a := by
+  simpa [NNReal.abs_eq] using abs_smul_real r _
+
+
+end CompleteSpaceCFCNonneg
+
+section CFCNonnegOrderedSMul
+
+variable [ContinuousFunctionalCalculus ℝ≥0 (fun (a : A) => 0 ≤ a)]
+
+lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
+  rw [abs, abs, star_comm_self, star_star]
+
+variable [StarOrderedRing A] [UniqueNonUnitalContinuousFunctionalCalculus ℝ≥0 A]
+section OrderedSMul
+
+variable [OrderedSMul ℝ A] [CompleteSpace A] [StarModule ℂ A]
 
 lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap ℝ A (Complex.abs c : ℝ) := by
   simp only [Algebra.algebraMap_eq_smul_one, abs_smul_complex, Complex.norm_eq_abs, abs_one]
 
-end NNN
+lemma abs_algebraMap_real (c : ℝ) : abs (algebraMap ℝ A c) = algebraMap ℝ A |c| := by
+  simpa only [Complex.abs_ofReal] using abs_algebraMap_complex (Complex.ofReal _)
 
+lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algebraMap ℝ≥0 A x := by
+  simpa only [NNReal.abs_eq] using abs_algebraMap_real (NNReal.toReal _)
+
+lemma abs_natCast (n : ℕ) : abs (n : A) = n := by
+  simpa only [map_natCast, Nat.abs_cast] using abs_algebraMap_real (n : ℝ)
+
+end OrderedSMul
+
+variable [CStarRing A]
+
+@[simp]
+lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
+  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, sq, ← CStarRing.norm_star_mul_self,
+    abs_nonneg.star_eq, abs_mul_self, CStarRing.norm_star_mul_self]
+
+end CFCNonnegOrderedSMul
+
+end Unital
 
 end CFC
