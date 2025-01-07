@@ -30,7 +30,8 @@ namespace CFC
 
 section Generic
 
---The contents of this section belong in another file.
+--The contents of this section belong in other files. ToDo: Transport them...
+
 variable {R : Type u_3} {A : Type u_4} {p : A → Prop} [CommSemiring R] [Nontrivial R] [StarRing R]
   [MetricSpace R] [TopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A] [StarRing A] [TopologicalSpace A]
   [Module R A] [IsScalarTower R A A] [SMulCommClass R A A] [instCFCₙ : NonUnitalContinuousFunctionalCalculus R p]
@@ -38,6 +39,11 @@ variable {R : Type u_3} {A : Type u_4} {p : A → Prop} [CommSemiring R] [Nontri
 lemma mul_self_eq_mul_self {a : A} (ha : p a := by cfc_tac) : a * a =
     cfcₙ (fun (x : R)  ↦ x * x) a := by
   conv_lhs => rw [← cfcₙ_id' R a , ← cfcₙ_mul ..]
+
+instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
+    [StarModule R A] [SMulCommClass R A A] [IsScalarTower R A A]
+    (r : R) (a : A) [ha : IsStarNormal a] : IsStarNormal (r • a) where
+  star_comm_self := star_smul r a ▸ ha.star_comm_self.smul_left (star r) |>.smul_right r
 
 end Generic
 
@@ -50,8 +56,6 @@ section YYN
 -- Does this work for nonunital algebras? YES
 -- Does this work over ℝ? YES
 -- Does this involve the norm or metric structure? NO
-
---variable [NonUnitalRing A][TopologicalSpace A] [Module ℝ A]
 
 variable [NonUnitalRing A] [StarRing A] [TopologicalSpace A]
 variable [PartialOrder A] [StarOrderedRing A] [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
@@ -114,7 +118,24 @@ section YYY
 -- Does this work over ℝ? YES
 -- Does this involve the norm or metric structure? YES
 
-variable [NonUnitalCStarAlgebra A]
+variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+
+lemma abs_eq_zero_iff {a : A}  : abs a = 0 ↔ a = 0 := by
+  rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
+
+protected lemma posPart_add_negPart (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a = a⁺ + a⁻ := by
+  rw [CFC.posPart_def, CFC.negPart_def, ← cfcₙ_add .., abs_eq_norm ha]
+  exact cfcₙ_congr fun x hx ↦ (posPart_add_negPart x).symm
+
+lemma abs_sub_self (a : A) (ha : IsSelfAdjoint a) : abs a - a = 2 • a⁻ := by
+  nth_rw 2 [← CFC.posPart_sub_negPart a]
+  rw [CFC.posPart_add_negPart a]
+  abel
+
+lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
+  nth_rw 2 [← CFC.posPart_sub_negPart a]
+  rw [CFC.posPart_add_negPart a]
+  abel
 
 end YYY
 
@@ -126,9 +147,28 @@ section YNY
 -- Does this involve the norm or metric structure? YES
 
 
-variable [NonUnitalCStarAlgebra A]
+variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
+-- The three below belong, I think, in the YNN section, but they break there and I don't know why.
+lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
+    abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
+  conv_lhs => rw [abs_nnrpow_two, ← cfcₙ_id' ℂ a, ← cfcₙ_star, ← cfcₙ_mul ..]
+  exact cfcₙ_congr fun x hx ↦ Complex.conj_mul' x
 
+lemma abs_eq_cfcₙ_norm_complex {a : A} (ha : IsStarNormal a) :
+    abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
+  conv_lhs => rw [abs, ← abs_nnrpow_two, sqrt_eq_real_sqrt, cfcₙ_real_eq_complex,
+    abs_sq_eq_cfcₙ_norm_sq_complex ha, ← cfcₙ_comp' ..]
+  exact cfcₙ_congr fun x hx ↦ by simp [sq]
+
+lemma abs_smul_complex (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := by
+  have : 0 ≤ ‖r‖ • abs a := smul_nonneg (by positivity) abs_nonneg
+  rw [abs, CFC.sqrt_eq_iff _ _ (star_mul_self_nonneg _) this]
+  simp only [mul_smul_comm, smul_mul_assoc, abs_mul_self, star_smul]
+  match_scalars
+  rw [mul_one, mul_one, ← sq, mul_comm, RCLike.star_def, Complex.conj_mul', Complex.norm_eq_abs, ← Complex.coe_algebraMap]
+lemma abs_smul_real (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
+  simpa only [Complex.coe_smul, Complex.norm_real, Real.norm_eq_abs] using abs_smul_complex (Complex.ofReal r) _
 
 end YNY
 
@@ -140,6 +180,17 @@ section YNN
 
 variable [NonUnitalRing A] [TopologicalSpace A] [Module ℂ A]
 
+variable [Star A] [StarRing A] [PartialOrder A] [StarOrderedRing A]
+variable [IsScalarTower ℂ A A] [SMulCommClass ℂ A A]
+variable [NonUnitalContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
+
+open ComplexOrder in
+lemma cfcₙ_norm_sq_nonneg {f : ℂ → ℂ} {a : A} : 0 ≤ cfcₙ (fun z ↦ star (f z) * (f z)) a :=
+  cfcₙ_nonneg fun _ _ ↦ star_mul_self_nonneg _
+
+open ComplexOrder in
+lemma cfcₙ_norm_nonneg {a : A} : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a :=
+  cfcₙ_nonneg fun _ _ ↦ by simp only [Complex.norm_eq_abs, Complex.zero_le_real, apply_nonneg]
 
 end YNN
 
@@ -159,8 +210,17 @@ section NYN
 -- Does this work over ℝ? YES
 -- Does this involve the norm or metric structure? NO
 
-variable [Ring A] [TopologicalSpace A] [Algebra ℝ A]
---also might use `[TopologicalRing A]` as needed
+variable [Ring A] [StarRing A] [PartialOrder A] [StarOrderedRing A] [TopologicalSpace A] [Algebra ℝ A] [TopologicalRing A]
+variable [ContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
+variable [NonnegSpectrumClass ℝ A]
+
+@[simp]
+lemma abs_one : abs (1 : A) = 1 := by
+  rw [abs, star_one , mul_one, sqrt_one]
+
+lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
+  simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
 
 end NYN
 
@@ -188,108 +248,6 @@ section NonUnital
 
 variable {A : Type*} [NonUnitalNormedRing A] [StarRing A]
 
-section CStarRing
-
-variable [CStarRing A]
-
-lemma abs_eq_zero_iff {a : A} : abs a = 0 ↔ a = 0 := by
-  rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
-
-end CStarRing
-
-section Complex
-
-variable [PartialOrder A] [StarOrderedRing A]
-variable [Module ℂ A] [IsScalarTower ℂ A A] [SMulCommClass ℂ A A]
-variable [NonUnitalContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
-
-open ComplexOrder in
-lemma cfcₙ_norm_sq_nonneg {f : ℂ → ℂ} {a : A} : 0 ≤ cfcₙ (fun z ↦ star (f z) * (f z)) a :=
-  cfcₙ_nonneg fun _ _ ↦ star_mul_self_nonneg _
-
-open ComplexOrder in
-lemma cfcₙ_norm_nonneg {a : A} : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a :=
-  cfcₙ_nonneg fun _ _ ↦ by simp only [Complex.norm_eq_abs, Complex.zero_le_real, apply_nonneg]
-
-section Nonneg
-
-variable [NonUnitalContinuousFunctionalCalculus ℝ≥0 (fun (a : A) => 0 ≤ a)]
-variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ≥0 A]
-
-lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
-    abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
-  conv_lhs => rw [abs_nnrpow_two, ← cfcₙ_id' ℂ a, ← cfcₙ_star, ← cfcₙ_mul ..]
-  exact cfcₙ_congr fun x hx ↦ Complex.conj_mul' x
-
-section NonnegSpectrumClass
-
-variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
-variable [UniqueNonUnitalContinuousFunctionalCalculus ℂ A]
-variable [NonnegSpectrumClass ℝ A]
-
-lemma abs_eq_cfcₙ_norm_complex {a : A} (ha : IsStarNormal a) :
-    abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
-  conv_lhs => rw [abs, ← abs_nnrpow_two, sqrt_eq_real_sqrt, cfcₙ_real_eq_complex,
-    abs_sq_eq_cfcₙ_norm_sq_complex ha, ← cfcₙ_comp' ..]
-  exact cfcₙ_congr fun x hx ↦ by simp [sq]
-
-end NonnegSpectrumClass
-
-end Nonneg
-
-end Complex
-
-section RealAlgebra
-
-variable [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
-variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
-variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
-variable [PartialOrder A] [StarOrderedRing A]
-variable [NonnegSpectrumClass ℝ A]
-
-protected lemma posPart_add_negPart (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a = a⁺ + a⁻ := by
-  rw [CFC.posPart_def, CFC.negPart_def, ← cfcₙ_add .., abs_eq_norm ha]
-  exact cfcₙ_congr fun x hx ↦ (posPart_add_negPart x).symm
-
-lemma abs_sub_self (a : A) (ha : IsSelfAdjoint a) : abs a - a = 2 • a⁻ := by
-  nth_rw 2 [← CFC.posPart_sub_negPart a]
-  rw [CFC.posPart_add_negPart a]
-  abel
-
-lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
-  nth_rw 2 [← CFC.posPart_sub_negPart a]
-  rw [CFC.posPart_add_negPart a]
-  abel
-
-end RealAlgebra
-
-section AbsSMul
-
-variable [PartialOrder A] [StarOrderedRing A]
-variable [Module ℂ A] [IsScalarTower ℂ A A] [SMulCommClass ℂ A A]
-variable [NonUnitalContinuousFunctionalCalculus ℝ≥0 (fun (a : A) => 0 ≤ a)]
-variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ≥0 A]
-variable [OrderedSMul ℝ A] [StarModule ℂ A]
-
-instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
-    [StarModule R A] [SMulCommClass R A A] [IsScalarTower R A A]
-    (r : R) (a : A) [ha : IsStarNormal a] : IsStarNormal (r • a) where
-  star_comm_self := star_smul r a ▸ ha.star_comm_self.smul_left (star r) |>.smul_right r
-
-lemma abs_smul_complex (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := by
-  have : 0 ≤ ‖r‖ • abs a := smul_nonneg (by positivity) abs_nonneg
-  rw [abs, CFC.sqrt_eq_iff _ _ (star_mul_self_nonneg _) this]
-  simp only [mul_smul_comm, smul_mul_assoc, abs_mul_self, star_smul]
-  match_scalars
-  rw [mul_one, mul_one, ← sq, mul_comm, RCLike.star_def, Complex.conj_mul', Complex.norm_eq_abs, ← Complex.coe_algebraMap]
-
-lemma abs_smul_real (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
-  simpa only [Complex.coe_smul, Complex.norm_real, Real.norm_eq_abs] using abs_smul_complex (Complex.ofReal r) _
-
-lemma abs_smul_nnreal (r : ℝ≥0) (a : A) : abs (r • a) = r • abs a := by
-  simpa [NNReal.abs_eq] using abs_smul_real r _
-
-end AbsSMul
 
 end NonUnital
 
@@ -301,9 +259,6 @@ section CompleteSpaceCFCNonneg
 
 variable [CompleteSpace A] [ContinuousFunctionalCalculus ℝ≥0 (fun (a : A) => 0 ≤ a)]
 
-@[simp]
-lemma abs_one : abs (1 : A) = 1 := by
-  rw [abs, star_one , mul_one, sqrt_one]
 
 variable  [StarModule ℂ A] [StarOrderedRing A]
 
@@ -316,6 +271,10 @@ variable [NonnegSpectrumClass ℝ A]
 
 lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
   simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
+
+lemma abs_smul_nnreal (r : ℝ≥0) (a : A) : abs (r • a) = r • abs a := by
+  simpa [NNReal.abs_eq] using abs_smul_real r _
+
 
 end CompleteSpaceCFCNonneg
 
