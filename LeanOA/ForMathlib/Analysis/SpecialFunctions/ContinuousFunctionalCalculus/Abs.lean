@@ -72,6 +72,9 @@ lemma abs_nonneg {a : A} : 0 ≤ abs a := sqrt_nonneg
 lemma abs_zero : abs (0 : A) = 0 := by
   rw [abs, star_zero, mul_zero, sqrt_zero]
 
+lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
+  rw [abs, abs, star_comm_self, star_star]
+
 variable [TopologicalRing A] [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
 
 lemma abs_mul_self (a : A) : (abs a) * (abs a) = star a * a := by
@@ -140,6 +143,13 @@ lemma abs_smul_real (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
 lemma abs_smul_nnreal (r : ℝ≥0) (a : A) : abs (r • a) = r • abs a := by
   simpa [NNReal.abs_eq] using abs_smul_real r a
 
+@[simp]
+lemma abs_neg (a : A) : abs (-a) = abs a := by
+  rw [← neg_one_smul ℝ a, abs_smul_real, _root_.abs_neg, _root_.abs_one, one_smul]
+
+lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
+  simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
+
 end YYN
 
 section YYY
@@ -148,11 +158,7 @@ section YYY
 -- Does this work over ℝ? YES
 -- Does this involve the norm or metric structure? YES
 
-variable [NonUnitalNormedRing A] [StarRing A]
-variable [PartialOrder A] [StarOrderedRing A] [NormedSpace ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
-variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
-variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
-variable [NonnegSpectrumClass ℝ A] [CStarRing A]
+variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 lemma abs_eq_zero_iff {a : A}  : abs a = 0 ↔ a = 0 := by
   rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
@@ -245,9 +251,6 @@ variable [NonnegSpectrumClass ℝ A]
 lemma abs_one : abs (1 : A) = 1 := by
   rw [abs, star_one , mul_one, sqrt_one]
 
-lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
-  simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
-
 end NYN
 
 section NNY
@@ -284,32 +287,12 @@ variable  [NormedAlgebra ℂ A] [PartialOrder A]
 section CompleteSpaceCFCNonneg
 
 variable [CompleteSpace A] [ContinuousFunctionalCalculus ℝ≥0 (fun (a : A) => 0 ≤ a)]
-
-
 variable  [StarModule ℂ A] [StarOrderedRing A]
 
-@[simp]
-lemma abs_neg (a : A) : abs (-a) = abs a := by
-  rw [← neg_one_smul ℝ a, abs_smul_real, _root_.abs_neg, _root_.abs_one, one_smul]
-
-variable [ContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
-variable [NonnegSpectrumClass ℝ A]
-
-lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
-  simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
-
-lemma abs_smul_nnreal (r : ℝ≥0) (a : A) : abs (r • a) = r • abs a := by
-  simpa [NNReal.abs_eq] using abs_smul_real r _
-
-
-end CompleteSpaceCFCNonneg
 
 section CFCNonnegOrderedSMul
 
 variable [ContinuousFunctionalCalculus ℝ≥0 (fun (a : A) => 0 ≤ a)]
-
-lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
-  rw [abs, abs, star_comm_self, star_star]
 
 variable [StarOrderedRing A] [UniqueNonUnitalContinuousFunctionalCalculus ℝ≥0 A]
 section OrderedSMul
