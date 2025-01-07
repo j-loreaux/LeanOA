@@ -30,7 +30,7 @@ namespace CFC
 
 section Generic
 
---The contents of this section belong in other files. ToDo: Transport them...
+--The next three items belong in different files from this one. ToDo: Transport them...
 
 variable {R : Type u_3} {A : Type u_4} {p : A → Prop} [CommSemiring R] [Nontrivial R] [StarRing R]
   [MetricSpace R] [TopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A] [StarRing A] [TopologicalSpace A]
@@ -45,15 +45,11 @@ instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
     (r : R) (a : A) [ha : IsStarNormal a] : IsStarNormal (r • a) where
   star_comm_self := star_smul r a ▸ ha.star_comm_self.smul_left (star r) |>.smul_right r
 
-end Generic
-
 variable {A : Type*}
 
-section YYN
+section NonUnital
 
--- Does this work for nonunital algebras? YES
--- Does this work over ℝ? YES
--- Does this involve the norm or metric structure? NO
+section Real
 
 variable [NonUnitalRing A] [StarRing A] [TopologicalSpace A]
 variable [PartialOrder A] [StarOrderedRing A] [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
@@ -148,46 +144,9 @@ lemma abs_smul_real (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
 lemma abs_smul_nnreal (r : ℝ≥0) (a : A) : abs (r • a) = r • abs a := by
   simpa [NNReal.abs_eq] using abs_smul_real r a
 
-end YYN
+end Real
 
-section YYY
-
--- Does this work for nonunital algebras? YES
--- Does this work over ℝ? YES
--- Does this involve the norm or metric structure? YES
-variable [NonUnitalNormedRing A] [StarRing A]
-variable [PartialOrder A] [StarOrderedRing A] [NormedSpace ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
-variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
-variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
-variable [NonnegSpectrumClass ℝ A] [CStarRing A]
-
-lemma abs_eq_zero_iff {a : A}  : abs a = 0 ↔ a = 0 := by
-  rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
-
-@[simp]
-lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
-  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, sq, ← CStarRing.norm_star_mul_self,
-    abs_nonneg.star_eq, abs_mul_self, CStarRing.norm_star_mul_self]
-
-end YYY
-
-
-section YNY
-
--- Does this work for nonunital algebras? YES
--- Does this work over ℝ? NO
--- Does this involve the norm or metric structure? YES
-
-
-variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-
-end YNY
-
-section YNN
-
--- Does this work for nonunital algebras? YES
--- Does this work over ℝ? NO
--- Does this involve the norm or metric structure? NO
+section Complex
 
 variable [NonUnitalRing A] [TopologicalSpace A] [Module ℂ A]
 
@@ -234,23 +193,13 @@ lemma abs_smul_complex (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := 
   match_scalars
   rw [mul_one, mul_one, ← sq, mul_comm, RCLike.star_def, Complex.conj_mul', Complex.norm_eq_abs, ← Complex.coe_algebraMap]
 
-end YNN
+end Complex
 
-section NYY
+end NonUnital
 
--- Does this work for nonunital algebras? NO
--- Does this work over ℝ? YES
--- Does this involve the norm or metric structure? YES
+section Unital
 
-variable [CStarAlgebra A]
-
-end NYY
-
-section NYN
-
--- Does this work for nonunital algebras? NO
--- Does this work over ℝ? YES
--- Does this involve the norm or metric structure? NO
+section Real
 
 variable [Ring A] [StarRing A] [PartialOrder A] [StarOrderedRing A] [TopologicalSpace A] [Algebra ℝ A] [TopologicalRing A]
 variable [ContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
@@ -272,23 +221,9 @@ lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algeb
 lemma abs_natCast (n : ℕ) : abs (n : A) = n := by
   simpa only [map_natCast, Nat.abs_cast] using abs_algebraMap_real (n : ℝ)
 
-end NYN
+end Real
 
-section NNY
-
--- Does this work for nonunital algebras? NO
--- Does this work over ℝ? NO
--- Does this involve the norm or metric structure? YES
-
-variable [CStarAlgebra A]
-
-end NNY
-
-section NNN
-
--- Does this work for nonunital algebras? NO
--- Does this work over ℝ? NO
--- Does this involve the norm or metric structure? NO
+section Complex
 
 variable [Ring A] [StarRing A] [PartialOrder A] [StarOrderedRing A] [TopologicalSpace A] [Algebra ℂ A] [TopologicalRing A]
 variable [ContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
@@ -298,7 +233,28 @@ variable [NonnegSpectrumClass ℝ A] [StarModule ℂ A]
 lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap ℝ A (Complex.abs c : ℝ) := by
   simp only [Algebra.algebraMap_eq_smul_one, abs_smul_complex, Complex.norm_eq_abs, abs_one]
 
-end NNN
+end Complex
 
+end Unital
+
+end Generic
+
+section CStar
+
+variable [NonUnitalNormedRing A] [StarRing A]
+variable [PartialOrder A] [StarOrderedRing A] [NormedSpace ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
+variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
+variable [NonnegSpectrumClass ℝ A] [CStarRing A]
+
+lemma abs_eq_zero_iff {a : A}  : abs a = 0 ↔ a = 0 := by
+  rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
+
+@[simp]
+lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
+  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, sq, ← CStarRing.norm_star_mul_self,
+    abs_nonneg.star_eq, abs_mul_self, CStarRing.norm_star_mul_self]
+
+end CStar
 
 end CFC
