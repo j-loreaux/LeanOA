@@ -156,10 +156,19 @@ section YYY
 -- Does this work over ℝ? YES
 -- Does this involve the norm or metric structure? YES
 
-variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+variable [NonUnitalNormedRing A] [StarRing A]
+variable [PartialOrder A] [StarOrderedRing A] [NormedSpace ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
+variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
+variable [NonnegSpectrumClass ℝ A] [CStarRing A]
 
 lemma abs_eq_zero_iff {a : A}  : abs a = 0 ↔ a = 0 := by
   rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
+
+@[simp]
+lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
+  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, sq, ← CStarRing.norm_star_mul_self,
+    abs_nonneg.star_eq, abs_mul_self, CStarRing.norm_star_mul_self]
 
 end YYY
 
@@ -172,11 +181,6 @@ section YNY
 
 
 variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-
-@[simp]
-lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
-  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, sq, ← CStarRing.norm_star_mul_self,
-    abs_nonneg.star_eq, abs_mul_self, CStarRing.norm_star_mul_self]
 
 end YNY
 
