@@ -155,8 +155,11 @@ section YYY
 -- Does this work for nonunital algebras? YES
 -- Does this work over ℝ? YES
 -- Does this involve the norm or metric structure? YES
-
-variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+variable [NonUnitalNormedRing A] [StarRing A]
+variable [PartialOrder A] [StarOrderedRing A] [NormedSpace ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
+variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+variable [UniqueNonUnitalContinuousFunctionalCalculus ℝ A]
+variable [NonnegSpectrumClass ℝ A] [CStarRing A]
 
 lemma abs_eq_zero_iff {a : A}  : abs a = 0 ↔ a = 0 := by
   rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
