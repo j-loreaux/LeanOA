@@ -149,27 +149,6 @@ section YNY
 
 variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
--- The three below belong, I think, in the YNN section, but they break there and I don't know why.
-lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
-    abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
-  conv_lhs => rw [abs_nnrpow_two, ← cfcₙ_id' ℂ a, ← cfcₙ_star, ← cfcₙ_mul ..]
-  exact cfcₙ_congr fun x hx ↦ Complex.conj_mul' x
-
-lemma abs_eq_cfcₙ_norm_complex {a : A} (ha : IsStarNormal a) :
-    abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
-  conv_lhs => rw [abs, ← abs_nnrpow_two, sqrt_eq_real_sqrt, cfcₙ_real_eq_complex,
-    abs_sq_eq_cfcₙ_norm_sq_complex ha, ← cfcₙ_comp' ..]
-  exact cfcₙ_congr fun x hx ↦ by simp [sq]
-
-lemma abs_smul_complex (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := by
-  have : 0 ≤ ‖r‖ • abs a := smul_nonneg (by positivity) abs_nonneg
-  rw [abs, CFC.sqrt_eq_iff _ _ (star_mul_self_nonneg _) this]
-  simp only [mul_smul_comm, smul_mul_assoc, abs_mul_self, star_smul]
-  match_scalars
-  rw [mul_one, mul_one, ← sq, mul_comm, RCLike.star_def, Complex.conj_mul', Complex.norm_eq_abs, ← Complex.coe_algebraMap]
-lemma abs_smul_real (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
-  simpa only [Complex.coe_smul, Complex.norm_real, Real.norm_eq_abs] using abs_smul_complex (Complex.ofReal r) _
-
 end YNY
 
 section YNN
@@ -191,6 +170,26 @@ lemma cfcₙ_norm_sq_nonneg {f : ℂ → ℂ} {a : A} : 0 ≤ cfcₙ (fun z ↦ 
 open ComplexOrder in
 lemma cfcₙ_norm_nonneg {a : A} : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a :=
   cfcₙ_nonneg fun _ _ ↦ by simp only [Complex.norm_eq_abs, Complex.zero_le_real, apply_nonneg]
+
+lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
+    abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
+  conv_lhs => rw [abs_nnrpow_two, ← cfcₙ_id' ℂ a, ← cfcₙ_star, ← cfcₙ_mul ..]
+  exact cfcₙ_congr fun x hx ↦ Complex.conj_mul' x
+
+lemma abs_eq_cfcₙ_norm_complex {a : A} (ha : IsStarNormal a) :
+    abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
+  conv_lhs => rw [abs, ← abs_nnrpow_two, sqrt_eq_real_sqrt, cfcₙ_real_eq_complex,
+    abs_sq_eq_cfcₙ_norm_sq_complex ha, ← cfcₙ_comp' ..]
+  exact cfcₙ_congr fun x hx ↦ by simp [sq]
+
+lemma abs_smul_complex (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := by
+  have : 0 ≤ ‖r‖ • abs a := smul_nonneg (by positivity) abs_nonneg
+  rw [abs, CFC.sqrt_eq_iff _ _ (star_mul_self_nonneg _) this]
+  simp only [mul_smul_comm, smul_mul_assoc, abs_mul_self, star_smul]
+  match_scalars
+  rw [mul_one, mul_one, ← sq, mul_comm, RCLike.star_def, Complex.conj_mul', Complex.norm_eq_abs, ← Complex.coe_algebraMap]
+lemma abs_smul_real (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
+  simpa only [Complex.coe_smul, Complex.norm_real, Real.norm_eq_abs] using abs_smul_complex (Complex.ofReal r) _
 
 end YNN
 
