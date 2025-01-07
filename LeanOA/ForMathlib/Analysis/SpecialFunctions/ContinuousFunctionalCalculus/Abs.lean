@@ -110,19 +110,6 @@ lemma abs_eq_norm {a : A} (ha : IsSelfAdjoint a) :
      Function.comp_def]
    rw [sqrt_eq_real_sqrt (star_mul_self_nonneg a), ha.star_eq, H]
 
-end YYN
-
-section YYY
-
--- Does this work for nonunital algebras? YES
--- Does this work over ℝ? YES
--- Does this involve the norm or metric structure? YES
-
-variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-
-lemma abs_eq_zero_iff {a : A}  : abs a = 0 ↔ a = 0 := by
-  rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
-
 protected lemma posPart_add_negPart (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a = a⁺ + a⁻ := by
   rw [CFC.posPart_def, CFC.negPart_def, ← cfcₙ_add .., abs_eq_norm ha]
   exact cfcₙ_congr fun x hx ↦ (posPart_add_negPart x).symm
@@ -136,6 +123,19 @@ lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
   nth_rw 2 [← CFC.posPart_sub_negPart a]
   rw [CFC.posPart_add_negPart a]
   abel
+
+end YYN
+
+section YYY
+
+-- Does this work for nonunital algebras? YES
+-- Does this work over ℝ? YES
+-- Does this involve the norm or metric structure? YES
+
+variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+
+lemma abs_eq_zero_iff {a : A}  : abs a = 0 ↔ a = 0 := by
+  rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
 
 end YYY
 
