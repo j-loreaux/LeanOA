@@ -182,11 +182,6 @@ section YNY
 
 variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
-@[simp]
-lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
-  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, sq, ← CStarRing.norm_star_mul_self,
-    abs_nonneg.star_eq, abs_mul_self, CStarRing.norm_star_mul_self]
-
 end YNY
 
 section YNN
