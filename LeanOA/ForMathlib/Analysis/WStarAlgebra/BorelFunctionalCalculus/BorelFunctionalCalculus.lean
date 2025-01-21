@@ -55,10 +55,26 @@ variable {α E F G : Type*} {m m0 : MeasurableSpace α} {p : ℝ≥0∞} {q : �
   [NormedAddCommGroup E] [NormedAddCommGroup F] [NormedAddCommGroup G]
 
 open  Memℒp
+/-Since we are having difficulties with the general construction, let's just try to prove a theorem
+saying that if one looks at the a.e. class of the product of two essentially bounded functions,
+then the resulting function is also essentially bounded. We then can move on to see how to best say this
+with instances, etc.-/
 
-instance LinftyMul : Mul (Lp ℂ ⊤ μ) := _
+theorem ProductExperiment {f g : α → ℂ} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (fun x => (f x) * (g x)) ⊤ μ := by
+  dsimp [Memℒp]
+  constructor
+  apply MeasureTheory.AEStronglyMeasurable.mul
+  exact aestronglyMeasurable hf
+  exact aestronglyMeasurable hg
+  --all that there is left to do is prove the norm inequality here. Then we can clean up this lemma and
+  --try to use it to define the Mul.
 
 #exit
+
+instance LinftyMul : Mul (Lp ℂ ⊤ μ) where
+  mul {f g}:=
+  --simp [eLpNorm_congr_ae AEEqFun.coeFn_mul f g]
+
 theorem toLinfty_mul {f g : α → E} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) :
     (hf.mul hg).toLp (f * g) = hf.toLp f * hg.toLp g :=
   rfl
@@ -81,6 +97,8 @@ variable {A : Type*} [CStarAlgebra A] [WStarAlgebra A] (a : A) (μ : MeasureTheo
 
 #check Add (Lp ℂ ⊤ μ)
 
+#exit
+
 -- Is there a ring structure on the essentially bounded functions?
 instance Linfty_Ring : Ring (Lp ℂ ⊤ μ) where
   add := (Lp ℂ ⊤ μ).add.add
@@ -90,7 +108,9 @@ instance Linfty_Ring : Ring (Lp ℂ ⊤ μ) where
   add_zero := add_zero
   nsmul := sorry
   add_comm := add_comm
-  mul := sorry
+  mul f g := by
+    simp [eLpNorm_congr_ae AEEqFun.coeFn_mul f g]
+    sorry
   left_distrib := sorry
   right_distrib := sorry
   zero_mul := sorry
