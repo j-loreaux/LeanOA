@@ -14,6 +14,7 @@ import Mathlib.Analysis.VonNeumannAlgebra.Basic
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 import Mathlib.MeasureTheory.Function.LpSpace
+import Mathlib.MeasureTheory.Function.LpSeminorm.Basic
 
 /-!
 # Borel Functional Calculus Class
@@ -44,6 +45,29 @@ def ess_range (μ : MeasureTheory.Measure X) (f : X → Y) : Set Y :=
 end BorelSpace
 
 namespace MeasureTheory
+
+section LpArithmetic
+
+open TopologicalSpace MeasureTheory Filter
+open scoped NNReal ENNReal Topology MeasureTheory Uniformity symmDiff
+
+variable {α E F G : Type*} {m m0 : MeasurableSpace α} {p : ℝ≥0∞} {q : ℝ} {μ ν : Measure α}
+  [NormedAddCommGroup E] [NormedAddCommGroup F] [NormedAddCommGroup G]
+
+open  Memℒp
+
+instance LinftyMul : Mul (Lp ℂ ⊤ μ) := _
+
+#exit
+theorem toLinfty_mul {f g : α → E} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) :
+    (hf.mul hg).toLp (f * g) = hf.toLp f * hg.toLp g :=
+  rfl
+
+/- How should one define an HMul on Linfty? Should we be able to get a multiplication on equivalence
+classes of measurable functions, even? This would be the right level of generality...in that we
+then only would need to provide a proof of essential boundedness of the product. -/
+
+end LpArithmetic
 
 section Instances
 
