@@ -60,14 +60,14 @@ then the resulting function is also essentially bounded. We then can move on to 
 with instances, etc.-/
 
 theorem Memℒp.infty_mul {f g : α → ℂ} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (f * g) ⊤ μ :=
-  ⟨by apply MeasureTheory.AEStronglyMeasurable.mul (aestronglyMeasurable hf) (aestronglyMeasurable hg),
+  ⟨ MeasureTheory.AEStronglyMeasurable.mul (aestronglyMeasurable hf) (aestronglyMeasurable hg),
    by simp only [eLpNorm, ENNReal.top_ne_zero, ↓reduceIte, eLpNormEssSup, Pi.mul_apply, nnnorm_mul, ENNReal.coe_mul]
-      exact LE.le.trans_lt (ENNReal.essSup_mul_le (fun x ↦ ‖f x‖₊) (fun x ↦ ‖g x‖₊)) (WithTop.mul_lt_top hf.2 hg.2)⟩
+      exact LE.le.trans_lt (ENNReal.essSup_mul_le (fun x ↦ ‖f x‖₊) (fun x ↦ ‖g x‖₊)) (WithTop.mul_lt_top hf.2 hg.2) ⟩
 
-#exit
+--Now we have to use the above to develop a `toLp_infty_mul` result.
 
 instance LinftyMul : Mul (Lp ℂ ⊤ μ) where
-  mul {f g}:=
+  mul {f g}:= sorry
   --simp [eLpNorm_congr_ae AEEqFun.coeFn_mul f g]
 
 theorem toLinfty_mul {f g : α → E} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) :
