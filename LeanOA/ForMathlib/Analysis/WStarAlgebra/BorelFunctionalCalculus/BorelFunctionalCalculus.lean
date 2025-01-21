@@ -11,6 +11,9 @@ import Mathlib.Algebra.Algebra.Quasispectrum
 import Mathlib.Algebra.Algebra.Spectrum
 import Mathlib.Algebra.Order.Star.Basic
 import Mathlib.Analysis.VonNeumannAlgebra.Basic
+import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+import Mathlib.MeasureTheory.Function.LpSpace
 
 /-!
 # Borel Functional Calculus Class
@@ -31,7 +34,7 @@ namespace BorelSpace
 
 variable {X : Type*} [TopologicalSpace X] [MeasurableSpace X] [BorelSpace X]
 
-def support (μ : MeasureTheory.Measure X) : Set X := {x : X | ∀ U ∈ nhds x, μ U > 0}
+def support (μ : MeasureTheory.Measure X) : Set X := {x : X | ∀ U ∈ nhds x, μ (interior U) > 0}
 
 variable {Y : Type*} [TopologicalSpace Y] [MeasurableSpace Y] [BorelSpace Y]
 
