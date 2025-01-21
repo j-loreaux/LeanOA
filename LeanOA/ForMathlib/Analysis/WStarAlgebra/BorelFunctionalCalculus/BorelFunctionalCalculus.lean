@@ -59,9 +59,9 @@ variable {A : Type*} [CStarAlgebra A] [WStarAlgebra A] (a : A) (μ : MeasureTheo
 
 -- Is there a ring structure on the essentially bounded functions?
 instance Linfty_Ring : Ring (Lp ℂ ⊤ μ) where
-  add := (Lp ℂ ⊤ μ).add
-  add_assoc := sorry
-  zero := sorry
+  add := (Lp ℂ ⊤ μ).add.add
+  add_assoc := add_assoc
+  zero := _
   zero_add := sorry
   add_zero := sorry
   nsmul := sorry
