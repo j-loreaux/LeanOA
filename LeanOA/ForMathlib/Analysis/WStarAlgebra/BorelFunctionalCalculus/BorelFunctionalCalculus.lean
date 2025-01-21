@@ -61,10 +61,11 @@ then the resulting function is also essentially bounded. We then can move on to 
 with instances, etc.-/
 
 theorem ProductExperiment {f g : α → ℂ} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (fun x => (f x) * (g x)) ⊤ μ := by
-  dsimp [Memℒp]
   constructor
-  apply MeasureTheory.AEStronglyMeasurable.mul (aestronglyMeasurable _) (aestronglyMeasurable _)
-
+  apply MeasureTheory.AEStronglyMeasurable.mul
+  exact aestronglyMeasurable hf
+  exact aestronglyMeasurable hg
+  sorry
   --all that there is left to do is prove the norm inequality here. Then we can clean up this lemma and
   --try to use it to define the Mul.
 
