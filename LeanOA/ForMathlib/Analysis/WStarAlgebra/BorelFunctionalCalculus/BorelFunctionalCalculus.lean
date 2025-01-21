@@ -61,7 +61,7 @@ with instances, etc.-/
 
 --The following result needs a better name. The use `infty_mul` means something like `⊤ * a` in the library so that's no good.
 -- What we want is `Memℒ∞.mul`, I think.
-theorem Memℒ∞.mul {f g : α → ℂ} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (f * g) ⊤ μ :=
+theorem Memℒinfty.mul {f g : α → ℂ} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (f * g) ⊤ μ :=
   ⟨ MeasureTheory.AEStronglyMeasurable.mul (aestronglyMeasurable hf) (aestronglyMeasurable hg),
    by simp only [eLpNorm, ENNReal.top_ne_zero, ↓reduceIte, eLpNormEssSup, Pi.mul_apply, nnnorm_mul, ENNReal.coe_mul]
       exact LE.le.trans_lt (ENNReal.essSup_mul_le (fun x ↦ ‖f x‖₊) (fun x ↦ ‖g x‖₊)) (WithTop.mul_lt_top hf.2 hg.2) ⟩
