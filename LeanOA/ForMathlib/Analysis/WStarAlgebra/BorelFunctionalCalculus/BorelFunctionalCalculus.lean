@@ -61,11 +61,11 @@ variable {A : Type*} [CStarAlgebra A] [WStarAlgebra A] (a : A) (μ : MeasureTheo
 instance Linfty_Ring : Ring (Lp ℂ ⊤ μ) where
   add := (Lp ℂ ⊤ μ).add.add
   add_assoc := add_assoc
-  zero := _
-  zero_add := sorry
-  add_zero := sorry
+  zero := (Lp ℂ ⊤ μ).zero.zero
+  zero_add := zero_add
+  add_zero := add_zero
   nsmul := sorry
-  add_comm := sorry
+  add_comm := add_comm
   mul := sorry
   left_distrib := sorry
   right_distrib := sorry
@@ -77,7 +77,7 @@ instance Linfty_Ring : Ring (Lp ℂ ⊤ μ) where
   mul_one := sorry
   neg := sorry
   zsmul := sorry
-  neg_add_cancel := sorry
+  neg_add_cancel := neg_add_cancel
 
 --Maybe get this running and then try to define instances to get L∞ to be a Ring, StarRing, etc...
 end Instances
