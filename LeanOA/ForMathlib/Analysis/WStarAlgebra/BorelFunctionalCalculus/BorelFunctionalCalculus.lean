@@ -45,14 +45,42 @@ end BorelSpace
 
 namespace MeasureTheory
 
+section Instances
+
 variable {A : Type*} [CStarAlgebra A] [WStarAlgebra A] (a : A) (μ : MeasureTheory.Measure (spectrum ℂ a))
 
 #check Lp ℂ 1 μ
 
 #check Lp ℂ ⊤ μ
 
---Maybe get this running and then try to define instances to get L∞ to be a Ring, StarRing, etc...
+#check (Lp ℂ ⊤ μ).add
 
+#check Add (Lp ℂ ⊤ μ)
+
+-- Is there a ring structure on the essentially bounded functions?
+instance Linfty_Ring : Ring (Lp ℂ ⊤ μ) where
+  add := (Lp ℂ ⊤ μ).add
+  add_assoc := sorry
+  zero := sorry
+  zero_add := sorry
+  add_zero := sorry
+  nsmul := sorry
+  add_comm := sorry
+  mul := sorry
+  left_distrib := sorry
+  right_distrib := sorry
+  zero_mul := sorry
+  mul_zero := sorry
+  mul_assoc := sorry
+  one := sorry
+  one_mul := sorry
+  mul_one := sorry
+  neg := sorry
+  zsmul := sorry
+  neg_add_cancel := sorry
+
+--Maybe get this running and then try to define instances to get L∞ to be a Ring, StarRing, etc...
+end Instances
 
 class BorelFunctionalCalculus {A : Type*} (p : outParam (A → Prop))
     [CStarAlgebra A] [WStarAlgebra A] : Prop where
