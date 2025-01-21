@@ -54,17 +54,15 @@ open scoped NNReal ENNReal Topology MeasureTheory Uniformity symmDiff
 variable {α E F G : Type*} {m m0 : MeasurableSpace α} {p : ℝ≥0∞} {q : ℝ} {μ ν : Measure α}
   [NormedAddCommGroup E] [NormedAddCommGroup F] [NormedAddCommGroup G]
 
-open  Memℒp
 /-Since we are having difficulties with the general construction, let's just try to prove a theorem
 saying that if one looks at the a.e. class of the product of two essentially bounded functions,
 then the resulting function is also essentially bounded. We then can move on to see how to best say this
 with instances, etc.-/
 
-theorem ProductExperiment {f g : α → ℂ} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (f * g) ⊤ μ :=
+theorem Memℒp.infty_mul {f g : α → ℂ} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (f * g) ⊤ μ :=
   ⟨by apply MeasureTheory.AEStronglyMeasurable.mul (aestronglyMeasurable hf) (aestronglyMeasurable hg),
-   by simp [eLpNorm, eLpNormEssSup, ← norm_mul]
-      exact LE.le.trans_lt (ENNReal.essSup_mul_le (fun x ↦ ‖f x‖₊) (fun x ↦ ‖g x‖₊) (μ := μ)) (WithTop.mul_lt_top hf.2 hg.2)⟩
-
+   by simp only [eLpNorm, ENNReal.top_ne_zero, ↓reduceIte, eLpNormEssSup, Pi.mul_apply, nnnorm_mul, ENNReal.coe_mul]
+      exact LE.le.trans_lt (ENNReal.essSup_mul_le (fun x ↦ ‖f x‖₊) (fun x ↦ ‖g x‖₊)) (WithTop.mul_lt_top hf.2 hg.2)⟩
 
 #exit
 
