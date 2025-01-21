@@ -58,6 +58,7 @@ variable {α E F G : Type*} {m m0 : MeasurableSpace α} {p : ℝ≥0∞} {q : �
 saying that if one looks at the a.e. class of the product of two essentially bounded functions,
 then the resulting function is also essentially bounded. We then can move on to see how to best say this
 with instances, etc.-/
+namespace Memℒp
 
 --The following result needs a better name. The use `infty_mul` means something like `⊤ * a` in the library so that's no good.
 -- What we want is `Memℒ∞.mul`, I think.
