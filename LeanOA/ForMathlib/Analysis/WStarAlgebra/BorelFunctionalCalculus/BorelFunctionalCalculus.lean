@@ -63,9 +63,8 @@ with instances, etc.-/
 theorem ProductExperiment {f g : α → ℂ} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (fun x => (f x) * (g x)) ⊤ μ := by
   dsimp [Memℒp]
   constructor
-  apply MeasureTheory.AEStronglyMeasurable.mul
-  exact aestronglyMeasurable hf
-  exact aestronglyMeasurable hg
+  apply MeasureTheory.AEStronglyMeasurable.mul (aestronglyMeasurable _) (aestronglyMeasurable _)
+
   --all that there is left to do is prove the norm inequality here. Then we can clean up this lemma and
   --try to use it to define the Mul.
 
