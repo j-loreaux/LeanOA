@@ -60,17 +60,11 @@ saying that if one looks at the a.e. class of the product of two essentially bou
 then the resulting function is also essentially bounded. We then can move on to see how to best say this
 with instances, etc.-/
 
-theorem ProductExperiment {f g : α → ℂ} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (f * g) ⊤ μ := by
-  constructor
-  apply MeasureTheory.AEStronglyMeasurable.mul
-  exact aestronglyMeasurable hf
-  exact aestronglyMeasurable hg
-  dsimp [eLpNorm, eLpNormEssSup]
-  simp [← norm_mul]
-  have H := ENNReal.essSup_mul_le (fun x ↦ ‖f x‖₊) (fun x ↦ ‖g x‖₊) (μ := μ)
-  dsimp [Memℒp, eLpNorm, eLpNormEssSup] at *
-  --How do we get this finiteness to work on the rhs?
-  --is there a more general way to think about this?
+theorem ProductExperiment {f g : α → ℂ} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (f * g) ⊤ μ :=
+  ⟨by apply MeasureTheory.AEStronglyMeasurable.mul (aestronglyMeasurable hf) (aestronglyMeasurable hg),
+   by simp [eLpNorm, eLpNormEssSup, ← norm_mul]
+      exact LE.le.trans_lt (ENNReal.essSup_mul_le (fun x ↦ ‖f x‖₊) (fun x ↦ ‖g x‖₊) (μ := μ)) (WithTop.mul_lt_top hf.2 hg.2)⟩
+
 
 #exit
 
