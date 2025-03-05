@@ -31,7 +31,7 @@ namespace StarAlgebra
 open StarSubalgebra
 
 variable (R : Type*) {A : Type*} [CommSemiring R] [StarRing R] [Semiring A] [Algebra R A]
-  [StarRing A] [StarModule R A] [TopologicalSpace A] [TopologicalSemiring A] [ContinuousStar A]
+  [StarRing A] [StarModule R A] [TopologicalSpace A] [IsTopologicalSemiring A] [ContinuousStar A]
   [T2Space A]
 
 lemma topologicalClosure_adjoin_le_centralizer_centralizer (s : Set A) :
@@ -47,7 +47,7 @@ end StarAlgebra
 section CFCRangeCommute
 
 theorem cfc_range (R : Type*) {A : Type*} {p : A → Prop} [CommSemiring R] [StarRing R]
-    [MetricSpace R] [TopologicalSemiring R] [ContinuousStar R] [Ring A] [StarRing A]
+    [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [Ring A] [StarRing A]
     [Algebra R A] [TopologicalSpace A] [StarModule R A] [ContinuousFunctionalCalculus R p]
     {a : A} (ha : p a) : Set.range (cfc (R := R) · a) = (cfcHom ha (R := R)).range := by
   ext
@@ -78,7 +78,7 @@ lemma ContinuousMap.elemental_eq_top (s : Set 𝕜) [CompactSpace s] :
   congr
   exact Polynomial.toContinuousMap_X_eq_id.symm
 
-variable [TopologicalRing A] [ContinuousStar A]
+variable [IsTopologicalRing A] [ContinuousStar A]
 
 open StarAlgebra
 
@@ -135,7 +135,7 @@ open NonUnitalStarSubalgebra
 
 variable (R : Type*) {A : Type*} [CommSemiring R] [StarRing R] [NonUnitalSemiring A]
   [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
-  [StarRing A] [StarModule R A] [TopologicalSpace A] [TopologicalSemiring A] [ContinuousStar A]
+  [StarRing A] [StarModule R A] [TopologicalSpace A] [IsTopologicalSemiring A] [ContinuousStar A]
   [T2Space A] [ContinuousConstSMul R A]
 
 lemma topologicalClosure_adjoin_le_centralizer_centralizer (s : Set A) :
@@ -151,7 +151,7 @@ end NonUnitalStarAlgebra
 section NonUnital
 
 theorem cfcₙ_range (R : Type*) {A : Type*} {p : A → Prop} [CommSemiring R] [StarRing R]
-    [MetricSpace R] [TopologicalSemiring R] [ContinuousStar R] [Nontrivial R] [NonUnitalRing A]
+    [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [Nontrivial R] [NonUnitalRing A]
     [StarRing A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A] [TopologicalSpace A]
     [StarModule R A] [NonUnitalContinuousFunctionalCalculus R p] {a : A} (ha : p a) :
     Set.range (cfcₙ (R := R) · a) = NonUnitalStarAlgHom.range (cfcₙHom ha (R := R)) := by
@@ -179,7 +179,7 @@ theorem cfcₙ_range (R : Type*) {A : Type*} {p : A → Prop} [CommSemiring R] [
 variable (𝕜 : Type*) {A : Type*} {p : A → Prop} [RCLike 𝕜] [NonUnitalRing A] [StarRing A]
 variable [Module 𝕜 A] [IsScalarTower 𝕜 A A] [SMulCommClass 𝕜 A A]
 variable [TopologicalSpace A] [NonUnitalContinuousFunctionalCalculus 𝕜 p]
-variable [ContinuousConstSMul 𝕜 A] [StarModule 𝕜 A] [TopologicalRing A] [ContinuousStar A]
+variable [ContinuousConstSMul 𝕜 A] [StarModule 𝕜 A] [IsTopologicalRing A] [ContinuousStar A]
 
 open NonUnitalStarAlgebra
 

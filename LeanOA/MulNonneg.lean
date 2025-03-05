@@ -10,7 +10,7 @@ namespace CFC
 -- it seems like some of the hypotheses are wrong near `CFC.sqrt`.
 variable {A : Type*} [PartialOrder A] [NonUnitalRing A] [StarRing A]
     [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A] [TopologicalSpace A]
-    [T2Space A] [TopologicalRing A]
+    [T2Space A] [IsTopologicalRing A]
     [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
     [StarOrderedRing A] [NonnegSpectrumClass ℝ A]
 
