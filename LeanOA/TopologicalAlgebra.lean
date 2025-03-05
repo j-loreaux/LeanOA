@@ -15,8 +15,8 @@ lemma NonUnitalStarAlgHom.range_eq_map_top {F R A B : Type*} [CommSemiring R] [S
 namespace NonUnitalSubalgebra
 
 variable {F R A B : Type*} [CommSemiring R]
-    [TopologicalSpace A] [NonUnitalSemiring A] [Module R A] [TopologicalSemiring A] [ContinuousConstSMul R A]
-    [TopologicalSpace B] [NonUnitalSemiring B] [Module R B] [TopologicalSemiring B] [ContinuousConstSMul R B]
+    [TopologicalSpace A] [NonUnitalSemiring A] [Module R A] [IsTopologicalSemiring A] [ContinuousConstSMul R A]
+    [TopologicalSpace B] [NonUnitalSemiring B] [Module R B] [IsTopologicalSemiring B] [ContinuousConstSMul R B]
     [FunLike F A B] [NonUnitalAlgHomClass F R A B] (s : NonUnitalSubalgebra R A) (φ : F)
 
 -- should be generalized to `[ContinuousMapClass F A B]` instead of `Continuous φ` once we have a type that will satisfy both
@@ -37,8 +37,8 @@ end NonUnitalSubalgebra
 namespace NonUnitalStarSubalgebra
 
 variable {F R A B : Type*} [CommSemiring R]
-    [TopologicalSpace A] [Star A] [NonUnitalSemiring A] [Module R A] [TopologicalSemiring A] [ContinuousConstSMul R A] [ContinuousStar A]
-    [TopologicalSpace B] [Star B] [NonUnitalSemiring B] [Module R B] [TopologicalSemiring B] [ContinuousConstSMul R B] [ContinuousStar B]
+    [TopologicalSpace A] [Star A] [NonUnitalSemiring A] [Module R A] [IsTopologicalSemiring A] [ContinuousConstSMul R A] [ContinuousStar A]
+    [TopologicalSpace B] [Star B] [NonUnitalSemiring B] [Module R B] [IsTopologicalSemiring B] [ContinuousConstSMul R B] [ContinuousStar B]
     [FunLike F A B] [NonUnitalAlgHomClass F R A B] [StarHomClass F A B] (s : NonUnitalStarSubalgebra R A) (φ : F)
 
 -- should be generalized to `[ContinuousMapClass F A B]` instead of `Continuous φ` once we have a type that will satisfy both
