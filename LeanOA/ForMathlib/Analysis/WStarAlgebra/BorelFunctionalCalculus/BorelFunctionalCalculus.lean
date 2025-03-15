@@ -81,6 +81,8 @@ theorem toLinfty_mul {f g : α → E} (hf : Memℒp f ⊤ μ) (hg : Memℒp g �
 classes of measurable functions, even? This would be the right level of generality...in that we
 then only would need to provide a proof of essential boundedness of the product. -/
 
+end Memℒp
+
 end LpArithmetic
 
 section Instances
