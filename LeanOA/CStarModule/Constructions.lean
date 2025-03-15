@@ -366,9 +366,7 @@ open ComplexOrder
 
 variable {E : Type*}
 variable [NormedAddCommGroup E] [InnerProductSpace ℂ E]
-variable [instSMulOp : SMul ℂᵐᵒᵖ E] [instCentral : IsCentralScalar ℂ E]
 
-open MulOpposite in
 open scoped InnerProductSpace in
 /-- Reinterpret an inner product space `E` over `ℂ` as a `CStarModule` over `ℂ`.
 
@@ -376,30 +374,27 @@ Note: this instance requires `SMul ℂᵐᵒᵖ E` and `IsCentralScalar ℂ E` i
 which is unlikely to occur in practice. However, in practice one could either add those instances
 to the type `E` in question, or else supply them to this instance manually, which is reason behind
 the naming of these two instance arguments. -/
-instance instCStarModuleComplex : CStarModule ℂᵐᵒᵖ E where
-  inner x y := op ⟪x, y⟫_ℂ
+instance instCStarModuleComplex : CStarModule ℂ E where
+  inner x y := ⟪x, y⟫_ℂ
   inner_add_right := by simp [_root_.inner_add_right]
   inner_self_nonneg {x} := by
     simp only
-    rw [← inner_self_ofReal_re, op_nonpos, RCLike.ofReal_nonneg]
+    rw [← inner_self_ofReal_re, RCLike.ofReal_nonneg]
     exact inner_self_nonneg
   inner_self := by simp
   inner_op_smul_right := by simp [inner_smul_right, mul_comm]
-  inner_smul_right_complex := by simp [inner_smul_right, ← op_smul, smul_eq_mul]
-  star_inner _ _ := by simp [← op_star]
+  inner_smul_right_complex := by simp [inner_smul_right, smul_eq_mul]
+  star_inner _ _ := by simp
   norm_eq_sqrt_norm_inner_self {x} := by
-    simpa only [norm_op, ← inner_self_re_eq_norm] using norm_eq_sqrt_inner x
-
-attribute [-instance] WithCStarModule.instCStarModule
-attribute [local instance] WithCStarModule.instMulOp
+    simpa only [← inner_self_re_eq_norm] using norm_eq_sqrt_inner x
 
 -- Ensures that the two ways to obtain `CStarModule ℂᵐᵒᵖ ℂ` are definitionally equal.
-example : instMulOp (A := ℂ) = instCStarModuleComplex := by with_reducible_and_instances rfl
+example : instCStarModule (A := ℂ) = instCStarModuleComplex := by with_reducible_and_instances rfl
 
 /- Ensures that the two `Inner ℂ ℂ` instances are definitionally equal. Note that this cannot be at
 reducible and instances transparency because the one from `InnerProductSpace` uses `StarRingEnd`
 whereas `WithCStarModule.instCStarModule.toInner` uses `star` since `A` may not be commutative. -/
---example : (toInner : Inner ℂ ℂ) = WithCStarModule.instCStarModule.toInner := rfl
+example : (toInner : Inner ℂ ℂ) = WithCStarModule.instCStarModule.toInner := rfl
 
 end InnerProductSpace
 
