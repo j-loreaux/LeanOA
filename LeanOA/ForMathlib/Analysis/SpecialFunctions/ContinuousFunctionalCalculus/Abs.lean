@@ -36,10 +36,6 @@ variable {R : Type u_3} {A : Type u_4} {p : A → Prop} [CommSemiring R] [Nontri
   [MetricSpace R] [TopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A] [StarRing A] [TopologicalSpace A]
   [Module R A] [IsScalarTower R A A] [SMulCommClass R A A] [instCFCₙ : NonUnitalContinuousFunctionalCalculus R p]
 
-lemma mul_self_eq_mul_self {a : A} (ha : p a := by cfc_tac) : a * a =
-    cfcₙ (fun (x : R)  ↦ x * x) a := by
-  conv_lhs => rw [← cfcₙ_id' R a , ← cfcₙ_mul ..]
-
 instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
     [StarModule R A] [SMulCommClass R A A] [IsScalarTower R A A]
     (r : R) (a : A) [ha : IsStarNormal a] : IsStarNormal (r • a) where
@@ -110,8 +106,7 @@ lemma abs_eq_norm {a : A} (ha : IsSelfAdjoint a) :
     abs a = cfcₙ (‖·‖) a := by
    simp only [abs, Real.norm_eq_abs, ← Real.sqrt_sq_eq_abs, sq]
    have H : cfcₙ Real.sqrt (a * a) = cfcₙ (fun x ↦ √(x * x)) a := by
-     rw [mul_self_eq_mul_self (R := ℝ) ha, ← cfcₙ_comp a (f := fun x ↦ x * x) (g := fun x ↦ √x),
-     Function.comp_def]
+       rw [← Function.comp_def, cfcₙ_comp a (f := fun x ↦ x * x) (g := fun x ↦ √x), cfcₙ_mul .., cfcₙ_id' ..]
    rw [sqrt_eq_real_sqrt (star_mul_self_nonneg a), ha.star_eq, H]
 
 protected lemma posPart_add_negPart (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a = a⁺ + a⁻ := by
