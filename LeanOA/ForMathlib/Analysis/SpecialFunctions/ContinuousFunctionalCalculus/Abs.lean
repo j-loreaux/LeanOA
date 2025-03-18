@@ -73,7 +73,7 @@ lemma abs_nnrpow (a : A) (x : ℝ≥0) :
   simp only [← abs_nnrpow_two_mul, mul_div_left_comm, ne_eq, OfNat.ofNat_ne_zero,
     not_false_eq_true, div_self, mul_one]
 
-lemma sqrt_eq_real_sqrt {a : A} (ha : 0 ≤ a := by cfc_tac) :
+lemma sqrt_eq_real_sqrt (a : A) (ha : 0 ≤ a := by cfc_tac) :
     CFC.sqrt a = cfcₙ Real.sqrt a := by
   rw [sqrt_eq_iff _ (hb := cfcₙ_nonneg (A := A) (fun x _ ↦ Real.sqrt_nonneg x)),
     ← cfcₙ_mul ..]
