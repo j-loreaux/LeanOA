@@ -49,8 +49,8 @@ lemma abs_neg (a : A) : abs (-a) = abs a := by
 @[simp]
 lemma abs_nonneg {a : A} : 0 ≤ abs a := sqrt_nonneg
 
-lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
- simp [abs, star_comm_self']
+lemma abs_star (a : A) (ha : IsStarNormal a := by cfc_tac) : abs (star a) = abs a := by
+  simp [abs, star_comm_self']
 
 @[simp]
 lemma abs_zero : abs (0 : A) = 0 := by
@@ -58,10 +58,10 @@ lemma abs_zero : abs (0 : A) = 0 := by
 
 variable [IsTopologicalRing A] [T2Space A]
 
-lemma abs_mul_self (a : A) : (abs a) * (abs a) = star a * a := by
+lemma abs_mul_self (a : A) : abs a * abs a = star a * a := by
   refine sqrt_mul_sqrt_self _ <| star_mul_self_nonneg _
 
-lemma abs_nnrpow_two (a : A) : (abs a) ^ (2 : NNReal) = star a * a := by
+lemma abs_nnrpow_two (a : A) : (abs a) ^ (2 : ℝ≥0) = star a * a := by
   simp only [abs_nonneg, nnrpow_two]
   apply abs_mul_self
 
@@ -73,7 +73,7 @@ lemma abs_nnrpow (a : A) (x : ℝ≥0) :
   simp only [← abs_nnrpow_two_mul, mul_div_left_comm, ne_eq, OfNat.ofNat_ne_zero,
     not_false_eq_true, div_self, mul_one]
 
-lemma sqrt_eq_real_sqrt {a : A} (ha : 0 ≤ a := by cfc_tac) :
+lemma sqrt_eq_real_sqrt (a : A) (ha : 0 ≤ a := by cfc_tac) :
     CFC.sqrt a = cfcₙ Real.sqrt a := by
   rw [sqrt_eq_iff _ (hb := cfcₙ_nonneg (A := A) (fun x _ ↦ Real.sqrt_nonneg x)),
     ← cfcₙ_mul ..]
@@ -82,36 +82,36 @@ lemma sqrt_eq_real_sqrt {a : A} (ha : 0 ≤ a := by cfc_tac) :
   refine Real.mul_self_sqrt ?_
   exact quasispectrum_nonneg_of_nonneg a ha x hx
 
-lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
+lemma abs_of_nonneg (a : A) (ha : 0 ≤ a := by cfc_tac) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
 
-lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
-  simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
+lemma abs_of_nonpos (a : A) (ha : a ≤ 0 := by cfc_tac) : abs a = -a := by
+  simp [← abs_neg a, abs_of_nonneg (-a) <| neg_nonneg.mpr ha]
 
-lemma abs_eq_norm {a : A} (ha : IsSelfAdjoint a) :
+lemma abs_eq_norm (a : A) (ha : IsSelfAdjoint a := by cfc_tac) :
     abs a = cfcₙ (‖·‖) a := by
    simp only [abs, Real.norm_eq_abs, ← Real.sqrt_sq_eq_abs, sq]
    have H : cfcₙ Real.sqrt (a * a) = cfcₙ (fun x ↦ √(x * x)) a := by
        rw [← Function.comp_def, cfcₙ_comp a (f := fun x ↦ x * x) (g := fun x ↦ √x), cfcₙ_mul .., cfcₙ_id' ..]
-   rw [sqrt_eq_real_sqrt (star_mul_self_nonneg a), ha.star_eq, H]
+   rw [sqrt_eq_real_sqrt (ha := star_mul_self_nonneg a), ha.star_eq, H]
 
 protected lemma posPart_add_negPart (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a = a⁺ + a⁻ := by
-  rw [CFC.posPart_def, CFC.negPart_def, ← cfcₙ_add .., abs_eq_norm ha]
+  rw [CFC.posPart_def, CFC.negPart_def, ← cfcₙ_add .., abs_eq_norm a ha]
   exact cfcₙ_congr fun x hx ↦ (posPart_add_negPart x).symm
 
-lemma abs_sub_self (a : A) (ha : IsSelfAdjoint a) : abs a - a = 2 • a⁻ := by
+lemma abs_sub_self (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a - a = 2 • a⁻ := by
   nth_rw 2 [← CFC.posPart_sub_negPart a]
   rw [CFC.posPart_add_negPart a]
   abel
 
-lemma abs_add_self (a : A) (ha : IsSelfAdjoint a) : abs a + a = 2 • a⁺ := by
+lemma abs_add_self (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a + a = 2 • a⁺ := by
   nth_rw 2 [← CFC.posPart_sub_negPart a]
   rw [CFC.posPart_add_negPart a]
   abel
 
 @[simp]
 lemma abs_abs (a : A) : abs (abs a) = abs a :=
-  abs_of_nonneg abs_nonneg
+  abs_of_nonneg ..
 
 variable [StarModule ℝ A]
 
@@ -145,21 +145,21 @@ lemma cfcₙ_norm_nonneg {a : A} : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)
 
 variable [NonnegSpectrumClass ℝ A] [IsTopologicalRing A] [T2Space A]
 
-lemma abs_sq_eq_cfcₙ_norm_sq_complex {a : A} (ha : IsStarNormal a) :
+lemma abs_sq_eq_cfcₙ_norm_sq_complex (a : A) (ha : IsStarNormal a) :
     abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
   conv_lhs => rw [abs_nnrpow_two, ← cfcₙ_id' ℂ a, ← cfcₙ_star, ← cfcₙ_mul ..]
   exact cfcₙ_congr fun x hx ↦ Complex.conj_mul' x
 
-lemma abs_eq_cfcₙ_norm_complex {a : A} (ha : IsStarNormal a) :
+lemma abs_eq_cfcₙ_norm_complex (a : A) (ha : IsStarNormal a) :
     abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
-  conv_lhs => rw [abs, ← abs_nnrpow_two, sqrt_eq_real_sqrt, cfcₙ_real_eq_complex,
-    abs_sq_eq_cfcₙ_norm_sq_complex ha, ← cfcₙ_comp' ..]
+  conv_lhs => rw [abs, ← abs_nnrpow_two, sqrt_eq_real_sqrt .., cfcₙ_real_eq_complex,
+    abs_sq_eq_cfcₙ_norm_sq_complex a ha, ← cfcₙ_comp' ..]
   exact cfcₙ_congr fun x hx ↦ by simp [sq]
 
 lemma cfcₙ_abs_complex (f : ℂ → ℂ) (a : A) (ha : IsStarNormal a := by cfc_tac)
     (hf : ContinuousOn f ((fun z ↦ (‖z‖ : ℂ)) '' quasispectrum ℂ a) := by cfc_cont_tac) :
     cfcₙ f (abs a) = cfcₙ (fun x ↦ f ‖x‖) a := by
-  rw [abs_eq_cfcₙ_norm_complex ha]
+  rw [abs_eq_cfcₙ_norm_complex a ha]
   obtain (hf0 | hf0) := em (f 0 = 0)
   · rw [← cfcₙ_comp' ..]
   · rw [cfcₙ_apply_of_not_map_zero _ hf0, cfcₙ_apply_of_not_map_zero _ (fun h ↦ (hf0 <| by simpa using h).elim)]
