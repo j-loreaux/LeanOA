@@ -61,7 +61,7 @@ variable [IsTopologicalRing A] [T2Space A]
 lemma abs_mul_self (a : A) : (abs a) * (abs a) = star a * a := by
   refine sqrt_mul_sqrt_self _ <| star_mul_self_nonneg _
 
-lemma abs_nnrpow_two (a : A) : (abs a) ^ (2 : NNReal) = star a * a := by
+lemma abs_nnrpow_two (a : A) : abs a ^ (2 : ℝ≥0) = star a * a := by
   simp only [abs_nonneg, nnrpow_two]
   apply abs_mul_self
 
