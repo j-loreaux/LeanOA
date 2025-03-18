@@ -86,7 +86,7 @@ lemma abs_of_nonneg (a : A) (ha : 0 ≤ a := by cfc_tac) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
 
 lemma abs_of_nonpos (a : A) (ha : a ≤ 0 := by cfc_tac) : abs a = -a := by
-  simp [← abs_neg a, abs_of_nonneg (-a) <| neg_nonneg.mpr ha]
+  simp [← abs_neg a, abs_of_nonneg _ <| neg_nonneg.mpr ha]
 
 lemma abs_eq_norm (a : A) (ha : IsSelfAdjoint a := by cfc_tac) :
     abs a = cfcₙ (‖·‖) a := by
