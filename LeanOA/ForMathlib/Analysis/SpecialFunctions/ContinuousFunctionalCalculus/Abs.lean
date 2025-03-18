@@ -88,7 +88,7 @@ lemma abs_of_nonneg (a : A) (ha : 0 ≤ a := by cfc_tac) : abs a = a := by
 lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
   simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
 
-lemma abs_eq_norm {a : A} (ha : IsSelfAdjoint a) :
+lemma abs_eq_norm (a : A) (ha : IsSelfAdjoint a := by cfc_tac) :
     abs a = cfcₙ (‖·‖) a := by
    simp only [abs, Real.norm_eq_abs, ← Real.sqrt_sq_eq_abs, sq]
    have H : cfcₙ Real.sqrt (a * a) = cfcₙ (fun x ↦ √(x * x)) a := by
