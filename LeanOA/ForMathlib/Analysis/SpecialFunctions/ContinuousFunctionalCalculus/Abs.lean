@@ -50,7 +50,7 @@ lemma abs_neg (a : A) : abs (-a) = abs a := by
 lemma abs_nonneg {a : A} : 0 ≤ abs a := sqrt_nonneg
 
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
-  simp [abs, star_comm_self]
+ simp [abs, star_comm_self']
 
 @[simp]
 lemma abs_zero : abs (0 : A) = 0 := by
@@ -58,10 +58,10 @@ lemma abs_zero : abs (0 : A) = 0 := by
 
 variable [IsTopologicalRing A] [T2Space A]
 
-lemma abs_mul_self (a : A) : abs a * abs a = star a * a := by
+lemma abs_mul_self (a : A) : (abs a) * (abs a) = star a * a := by
   refine sqrt_mul_sqrt_self _ <| star_mul_self_nonneg _
 
-lemma abs_nnrpow_two (a : A) : abs a ^ (2 : ℝ≥0) = star a * a := by
+lemma abs_nnrpow_two (a : A) : (abs a) ^ (2 : NNReal) = star a * a := by
   simp only [abs_nonneg, nnrpow_two]
   apply abs_mul_self
 
@@ -73,7 +73,7 @@ lemma abs_nnrpow (a : A) (x : ℝ≥0) :
   simp only [← abs_nnrpow_two_mul, mul_div_left_comm, ne_eq, OfNat.ofNat_ne_zero,
     not_false_eq_true, div_self, mul_one]
 
-lemma sqrt_eq_real_sqrt (a : A) (ha : 0 ≤ a := by cfc_tac) :
+lemma sqrt_eq_real_sqrt {a : A} (ha : 0 ≤ a := by cfc_tac) :
     CFC.sqrt a = cfcₙ Real.sqrt a := by
   rw [sqrt_eq_iff _ (hb := cfcₙ_nonneg (A := A) (fun x _ ↦ Real.sqrt_nonneg x)),
     ← cfcₙ_mul ..]
@@ -82,13 +82,13 @@ lemma sqrt_eq_real_sqrt (a : A) (ha : 0 ≤ a := by cfc_tac) :
   refine Real.mul_self_sqrt ?_
   exact quasispectrum_nonneg_of_nonneg a ha x hx
 
-lemma abs_of_nonneg (a : A) (ha : 0 ≤ a := by cfc_tac) : abs a = a := by
+lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
 
 lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
   simp only [← abs_neg a, abs_of_nonneg <| neg_nonneg.mpr ha]
 
-lemma abs_eq_norm (a : A) (ha : IsSelfAdjoint a := by cfc_tac) :
+lemma abs_eq_norm {a : A} (ha : IsSelfAdjoint a) :
     abs a = cfcₙ (‖·‖) a := by
    simp only [abs, Real.norm_eq_abs, ← Real.sqrt_sq_eq_abs, sq]
    have H : cfcₙ Real.sqrt (a * a) = cfcₙ (fun x ↦ √(x * x)) a := by
