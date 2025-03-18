@@ -50,7 +50,7 @@ lemma abs_neg (a : A) : abs (-a) = abs a := by
 lemma abs_nonneg {a : A} : 0 ≤ abs a := sqrt_nonneg
 
 lemma abs_star {a : A} (ha : IsStarNormal a) : abs (star a) = abs a := by
-  rw [abs, abs, star_comm_self, star_star]
+  simp [abs, star_comm_self]
 
 @[simp]
 lemma abs_zero : abs (0 : A) = 0 := by
