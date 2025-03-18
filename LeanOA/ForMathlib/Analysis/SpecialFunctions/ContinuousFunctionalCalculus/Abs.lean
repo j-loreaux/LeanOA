@@ -82,7 +82,7 @@ lemma sqrt_eq_real_sqrt (a : A) (ha : 0 ≤ a := by cfc_tac) :
   refine Real.mul_self_sqrt ?_
   exact quasispectrum_nonneg_of_nonneg a ha x hx
 
-lemma abs_of_nonneg {a : A} (ha : 0 ≤ a) : abs a = a := by
+lemma abs_of_nonneg (a : A) (ha : 0 ≤ a := by cfc_tac) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
 
 lemma abs_of_nonpos {a : A} (ha : a ≤ 0) : abs a = -a := by
