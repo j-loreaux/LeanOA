@@ -28,17 +28,6 @@ namespace CFC
 
 section Generic
 
---The next three items belong in different files from this one. ToDo: Transport them...
-
-variable {R : Type u_3} {A : Type u_4} {p : A → Prop} [CommSemiring R] [Nontrivial R] [StarRing R]
-  [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A] [StarRing A] [TopologicalSpace A]
-  [Module R A] [IsScalarTower R A A] [SMulCommClass R A A] [instCFCₙ : NonUnitalContinuousFunctionalCalculus R p]
-
-instance IsStarNormal.smul {R A : Type*} [SMul R A] [Star R] [Star A] [Mul A]
-    [StarModule R A] [SMulCommClass R A A] [IsScalarTower R A A]
-    (r : R) (a : A) [ha : IsStarNormal a] : IsStarNormal (r • a) where
-  star_comm_self := star_smul r a ▸ ha.star_comm_self.smul_left (star r) |>.smul_right r
-
 variable {A : Type*}
 
 section NonUnital
@@ -79,7 +68,6 @@ lemma abs_nnrpow_two (a : A) : (abs a) ^ (2 : NNReal) = star a * a := by
 lemma abs_nnrpow_two_mul (a : A) (x : ℝ≥0) :
     (abs a) ^ (2 * x) = (star a * a) ^ x := by rw [← nnrpow_nnrpow, abs_nnrpow_two]
 
-/-- This and the previous need new names. -/
 lemma abs_nnrpow (a : A) (x : ℝ≥0) :
     (abs a) ^ x = (star a * a) ^ (x / 2) := by
   simp only [← abs_nnrpow_two_mul, mul_div_left_comm, ne_eq, OfNat.ofNat_ne_zero,
