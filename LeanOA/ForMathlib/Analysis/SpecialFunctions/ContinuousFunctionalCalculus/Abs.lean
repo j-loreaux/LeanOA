@@ -9,8 +9,8 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 /-!
 # Absolute value of an operator defined via the continuous functional calculus
 
-This file defines the absolute value via the (unital and non unital) continuous functional calculus
-(CFC) and (CFCₙ), and includes foundational API.
+This file defines the absolute value via the non-unital continuous functional calculus
+and includes foundational API.
 
 ## Main declarations
 
@@ -54,30 +54,30 @@ lemma abs_star (a : A) (ha : IsStarNormal a := by cfc_tac) : abs (star a) = abs 
 
 @[simp]
 lemma abs_zero : abs (0 : A) = 0 := by
-  rw [abs, star_zero, mul_zero, sqrt_zero]
+  simp [abs]
 
 variable [IsTopologicalRing A] [T2Space A]
 
-lemma abs_mul_self (a : A) : abs a * abs a = star a * a := by
-  refine sqrt_mul_sqrt_self _ <| star_mul_self_nonneg _
+lemma abs_mul_abs_self (a : A) : abs a * abs a = star a * a :=
+  sqrt_mul_sqrt_self _ <| star_mul_self_nonneg _
 
-lemma abs_nnrpow_two (a : A) : (abs a) ^ (2 : ℝ≥0) = star a * a := by
+lemma abs_nnrpow_two (a : A) : abs a ^ (2 : ℝ≥0) = star a * a := by
   simp only [abs_nonneg, nnrpow_two]
-  apply abs_mul_self
+  apply abs_mul_abs_self
 
 lemma abs_nnrpow_two_mul (a : A) (x : ℝ≥0) :
-    (abs a) ^ (2 * x) = (star a * a) ^ x := by rw [← nnrpow_nnrpow, abs_nnrpow_two]
+    abs a ^ (2 * x) = (star a * a) ^ x := by rw [← nnrpow_nnrpow, abs_nnrpow_two]
 
 lemma abs_nnrpow (a : A) (x : ℝ≥0) :
-    (abs a) ^ x = (star a * a) ^ (x / 2) := by
+    abs a ^ x = (star a * a) ^ (x / 2) := by
   simp only [← abs_nnrpow_two_mul, mul_div_left_comm, ne_eq, OfNat.ofNat_ne_zero,
     not_false_eq_true, div_self, mul_one]
 
 lemma sqrt_eq_real_sqrt (a : A) (ha : 0 ≤ a := by cfc_tac) :
     CFC.sqrt a = cfcₙ Real.sqrt a := by
-  rw [sqrt_eq_iff _ (hb := cfcₙ_nonneg (A := A) (fun x _ ↦ Real.sqrt_nonneg x)),
-    ← cfcₙ_mul ..]
-  conv_rhs => rw [← cfcₙ_id (R := ℝ) a]
+  suffices cfcₙ (fun x : ℝ ↦ √x * √x) a = cfcₙ (fun x : ℝ ↦ x) a by
+    rwa [cfcₙ_mul .., cfcₙ_id' ..,
+      ← sqrt_eq_iff _ (hb := cfcₙ_nonneg (fun x _ ↦ Real.sqrt_nonneg x))] at this
   refine cfcₙ_congr fun x hx ↦ ?_
   refine Real.mul_self_sqrt ?_
   exact quasispectrum_nonneg_of_nonneg a ha x hx
@@ -86,14 +86,12 @@ lemma abs_of_nonneg (a : A) (ha : 0 ≤ a := by cfc_tac) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
 
 lemma abs_of_nonpos (a : A) (ha : a ≤ 0 := by cfc_tac) : abs a = -a := by
-  simp [← abs_neg a, abs_of_nonneg _ <| neg_nonneg.mpr ha]
+  simpa using abs_of_nonneg (-a)
 
 lemma abs_eq_norm (a : A) (ha : IsSelfAdjoint a := by cfc_tac) :
     abs a = cfcₙ (‖·‖) a := by
-   simp only [abs, Real.norm_eq_abs, ← Real.sqrt_sq_eq_abs, sq]
-   have H : cfcₙ Real.sqrt (a * a) = cfcₙ (fun x ↦ √(x * x)) a := by
-       rw [← Function.comp_def, cfcₙ_comp a (f := fun x ↦ x * x) (g := fun x ↦ √x), cfcₙ_mul .., cfcₙ_id' ..]
-   rw [sqrt_eq_real_sqrt (ha := star_mul_self_nonneg a), ha.star_eq, H]
+  conv_lhs => rw [abs, ha.star_eq, sqrt_eq_real_sqrt .., ← cfcₙ_id' ℝ a, ← cfcₙ_mul .., ← cfcₙ_comp' ..]
+  simp [← sq, Real.sqrt_sq_eq_abs]
 
 protected lemma posPart_add_negPart (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a = a⁺ + a⁻ := by
   rw [CFC.posPart_def, CFC.negPart_def, ← cfcₙ_add .., abs_eq_norm a ha]
@@ -105,9 +103,8 @@ lemma abs_sub_self (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a - a = 2 
   abel
 
 lemma abs_add_self (a : A) (ha : IsSelfAdjoint a := by cfc_tac) : abs a + a = 2 • a⁺ := by
-  nth_rw 2 [← CFC.posPart_sub_negPart a]
-  rw [CFC.posPart_add_negPart a]
-  abel
+  simpa [two_smul] using
+    congr($(CFC.posPart_add_negPart a) + $((CFC.posPart_sub_negPart a).symm))
 
 @[simp]
 lemma abs_abs (a : A) : abs (abs a) = abs a :=
@@ -115,15 +112,40 @@ lemma abs_abs (a : A) : abs (abs a) = abs a :=
 
 variable [StarModule ℝ A]
 
-lemma abs_smul_real (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
-  have : 0 ≤ |r| • abs a := smul_nonneg (by positivity) abs_nonneg
-  rw [abs, CFC.sqrt_eq_iff _ _ (star_mul_self_nonneg _) this]
-  simp only [mul_smul_comm, smul_mul_assoc, abs_mul_self, star_smul]
-  match_scalars
-  simp
+/- Have to PR the following two lemmas to Mathlib. (I think Jireh did this already...)-/
 
-lemma abs_smul_nnreal (r : ℝ≥0) (a : A) : abs (r • a) = r • abs a := by
-  simpa [NNReal.abs_eq] using abs_smul_real r a
+@[elab_as_elim]
+lemma Real.nnreal_dichotomy {p : ℝ → Prop} (nonneg : ∀ x : ℝ≥0, p x)
+    (nonpos : ∀ x : ℝ≥0, p x → p (-x)) (r : ℝ) : p r := by
+  obtain (hr | hr) : 0 ≤ r ∨ 0 ≤ -r := by simpa using le_total ..
+  all_goals
+    rw [← neg_neg r]
+    lift (_ : ℝ) to ℝ≥0 using hr with r
+    aesop
+
+@[elab_as_elim]
+lemma Real.nnreal_trichotomy {p : ℝ → Prop} (zero : p 0) (pos : ∀ x : ℝ≥0, 0 < x → p x)
+    (neg : ∀ x : ℝ≥0, 0 < x → p x → p (-x)) (r : ℝ) : p r := by
+  obtain (hr | rfl | hr) : 0 < r ∨ 0 = r ∨ 0 < -r := by simpa using lt_trichotomy 0 r
+  case inr.inl => exact zero
+  all_goals
+    rw [← neg_neg r]
+    lift (_ : ℝ) to ℝ≥0 using hr.le with r
+    aesop
+
+
+@[simp]
+lemma abs_smul_nonneg {R : Type*} [LinearOrderedSemiring R] [SMulWithZero R ℝ≥0] [OrderedSMul R ℝ≥0]
+    [SMul R A] [IsScalarTower R ℝ≥0 A] (r : R) (a : A) : abs (r • a) = r • abs a := by
+  suffices ∀ r : ℝ≥0, abs (r • a) = r • abs a by simpa using this (r • 1)
+  intro r
+  rw [abs, sqrt_eq_iff _ _ (star_mul_self_nonneg _) (smul_nonneg (by positivity) abs_nonneg)]
+  simp [mul_smul_comm, smul_mul_assoc, abs_mul_abs_self]
+
+@[simp]
+lemma abs_smul (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
+  cases r using Real.nnreal_dichotomy
+  all_goals simp [← NNReal.smul_def]
 
 end Real
 
@@ -139,22 +161,26 @@ open ComplexOrder in
 lemma cfcₙ_norm_sq_nonneg {f : ℂ → ℂ} {a : A} : 0 ≤ cfcₙ (fun z ↦ star (f z) * (f z)) a :=
   cfcₙ_nonneg fun _ _ ↦ star_mul_self_nonneg _
 
+
+/- Put the following in `ForMathlib.Miscellany.lean`, together with a unital counterpart. -/
+
 open ComplexOrder in
-lemma cfcₙ_norm_nonneg {a : A} : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a :=
-  cfcₙ_nonneg fun _ _ ↦ by simp only [Complex.zero_le_real, norm_nonneg]
+lemma cfcₙ_norm_nonneg (f : ℂ → ℂ) (a : A) : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖f z‖ : ℂ)) a :=
+  cfcₙ_nonneg fun _ _ ↦ by simp [Complex.zero_le_real]
 
 variable [NonnegSpectrumClass ℝ A] [IsTopologicalRing A] [T2Space A]
 
 lemma abs_sq_eq_cfcₙ_norm_sq_complex (a : A) (ha : IsStarNormal a) :
     abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
   conv_lhs => rw [abs_nnrpow_two, ← cfcₙ_id' ℂ a, ← cfcₙ_star, ← cfcₙ_mul ..]
-  exact cfcₙ_congr fun x hx ↦ Complex.conj_mul' x
+  simp [Complex.conj_mul']
 
 lemma abs_eq_cfcₙ_norm_complex (a : A) (ha : IsStarNormal a) :
     abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
   conv_lhs => rw [abs, ← abs_nnrpow_two, sqrt_eq_real_sqrt .., cfcₙ_real_eq_complex,
     abs_sq_eq_cfcₙ_norm_sq_complex a ha, ← cfcₙ_comp' ..]
-  exact cfcₙ_congr fun x hx ↦ by simp [sq]
+  simp [sq]
+
 
 lemma cfcₙ_abs_complex (f : ℂ → ℂ) (a : A) (ha : IsStarNormal a := by cfc_tac)
     (hf : ContinuousOn f ((fun z ↦ (‖z‖ : ℂ)) '' quasispectrum ℂ a) := by cfc_cont_tac) :
@@ -164,13 +190,13 @@ lemma cfcₙ_abs_complex (f : ℂ → ℂ) (a : A) (ha : IsStarNormal a := by cf
   · rw [← cfcₙ_comp' ..]
   · rw [cfcₙ_apply_of_not_map_zero _ hf0, cfcₙ_apply_of_not_map_zero _ (fun h ↦ (hf0 <| by simpa using h).elim)]
 
+/- The following likely generalizes to `RCLike 𝕜`. -/
 variable [StarModule ℂ A] in
-lemma abs_smul_complex (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := by
-  have : 0 ≤ ‖r‖ • abs a := smul_nonneg (by positivity) abs_nonneg
-  rw [abs, CFC.sqrt_eq_iff _ _ (star_mul_self_nonneg _) this]
-  simp only [mul_smul_comm, smul_mul_assoc, abs_mul_self, star_smul]
-  match_scalars
-  rw [mul_one, mul_one, ← sq, mul_comm, RCLike.star_def, Complex.conj_mul', ← Complex.coe_algebraMap]
+lemma abs_complex_smul (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := by
+  trans abs (‖r‖ • a)
+  · simp [abs, mul_smul_comm, smul_mul_assoc, abs_mul_abs_self, star_smul, ← smul_assoc,
+      ← Complex.coe_smul, Complex.mul_conj', sq]
+  · simp
 
 end Complex
 
@@ -186,18 +212,32 @@ variable [NonnegSpectrumClass ℝ A]
 
 @[simp]
 lemma abs_one : abs (1 : A) = 1 := by
-  rw [abs, star_one , mul_one, sqrt_one]
+  simp [abs]
 
 variable [StarModule ℝ A]
 
 lemma abs_algebraMap_real (c : ℝ) : abs (algebraMap ℝ A c) = algebraMap ℝ A |c| := by
-  simp only [Algebra.algebraMap_eq_smul_one, abs_smul_real, abs_one]
+  simp [Algebra.algebraMap_eq_smul_one]
 
+@[simp]
 lemma abs_algebraMap_nnreal (x : ℝ≥0) : abs (algebraMap ℝ≥0 A x) = algebraMap ℝ≥0 A x := by
-  simpa only [NNReal.abs_eq] using abs_algebraMap_real (NNReal.toReal _)
+  simp [Algebra.algebraMap_eq_smul_one]
 
+@[simp]
 lemma abs_natCast (n : ℕ) : abs (n : A) = n := by
   simpa only [map_natCast, Nat.abs_cast] using abs_algebraMap_real (n : ℝ)
+
+@[simp]
+lemma abs_ofNat (n : ℕ) [n.AtLeastTwo] : abs (ofNat(n) : A) = ofNat(n) := by
+  simpa using abs_natCast n
+
+@[simp]
+lemma abs_intCast (n : ℤ) : abs (n : A) = |n| := by
+  cases n with
+  | ofNat _ => simp
+  | negSucc n =>
+    rw [Int.cast_negSucc, abs_neg, abs_natCast, ← Int.cast_natCast]
+    congr
 
 end Real
 
@@ -208,7 +248,7 @@ variable [ContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
 variable [NonnegSpectrumClass ℝ A] [StarModule ℂ A]
 
 lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap ℝ A (norm c : ℝ) := by
-  simp only [Algebra.algebraMap_eq_smul_one, abs_smul_complex, abs_one]
+  simp only [Algebra.algebraMap_eq_smul_one, abs_complex_smul, abs_one]
 
 end Complex
 
@@ -218,18 +258,23 @@ end Generic
 
 section CStar
 
+/- This section should be moved to `ForMathlib/Analysis/CStarAlgebra/SpecialFunctions/Abs.lean`. -/
+
+
 variable [NonUnitalNormedRing A] [StarRing A]
 variable [PartialOrder A] [StarOrderedRing A] [NormedSpace ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
 variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
 variable [NonnegSpectrumClass ℝ A] [CStarRing A]
 
+@[simp]
 lemma abs_eq_zero_iff {a : A}  : abs a = 0 ↔ a = 0 := by
   rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
 
+/- Move to another file. -/
 @[simp]
 lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
   rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, sq, ← CStarRing.norm_star_mul_self,
-    abs_nonneg.star_eq, abs_mul_self, CStarRing.norm_star_mul_self]
+    abs_nonneg.star_eq, abs_mul_abs_self, CStarRing.norm_star_mul_self]
 
 end CStar
 
