@@ -248,34 +248,12 @@ variable [ContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
 variable [NonnegSpectrumClass ℝ A] [StarModule ℂ A]
 
 lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap ℝ A (norm c : ℝ) := by
-  simp only [Algebra.algebraMap_eq_smul_one, abs_complex_smul, abs_one]
+  simp only [Algebra.algebraMap_eq_smul_one, abs_rclike_smul, abs_one]
 
 end Complex
 
 end Unital
 
 end Generic
-
-section CStar
-
-/- This section should be moved to `ForMathlib/Analysis/CStarAlgebra/SpecialFunctions/Abs.lean`. -/
-
-
-variable [NonUnitalNormedRing A] [StarRing A]
-variable [PartialOrder A] [StarOrderedRing A] [NormedSpace ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
-variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
-variable [NonnegSpectrumClass ℝ A] [CStarRing A]
-
-@[simp]
-lemma abs_eq_zero_iff {a : A}  : abs a = 0 ↔ a = 0 := by
-  rw [abs, sqrt_eq_zero_iff _, CStarRing.star_mul_self_eq_zero_iff]
-
-/- Move to another file. -/
-@[simp]
-lemma norm_abs {a : A} : ‖abs a‖ = ‖a‖ := by
-  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, sq, ← CStarRing.norm_star_mul_self,
-    abs_nonneg.star_eq, abs_mul_abs_self, CStarRing.norm_star_mul_self]
-
-end CStar
 
 end CFC
