@@ -30,6 +30,7 @@ section Generic
 
 variable {A : Type*}
 
+
 section NonUnital
 
 section Real
@@ -149,6 +150,57 @@ lemma abs_smul (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
 
 end Real
 
+section RCLike
+
+variable {𝕜 A : Type*} {p : A → Prop} [RCLike 𝕜]
+variable [NonUnitalRing A] [TopologicalSpace A] [Module 𝕜 A]
+variable [StarRing A] [PartialOrder A] [StarOrderedRing A]
+variable [IsScalarTower 𝕜 A A] [SMulCommClass 𝕜 A A]
+variable [NonUnitalContinuousFunctionalCalculus 𝕜 p]
+
+/-- The absolute value of an operator, using the nonunital continuous functional calculus. -/
+noncomputable def abs (a : A) := sqrt (star a * a)
+
+open ComplexOrder
+
+lemma cfcₙ_norm_sq_nonneg {f : 𝕜 → 𝕜} {a : A} : 0 ≤ cfcₙ (fun z ↦ star (f z) * (f z)) a :=
+  cfcₙ_nonneg fun _ _ ↦ star_mul_self_nonneg _
+
+lemma cfcₙ_norm_nonneg (f : 𝕜 → 𝕜) (a : A) : 0 ≤ cfcₙ (fun z : 𝕜 ↦ (‖f z‖ : 𝕜)) a :=
+  cfcₙ_nonneg fun _ _ ↦ by simp
+
+variable [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
+variable [NonnegSpectrumClass ℝ A] [IsTopologicalRing A] [T2Space A]
+variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+
+variable [StarModule 𝕜 A] [StarModule ℝ A] [IsScalarTower ℝ 𝕜 A] in
+lemma abs_rclike_smul (r : 𝕜) (a : A) : abs (r • a) = ‖r‖ • abs a := by
+  trans abs (‖r‖ • a)
+  · simp [abs, mul_smul_comm, smul_mul_assoc, abs_mul_abs_self, star_smul, ← smul_assoc]
+    simp only [RCLike.real_smul_eq_coe_smul (K := 𝕜)]
+    simp [-algebraMap_smul, ← smul_mul_assoc, smul_smul, ← mul_comm (starRingEnd _ _), RCLike.conj_mul, sq]
+  · simp [abs_smul]
+
+lemma abs_sq_eq_cfcₙ_norm_sq (a : A) (ha : p a := by cfc_tac) :
+    abs a ^ (2 : ℝ≥0) = cfcₙ (fun z : 𝕜 ↦ (‖z‖ ^ 2 : 𝕜)) a := by
+  conv_lhs => rw [abs_nnrpow_two, ← cfcₙ_id' 𝕜 a, ← cfcₙ_star, ← cfcₙ_mul ..]
+  simp [RCLike.conj_mul]
+
+lemma abs_eq_cfcₙ_norm (a : A) (ha : p a := by cfc_tac) :
+    abs a = cfcₙ (fun z : 𝕜 ↦ (‖z‖ : 𝕜)) a := by
+  rw [abs, sqrt_eq_iff _ _ (hb := cfcₙ_norm_nonneg _ _), ← abs_nnrpow_two, abs_sq_eq_cfcₙ_norm_sq (𝕜 := 𝕜) a ha]
+  conv_lhs => rw [← cfcₙ_id' 𝕜 a, ← cfcₙ_mul ..]
+  simp [sq, cfcₙ_id' 𝕜 a]
+
+lemma cfcₙ_comp_norm (f : 𝕜 → 𝕜) (a : A) (ha : p a := by cfc_tac)
+    (hf : ContinuousOn f ((fun z ↦ (‖z‖ : 𝕜)) '' quasispectrum 𝕜 a) := by cfc_cont_tac) :
+    cfcₙ f (abs a) = cfcₙ (fun x ↦ f ‖x‖) a := by
+  obtain (hf0 | hf0) := em (f 0 = 0)
+  · rw [cfcₙ_comp' f (fun x ↦ (‖x‖ : 𝕜)) a, ← abs_eq_cfcₙ_norm a]
+  · rw [cfcₙ_apply_of_not_map_zero _ hf0, cfcₙ_apply_of_not_map_zero _ (fun h ↦ (hf0 <| by simpa using h).elim)]
+
+end RCLike
+
 section Complex
 
 variable [NonUnitalRing A] [TopologicalSpace A] [Module ℂ A]
@@ -156,18 +208,6 @@ variable [NonUnitalRing A] [TopologicalSpace A] [Module ℂ A]
 variable [StarRing A] [PartialOrder A] [StarOrderedRing A]
 variable [IsScalarTower ℂ A A] [SMulCommClass ℂ A A]
 variable [NonUnitalContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
-
-open ComplexOrder in
-lemma cfcₙ_norm_sq_nonneg {f : ℂ → ℂ} {a : A} : 0 ≤ cfcₙ (fun z ↦ star (f z) * (f z)) a :=
-  cfcₙ_nonneg fun _ _ ↦ star_mul_self_nonneg _
-
-
-/- Put the following in `ForMathlib.Miscellany.lean`, together with a unital counterpart. -/
-
-open ComplexOrder in
-lemma cfcₙ_norm_nonneg (f : ℂ → ℂ) (a : A) : 0 ≤ cfcₙ (fun z : ℂ ↦ (‖f z‖ : ℂ)) a :=
-  cfcₙ_nonneg fun _ _ ↦ by simp [Complex.zero_le_real]
-
 variable [NonnegSpectrumClass ℝ A] [IsTopologicalRing A] [T2Space A]
 
 lemma abs_sq_eq_cfcₙ_norm_sq_complex (a : A) (ha : IsStarNormal a) :
