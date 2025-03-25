@@ -198,45 +198,6 @@ lemma cfcₙ_comp_norm (f : 𝕜 → 𝕜) (a : A) (ha : p a := by cfc_tac)
 
 end RCLike
 
-section Complex
-
-variable [NonUnitalRing A] [TopologicalSpace A] [Module ℂ A]
-
-variable [StarRing A] [PartialOrder A] [StarOrderedRing A]
-variable [IsScalarTower ℂ A A] [SMulCommClass ℂ A A]
-variable [NonUnitalContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
-variable [NonnegSpectrumClass ℝ A] [IsTopologicalRing A] [T2Space A]
-
-lemma abs_sq_eq_cfcₙ_norm_sq_complex (a : A) (ha : IsStarNormal a) :
-    abs a ^ (2 : NNReal) = cfcₙ (fun z : ℂ ↦ (‖z‖ ^ 2 : ℂ)) a := by
-  conv_lhs => rw [abs_nnrpow_two, ← cfcₙ_id' ℂ a, ← cfcₙ_star, ← cfcₙ_mul ..]
-  simp [Complex.conj_mul']
-
-lemma abs_eq_cfcₙ_norm_complex (a : A) (ha : IsStarNormal a) :
-    abs a = cfcₙ (fun z : ℂ ↦ (‖z‖ : ℂ)) a := by
-  conv_lhs => rw [abs, ← abs_nnrpow_two, sqrt_eq_real_sqrt .., cfcₙ_real_eq_complex,
-    abs_sq_eq_cfcₙ_norm_sq_complex a ha, ← cfcₙ_comp' ..]
-  simp [sq]
-
-
-lemma cfcₙ_abs_complex (f : ℂ → ℂ) (a : A) (ha : IsStarNormal a := by cfc_tac)
-    (hf : ContinuousOn f ((fun z ↦ (‖z‖ : ℂ)) '' quasispectrum ℂ a) := by cfc_cont_tac) :
-    cfcₙ f (abs a) = cfcₙ (fun x ↦ f ‖x‖) a := by
-  rw [abs_eq_cfcₙ_norm_complex a ha]
-  obtain (hf0 | hf0) := em (f 0 = 0)
-  · rw [← cfcₙ_comp' ..]
-  · rw [cfcₙ_apply_of_not_map_zero _ hf0, cfcₙ_apply_of_not_map_zero _ (fun h ↦ (hf0 <| by simpa using h).elim)]
-
-/- The following likely generalizes to `RCLike 𝕜`. -/
-variable [StarModule ℂ A] in
-lemma abs_complex_smul (r : ℂ) (a : A) : abs (r • a) = ‖r‖ • abs a := by
-  trans abs (‖r‖ • a)
-  · simp [abs, mul_smul_comm, smul_mul_assoc, abs_mul_abs_self, star_smul, ← smul_assoc,
-      ← Complex.coe_smul, Complex.mul_conj', sq]
-  · simp
-
-end Complex
-
 end NonUnital
 
 section Unital
