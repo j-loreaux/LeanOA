@@ -241,6 +241,8 @@ end Real
 
 section Complex
 
+/- Maybe this section also can be changed to RCLike? -/
+
 variable [Ring A] [StarRing A] [PartialOrder A] [StarOrderedRing A] [TopologicalSpace A] [Algebra ℂ A] [IsTopologicalRing A] [T2Space A]
 variable [ContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
 variable [NonnegSpectrumClass ℝ A] [StarModule ℂ A]
