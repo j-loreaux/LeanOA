@@ -158,9 +158,6 @@ variable [StarRing A] [PartialOrder A] [StarOrderedRing A]
 variable [IsScalarTower 𝕜 A A] [SMulCommClass 𝕜 A A]
 variable [NonUnitalContinuousFunctionalCalculus 𝕜 p]
 
-/-- The absolute value of an operator, using the nonunital continuous functional calculus. -/
-noncomputable def abs (a : A) := sqrt (star a * a)
-
 open ComplexOrder
 
 lemma cfcₙ_norm_sq_nonneg {f : 𝕜 → 𝕜} {a : A} : 0 ≤ cfcₙ (fun z ↦ star (f z) * (f z)) a :=
