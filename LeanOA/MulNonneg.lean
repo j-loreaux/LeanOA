@@ -11,7 +11,7 @@ namespace CFC
 variable {A : Type*} [PartialOrder A] [NonUnitalRing A] [StarRing A]
     [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A] [TopologicalSpace A]
     [T2Space A] [IsTopologicalRing A]
-    [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+    [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
     [StarOrderedRing A] [NonnegSpectrumClass ℝ A]
 
 lemma sqrt_eq_cfcₙ_real_sqrt (a : A) (ha : 0 ≤ a := by cfc_tac) :
