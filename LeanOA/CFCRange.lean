@@ -52,20 +52,9 @@ theorem cfc_range (R : Type*) {A : Type*} {p : A → Prop} [CommSemiring R] [Sta
     {a : A} (ha : p a) : Set.range (cfc (R := R) · a) = (cfcHom ha (R := R)).range := by
   ext
   constructor
-  · rintro ⟨f, rfl⟩
-    by_cases hf : ContinuousOn f (spectrum R a)
-    · simpa only [cfc_apply f a, SetLike.mem_coe] using ⟨_, rfl⟩
-    · simpa only [cfc_apply_of_not_continuousOn a hf] using zero_mem _
-  · rintro ⟨f, rfl⟩
-    classical
-    let f' (x : R) : R := if hx : x ∈ spectrum R a then f ⟨x, hx⟩ else 0
-    have hff' : f = Set.restrict (spectrum R a) f'  := by ext; simp [f']
-    have : ContinuousOn f' (spectrum R a) :=
-      continuousOn_iff_continuous_restrict.mpr (hff' ▸ map_continuous f)
-    use f'
-    simp only [cfc_apply f' a]
-    congr!
-    exact hff'.symm
+  all_goals rintro ⟨f, rfl⟩
+  · exact cfc_cases _ _ _ (by aesop) (fun _ _ ↦ AlgHom.mem_range_self _ _)
+  · exact ⟨Function.extend Subtype.val f 0, (cfcHom_eq_cfc_extend 0 ha f).symm⟩
 
 variable (𝕜 : Type*) {A : Type*} {p : A → Prop} [RCLike 𝕜] [Ring A] [StarRing A] [Algebra 𝕜 A]
 variable [TopologicalSpace A] [StarModule 𝕜 A] [ContinuousFunctionalCalculus 𝕜 A p]
@@ -157,24 +146,9 @@ theorem cfcₙ_range (R : Type*) {A : Type*} {p : A → Prop} [CommSemiring R] [
     Set.range (cfcₙ (R := R) · a) = NonUnitalStarAlgHom.range (cfcₙHom ha (R := R)) := by
   ext
   constructor
-  · rintro ⟨f, rfl⟩
-    by_cases hf : ContinuousOn f (quasispectrum R a) ∧ f 0 = 0
-    · obtain ⟨hf, hf₀⟩ := hf
-      simpa only [cfcₙ_apply f a, SetLike.mem_coe] using ⟨_, rfl⟩
-    · obtain (hf | hf₀) := not_and_or.mp hf
-      · simpa only [cfcₙ_apply_of_not_continuousOn a hf] using zero_mem _
-      · simpa only [cfcₙ_apply_of_not_map_zero a hf₀] using zero_mem _
-  · rintro ⟨f, rfl⟩
-    classical
-    let f' (x : R) : R := if hx : x ∈ quasispectrum R a then f ⟨x, hx⟩ else 0
-    have hff' : f = Set.restrict (quasispectrum R a) f'  := by ext; simp [f']
-    have : ContinuousOn f' (quasispectrum R a) :=
-      continuousOn_iff_continuous_restrict.mpr (hff' ▸ map_continuous f)
-    have hf'₀ : f' 0 = 0 := by simp only [quasispectrum.zero_mem, ↓reduceDIte, f']; exact map_zero f
-    use f'
-    simp only [cfcₙ_apply f' a]
-    congr!
-    exact hff'.symm
+  all_goals rintro ⟨f, rfl⟩
+  · exact cfcₙ_cases _ _ _ (zero_mem _) (fun _ _ _ ↦ NonUnitalStarAlgHom.mem_range_self _ _)
+  · exact ⟨Function.extend Subtype.val f 0, (cfcₙHom_eq_cfcₙ_extend 0 ha f).symm⟩
 
 variable (𝕜 : Type*) {A : Type*} {p : A → Prop} [RCLike 𝕜] [NonUnitalRing A] [StarRing A]
 variable [Module 𝕜 A] [IsScalarTower 𝕜 A A] [SMulCommClass 𝕜 A A]
