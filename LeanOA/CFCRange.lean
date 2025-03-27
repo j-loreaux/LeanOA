@@ -48,7 +48,7 @@ section CFCRangeCommute
 
 theorem cfc_range (R : Type*) {A : Type*} {p : A → Prop} [CommSemiring R] [StarRing R]
     [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [Ring A] [StarRing A]
-    [Algebra R A] [TopologicalSpace A] [StarModule R A] [ContinuousFunctionalCalculus R p]
+    [Algebra R A] [TopologicalSpace A] [StarModule R A] [ContinuousFunctionalCalculus R A p]
     {a : A} (ha : p a) : Set.range (cfc (R := R) · a) = (cfcHom ha (R := R)).range := by
   ext
   constructor
@@ -68,7 +68,7 @@ theorem cfc_range (R : Type*) {A : Type*} {p : A → Prop} [CommSemiring R] [Sta
     exact hff'.symm
 
 variable (𝕜 : Type*) {A : Type*} {p : A → Prop} [RCLike 𝕜] [Ring A] [StarRing A] [Algebra 𝕜 A]
-variable [TopologicalSpace A] [StarModule 𝕜 A] [ContinuousFunctionalCalculus 𝕜 p]
+variable [TopologicalSpace A] [StarModule 𝕜 A] [ContinuousFunctionalCalculus 𝕜 A p]
 
 open StarAlgebra in
 lemma ContinuousMap.elemental_eq_top (s : Set 𝕜) [CompactSpace s] :
@@ -153,7 +153,7 @@ section NonUnital
 theorem cfcₙ_range (R : Type*) {A : Type*} {p : A → Prop} [CommSemiring R] [StarRing R]
     [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [Nontrivial R] [NonUnitalRing A]
     [StarRing A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A] [TopologicalSpace A]
-    [StarModule R A] [NonUnitalContinuousFunctionalCalculus R p] {a : A} (ha : p a) :
+    [StarModule R A] [NonUnitalContinuousFunctionalCalculus R A p] {a : A} (ha : p a) :
     Set.range (cfcₙ (R := R) · a) = NonUnitalStarAlgHom.range (cfcₙHom ha (R := R)) := by
   ext
   constructor
@@ -178,7 +178,7 @@ theorem cfcₙ_range (R : Type*) {A : Type*} {p : A → Prop} [CommSemiring R] [
 
 variable (𝕜 : Type*) {A : Type*} {p : A → Prop} [RCLike 𝕜] [NonUnitalRing A] [StarRing A]
 variable [Module 𝕜 A] [IsScalarTower 𝕜 A A] [SMulCommClass 𝕜 A A]
-variable [TopologicalSpace A] [NonUnitalContinuousFunctionalCalculus 𝕜 p]
+variable [TopologicalSpace A] [NonUnitalContinuousFunctionalCalculus 𝕜 A p]
 variable [ContinuousConstSMul 𝕜 A] [StarModule 𝕜 A] [IsTopologicalRing A] [ContinuousStar A]
 
 open NonUnitalStarAlgebra
