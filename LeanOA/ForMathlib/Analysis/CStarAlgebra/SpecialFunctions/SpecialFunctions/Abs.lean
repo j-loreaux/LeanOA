@@ -16,7 +16,7 @@ section CStar
 
 variable (A : Type*) [NonUnitalNormedRing A] [StarRing A]
 variable [PartialOrder A] [StarOrderedRing A] [NormedSpace ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
-variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+variable [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
 variable [NonnegSpectrumClass ℝ A] [CStarRing A]
 
 open CFC
