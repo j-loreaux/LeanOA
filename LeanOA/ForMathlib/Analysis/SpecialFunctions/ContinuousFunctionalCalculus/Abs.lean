@@ -4,7 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jon Bannon, Jireh Loreaux
 -/
 
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Instances
+import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
+import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart.Basic
 
 /-!
 # Absolute value of an operator defined via the continuous functional calculus
@@ -16,10 +18,6 @@ and includes foundational API.
 
 + `CFC.abs`: The absolute value declaration as `abs a := sqrt (star a) * a`.
 
-# TODO
-
-There is likely an `RCLike` version of `abs_smul_complex`.
-
 -/
 
 open scoped NNReal
@@ -29,7 +27,6 @@ namespace CFC
 section Generic
 
 variable {A : Type*}
-
 
 section NonUnital
 
@@ -221,14 +218,22 @@ section Complex
 
 variable {𝕜 A : Type*} {p : A → Prop} [RCLike 𝕜]
 variable [Ring A] [TopologicalSpace A] [StarRing A] [PartialOrder A]
-variable [StarOrderedRing A] [Algebra 𝕜 A] [StarModule 𝕜 A]
+variable [StarOrderedRing A] [Algebra 𝕜 A]
 variable [ContinuousFunctionalCalculus 𝕜 A p]
 variable [Algebra ℝ A] [NonnegSpectrumClass ℝ A] [IsTopologicalRing A] [T2Space A]
-variable [ContinuousFunctionalCalculus ℝ A IsSelfAdjoint] [StarModule ℝ A]
-variable [IsScalarTower ℝ 𝕜 A]
+variable [ContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
 
+variable [StarModule 𝕜 A] [StarModule ℝ A] [IsScalarTower ℝ 𝕜 A] in
 lemma abs_algebraMap_rclike (c : 𝕜) : abs (algebraMap 𝕜 A c) = algebraMap ℝ A (norm c : ℝ) := by
   simp [Algebra.algebraMap_eq_smul_one, abs_rclike_smul c, abs_one]
+
+lemma cfc_comp_norm (f : 𝕜 → 𝕜) (a : A) (ha : p a := by cfc_tac)
+    (hf : ContinuousOn f ((fun z ↦ (‖z‖ : 𝕜)) '' spectrum 𝕜 a) := by cfc_cont_tac) :
+    cfc f (abs a) = cfc (fun x ↦ f ‖x‖) a := by
+  rw [abs_eq_cfcₙ_norm a (𝕜 := 𝕜), cfcₙ_eq_cfc, ← cfc_comp' ..]
+
+lemma abs_sq (a : A) : (abs a) ^ 2 = star a * a := by
+  rw [sq, abs_mul_abs_self]
 
 end Complex
 
