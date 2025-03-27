@@ -37,7 +37,8 @@ section Real
 
 variable [NonUnitalRing A] [StarRing A] [TopologicalSpace A]
 variable [PartialOrder A] [StarOrderedRing A] [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
-variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+
+variable [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
 variable [NonnegSpectrumClass ℝ A]
 
 /-- The absolute value of an operator, using the nonunital continuous functional calculus. -/
@@ -155,7 +156,7 @@ variable {𝕜 A : Type*} {p : A → Prop} [RCLike 𝕜]
 variable [NonUnitalRing A] [TopologicalSpace A] [Module 𝕜 A]
 variable [StarRing A] [PartialOrder A] [StarOrderedRing A]
 variable [IsScalarTower 𝕜 A A] [SMulCommClass 𝕜 A A]
-variable [NonUnitalContinuousFunctionalCalculus 𝕜 p]
+variable [NonUnitalContinuousFunctionalCalculus 𝕜 A p]
 
 open ComplexOrder
 
@@ -167,7 +168,7 @@ lemma cfcₙ_norm_nonneg (f : 𝕜 → 𝕜) (a : A) : 0 ≤ cfcₙ (fun z : �
 
 variable [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
 variable [NonnegSpectrumClass ℝ A] [IsTopologicalRing A] [T2Space A]
-variable [NonUnitalContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+variable [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
 
 variable [StarModule 𝕜 A] [StarModule ℝ A] [IsScalarTower ℝ 𝕜 A] in
 lemma abs_rclike_smul (r : 𝕜) (a : A) : abs (r • a) = ‖r‖ • abs a := by
@@ -204,7 +205,7 @@ section Unital
 section Real
 
 variable [Ring A] [StarRing A] [PartialOrder A] [StarOrderedRing A] [TopologicalSpace A] [Algebra ℝ A] [IsTopologicalRing A] [T2Space A]
-variable [ContinuousFunctionalCalculus ℝ (IsSelfAdjoint : A → Prop)]
+variable [ContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
 variable [NonnegSpectrumClass ℝ A]
 
 @[simp]
@@ -241,7 +242,7 @@ end Real
 section Complex
 
 variable [Ring A] [StarRing A] [PartialOrder A] [StarOrderedRing A] [TopologicalSpace A] [Algebra ℂ A] [IsTopologicalRing A] [T2Space A]
-variable [ContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
+variable [ContinuousFunctionalCalculus ℂ A IsStarNormal]
 variable [NonnegSpectrumClass ℝ A] [StarModule ℂ A]
 
 lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap ℝ A (norm c : ℝ) := by
