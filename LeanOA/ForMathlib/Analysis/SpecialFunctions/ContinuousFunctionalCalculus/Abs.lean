@@ -113,30 +113,8 @@ lemma abs_abs (a : A) : abs (abs a) = abs a :=
 
 variable [StarModule ℝ A]
 
-/- The next two results appear in PR #23131, and once that is merged these can be omitted. -/
-
-@[elab_as_elim]
-lemma Real.nnreal_dichotomy {p : ℝ → Prop} (nonneg : ∀ x : ℝ≥0, p x)
-    (nonpos : ∀ x : ℝ≥0, p x → p (-x)) (r : ℝ) : p r := by
-  obtain (hr | hr) : 0 ≤ r ∨ 0 ≤ -r := by simpa using le_total ..
-  all_goals
-    rw [← neg_neg r]
-    lift (_ : ℝ) to ℝ≥0 using hr with r
-    aesop
-
-@[elab_as_elim]
-lemma Real.nnreal_trichotomy {p : ℝ → Prop} (zero : p 0) (pos : ∀ x : ℝ≥0, 0 < x → p x)
-    (neg : ∀ x : ℝ≥0, 0 < x → p x → p (-x)) (r : ℝ) : p r := by
-  obtain (hr | rfl | hr) : 0 < r ∨ 0 = r ∨ 0 < -r := by simpa using lt_trichotomy 0 r
-  case inr.inl => exact zero
-  all_goals
-    rw [← neg_neg r]
-    lift (_ : ℝ) to ℝ≥0 using hr.le with r
-    aesop
-
-
 @[simp]
-lemma abs_smul_nonneg {R : Type*} [LinearOrderedSemiring R] [SMulWithZero R ℝ≥0] [OrderedSMul R ℝ≥0]
+lemma abs_smul_nonneg {R : Type*} [LinearOrderedSemiring R] [SMulWithZero R ℝ≥0]
     [SMul R A] [IsScalarTower R ℝ≥0 A] (r : R) (a : A) : abs (r • a) = r • abs a := by
   suffices ∀ r : ℝ≥0, abs (r • a) = r • abs a by simpa using this (r • 1)
   intro r
@@ -145,7 +123,7 @@ lemma abs_smul_nonneg {R : Type*} [LinearOrderedSemiring R] [SMulWithZero R ℝ�
 
 @[simp]
 lemma abs_smul (r : ℝ) (a : A) : abs (r • a) = |r| • abs a := by
-  cases r using Real.nnreal_dichotomy
+  cases r using Real.nnreal_induction_on
   all_goals simp [← NNReal.smul_def]
 
 end Real
@@ -241,12 +219,16 @@ end Real
 
 section Complex
 
-variable [Ring A] [StarRing A] [PartialOrder A] [StarOrderedRing A] [TopologicalSpace A] [Algebra ℂ A] [IsTopologicalRing A] [T2Space A]
-variable [ContinuousFunctionalCalculus ℂ A IsStarNormal]
-variable [NonnegSpectrumClass ℝ A] [StarModule ℂ A]
+variable {𝕜 A : Type*} {p : A → Prop} [RCLike 𝕜]
+variable [Ring A] [TopologicalSpace A] [StarRing A] [PartialOrder A]
+variable [StarOrderedRing A] [Algebra 𝕜 A] [StarModule 𝕜 A]
+variable [ContinuousFunctionalCalculus 𝕜 A p]
+variable [Algebra ℝ A] [NonnegSpectrumClass ℝ A] [IsTopologicalRing A] [T2Space A]
+variable [ContinuousFunctionalCalculus ℝ A IsSelfAdjoint] [StarModule ℝ A]
+variable [IsScalarTower ℝ 𝕜 A]
 
-lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap ℝ A (norm c : ℝ) := by
-  simp [Algebra.algebraMap_eq_smul_one, abs_rclike_smul, abs_one]
+lemma abs_algebraMap_rclike (c : 𝕜) : abs (algebraMap 𝕜 A c) = algebraMap ℝ A (norm c : ℝ) := by
+  simp [Algebra.algebraMap_eq_smul_one, abs_rclike_smul c, abs_one]
 
 end Complex
 
