@@ -16,10 +16,6 @@ and includes foundational API.
 
 + `CFC.abs`: The absolute value declaration as `abs a := sqrt (star a) * a`.
 
-# TODO
-
-There is likely an `RCLike` version of `abs_smul_complex`.
-
 -/
 
 open scoped NNReal
