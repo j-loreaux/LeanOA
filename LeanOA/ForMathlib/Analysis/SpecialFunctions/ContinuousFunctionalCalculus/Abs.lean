@@ -113,7 +113,7 @@ lemma abs_abs (a : A) : abs (abs a) = abs a :=
 
 variable [StarModule ℝ A]
 
-/- Have to PR the following two lemmas to Mathlib. (I think Jireh did this already...)-/
+/- The next two results appear in PR #23131, and once that is merged these can be omitted. -/
 
 @[elab_as_elim]
 lemma Real.nnreal_dichotomy {p : ℝ → Prop} (nonneg : ∀ x : ℝ≥0, p x)
@@ -241,14 +241,12 @@ end Real
 
 section Complex
 
-/- Maybe this section also can be changed to RCLike? -/
-
 variable [Ring A] [StarRing A] [PartialOrder A] [StarOrderedRing A] [TopologicalSpace A] [Algebra ℂ A] [IsTopologicalRing A] [T2Space A]
 variable [ContinuousFunctionalCalculus ℂ (IsStarNormal : A → Prop)]
 variable [NonnegSpectrumClass ℝ A] [StarModule ℂ A]
 
 lemma abs_algebraMap_complex (c : ℂ) : abs (algebraMap ℂ A c) = algebraMap ℝ A (norm c : ℝ) := by
-  simp only [Algebra.algebraMap_eq_smul_one, abs_rclike_smul, abs_one]
+  simp [Algebra.algebraMap_eq_smul_one, abs_rclike_smul, abs_one]
 
 end Complex
 
