@@ -35,7 +35,7 @@ lemma polarization' {x y : E} :
 
 end Polarization
 
-variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A]
 variable {ι : Type*} {E : ι → Type*}
 variable [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace ℂ (E i)] [∀ i, SMul A (E i)]
 variable [∀ i, CStarModule A (E i)]
@@ -47,52 +47,26 @@ Note: the condition that `∑' i, ⟪x i, x i⟫_A` converges is in general *str
 the condition `∑' i, ‖x i‖ ^ 2` converges. -/
 def MemStandard (x : Π i, E i) : Prop := Summable fun i ↦ ⟪x i, x i⟫_A
 
+lemma MemStandard.subtype {x : Π i, E i} (hx : MemStandard A x) (s : Set ι) :
+    MemStandard A (fun i : s ↦ x i) := by
+  simpa [Function.comp_def] using Summable.subtype hx s
+
 lemma MemStandard.of_memℓp {x : Π i, E i} (hx : Memℓp (‖x ·‖) 2) :
     MemStandard A x :=
   Summable.of_norm <| by simpa [← norm_sq_eq, memℓp_gen_iff] using hx
 
-lemma dominated_convergence {x y : ι → A} (hx : Summable x) (hy_nonneg : ∀ i, 0 ≤ y i)
-    (h_le : ∀ i, y i ≤ x i) : Summable y := by
-  rw [summable_iff_vanishing] at hx ⊢
-  intro u hu
-  obtain ⟨ε, ε_pos, hε⟩ := Metric.nhds_basis_closedBall.mem_iff.mp hu
-  specialize hx (Metric.closedBall 0 ε) (Metric.closedBall_mem_nhds 0 ε_pos)
-  peel hx with s t hst _
-  refine hε ?_
-  simp only [Metric.mem_closedBall, dist_zero_right] at this ⊢
-  refine le_trans ?_ this
-  refine CStarAlgebra.norm_le_norm_of_nonneg_of_le (t.sum_nonneg fun i _ ↦ (hy_nonneg i)) ?_
-  gcongr
-  exact h_le _
-
 lemma MemStandard.zero : MemStandard A (0 : Π i, E i) := by
   simpa [MemStandard] using summable_zero
-
-lemma MemStandard.add {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard A y) :
-    MemStandard A (x + y) := by
-  rw [MemStandard] at hx hy ⊢
-  refine dominated_convergence ((hx.add hy).add (hx.add hy)) (fun _ ↦ inner_self_nonneg) fun i ↦ ?_
-  calc
-    _ ≤ ⟪(x + y) i, (x + y) i⟫_A + ⟪(x - y) i, (x - y) i⟫_A :=
-      le_add_of_nonneg_right inner_self_nonneg
-    _ = _ := by simp; abel
 
 lemma MemStandard.neg {x : Π i, E i} (hx : MemStandard A x) :
     MemStandard A (-x) := by
   simpa [MemStandard]
 
-lemma MemStandard.sub {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard A y) :
-    MemStandard A (x - y) := by
-  rw [sub_eq_add_neg]
-  exact hx.add hy.neg
-
-lemma MemStandard.smul (z : ℂ) {x : Π i, E i} (hx : MemStandard A x) :
+lemma MemStandard.complex_smul (z : ℂ) {x : Π i, E i} (hx : MemStandard A x) :
     MemStandard A (z • x) := by
   simpa [MemStandard] using (hx.const_smul _).const_smul _
 
-open scoped RightActions
-
-lemma MemStandard.smul_right (a : A) {x : Π i, E i} (hx : MemStandard A x) :
+lemma MemStandard.smul (a : A) {x : Π i, E i} (hx : MemStandard A x) :
     MemStandard A (a • x) := by
   simpa [MemStandard] using hx.mul_right (star a) |>.mul_left a
 
@@ -107,18 +81,46 @@ lemma MemStandard.isBounded_norm {x : Π i, E i} (hx : MemStandard A x) :
   specialize this _ ⟨i, rfl⟩
   simpa [norm_sq_eq A]
 
+variable [StarOrderedRing A]
+
+/-- If `x : ι → A` is summable and `y` is dominated by `x` (i.e., `0 ≤ y i ≤ x i` for `i : ι`), then
+`y` is also summable.  -/
+lemma dominated_convergence {x y : ι → A} (hx : Summable x) (hy_nonneg : ∀ i, 0 ≤ y i)
+    (h_le : ∀ i, y i ≤ x i) : Summable y := by
+  rw [summable_iff_vanishing] at hx ⊢
+  intro u hu
+  obtain ⟨ε, ε_pos, hε⟩ := Metric.nhds_basis_closedBall.mem_iff.mp hu
+  specialize hx (Metric.closedBall 0 ε) (Metric.closedBall_mem_nhds 0 ε_pos)
+  peel hx with s t hst _
+  refine hε ?_
+  simp only [Metric.mem_closedBall, dist_zero_right] at this ⊢
+  refine le_trans ?_ this
+  refine CStarAlgebra.norm_le_norm_of_nonneg_of_le (t.sum_nonneg fun i _ ↦ (hy_nonneg i)) ?_
+  gcongr
+  exact h_le _
+
+lemma MemStandard.add {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard A y) :
+    MemStandard A (x + y) := by
+  rw [MemStandard] at hx hy ⊢
+  refine dominated_convergence ((hx.add hy).add (hx.add hy)) (fun _ ↦ inner_self_nonneg) fun i ↦ ?_
+  calc
+    _ ≤ ⟪(x + y) i, (x + y) i⟫_A + ⟪(x - y) i, (x - y) i⟫_A :=
+      le_add_of_nonneg_right inner_self_nonneg
+    _ = _ := by simp; abel
+
+lemma MemStandard.sub {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard A y) :
+    MemStandard A (x - y) := by
+  rw [sub_eq_add_neg]
+  exact hx.add hy.neg
+
 lemma MemStandard.summable_inner {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard A y) :
     Summable fun i ↦ ⟪x i, y i⟫_A := by
   conv in ⟪x _, y _⟫_A => rw [polarization']
   apply_rules (config := { transparency := .reducible }) [Summable.const_smul, Summable.add, Summable.sub]
   · exact hy.add hx
   · exact hy.sub hx
-  · exact hy.add (hx.smul _)
-  · exact hy.sub (hx.smul _)
-
-lemma MemStandard.subtype {x : Π i, E i} (hx : MemStandard A x) (s : Set ι) :
-    MemStandard A (fun i : s ↦ x i) := by
-  simpa [Function.comp_def] using Summable.subtype hx s
+  · exact hy.add (hx.complex_smul _)
+  · exact hy.sub (hx.complex_smul _)
 
 variable (A E) in
 /-- The standard C⋆-module  -/
@@ -126,7 +128,7 @@ def Standard : Type _ :=
   { carrier := {x | MemStandard A x}
     zero_mem' := .zero
     add_mem' := .add
-    smul_mem' := .smul : Submodule ℂ (Π i, E i) }
+    smul_mem' := .complex_smul : Submodule ℂ (Π i, E i) }
 
 scoped[CStarAlgebra] notation "ℓ²(" A ", " E ")" => CStarModule.Standard A E
 
@@ -158,7 +160,7 @@ instance : AddCommGroup ℓ²(A, E) := Submodule.addCommGroup _
 instance : Module ℂ ℓ²(A, E) := Submodule.module _
 
 instance : SMul A ℓ²(A, E) where
-  smul a x := ⟨_, x.property.smul_right a⟩
+  smul a x := ⟨_, x.property.smul a⟩
 
 @[simp] lemma memStandard (x : ℓ²(A, E)) : MemStandard A ⇑x := x.property
 @[simp] lemma coe_zero : ⇑(0 : ℓ²(A, E)) = (0 : Π i, E i) := rfl
@@ -187,7 +189,7 @@ lemma inner_apply_self_le_inner (x : ℓ²(A, E)) (i : ι) : ⟪x i, x i⟫_A �
   le_tsum x.memStandard _ fun _ _ ↦ inner_self_nonneg
 
 lemma sum_inner_apply_self_le_inner (x : ℓ²(A, E)) (s : Finset ι) :
-    ∑ i in s, ⟪x i, x i⟫_A ≤ ⟪x, x⟫_A :=
+    ∑ i ∈ s, ⟪x i, x i⟫_A ≤ ⟪x, x⟫_A :=
   sum_le_tsum s (fun _ _ ↦ inner_self_nonneg) x.memStandard
 
 lemma tsum_inner_apply_self_le_inner (x : ℓ²(A, E)) (s : Set ι) :
@@ -222,7 +224,7 @@ lemma norm_apply_le (x : ℓ²(A, E)) (i : ι) : ‖x i‖ ≤ ‖x‖ := by
   exact CStarAlgebra.norm_le_norm_of_nonneg_of_le inner_self_nonneg (inner_apply_self_le_inner x i)
 
 lemma norm_sum_inner_apply_le (x : ℓ²(A, E)) (s : Finset ι) :
-    ‖∑ i in s, ⟪x i, x i⟫_A‖ ≤ ‖x‖ ^ 2 := by
+    ‖∑ i ∈ s, ⟪x i, x i⟫_A‖ ≤ ‖x‖ ^ 2 := by
   rw [norm_def, Real.sq_sqrt (by positivity)]
   exact CStarAlgebra.norm_le_norm_of_nonneg_of_le (s.sum_nonneg fun _ _ ↦ inner_self_nonneg)
     (sum_inner_apply_self_le_inner x s)
@@ -256,7 +258,7 @@ theorem tendsto_of_tendsto_pi {F : ℕ → ℓ²(A, E)} (hF : CauchySeq F) {f : 
     · refine tendsto_norm.comp <| tendsto_finset_sum s fun i hi ↦ ?_
       rw [tendsto_pi_nhds] at hf
       have := tendsto_const_nhds (x := F n i) |>.sub (hf i)
-      refine (continuous_inner.tendsto _).comp (this.prod_mk_nhds this)
+      refine (continuous_inner.tendsto _).comp (this.prodMk_nhds this)
     · filter_upwards [hn] with m hm
       rw [← Real.sqrt_sq (norm_nonneg _), Real.sqrt_lt (by positivity) (by positivity)] at hm
       refine norm_sum_inner_apply_le _ s |>.trans hm.le |>.trans <| by simp [div_pow]
@@ -284,7 +286,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
       refine lt_of_le_of_lt ?_ (half_lt_self hε)
       refine le_of_tendsto (f := fun n ↦ ‖∑ i ∈ t, ⟪x n i, x n i⟫_A‖) (x := atTop) ?_ ?_
       · exact tendsto_norm.comp <| tendsto_finset_sum t fun i hi ↦
-          (continuous_inner.tendsto _).comp ((hy i).prod_mk_nhds (hy i))
+          (continuous_inner.tendsto _).comp ((hy i).prodMk_nhds (hy i))
       · filter_upwards [Ici_mem_atTop N] with m hm
         replace hN := (hN N le_rfl m hm).le
         have (j : ι) (a b : E j) :
