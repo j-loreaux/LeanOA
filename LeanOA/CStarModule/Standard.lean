@@ -4,16 +4,38 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jireh Loreaux
 -/
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-import LeanOA.CStarModule.Defs
+import Mathlib.Analysis.CStarAlgebra.Module.Defs
 import Mathlib.Analysis.Normed.Lp.lpSpace
 
-/-! # The standard C⋆-module -/
+/-! # The standard C⋆-module
+
+Given a family `E : ι → Type*` of C⋆-modules over a C⋆-algebra `A`, the *standard C⋆-module* `ℓ²(A, E)`
+consists of the additive subgroup of `Π i, E i` consisting of those `x : Π i, E i` such that the sum
+`∑' i, ⟪x i, x i⟫_A` converges. Note that such convergence is a consequence of, but not equivalent to,
+the convergence of `∑' i, ‖x i‖ ^ 2`. Because of the similarity with `lp` for `p = 2`, we develop the
+API in an analogous manner.
+
+`ℓ²(A, E)` is naturally a complete C⋆-module over `A`, with `A`-valued inner product given by
+`⟪x, y⟫_A = ∑' i, ⟪x i, y i⟫_A`.
+
+## Main declarations
+
++ `CStarModule.polarization`: The polarization identity for C⋆-modules.
++ `CStarModule.MemStandard`: The property on `x : Π i, E i` saying that `∑' i, ⟪x i, x i⟫_A` converges.
++ `CStarModule.Standard`: The standard C⋆-module `ℓ²(A, E)` which is the additive subgroup with carrier
+  `{x : Π i, E i | MemStandard A x}`.
++ `CStarAlgebra.dominated_convergence`: If `x y : ι → A` are sequences of nonnegative elements with `x`
+  summable and `y` dominated by `x`, then `y` is also summable.
++ `CStarModule.Standard.inst`: The standard C⋆-module `ℓ²(A, E)` is a C⋆-module over `A`.
++ `CStarModule.Standard.instCompleteSpace`: The standard C⋆-module `ℓ²(A, E)` is a complete space.
+-/
 
 open scoped InnerProductSpace
 
 namespace CStarModule
 
 section Polarization
+-- this should probably move into the `Defs` file
 
 variable {A E : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 variable [NormedAddCommGroup E] [Module ℂ E] [SMul A E] [CStarModule A E]
@@ -83,10 +105,11 @@ lemma MemStandard.isBounded_norm {x : Π i, E i} (hx : MemStandard A x) :
 
 variable [StarOrderedRing A]
 
+-- I think this can go in `CStarAlgebra.ContinuousFunctionalCalculus.Order`
 /-- If `x : ι → A` is summable and `y` is dominated by `x` (i.e., `0 ≤ y i ≤ x i` for `i : ι`), then
 `y` is also summable.  -/
-lemma dominated_convergence {x y : ι → A} (hx : Summable x) (hy_nonneg : ∀ i, 0 ≤ y i)
-    (h_le : ∀ i, y i ≤ x i) : Summable y := by
+lemma _root_.CStarAlgebra.dominated_convergence {x y : ι → A} (hx : Summable x)
+    (hy_nonneg : ∀ i, 0 ≤ y i) (h_le : ∀ i, y i ≤ x i) : Summable y := by
   rw [summable_iff_vanishing] at hx ⊢
   intro u hu
   obtain ⟨ε, ε_pos, hε⟩ := Metric.nhds_basis_closedBall.mem_iff.mp hu
@@ -102,7 +125,8 @@ lemma dominated_convergence {x y : ι → A} (hx : Summable x) (hy_nonneg : ∀ 
 lemma MemStandard.add {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard A y) :
     MemStandard A (x + y) := by
   rw [MemStandard] at hx hy ⊢
-  refine dominated_convergence ((hx.add hy).add (hx.add hy)) (fun _ ↦ inner_self_nonneg) fun i ↦ ?_
+  refine CStarAlgebra.dominated_convergence ((hx.add hy).add (hx.add hy))
+    (fun _ ↦ inner_self_nonneg) fun i ↦ ?_
   calc
     _ ≤ ⟪(x + y) i, (x + y) i⟫_A + ⟪(x - y) i, (x - y) i⟫_A :=
       le_add_of_nonneg_right inner_self_nonneg
