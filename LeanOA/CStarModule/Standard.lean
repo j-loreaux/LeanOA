@@ -3,6 +3,8 @@ Copyright (c) 2024 Jireh Loreaux. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jireh Loreaux
 -/
+import LeanOA.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+import LeanOA.ForMathlib.Analysis.CStarAlgebra.Module.Defs
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.CStarAlgebra.Module.Defs
 import Mathlib.Analysis.Normed.Lp.lpSpace
@@ -20,7 +22,6 @@ API in an analogous manner.
 
 ## Main declarations
 
-+ `CStarModule.polarization`: The polarization identity for C⋆-modules.
 + `CStarModule.MemStandard`: The property on `x : Π i, E i` saying that `∑' i, ⟪x i, x i⟫_A` converges.
 + `CStarModule.Standard`: The standard C⋆-module `ℓ²(A, E)` which is the additive subgroup with carrier
   `{x : Π i, E i | MemStandard A x}`.
@@ -33,29 +34,6 @@ API in an analogous manner.
 open scoped InnerProductSpace
 
 namespace CStarModule
-
-section Polarization
--- this should probably move into the `Defs` file
-
-variable {A E : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-variable [NormedAddCommGroup E] [Module ℂ E] [SMul A E] [CStarModule A E]
-
-open Complex
-
-lemma polarization {x y : E} :
-    4 • ⟪y, x⟫_A = ⟪x + y, x + y⟫_A - ⟪x - y, x - y⟫_A +
-      I • ⟪x + I • y, x + I • y⟫_A - I • ⟪x - I • y, x - I • y⟫_A := by
-  simp [smul_smul, smul_sub]
-  abel
-
-lemma polarization' {x y : E} :
-    ⟪y, x⟫_A = (1 / 4 : ℂ) • (⟪x + y, x + y⟫_A - ⟪x - y, x - y⟫_A +
-      I • ⟪x + I • y, x + I • y⟫_A - I • ⟪x - I • y, x - I • y⟫_A) := by
-  rw [← (IsUnit.mk0 (4 : ℂ) (by norm_num)).smul_left_cancel, ofNat_smul_eq_nsmul ℂ 4]
-  simpa only [one_div, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, smul_inv_smul₀]
-    using CStarModule.polarization
-
-end Polarization
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A]
 variable {ι : Type*} {E : ι → Type*}
@@ -104,23 +82,6 @@ lemma MemStandard.isBounded_norm {x : Π i, E i} (hx : MemStandard A x) :
   simpa [norm_sq_eq A]
 
 variable [StarOrderedRing A]
-
--- I think this can go in `CStarAlgebra.ContinuousFunctionalCalculus.Order`
-/-- If `x : ι → A` is summable and `y` is dominated by `x` (i.e., `0 ≤ y i ≤ x i` for `i : ι`), then
-`y` is also summable.  -/
-lemma _root_.CStarAlgebra.dominated_convergence {x y : ι → A} (hx : Summable x)
-    (hy_nonneg : ∀ i, 0 ≤ y i) (h_le : ∀ i, y i ≤ x i) : Summable y := by
-  rw [summable_iff_vanishing] at hx ⊢
-  intro u hu
-  obtain ⟨ε, ε_pos, hε⟩ := Metric.nhds_basis_closedBall.mem_iff.mp hu
-  specialize hx (Metric.closedBall 0 ε) (Metric.closedBall_mem_nhds 0 ε_pos)
-  peel hx with s t hst _
-  refine hε ?_
-  simp only [Metric.mem_closedBall, dist_zero_right] at this ⊢
-  refine le_trans ?_ this
-  refine CStarAlgebra.norm_le_norm_of_nonneg_of_le (t.sum_nonneg fun i _ ↦ (hy_nonneg i)) ?_
-  gcongr
-  exact h_le _
 
 lemma MemStandard.add {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard A y) :
     MemStandard A (x + y) := by
