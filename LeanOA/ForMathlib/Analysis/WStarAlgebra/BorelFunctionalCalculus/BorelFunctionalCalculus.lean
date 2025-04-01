@@ -14,7 +14,7 @@ import Mathlib.Analysis.VonNeumannAlgebra.Basic
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 import Mathlib.MeasureTheory.Function.LpSpace
-import Mathlib.MeasureTheory.Function.LpSeminorm.Basic
+import Mathlib.MeasureTheory.Function.LpSeminorm.CompareExp
 
 /-!
 # Borel Functional Calculus Class
@@ -31,7 +31,9 @@ We develop the basic definition of the `BorelFunctionalCalculus` class, imitatin
 -/
 
 
-namespace BorelSpace
+section BorelSpace
+
+open BorelSpace
 
 variable {X : Type*} [TopologicalSpace X] [MeasurableSpace X] [BorelSpace X]
 
@@ -44,7 +46,8 @@ def ess_range (μ : MeasureTheory.Measure X) (f : X → Y) : Set Y :=
 
 end BorelSpace
 
-namespace MeasureTheory
+/- What happens if we have a namespace elsewhere called `MeasureTheory`? Is declaring the section below a problem? -/
+
 
 section LpArithmetic
 
@@ -60,18 +63,34 @@ then the resulting function is also essentially bounded. We then can move on to 
 with instances, etc.-/
 namespace Memℒp
 
+#check MeasureTheory.MemLp.mul
+
 --The following result needs a better name. The use `infty_mul` means something like `⊤ * a` in the library so that's no good.
 -- What we want is `Memℒ∞.mul`, I think.
-theorem Memℒinfty.mul {f g : α → ℂ} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (f * g) ⊤ μ :=
-  ⟨ MeasureTheory.AEStronglyMeasurable.mul (aestronglyMeasurable hf) (aestronglyMeasurable hg),
-   by simp only [eLpNorm, ENNReal.top_ne_zero, ↓reduceIte, eLpNormEssSup, Pi.mul_apply, nnnorm_mul, ENNReal.coe_mul]
-      exact LE.le.trans_lt (ENNReal.essSup_mul_le (fun x ↦ ‖f x‖₊) (fun x ↦ ‖g x‖₊)) (WithTop.mul_lt_top hf.2 hg.2) ⟩
+theorem MemLinfty.mul {f g : α → ℂ} (hf : MemLp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (f * g) ⊤ μ := by
+   have H := MeasureTheory.MemLp.mul
+  --⟨ MeasureTheory.AEStronglyMeasurable.mul (aestronglyMeasurable hf) (aestronglyMeasurable hg),
+  -- by simp only [eLpNorm, ENNReal.top_ne_zero, ↓reduceIte, eLpNormEssSup, Pi.mul_apply, nnnorm_mul, ENNReal.coe_mul]
+  --    exact LE.le.trans_lt (ENNReal.essSup_mul_le (fun x ↦ ‖f x‖₊) (fun x ↦ ‖g x‖₊)) (WithTop.mul_lt_top hf.2 hg.2) ⟩
 
---Now we have to use the above to develop a `toLp_infty_mul` result.
+--The above is working too hard. We already have  `MeasureTheory.Memℒp.mul` in the library.
 
-instance LinftyMul : Mul (Lp ℂ ⊤ μ) where
-  mul {f g}:= sorry
-  --simp [eLpNorm_congr_ae AEEqFun.coeFn_mul f g]
+--Now we need to define the multiplication on the L infty space itself. But this is in an `AddSubgroup`, so is a bit unusual...
+
+-- We also have `MeasureTheory.AEEqFun.instMul` for a multiplication instance at the level of classes of measurable functions.
+
+noncomputable def ml (f g : α →ₘ[μ] ℂ) (hf : f ∈  Lp ℂ ⊤ μ) (hg : g ∈  Lp ℂ ⊤ μ) := Memℒp.toLp _ (Memℒinfty.mul ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hf) ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hg))
+
+
+noncomputable instance LinftyMul : Mul (Lp ℂ ⊤ μ) where
+  mul := fun
+    | .mk f hf => fun
+      | .mk g hg => .mk (f * g) (by
+        have H := Memℒp.toLp (f * g) (Memℒinfty.mul ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hf) ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hg)))
+
+
+
+--maybe some kind of coercion on the RHS can be used here...
 
 theorem toLinfty_mul {f g : α → E} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) :
     (hf.mul hg).toLp (f * g) = hf.toLp f * hg.toLp g :=
@@ -81,7 +100,7 @@ theorem toLinfty_mul {f g : α → E} (hf : Memℒp f ⊤ μ) (hg : Memℒp g �
 classes of measurable functions, even? This would be the right level of generality...in that we
 then only would need to provide a proof of essential boundedness of the product. -/
 
-end LpArithmetic
+end Memℒp
 
 section Instances
 
