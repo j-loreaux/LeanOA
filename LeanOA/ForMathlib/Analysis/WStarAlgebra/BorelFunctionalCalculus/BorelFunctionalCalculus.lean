@@ -13,8 +13,9 @@ import Mathlib.Algebra.Order.Star.Basic
 import Mathlib.Analysis.VonNeumannAlgebra.Basic
 import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
-import Mathlib.MeasureTheory.Function.LpSpace
 import Mathlib.MeasureTheory.Function.LpSeminorm.CompareExp
+import Mathlib.MeasureTheory.Function.LpSpace.Basic
+import Mathlib.MeasureTheory.Function.Holder
 
 /-!
 # Borel Functional Calculus Class
@@ -46,9 +47,56 @@ def ess_range (μ : MeasureTheory.Measure X) (f : X → Y) : Set Y :=
 
 end BorelSpace
 
-/- What happens if we have a namespace elsewhere called `MeasureTheory`? Is declaring the section below a problem? -/
+/- Ok, so Jireh has made a nice HMul instance for Holder conjugate measurable functions. It's involved. I'd still like to make the
+`L∞` classes into a `CStarAlgebra`. It's probably a good idea to try. What is the right way forward, here?
+
+Ok. The obvious way forward is exactly the same as for paper math. We look at what is needed for the `CStarAlgebra` declaration.
+
+I can try to rebuild from the ground up, and introduce things from below as needed.
+
+-/
+
+--namespace Linfty
+
+namespace MeasureTheory
+
+variable {α R : Type*} {m : MeasurableSpace α} {μ : Measure α} [NormedRing R] [NormOneClass R]
+
+/-
+#synth AddCommGroup (Lp R ⊤ μ)
+#synth Norm (Lp R ⊤ μ)
+#synth MetricSpace (Lp R ⊤ μ)
+#synth HMul (Lp R ⊤ μ)
+#synth SMul (Lp R ⊤ μ)
+#synth MulOneClass (Lp R ⊤ μ)
+#synth Semigroup (Lp R ⊤ μ)
+#synth NonAssocSemiring (Lp R ⊤ μ)
+#synth NonUnitalSemiring (Lp R ⊤ μ)
+#synth Monoid (Lp R ⊤ μ)
+#synth MonoidWithZero (Lp R ⊤ μ)
+#synth Semiring (Lp R ⊤ μ)
+#synth AddGroupWithOne (Lp R ⊤ μ)
+-/
+
+--#synth ENNReal.HolderTriple ⊤ ⊤ ⊤
+--#synth HSMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
+
+noncomputable instance Linfty.instHMul : HMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ) where
+  hMul f g := f • g
+
+noncomputable instance Linfty.instMul : Mul (Lp R ⊤ μ) where
+  mul f g := f * g
+
+instance Linfty.instOne : One (Lp R ⊤ μ) where
+  one := ⟨by one(R →ₘ[μ] R) , by sorry⟩
+
+noncomputable instance Linfty.instMulOneClass : MulOneClass (Lp R ⊤ μ) where
+  one := sorry
+  one_mul := sorry
+  mul_one := sorry
 
 
+#exit
 section LpArithmetic
 
 open TopologicalSpace MeasureTheory Filter
@@ -63,12 +111,20 @@ then the resulting function is also essentially bounded. We then can move on to 
 with instances, etc.-/
 namespace Memℒp
 
-#check MeasureTheory.MemLp.mul
+variable {f g : α → ℂ} (hf : MemLp f ⊤ μ) (hg : MemLp g ⊤ μ)
+
+
 
 --The following result needs a better name. The use `infty_mul` means something like `⊤ * a` in the library so that's no good.
 -- What we want is `Memℒ∞.mul`, I think.
-theorem MemLinfty.mul {f g : α → ℂ} (hf : MemLp f ⊤ μ) (hg : Memℒp g ⊤ μ) : Memℒp (f * g) ⊤ μ := by
-   have H := MeasureTheory.MemLp.mul
+theorem MemLinfty.mul {f g : α → ℂ} (hg : MemLp g ⊤ μ) (hf : MemLp f ⊤ μ)  : MemLp (f * g) ⊤ μ := MemLp.mul hg hf
+
+#check (MemLp.toLp (MemLinfty.mul hg hf)).2
+
+theorem Mem {f g : α → ℂ} (hg : MemLp g ⊤ μ) (hf : MemLp f ⊤ μ) : Prop := (MemLp.toLp MemLinfty.mul hg hf).2
+
+
+
   --⟨ MeasureTheory.AEStronglyMeasurable.mul (aestronglyMeasurable hf) (aestronglyMeasurable hg),
   -- by simp only [eLpNorm, ENNReal.top_ne_zero, ↓reduceIte, eLpNormEssSup, Pi.mul_apply, nnnorm_mul, ENNReal.coe_mul]
   --    exact LE.le.trans_lt (ENNReal.essSup_mul_le (fun x ↦ ‖f x‖₊) (fun x ↦ ‖g x‖₊)) (WithTop.mul_lt_top hf.2 hg.2) ⟩
@@ -79,20 +135,20 @@ theorem MemLinfty.mul {f g : α → ℂ} (hf : MemLp f ⊤ μ) (hg : Memℒp g �
 
 -- We also have `MeasureTheory.AEEqFun.instMul` for a multiplication instance at the level of classes of measurable functions.
 
-noncomputable def ml (f g : α →ₘ[μ] ℂ) (hf : f ∈  Lp ℂ ⊤ μ) (hg : g ∈  Lp ℂ ⊤ μ) := Memℒp.toLp _ (Memℒinfty.mul ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hf) ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hg))
+noncomputable def ml (f g : α →ₘ[μ] ℂ) (hf : f ∈  Lp ℂ ⊤ μ) (hg : g ∈  Lp ℂ ⊤ μ) := MemLp.toLp _ (MemLinfty.mul ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hf) ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hg))
 
 
 noncomputable instance LinftyMul : Mul (Lp ℂ ⊤ μ) where
   mul := fun
     | .mk f hf => fun
       | .mk g hg => .mk (f * g) (by
-        have H := Memℒp.toLp (f * g) (Memℒinfty.mul ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hf) ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hg)))
+        have H := MemLp.toLp (f * g) (MemLinfty.mul ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hf) ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hg)))
 
 
 
 --maybe some kind of coercion on the RHS can be used here...
 
-theorem toLinfty_mul {f g : α → E} (hf : Memℒp f ⊤ μ) (hg : Memℒp g ⊤ μ) :
+theorem toLinfty_mul {f g : α → E} (hf : MemLp f ⊤ μ) (hg : MemLp g ⊤ μ) :
     (hf.mul hg).toLp (f * g) = hf.toLp f * hg.toLp g :=
   rfl
 
