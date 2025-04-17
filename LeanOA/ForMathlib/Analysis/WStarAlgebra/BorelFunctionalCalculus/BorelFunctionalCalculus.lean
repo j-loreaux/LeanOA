@@ -60,7 +60,7 @@ I can try to rebuild from the ground up, and introduce things from below as need
 
 namespace MeasureTheory
 
-variable {α R : Type*} {m : MeasurableSpace α} {μ : Measure α} [NormedRing R] [NormOneClass R]
+variable {α R : Type*} {m : MeasurableSpace α} {μ : Measure α} [IsFiniteMeasure μ] [NormedRing R] [NormOneClass R]
 
 /-
 #synth AddCommGroup (Lp R ⊤ μ)
@@ -88,11 +88,14 @@ noncomputable instance Linfty.instMul : Mul (Lp R ⊤ μ) where
   mul f g := f * g
 
 instance Linfty.instOne : One (Lp R ⊤ μ) where
-  one := ⟨by one(R →ₘ[μ] R) , by sorry⟩
+  one := ⟨MeasureTheory.AEEqFun.const α 1 , MeasureTheory.Lp.const_mem_Lp α μ 1⟩
 
 noncomputable instance Linfty.instMulOneClass : MulOneClass (Lp R ⊤ μ) where
-  one := sorry
-  one_mul := sorry
+  one := Linfty.instOne.one
+  one_mul := by
+      intro a
+      ext
+
   mul_one := sorry
 
 
