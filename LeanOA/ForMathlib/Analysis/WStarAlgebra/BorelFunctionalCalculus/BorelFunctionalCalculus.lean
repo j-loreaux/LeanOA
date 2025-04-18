@@ -47,17 +47,6 @@ def ess_range (μ : MeasureTheory.Measure X) (f : X → Y) : Set Y :=
 
 end BorelSpace
 
-/- Ok, so Jireh has made a nice HMul instance for Holder conjugate measurable functions. It's involved. I'd still like to make the
-`L∞` classes into a `CStarAlgebra`. It's probably a good idea to try. What is the right way forward, here?
-
-Ok. The obvious way forward is exactly the same as for paper math. We look at what is needed for the `CStarAlgebra` declaration.
-
-I can try to rebuild from the ground up, and introduce things from below as needed.
-
--/
-
---namespace Linfty
-
 namespace MeasureTheory
 
 section AEEqFun
@@ -80,6 +69,9 @@ noncomputable instance Linfty.instMul : Mul (Lp R ⊤ μ) where
   mul f g := f • g
 
 variable [IsFiniteMeasure μ]
+
+--have to make a new 1 specialized to Linfty (so we don't need finite measure). Can do this with
+--MemLp.toLp
 
 instance Linfty.instOne : One (Lp R ⊤ μ) where
   one := ⟨1 , MeasureTheory.Lp.const_mem_Lp α μ 1⟩
@@ -117,6 +109,11 @@ noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ⊤ μ) where
     rw [smul_eq_mul] at *
     simp [hx1, hx2, hx3, hx4]
     simp [mul_assoc]
+
+noncomputable instance Linfty.instMonoid : Monoid (Lp R ⊤ μ) :=
+  {Linfty.instMulOneClass, Linfty.instSemigroup with}
+
+
 
 noncomputable instance Linfty.instNonAssocSemiring : NonAssocSemiring (Lp R ⊤ μ) where
   nsmul := sorry
