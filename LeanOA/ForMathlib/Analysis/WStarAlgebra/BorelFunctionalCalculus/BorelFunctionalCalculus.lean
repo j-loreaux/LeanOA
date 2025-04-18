@@ -105,6 +105,24 @@ noncomputable instance Linfty.instMulOneClass : MulOneClass (Lp R ⊤ μ) where
   one_mul := one_smul
   mul_one := smul_one
 
+noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ⊤ μ) where
+  mul f g := f * g
+  mul_assoc := by
+    intro f g h
+    ext
+    filter_upwards [MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) (f * g) h,
+      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) f  (g * h),
+      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) f g,
+      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) g h] with x hx1 hx2 hx3 hx4
+    rw [smul_eq_mul] at *
+    simp [hx1, hx2, hx3, hx4]
+    simp [mul_assoc]
+
+
+
+
+
+#exit
 #synth ENNReal.HolderTriple ⊤ ⊤ ⊤
 #synth HSMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
 #synth AddCommGroup (Lp R ⊤ μ)
