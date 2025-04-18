@@ -69,11 +69,12 @@ noncomputable instance Linfty.instMul : Mul (Lp R ⊤ μ) where
   mul f g := f • g
 
 instance Linfty.instOne : One (Lp R ⊤ μ) where
-  one := ⟨MemLp.toLp (fun (_ : α) => (1 : R)) (memLp_top_const (μ := μ) 1), SetLike.coe_mem (MemLp.toLp (fun _ => 1) (memLp_top_const 1))⟩
+  one := ⟨MemLp.toLp (fun (_ : α) => (1 : R)) (memLp_top_const (μ := μ) 1), SetLike.coe_mem _⟩
 
 #check MeasureTheory.Lp.toLp_coeFn
 
-theorem Linfty.coeFn_one : ⇑(1 : Lp R ⊤ μ) =ᵐ[μ] 1 := by sorry
+theorem Linfty.coeFn_one : ⇑(1 : Lp R ⊤ μ) =ᵐ[μ] 1 :=
+  MeasureTheory.Lp.coeFn_const ..
 
 theorem Linfty.one_smul (f : Lp R ⊤ μ) : (1 : Lp R ⊤ μ) • f = f := by
   ext
