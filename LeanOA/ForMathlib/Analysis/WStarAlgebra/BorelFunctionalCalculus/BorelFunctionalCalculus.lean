@@ -97,29 +97,14 @@ theorem Linfty.smul_one (f : Lp R ⊤ μ) : f • (1 : Lp R ⊤ μ) = f := by
   ext
   filter_upwards [Linfty.coeFn_one (R := R),
     MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) f (1 : Lp R ⊤ μ)] with x hx1 hx2
-  simp [- smul_eq_mul, hx1, hx2]
-  --here there seems to be an issue with `smul` on the right. We need to somehow get this central.
-  sorry
-
-variable [NormOneClass R]
-
-
-
-
-
-
-
-example (f : Lp R ⊤ μ) : 1 * f = f := by
-    rw [Linfty.mul_eq]
-    simp [Linfty.one_smul]
+  rw [hx2, Pi.smul_apply', hx1, Pi.one_apply]
+  simp
 
 noncomputable instance Linfty.instMulOneClass : MulOneClass (Lp R ⊤ μ) where
   one := 1
   one_mul := one_smul
-  mul_one := sorry
+  mul_one := smul_one
 
-
-#exit
 #synth ENNReal.HolderTriple ⊤ ⊤ ⊤
 #synth HSMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
 #synth AddCommGroup (Lp R ⊤ μ)
