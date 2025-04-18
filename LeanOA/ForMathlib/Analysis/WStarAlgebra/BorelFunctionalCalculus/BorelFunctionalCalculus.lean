@@ -113,7 +113,7 @@ noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ⊤ μ) where
 noncomputable instance Linfty.instMonoid : Monoid (Lp R ⊤ μ) :=
   {Linfty.instMulOneClass, Linfty.instSemigroup with}
 
-
+--Need `NonUnitalNonAssocSemiring` instance, first.
 
 noncomputable instance Linfty.instNonAssocSemiring : NonAssocSemiring (Lp R ⊤ μ) where
   nsmul := sorry
@@ -123,8 +123,6 @@ noncomputable instance Linfty.instNonAssocSemiring : NonAssocSemiring (Lp R ⊤ 
   right_distrib := sorry
   mul_zero := sorry
   zero_mul := sorry
-
-
 
 #exit
 #synth ENNReal.HolderTriple ⊤ ⊤ ⊤
