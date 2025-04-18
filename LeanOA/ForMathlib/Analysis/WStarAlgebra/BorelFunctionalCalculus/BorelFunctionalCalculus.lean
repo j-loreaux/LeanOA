@@ -60,14 +60,73 @@ I can try to rebuild from the ground up, and introduce things from below as need
 
 namespace MeasureTheory
 
-variable {α R : Type*} {m : MeasurableSpace α} {μ : Measure α} [IsFiniteMeasure μ] [NormedRing R] [NormOneClass R]
+section AEEqFun
 
-/-
+variable {α β : Type*} {m : MeasurableSpace α} {μ : Measure α} [TopologicalSpace β] [MulOneClass β] [ContinuousMul β]
+
+theorem AEEqFun.one_mul (f : α →ₘ[μ] β) : 1 * f = f := by
+   ext
+   filter_upwards [coeFn_mul 1 f, coeFn_one (β := β)] with x hx1 hx2
+   simp [hx1, hx2]
+
+theorem AEEqFun.one_smul (f : α →ₘ[μ] β) : (1 : α →ₘ[μ] β) • f = f := by simp only [smul_eq_mul,
+  AEEqFun.one_mul]
+
+end AEEqFun
+
+variable {α R : Type*} {m : MeasurableSpace α} {μ : Measure α} [NormedRing R]
+
+noncomputable instance Linfty.instMul : Mul (Lp R ⊤ μ) where
+  mul f g := f • g
+
+variable [IsFiniteMeasure μ]
+
+instance Linfty.instOne : One (Lp R ⊤ μ) where
+  one := ⟨1 , MeasureTheory.Lp.const_mem_Lp α μ 1⟩
+
+theorem Linfty.coeFn_one : ⇑(1 : Lp R ⊤ μ) =ᵐ[μ] 1 :=
+  MeasureTheory.Lp.coeFn_const ..
+
+theorem Linfty.one_smul (f : Lp R ⊤ μ) : (1 : Lp R ⊤ μ) • f = f := by
+  ext
+  filter_upwards [Linfty.coeFn_one (R := R),
+    MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) 1 f] with x hx1 hx2
+  simp [- smul_eq_mul, hx1, hx2]
+
+theorem Linfty.smul_one (f : Lp R ⊤ μ) : f • (1 : Lp R ⊤ μ) = f := by
+  ext
+  filter_upwards [Linfty.coeFn_one (R := R),
+    MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) f (1 : Lp R ⊤ μ)] with x hx1 hx2
+  simp [- smul_eq_mul, hx1, hx2]
+  --here there seems to be an issue with `smul` on the right. We need to somehow get this central.
+  sorry
+
+variable [NormOneClass R]
+
+
+
+
+
+
+
+example (f : Lp R ⊤ μ) : 1 * f = f := by
+    rw [Linfty.mul_eq]
+    simp [Linfty.one_smul]
+
+noncomputable instance Linfty.instMulOneClass : MulOneClass (Lp R ⊤ μ) where
+  one := 1
+  one_mul := one_smul
+  mul_one := sorry
+
+
+#exit
+#synth ENNReal.HolderTriple ⊤ ⊤ ⊤
+#synth HSMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
 #synth AddCommGroup (Lp R ⊤ μ)
 #synth Norm (Lp R ⊤ μ)
 #synth MetricSpace (Lp R ⊤ μ)
-#synth HMul (Lp R ⊤ μ)
-#synth SMul (Lp R ⊤ μ)
+#synth HMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
+#synth SMul (Lp R ⊤ μ) (Lp R ⊤ μ) --should be ok because defeq to the other HSMul
 #synth MulOneClass (Lp R ⊤ μ)
 #synth Semigroup (Lp R ⊤ μ)
 #synth NonAssocSemiring (Lp R ⊤ μ)
@@ -76,30 +135,7 @@ variable {α R : Type*} {m : MeasurableSpace α} {μ : Measure α} [IsFiniteMeas
 #synth MonoidWithZero (Lp R ⊤ μ)
 #synth Semiring (Lp R ⊤ μ)
 #synth AddGroupWithOne (Lp R ⊤ μ)
--/
 
---#synth ENNReal.HolderTriple ⊤ ⊤ ⊤
---#synth HSMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
-
-noncomputable instance Linfty.instHMul : HMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ) where
-  hMul f g := f • g
-
-noncomputable instance Linfty.instMul : Mul (Lp R ⊤ μ) where
-  mul f g := f * g
-
-instance Linfty.instOne : One (Lp R ⊤ μ) where
-  one := ⟨MeasureTheory.AEEqFun.const α 1 , MeasureTheory.Lp.const_mem_Lp α μ 1⟩
-
-noncomputable instance Linfty.instMulOneClass : MulOneClass (Lp R ⊤ μ) where
-  one := Linfty.instOne.one
-  one_mul := by
-      intro a
-      ext
-
-  mul_one := sorry
-
-
-#exit
 section LpArithmetic
 
 open TopologicalSpace MeasureTheory Filter
