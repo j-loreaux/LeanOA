@@ -68,16 +68,12 @@ variable {α R : Type*} {m : MeasurableSpace α} {μ : Measure α} [NormedRing R
 noncomputable instance Linfty.instMul : Mul (Lp R ⊤ μ) where
   mul f g := f • g
 
-variable [IsFiniteMeasure μ]
-
---have to make a new 1 specialized to Linfty (so we don't need finite measure). Can do this with
---MemLp.toLp
-
 instance Linfty.instOne : One (Lp R ⊤ μ) where
-  one := ⟨1 , MeasureTheory.Lp.const_mem_Lp α μ 1⟩
+  one := ⟨MemLp.toLp (fun (_ : α) => (1 : R)) (memLp_top_const (μ := μ) 1), SetLike.coe_mem (MemLp.toLp (fun _ => 1) (memLp_top_const 1))⟩
 
-theorem Linfty.coeFn_one : ⇑(1 : Lp R ⊤ μ) =ᵐ[μ] 1 :=
-  MeasureTheory.Lp.coeFn_const ..
+#check MeasureTheory.Lp.toLp_coeFn
+
+theorem Linfty.coeFn_one : ⇑(1 : Lp R ⊤ μ) =ᵐ[μ] 1 := by sorry
 
 theorem Linfty.one_smul (f : Lp R ⊤ μ) : (1 : Lp R ⊤ μ) • f = f := by
   ext
