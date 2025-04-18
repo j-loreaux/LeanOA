@@ -118,7 +118,14 @@ noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ⊤ μ) where
     simp [hx1, hx2, hx3, hx4]
     simp [mul_assoc]
 
-
+noncomputable instance Linfty.instNonAssocSemiring : NonAssocSemiring (Lp R ⊤ μ) where
+  nsmul := sorry
+  nsmul_zero := sorry
+  nsmul_succ := sorry
+  left_distrib := sorry
+  right_distrib := sorry
+  mul_zero := sorry
+  zero_mul := sorry
 
 
 
