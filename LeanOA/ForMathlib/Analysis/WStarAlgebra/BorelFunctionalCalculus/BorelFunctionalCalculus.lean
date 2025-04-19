@@ -63,56 +63,60 @@ theorem AEEqFun.one_smul (f : α →ₘ[μ] β) : (1 : α →ₘ[μ] β) • f =
 
 end AEEqFun
 
+open scoped ENNReal
+
 variable {α R : Type*} {m : MeasurableSpace α} {μ : Measure α} [NormedRing R]
 
-noncomputable instance Linfty.instMul : Mul (Lp R ⊤ μ) where
+noncomputable instance Linfty.instMul : Mul (Lp R ∞ μ) where
   mul f g := f • g
 
-instance Linfty.instOne : One (Lp R ⊤ μ) where
+instance Linfty.instOne : One (Lp R ∞ μ) where
   one := ⟨MemLp.toLp (fun (_ : α) => (1 : R)) (memLp_top_const (μ := μ) 1), SetLike.coe_mem _⟩
 
 #check MeasureTheory.Lp.toLp_coeFn
 
-theorem Linfty.coeFn_one : ⇑(1 : Lp R ⊤ μ) =ᵐ[μ] 1 :=
-  MeasureTheory.Lp.coeFn_const ..
+theorem Linfty.coeFn_one : ⇑(1 : Lp R ∞ μ) =ᶠ[ae μ] 1 := coeFn_const ..
 
-theorem Linfty.one_smul (f : Lp R ⊤ μ) : (1 : Lp R ⊤ μ) • f = f := by
+
+
+
+
+theorem Linfty.one_smul (f : Lp R ∞ μ) : (1 : Lp R ∞ μ) • f = f := by
   ext
   filter_upwards [Linfty.coeFn_one (R := R),
-    MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) 1 f] with x hx1 hx2
+    MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) 1 f] with x hx1 hx2
   simp [- smul_eq_mul, hx1, hx2]
 
-theorem Linfty.smul_one (f : Lp R ⊤ μ) : f • (1 : Lp R ⊤ μ) = f := by
+theorem Linfty.smul_one (f : Lp R ∞ μ) : f • (1 : Lp R ∞ μ) = f := by
   ext
   filter_upwards [Linfty.coeFn_one (R := R),
-    MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) f (1 : Lp R ⊤ μ)] with x hx1 hx2
+    MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f (1 : Lp R ∞ μ)] with x hx1 hx2
   rw [hx2, Pi.smul_apply', hx1, Pi.one_apply]
   simp
 
-noncomputable instance Linfty.instMulOneClass : MulOneClass (Lp R ⊤ μ) where
+noncomputable instance Linfty.instMulOneClass : MulOneClass (Lp R ∞ μ) where
   one := 1
   one_mul := one_smul
   mul_one := smul_one
 
-noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ⊤ μ) where
+noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ∞ μ) where
   mul f g := f * g
   mul_assoc := by
     intro f g h
     ext
-    filter_upwards [MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) (f * g) h,
-      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) f  (g * h),
-      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) f g,
-      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ⊤) (q := ⊤) (r := ⊤) g h] with x hx1 hx2 hx3 hx4
+    filter_upwards [MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) (f * g) h,
+      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f  (g * h),
+      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f g,
+      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) g h] with x hx1 hx2 hx3 hx4
     rw [smul_eq_mul] at *
-    simp [hx1, hx2, hx3, hx4]
-    simp [mul_assoc]
+    simp [hx1, hx2, hx3, hx4, mul_assoc]
 
-noncomputable instance Linfty.instMonoid : Monoid (Lp R ⊤ μ) :=
+noncomputable instance Linfty.instMonoid : Monoid (Lp R ∞ μ) :=
   {Linfty.instMulOneClass, Linfty.instSemigroup with}
 
 --Need `NonUnitalNonAssocSemiring` instance, first.
 
-noncomputable instance Linfty.instNonAssocSemiring : NonAssocSemiring (Lp R ⊤ μ) where
+noncomputable instance Linfty.instNonAssocSemiring : NonAssocSemiring (Lp R ∞ μ) where
   nsmul := sorry
   nsmul_zero := sorry
   nsmul_succ := sorry
