@@ -70,26 +70,43 @@ variable {α R : Type*} {m : MeasurableSpace α} {μ : Measure α} [NormedRing R
 noncomputable instance Linfty.instMul : Mul (Lp R ∞ μ) where
   mul f g := f • g
 
+/-- Note, does not require `IsFiniteMeasure` instance. -/
+theorem memLinfty_const (c : R) : MemLp (fun _ : α => c) ∞ μ := by
+  refine ⟨aestronglyMeasurable_const, ?_⟩
+  by_cases hμ : μ = 0
+  · simp [hμ]
+  · rw [eLpNorm_const c (ENNReal.top_ne_zero) hμ]
+    simp
+
+theorem const_mem_Linfty (c : R) :
+    @AEEqFun.const α _ _ μ _ c ∈ Lp R ∞ μ :=
+  (memLinfty_const c).eLpNorm_mk_lt_top
+
+def Linfty.const : R →+ Lp R ∞ μ where
+  toFun c := ⟨AEEqFun.const α c, const_mem_Linfty c⟩
+  map_zero' := rfl
+  map_add' _ _ := rfl
+
+@[simp]
+lemma Linfty.const_val (c : R) : (Linfty.const c).1 = AEEqFun.const (β := R) (μ := μ) α c := rfl
+
+lemma Linfty.coeFn_const (c : R) : Linfty.const (μ := μ) c =ᵐ[μ] Function.const α c :=
+  AEEqFun.coeFn_const α c
+
 instance Linfty.instOne : One (Lp R ∞ μ) where
   one := ⟨MemLp.toLp (fun (_ : α) => (1 : R)) (memLp_top_const (μ := μ) 1), SetLike.coe_mem _⟩
 
-#check MeasureTheory.Lp.toLp_coeFn
-
 theorem Linfty.coeFn_one : ⇑(1 : Lp R ∞ μ) =ᶠ[ae μ] 1 := coeFn_const ..
-
-
-
-
 
 theorem Linfty.one_smul (f : Lp R ∞ μ) : (1 : Lp R ∞ μ) • f = f := by
   ext
-  filter_upwards [Linfty.coeFn_one (R := R),
+  filter_upwards [Linfty.coeFn_one (R := R) ..,
     MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) 1 f] with x hx1 hx2
   simp [- smul_eq_mul, hx1, hx2]
 
 theorem Linfty.smul_one (f : Lp R ∞ μ) : f • (1 : Lp R ∞ μ) = f := by
   ext
-  filter_upwards [Linfty.coeFn_one (R := R),
+  filter_upwards [Linfty.coeFn_one (R := R) ..,
     MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f (1 : Lp R ∞ μ)] with x hx1 hx2
   rw [hx2, Pi.smul_apply', hx1, Pi.one_apply]
   simp
