@@ -131,7 +131,51 @@ noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ∞ μ) where
 noncomputable instance Linfty.instMonoid : Monoid (Lp R ∞ μ) :=
   {Linfty.instMulOneClass, Linfty.instSemigroup with}
 
---Need `NonUnitalNonAssocSemiring` instance, first.
+#synth AddCommMonoid (Lp R ∞ μ)
+#synth Distrib (Lp R ∞ μ)
+#synth MulZeroClass (Lp R ∞ μ)
+#synth Mul (Lp R ∞ μ)
+#synth Add (Lp R ∞ μ)
+
+noncomputable instance Linfty.instDistrib : Distrib (Lp R ∞ μ) where
+  left_distrib := by
+    intro f g h
+    ext
+    filter_upwards [MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f (g + h),
+      MeasureTheory.Lp.coeFn_add (p := ∞) g h,
+      MeasureTheory.Lp.coeFn_add (p := ∞) (f * g) (f * h),
+      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f g,
+      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f h] with x h1 h2 h3 h4 h5
+    rw [smul_eq_mul] at *
+    rw [h3, Pi.add_apply, h4, h5, h1, Pi.smul_apply', h2, Pi.add_apply, Pi.smul_apply', Pi.smul_apply']
+    exact DistribSMul.smul_add ..
+  right_distrib := by
+    intro f g h
+    ext
+    filter_upwards [MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) (f + g) h, MeasureTheory.Lp.coeFn_add (p := ∞) f g] with x h1 h2
+    rw [Pi.smul_apply', h2, Pi.add_apply] at h1
+    -- this is a fact about the right action, so I am somehow approaching the proof wrongly...
+    sorry
+
+
+#exit
+noncomputable instance Linfty.NonUnitalNonAssocSemiring : NonUnitalNonAssocSemiring (Lp R ∞ μ) where
+  add := _
+  add_assoc := _
+  zero := _
+  zero_add := _
+  add_zero := _
+  nsmul := _
+  nsmul_zero := _
+  nsmul_succ := _
+  add_comm := _
+  mul := _
+  left_distrib := _
+  right_distrib := _
+  zero_mul := _
+  mul_zero := _
+
+
 
 noncomputable instance Linfty.instNonAssocSemiring : NonAssocSemiring (Lp R ∞ μ) where
   nsmul := sorry
