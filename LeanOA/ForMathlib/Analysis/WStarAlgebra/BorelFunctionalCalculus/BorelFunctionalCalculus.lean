@@ -63,9 +63,11 @@ theorem AEEqFun.one_smul (f : α →ₘ[μ] β) : (1 : α →ₘ[μ] β) • f =
 
 end AEEqFun
 
+variable {R : Type*} [NormedRing R]
+
 open scoped ENNReal
 
-variable {α R : Type*} {m : MeasurableSpace α} {μ : Measure α} [NormedRing R]
+variable {α : Type*} {m : MeasurableSpace α} {μ : Measure α}
 
 noncomputable instance Linfty.instMul : Mul (Lp R ∞ μ) where
   mul f g := f • g
@@ -185,10 +187,14 @@ noncomputable instance Linfty.NonUnitalRing : NonUnitalRing (Lp R ∞ μ) where
 
 noncomputable instance Linfty.Ring : Ring (Lp R ∞ μ) where
 
+-- Should we make `R` into a `ℂ`-module? How to introduce the `ℂ`-algebra structure?
 
+/-- The trouble with this instance is that `R` needs to be `ℂ` if we are going to be able to define CStarAlg. -/
+noncomputable instance Linfty.RSMul : SMul R (Lp R ∞ μ) where
+  smul c f := (Linfty.const (μ := μ) c) • f
 
 noncomputable instance Linfty.Star : Star (Lp R ∞ μ) where
-  star := sorry
+  star := sorry --fill in the data here, but not the proof.
 
 noncomputable instance Linfty.InvolutiveStar : InvolutiveStar (Lp R ∞ μ) where
   star_involutive := sorry
@@ -203,9 +209,27 @@ noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
   dist_eq := sorry
   norm_mul_le := sorry
 
+-- Some bizarre things are starting to happen. We are declaring instances that Lean can't find. There must be
+-- confusion. It seems to have something to do with the complex `SMul`.
 
 
-#exit
+
+#synth SMul R (Lp R ∞ μ)
+
+noncomputable instance Linfty.ComplexAlgebra : Algebra ℂ (Lp R ∞ μ) where
+
+#synth Algebra ℂ (Lp R ∞ μ)
+
+variable [CompleteSpace R]
+
+noncomputable instance Linfty.CompleteSpace : CompleteSpace (Lp R ∞ μ) where
+
+noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp R ∞ μ) where
+
+#synth Algebra ℂ (Lp R ∞ μ)
+#synth NormedAlgebra ℂ (Lp R ∞ μ)
+
+
 #synth ENNReal.HolderTriple ⊤ ⊤ ⊤
 #synth HSMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
 #synth AddCommGroup (Lp R ⊤ μ)
@@ -221,7 +245,11 @@ noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
 #synth MonoidWithZero (Lp R ⊤ μ)
 #synth Semiring (Lp R ⊤ μ)
 #synth AddGroupWithOne (Lp R ⊤ μ)
-
+#synth Ring (Lp R ∞ μ)
+#synth Star (Lp R ∞ μ)
+#synth InvolutiveStar (Lp R ∞ μ)
+#synth CompleteSpace (Lp R ∞ μ)
+#synth Algebra ℂ (Lp R ∞ μ)
 section LpArithmetic
 
 open TopologicalSpace MeasureTheory Filter
