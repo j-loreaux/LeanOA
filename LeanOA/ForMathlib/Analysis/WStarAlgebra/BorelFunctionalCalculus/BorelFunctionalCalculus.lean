@@ -131,12 +131,7 @@ noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ∞ μ) where
 noncomputable instance Linfty.instMonoid : Monoid (Lp R ∞ μ) :=
   {Linfty.instMulOneClass, Linfty.instSemigroup with}
 
-#synth AddCommMonoid (Lp R ∞ μ)
-#synth Distrib (Lp R ∞ μ)
-#synth MulZeroClass (Lp R ∞ μ)
-#synth Mul (Lp R ∞ μ)
-#synth Add (Lp R ∞ μ)
-
+/-- Needs clean up. -/
 noncomputable instance Linfty.instDistrib : Distrib (Lp R ∞ μ) where
   left_distrib := by
     intro f g h
@@ -152,11 +147,36 @@ noncomputable instance Linfty.instDistrib : Distrib (Lp R ∞ μ) where
   right_distrib := by
     intro f g h
     ext
-    filter_upwards [MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) (f + g) h, MeasureTheory.Lp.coeFn_add (p := ∞) f g] with x h1 h2
+    filter_upwards [MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) (f + g) h, MeasureTheory.Lp.coeFn_add (p := ∞) f g,
+       MeasureTheory.Lp.coeFn_add (p := ∞) (f * h) (g * h),  MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f h,
+       MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) g h] with x h1 h2 h3 h4 h5
     rw [Pi.smul_apply', h2, Pi.add_apply] at h1
-    -- this is a fact about the right action, so I am somehow approaching the proof wrongly...
-    sorry
+    rw [← smul_eq_mul, h1, h3, Pi.add_apply]
+    rw [← smul_eq_mul, ← smul_eq_mul, h4, h5, Pi.smul_apply', Pi.smul_apply']
+    exact Module.add_smul ..
 
+/-- Needs clean up. -/
+noncomputable instance Linfty.instMulZeroClass : MulZeroClass (Lp R ∞ μ) where
+  zero_mul := by
+    intro f
+    ext
+    filter_upwards [Lp.coeFn_zero (E := R) ..,
+      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) (0 : Lp R ∞ μ) f] with x h1 h2
+    rw [h1, ← smul_eq_mul, h2, Pi.smul_apply', h1]
+    simp
+  mul_zero := by
+    intro f
+    ext
+    filter_upwards [Lp.coeFn_zero (E := R) ..,
+      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f (0 : Lp R ∞ μ)] with x h1 h2
+    rw [h1, ← smul_eq_mul, h2, Pi.smul_apply', h1]
+    simp
+
+#synth AddCommMonoid (Lp R ∞ μ)
+#synth Distrib (Lp R ∞ μ)
+#synth MulZeroClass (Lp R ∞ μ)
+#synth Mul (Lp R ∞ μ)
+#synth Add (Lp R ∞ μ)
 
 #exit
 noncomputable instance Linfty.NonUnitalNonAssocSemiring : NonUnitalNonAssocSemiring (Lp R ∞ μ) where
