@@ -181,6 +181,31 @@ noncomputable instance Linfty.Semiring : Semiring (Lp R ∞ μ) where
 
 noncomputable instance Linfty.AddGroupWithOne : AddGroupWithOne (Lp R ∞ μ) where
 
+noncomputable instance Linfty.NonUnitalRing : NonUnitalRing (Lp R ∞ μ) where
+
+noncomputable instance Linfty.Ring : Ring (Lp R ∞ μ) where
+
+
+
+noncomputable instance Linfty.Star : Star (Lp R ∞ μ) where
+  star := sorry
+
+noncomputable instance Linfty.InvolutiveStar : InvolutiveStar (Lp R ∞ μ) where
+  star_involutive := sorry
+
+noncomputable instance Linfty.StarMul : StarMul (Lp R ∞ μ) where
+  star_mul := sorry
+
+noncomputable instance Linfty.StarRing : StarRing (Lp R ∞ μ) where
+  star_add := sorry
+
+noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
+  dist_eq := sorry
+  norm_mul_le := sorry
+
+
+
+#exit
 #synth ENNReal.HolderTriple ⊤ ⊤ ⊤
 #synth HSMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
 #synth AddCommGroup (Lp R ⊤ μ)
