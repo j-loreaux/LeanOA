@@ -128,9 +128,6 @@ noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ∞ μ) where
     rw [smul_eq_mul] at *
     simp [hx1, hx2, hx3, hx4, mul_assoc]
 
-noncomputable instance Linfty.instMonoid : Monoid (Lp R ∞ μ) :=
-  {Linfty.instMulOneClass, Linfty.instSemigroup with}
-
 /-- Needs clean up. -/
 noncomputable instance Linfty.instDistrib : Distrib (Lp R ∞ μ) where
   left_distrib := by
@@ -172,41 +169,18 @@ noncomputable instance Linfty.instMulZeroClass : MulZeroClass (Lp R ∞ μ) wher
     rw [h1, ← smul_eq_mul, h2, Pi.smul_apply', h1]
     simp
 
-#synth AddCommMonoid (Lp R ∞ μ)
-#synth Distrib (Lp R ∞ μ)
-#synth MulZeroClass (Lp R ∞ μ)
-#synth Mul (Lp R ∞ μ)
-#synth Add (Lp R ∞ μ)
+noncomputable instance Linfty.instMonoidWithZero : MonoidWithZero (Lp R ∞ μ) where
 
-#exit
 noncomputable instance Linfty.NonUnitalNonAssocSemiring : NonUnitalNonAssocSemiring (Lp R ∞ μ) where
-  add := _
-  add_assoc := _
-  zero := _
-  zero_add := _
-  add_zero := _
-  nsmul := _
-  nsmul_zero := _
-  nsmul_succ := _
-  add_comm := _
-  mul := _
-  left_distrib := _
-  right_distrib := _
-  zero_mul := _
-  mul_zero := _
-
-
 
 noncomputable instance Linfty.instNonAssocSemiring : NonAssocSemiring (Lp R ∞ μ) where
-  nsmul := sorry
-  nsmul_zero := sorry
-  nsmul_succ := sorry
-  left_distrib := sorry
-  right_distrib := sorry
-  mul_zero := sorry
-  zero_mul := sorry
 
-#exit
+noncomputable instance Linfty.NonUnitalSemiring : NonUnitalSemiring (Lp R ∞ μ) where
+
+noncomputable instance Linfty.Semiring : Semiring (Lp R ∞ μ) where
+
+noncomputable instance Linfty.AddGroupWithOne : AddGroupWithOne (Lp R ∞ μ) where
+
 #synth ENNReal.HolderTriple ⊤ ⊤ ⊤
 #synth HSMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
 #synth AddCommGroup (Lp R ⊤ μ)
