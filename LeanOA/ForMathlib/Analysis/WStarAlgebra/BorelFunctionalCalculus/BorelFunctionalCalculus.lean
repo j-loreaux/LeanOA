@@ -34,8 +34,6 @@ We develop the basic definition of the `BorelFunctionalCalculus` class, imitatin
 
 section BorelSpace
 
-open BorelSpace
-
 variable {X : Type*} [TopologicalSpace X] [MeasurableSpace X] [BorelSpace X]
 
 def support (μ : MeasureTheory.Measure X) : Set X := {x : X | ∀ U ∈ nhds x, μ (interior U) > 0}
@@ -63,7 +61,7 @@ theorem AEEqFun.one_smul (f : α →ₘ[μ] β) : (1 : α →ₘ[μ] β) • f =
 
 end AEEqFun
 
-variable {R : Type*} [NormedRing R]
+variable {R : Type*} [_root_.NormedRing R]
 
 open scoped ENNReal
 
@@ -187,14 +185,28 @@ noncomputable instance Linfty.NonUnitalRing : NonUnitalRing (Lp R ∞ μ) where
 
 noncomputable instance Linfty.Ring : Ring (Lp R ∞ μ) where
 
--- Should we make `R` into a `ℂ`-module? How to introduce the `ℂ`-algebra structure?
+#synth Module R (Lp R ∞ μ)
+#synth DistribMulAction R (Lp R ∞ μ)
+#synth DistribSMul R (Lp R ∞ μ)
+#synth SMulZeroClass R (Lp R ∞ μ)
+#synth SMul R (Lp R ∞ μ)
 
-/-- The trouble with this instance is that `R` needs to be `ℂ` if we are going to be able to define CStarAlg. -/
-noncomputable instance Linfty.RSMul : SMul R (Lp R ∞ μ) where
-  smul c f := (Linfty.const (μ := μ) c) • f
+--Maybe it will be fun to figure out how to define the star operation here.
+
+variable [_root_.Star R] [_root_.ContinuousStar R]
+
+def AEEqFun.star : (α →ₘ[μ] R) → α →ₘ[μ] R := fun f => (MeasureTheory.AEEqFun.comp (Star.star) continuous_star <| f)
+
+
+
+theorem Lp.memLinfty.star_mem (f : Lp R ∞ μ) : AEEqFun.star f.1 ∈ Lp R ∞ μ := sorry
+
+--How to even define the data of a star operation?
+def Linfty.star' : Lp R ∞ μ → Lp R ∞ μ :=
+  fun f => ⟨MeasureTheory.AEEqFun.comp star continuous_star <| f.1, by exact?⟩
 
 noncomputable instance Linfty.Star : Star (Lp R ∞ μ) where
-  star := sorry --fill in the data here, but not the proof.
+  star f := Linfty.star'
 
 noncomputable instance Linfty.InvolutiveStar : InvolutiveStar (Lp R ∞ μ) where
   star_involutive := sorry
@@ -209,16 +221,9 @@ noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
   dist_eq := sorry
   norm_mul_le := sorry
 
--- Some bizarre things are starting to happen. We are declaring instances that Lean can't find. There must be
--- confusion. It seems to have something to do with the complex `SMul`.
 
+--noncomputable instance Linfty.Algebra : Algebra R (Lp R ∞ μ) where
 
-
-#synth SMul R (Lp R ∞ μ)
-
-noncomputable instance Linfty.ComplexAlgebra : Algebra ℂ (Lp R ∞ μ) where
-
-#synth Algebra ℂ (Lp R ∞ μ)
 
 variable [CompleteSpace R]
 
