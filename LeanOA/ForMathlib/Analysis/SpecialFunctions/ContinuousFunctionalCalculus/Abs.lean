@@ -111,8 +111,9 @@ lemma abs_abs (a : A) : abs (abs a) = abs a :=
 variable [StarModule ℝ A]
 
 @[simp]
-lemma abs_smul_nonneg {R : Type*} [LinearOrderedSemiring R] [SMulWithZero R ℝ≥0]
-    [SMul R A] [IsScalarTower R ℝ≥0 A] (r : R) (a : A) : abs (r • a) = r • abs a := by
+lemma abs_smul_nonneg {R : Type*} [Semiring R] [SMulWithZero R ℝ≥0] [SMul R A]
+    [IsScalarTower R ℝ≥0 A] (r : R) (a : A) :
+    abs (r • a) = r • abs a := by
   suffices ∀ r : ℝ≥0, abs (r • a) = r • abs a by simpa using this (r • 1)
   intro r
   rw [abs, sqrt_eq_iff _ _ (star_mul_self_nonneg _) (smul_nonneg (by positivity) abs_nonneg)]

@@ -1,7 +1,7 @@
 import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
 import Mathlib.Topology.Algebra.StarSubalgebra
 import Mathlib.Analysis.CStarAlgebra.Classes
-import Mathlib.Algebra.Algebra.Quasispectrum
+import Mathlib.Algebra.Algebra.Spectrum.Quasispectrum
 
 /-! # Notation for C⋆-algebras
 
