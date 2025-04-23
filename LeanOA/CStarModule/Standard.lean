@@ -171,19 +171,19 @@ noncomputable instance : Inner A ℓ²(A, E) where
 lemma inner_def {x y : ℓ²(A, E)} : ⟪x, y⟫_A = ∑' i, ⟪x i, y i⟫_A := rfl
 
 lemma inner_apply_self_le_inner (x : ℓ²(A, E)) (i : ι) : ⟪x i, x i⟫_A ≤ ⟪x, x⟫_A :=
-  le_tsum x.memStandard _ fun _ _ ↦ inner_self_nonneg
+  x.memStandard.le_tsum _ fun _ _ ↦ inner_self_nonneg
 
 lemma sum_inner_apply_self_le_inner (x : ℓ²(A, E)) (s : Finset ι) :
     ∑ i ∈ s, ⟪x i, x i⟫_A ≤ ⟪x, x⟫_A :=
-  sum_le_tsum s (fun _ _ ↦ inner_self_nonneg) x.memStandard
+  x.memStandard.sum_le_tsum s (fun _ _ ↦ inner_self_nonneg)
 
 lemma tsum_inner_apply_self_le_inner (x : ℓ²(A, E)) (s : Set ι) :
     ∑' i : s, ⟪x i, x i⟫_A ≤ ⟪x, x⟫_A :=
-  tsum_subtype_le _ _ (fun _ ↦ inner_self_nonneg) x.memStandard
+  x.memStandard.tsum_subtype_le _ _ (fun _ ↦ inner_self_nonneg)
 
 noncomputable instance : CStarModule A ℓ²(A, E) where
   inner_add_right {x y z} := by
-    simpa [inner_def] using tsum_add (x.summable_inner y) (x.summable_inner z)
+    simpa [inner_def] using (x.summable_inner y).tsum_add (x.summable_inner z)
   inner_self_nonneg := tsum_nonneg fun i => inner_self_nonneg
   inner_self {x} := by
     refine ⟨fun hx ↦ ?_, fun h ↦ by simp [h, inner_def]⟩
@@ -195,7 +195,7 @@ noncomputable instance : CStarModule A ℓ²(A, E) where
       using x.summable_inner y |>.tsum_mul_left a
   inner_smul_right_complex {c x y} := by
     simpa only [coe_smul, Pi.smul_apply, inner_smul_right_complex, inner_def]
-      using tsum_const_smul c <| x.summable_inner y
+      using x.summable_inner y |>.tsum_const_smul c
   star_inner x y := by simpa using (starL ℂ).map_tsum (f := fun i ↦ ⟪x i, y i⟫_A)
   norm_eq_sqrt_norm_inner_self _ := rfl
 
@@ -236,7 +236,7 @@ theorem tendsto_of_tendsto_pi {F : ℕ → ℓ²(A, E)} (hF : CauchySeq F) {f : 
   rintro n (hn : ∀ᶠ l in atTop, ‖F n - F l‖ < ε / √2)
   simp only [Metric.mem_closedBall, dist_eq_norm, norm_def, Real.sqrt_le_iff, hε.le, true_and]
   obtain ⟨s, hs⟩ := (F n - f).memStandard.tsum_vanishing (Metric.ball_mem_nhds 0 (by positivity : 0 < ε ^ 2 / 2))
-  rw [← sum_add_tsum_compl (s := s) (F n - f).memStandard, ← add_halves (ε ^ 2)]
+  rw [← (F n - f).memStandard.sum_add_tsum_compl (s := s) , ← add_halves (ε ^ 2)]
   apply norm_add_le _ _ |>.trans ?_
   gcongr
   · apply le_of_tendsto (f := fun l ↦ ‖∑ x ∈ s, ⟪(F n - F l) x, (F n - F l) x⟫_A‖) (x := atTop) ?_ ?_
