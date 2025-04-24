@@ -66,6 +66,20 @@ lemma val_inv_unitOfAddNonneg_eq_cfc_real :
   apply cfc_congr fun x hx ↦ ?_
   simpa using spectrum_nonneg_of_nonneg ha hx
 
+lemma val_inv_unitOfAddNonneg_le :
+    (↑(unitOfAddNonneg r hr a ha)⁻¹ : A) ≤ algebraMap ℝ≥0 A r⁻¹ := by
+  rw [val_inv_unitOfAddNonneg_eq_cfc_real, IsScalarTower.algebraMap_apply ℝ≥0 ℝ A,
+    NNReal.algebraMap_eq_coe, le_algebraMap_iff_spectrum_le, cfc_map_spectrum _ _ (hf := ?_)]
+  · rintro - ⟨x, hx, rfl⟩
+    rw [← NNReal.coe_pos] at hr
+    replace hx := spectrum_nonneg_of_nonneg ha hx
+    simp only [NNReal.coe_inv]
+    rw [inv_le_inv₀ (by positivity) hr]
+    exact le_add_of_nonneg_right hx
+  · refine ContinuousOn.inv₀ (by fun_prop) fun x hx ↦ ?_
+    have := spectrum_nonneg_of_nonneg ha hx
+    positivity
+
 end CFC
 
 namespace CStarAlgebra
@@ -73,11 +87,6 @@ open CFC
 
 variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 variable {r : ℝ≥0} {hr : 0 < r} {a : A} {ha : 0 ≤ a}
-
-lemma val_inv_unitOfAddNonneg_le : (↑(unitOfAddNonneg r hr a ha)⁻¹ : A) ≤ algebraMap ℝ≥0 A r⁻¹ := by
-  let u := Units.mk0 r hr.ne' |>.map <| (algebraMap ℝ≥0 A).toMonoidHom
-  refine CStarAlgebra.inv_le_inv (a := u) ?_ le_val_unitOfAddNonneg
-  simpa [u, Algebra.algebraMap_eq_smul_one] using smul_nonneg (zero_le r) zero_le_one
 
 lemma nnnorm_val_unitOfAddNonneg [Nontrivial A] :
     ‖(unitOfAddNonneg r hr a ha : A)‖₊ = r + ‖a‖₊ := by
