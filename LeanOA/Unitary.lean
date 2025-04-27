@@ -5,6 +5,8 @@ import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog
 import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 import LeanOA.ForMathlib.Algebra.Star.Unitary
 import LeanOA.ForMathlib.Misc
+import LeanOA.ContinuousMap.Uniform
+import LeanOA.ContinuousFunctionalCalculus.Continuity
 
 /-! # Properties of unitary elements in a C⋆-algebra
 
@@ -112,8 +114,6 @@ lemma CStarAlgebra.span_unitary : span ℂ (unitary A : Set A) = ⊤ := by
   obtain ⟨u, c, rfl, h⟩ := CStarAlgebra.exists_sum_four_unitary x
   exact sum_mem fun i _ ↦ Submodule.smul_mem _ _ (subset_span (u i).2)
 
-
-
 end UnitarySpan
 
 section ExpUnitary
@@ -125,23 +125,9 @@ variable {A : Type*} [CStarAlgebra A]
 open Complex
 
 
--- `Mathlib.Analysis.SpecialFunctions.Complex.Arg`
-@[fun_prop]
-theorem Complex.continuousOn_arg : ContinuousOn arg slitPlane :=
-  fun _ h ↦ continuousAt_arg h |>.continuousWithinAt
-
 @[aesop safe apply (rule_sets := [CStarAlgebra])]
 lemma IsSelfAdjoint.cfc_arg (u : A) : IsSelfAdjoint (cfc (arg · : ℂ → ℂ) u) := by
   simp [isSelfAdjoint_iff, ← cfc_star]
-
-lemma spectrum_subset_slitPlane_of_norm_lt_one {u : A} (hu : ‖u - 1‖ < 1) :
-    spectrum ℂ u ⊆ slitPlane := by
-  nontriviality A
-  have := spectrum.subset_closedBall_norm (𝕜 := ℂ) (u - 1) |>.trans <|
-    Metric.closedBall_subset_ball hu
-  rw [← map_one (algebraMap ℂ A), ← spectrum.sub_singleton_eq, Set.sub_singleton] at this
-  exact fun x hx ↦ add_sub_cancel 1 x ▸ Complex.mem_slitPlane_of_norm_lt_one (by simpa using this ⟨x, hx, rfl⟩)
-
 
 lemma unitary.expUnitary_cfc_arg_eq_of_norm_lt_one (u : unitary A) (hu : ‖(u - 1 : A)‖ < 1) :
     selfAdjoint.expUnitary ⟨cfc (arg · : ℂ → ℂ) (u : A), .cfc_arg (u : A)⟩ = u := by
@@ -159,43 +145,9 @@ lemma unitary.expUnitary_cfc_arg_eq_of_norm_lt_one (u : unitary A) (hu : ‖(u -
   apply Complex.ext
   all_goals simp [log_re, hx₁, log_im]
 
-section
-
-open Filter Topology
-
-theorem ContinuousOn.tendsto_restrict_iff_tendstoUniformlyOn {α β : Type*}
-    [TopologicalSpace α] [UniformSpace β] {s : Set α} [CompactSpace s]
-    {f : α → β} (hf : ContinuousOn f s) {ι : Type*} {p : Filter ι}
-    {F : ι → α → β} (hF : ∀ i, ContinuousOn (F i) s) :
-    Tendsto (fun i ↦ ⟨_, (hF i).restrict⟩ : ι → C(s, β)) p (𝓝 ⟨_, hf.restrict⟩) ↔
-      TendstoUniformlyOn F f p s := by
-  rw [ContinuousMap.tendsto_iff_tendstoUniformly, tendstoUniformlyOn_iff_tendstoUniformly_comp_coe]
-  congr!
-
-theorem continuousAt_cfc (a : A) [ha : IsStarNormal a] {X : Type*} [TopologicalSpace X]
-    {f : X → ℂ → ℂ} (hf : ∀ x, ContinuousOn (f x) (spectrum ℂ a)) (x₀ : X)
-    (h_tendsto : TendstoUniformlyOn f (f x₀) (𝓝 x₀) (spectrum ℂ a)) :
-    ContinuousAt (fun x ↦ cfc (f x) a) x₀ := by
-  conv =>
-    enter [1, x]
-    rw [cfc_apply ..]
-  apply cfcHom_continuous ha |>.continuousAt.comp
-  rwa [ContinuousAt, (hf x₀).tendsto_restrict_iff_tendstoUniformlyOn hf]
-
-end
-
-
---- we need the other lemmas like this
-open UniformFun in
-theorem ContinuousMap.continuous_iff_continuous_uniformFun {X α β : Type*}
-    [TopologicalSpace X] [TopologicalSpace α] [UniformSpace β] (f : X → C(α, β)) [CompactSpace α] :
-    Continuous f ↔ Continuous (fun x ↦ ofFun (f x)) := by
-  simp only [continuous_iff_continuousAt]
-  apply forall_congr' fun x ↦ ?_
-  simp [ContinuousAt, tendsto_iff_tendstoUniformly, UniformFun.tendsto_iff_tendstoUniformly,
-    Function.comp_def]
 
 attribute [fun_prop] NormedSpace.exp_continuous
+
 
 open Real in
 noncomputable
@@ -205,20 +157,19 @@ def unitary.pathToOne (u : unitary A) (hu : ‖(u - 1 : A)‖ < 1) : Path 1 u wh
   continuous_toFun := by
     simp only [continuous_induced_rng, Function.comp_def, selfAdjoint.expUnitary_coe]
     suffices Continuous fun x : unitInterval ↦ cfc (fun z ↦ x * arg z) (u : A) by fun_prop
-    rw [continuous_iff_continuousAt]
-    intro x₀
-    apply continuousAt_cfc
-    · exact fun _ ↦ ContinuousOn.mono (by fun_prop) (spectrum_subset_slitPlane_of_norm_lt_one hu)
-    · rw [Metric.tendstoUniformlyOn_iff]
-      simp [dist_eq_norm, ← sub_mul]
-      intro ε hε
-      filter_upwards [Metric.ball_mem_nhds x₀ (ε := ε / π) (by positivity)] with x hx z hz
-      calc
-        ‖(x₀ - x : ℂ)‖ * |z.arg| ≤ ‖(x₀ - x : ℂ)‖ * π := by gcongr; exact Complex.abs_arg_le_pi z
-        _ < ε / π * π := by
-          gcongr
-          simpa [Subtype.dist_eq, dist_eq_norm, ← Complex.ofReal_sub, abs_sub_comm] using hx
-        _ = ε := div_mul_cancel₀ _ (by positivity)
+    obtain (h | h) := subsingleton_or_nontrivial A
+    · convert continuous_const (y := (0 : A))
+    refine continuous_cfc (hf := ?hf_cont) _ (u : A) ?h_cont
+    case hf_cont => exact fun _ ↦ ContinuousOn.mono (by fun_prop) (spectrum_subset_slitPlane_of_norm_lt_one hu)
+    case h_cont =>
+      apply UniformOnFun.continuous_of_lipschitzWith (fun _ : Set ℂ ↦ ⟨π, by positivity⟩)
+      simp only [Set.mem_singleton_iff, UniformOnFun.toFun_ofFun, forall_eq,
+        lipschitzWith_iff_dist_le_mul, dist_eq_norm, Subtype.dist_eq, ← sub_mul,
+        ← Complex.ofReal_sub, norm_mul, Complex.norm_real]
+      rintro _ - _ _
+      rw [mul_comm]
+      gcongr
+      exact Complex.abs_arg_le_pi _
   source' := by ext; simp
   target' := by
     ext
