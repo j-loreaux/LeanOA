@@ -191,8 +191,8 @@ variable {X 𝕜 A : Type*} {p : A → Prop} [RCLike 𝕜] [NonUnitalNormedRing 
 -- `cfcₙHomSuperset` not to use `letI`.
 open scoped NonUnitalContinuousFunctionalCalculus ContinuousMapZero in
 theorem continuous_cfcₙHomSuperset_left
-    [TopologicalSpace X] {s : Set 𝕜} (hs : IsCompact s) [Fact (0 ∈ s)]
-    (f : letI _ : Zero s := ⟨0, Fact.out⟩; C(s, 𝕜)₀) (a : X → A)
+    [TopologicalSpace X] {s : Set 𝕜} (hs : IsCompact s) (hs0 : 0 ∈ s)
+    (f : letI _ : Zero s := ⟨0, hs0⟩; C(s, 𝕜)₀) (a : X → A)
     (ha_cont : Continuous a) (ha : ∀ x, quasispectrum 𝕜 (a x) ⊆ s)
     (ha' : ∀ x, p (a x) := by cfc_tac) :
     Continuous (fun x ↦ cfcₙHomSuperset (ha' x) (ha x) f) := by
@@ -215,7 +215,7 @@ theorem continuous_cfcₙHomSuperset_left
     refine ⟨_, g_cont, fun x ↦ ?_⟩
     rw [← map_sub, cfcₙHomSuperset_apply]
     rw [isometry_cfcₙHom (R := 𝕜) _ (ha' x) |>.norm_map_of_map_zero (map_zero (cfcₙHom (ha' x)))]
-    letI _ : Zero s := ⟨0, Fact.out⟩
+    letI _ : Zero s := ⟨0, hs0⟩
     rw [ContinuousMapZero.norm_def, ContinuousMap.norm_le _ hε.le] at hg ⊢
     aesop
 
@@ -224,8 +224,7 @@ theorem continuous_cfcₙ_left [TopologicalSpace X] {s : Set 𝕜} (hs : IsCompa
     (hf : ContinuousOn f s := by cfc_cont_tac) (hf0 : f 0 = 0 := by cfc_zero_tac)
     (ha' : ∀ x, p (a x) := by cfc_tac) :
     Continuous (fun x ↦ cfcₙ f (a x)) := by
-  have : Fact (0 ∈ s) := ⟨hs0⟩
-  convert continuous_cfcₙHomSuperset_left hs ⟨⟨_, hf.restrict⟩, hf0⟩ a ha_cont ha with x
+  convert continuous_cfcₙHomSuperset_left hs hs0 ⟨⟨_, hf.restrict⟩, hf0⟩ a ha_cont ha with x
   rw [cfcₙHomSuperset_apply, cfcₙ_apply (hf := hf.mono (ha x))]
   congr!
 
