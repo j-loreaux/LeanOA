@@ -256,7 +256,7 @@ noncomputable instance Linfty.Star : Star (Lp R ∞ μ) where
     rw [MeasureTheory.Lp.mem_Lp_iff_memLp]
     constructor
     · exact AEEqFun.aestronglyMeasurable (star <| f : α →ₘ[μ] R)
-    · simpa [eLpNorm_congr_ae <| AEEqFun.coeFn_star (f : α →ₘ[μ] R), (f.1).norm_star] using Lp.eLpNorm_lt_top f⟩
+    · simpa [eLpNorm_congr_ae <| AEEqFun.coeFn_star (f : α →ₘ[μ] R), f.1.norm_star] using Lp.eLpNorm_lt_top f⟩
 
 noncomputable instance Linfty.InvolutiveStar : InvolutiveStar (Lp R ∞ μ) where
   star_involutive := by
