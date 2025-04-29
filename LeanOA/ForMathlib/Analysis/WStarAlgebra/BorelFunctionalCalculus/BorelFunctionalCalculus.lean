@@ -230,8 +230,6 @@ variable [TopologicalSpace R] [Star R] [ContinuousStar R]
 instance : Star (α →ₘ[μ] R) where
   star f := (AEEqFun.comp _ continuous_star f)
 
-#synth Star (α → R)
-
 lemma AEEqFun.coeFn_star (f : α →ₘ[μ] R) : ↑(star f) =ᵐ[μ] (star f : α → R) :=
   coeFn_comp _ (continuous_star) f
 
@@ -261,7 +259,15 @@ noncomputable instance Linfty.Star : Star (Lp R ∞ μ) where
     · simpa [eLpNorm_congr_ae <| AEEqFun.coeFn_star (f : α →ₘ[μ] R), (f.1).norm_star] using Lp.eLpNorm_lt_top f⟩
 
 noncomputable instance Linfty.InvolutiveStar : InvolutiveStar (Lp R ∞ μ) where
-  star_involutive := sorry
+  star_involutive := by
+    refine Function.involutive_iff_iter_2_eq_id.mpr ?_
+    simp only [Function.iterate_succ, Function.iterate_one]
+    ext f
+    simp only [Function.iterate_zero, CompTriple.comp_eq, Function.comp_apply, id_eq]
+    filter_upwards [AEEqFun.coeFn_star (R := R) (μ := μ) (f := f), AEEqFun.coeFn_star (R := R) (μ := μ) (f := star f)] with x H1 H2
+    sorry --We seem to be part way there. It may be helpful to write this out on paper to see how it's going to go
+
+
 
 end LinftyStar
 
