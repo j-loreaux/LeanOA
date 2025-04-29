@@ -247,18 +247,47 @@ theorem AEEqFun.norm_star {p : ℝ≥0∞} {f : α →ₘ[μ] R} :
 
 end AEEqFunNormStar
 
-section LinftyStar
+section LpStar
 
 variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
-noncomputable instance Linfty.Star : Star (Lp R ∞ μ) where
-  star f := ⟨star (f : α →ₘ[μ] R), by
-    rw [MeasureTheory.Lp.mem_Lp_iff_memLp]
-    constructor
-    · exact AEEqFun.aestronglyMeasurable (star <| f : α →ₘ[μ] R)
-    · simpa [eLpNorm_congr_ae <| AEEqFun.coeFn_star (f : α →ₘ[μ] R), f.1.norm_star] using Lp.eLpNorm_lt_top f⟩
+local infixr:25 " →ₛ " => SimpleFunc
 
-noncomputable instance Linfty.InvolutiveStar : InvolutiveStar (Lp R ∞ μ) where
+instance {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R] : Star (α →ₛ R) where
+  star f := f.map Star.star
+
+protected theorem _root_.Filter.EventuallyEq.star {α β : Type*} [Star β] {f g : α → β}
+    {l : Filter α} (h : f =ᶠ[l] g) :
+    (fun x ↦ star (f x)) =ᶠ[l] fun x ↦ star (g x) :=
+  h.fun_comp Star.star
+
+@[measurability]
+protected theorem StronglyMeasurable.star {β : Type*} [TopologicalSpace β]
+    [Star β] [ContinuousStar β] (f : α → β) (hf : StronglyMeasurable f) :
+    StronglyMeasurable (star f) :=
+  ⟨fun n => star (hf.approx n), fun x => (hf.tendsto_approx x).star⟩
+
+@[simp]
+theorem eLpNorm_star {p : ℝ≥0∞} {f : α → R} :
+    eLpNorm (star f) p μ = eLpNorm f p μ :=
+  eLpNorm_congr_norm_ae <| .of_forall <| by simp
+
+@[simp]
+theorem AEEqFun.eLpNorm_star {p : ℝ≥0∞} {f : α →ₘ[μ] R} :
+    eLpNorm (star f : α →ₘ[μ] R) p μ = eLpNorm f p μ :=
+  eLpNorm_congr_ae (coeFn_star f) |>.trans <| by simp
+
+protected theorem AEStronglyMeasurable.star {f : α → R} (hf : AEStronglyMeasurable f μ) :
+    AEStronglyMeasurable (star f) μ :=
+  ⟨star (hf.mk f), hf.stronglyMeasurable_mk.star, hf.ae_eq_mk.star⟩
+
+protected theorem MemLp.star {p : ℝ≥0∞} {f : α → R} (hf : MemLp f p μ) : MemLp (star f) p μ :=
+  ⟨hf.1.star, by simpa using hf.2⟩
+
+protected noncomputable instance Lp.Star {p : ℝ≥0∞} : Star (Lp R p μ) where
+  star f := ⟨star (f : α →ₘ[μ] R), by simpa [Lp.mem_Lp_iff_eLpNorm_lt_top] using Lp.eLpNorm_lt_top f⟩
+
+noncomputable instance Lp.InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
   star_involutive := by
     refine Function.involutive_iff_iter_2_eq_id.mpr ?_
     simp only [Function.iterate_succ, Function.iterate_one]
@@ -267,9 +296,7 @@ noncomputable instance Linfty.InvolutiveStar : InvolutiveStar (Lp R ∞ μ) wher
     filter_upwards [AEEqFun.coeFn_star (R := R) (μ := μ) (f := f), AEEqFun.coeFn_star (R := R) (μ := μ) (f := star f)] with x H1 H2
     sorry --We seem to be part way there. It may be helpful to write this out on paper to see how it's going to go
 
-
-
-end LinftyStar
+end LpStar
 
 #exit
 
