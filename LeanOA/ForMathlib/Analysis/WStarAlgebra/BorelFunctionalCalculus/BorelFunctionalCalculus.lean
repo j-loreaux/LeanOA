@@ -34,6 +34,8 @@ We develop the basic definition of the `BorelFunctionalCalculus` class, imitatin
 
 section BorelSpace
 
+open BorelSpace
+
 variable {X : Type*} [TopologicalSpace X] [MeasurableSpace X] [BorelSpace X]
 
 def support (μ : MeasureTheory.Measure X) : Set X := {x : X | ∀ U ∈ nhds x, μ (interior U) > 0}
@@ -47,9 +49,11 @@ end BorelSpace
 
 namespace MeasureTheory
 
+variable {α : Type*} {m : MeasurableSpace α} {μ : Measure α}
+
 section AEEqFun
 
-variable {α β : Type*} {m : MeasurableSpace α} {μ : Measure α} [TopologicalSpace β] [MulOneClass β] [ContinuousMul β]
+variable {β : Type*} [TopologicalSpace β] [MulOneClass β] [ContinuousMul β]
 
 theorem AEEqFun.one_mul (f : α →ₘ[μ] β) : 1 * f = f := by
    ext
@@ -61,14 +65,24 @@ theorem AEEqFun.one_smul (f : α →ₘ[μ] β) : (1 : α →ₘ[μ] β) • f =
 
 end AEEqFun
 
-variable {R : Type*} [_root_.NormedRing R]
+variable {R : Type*}
 
 open scoped ENNReal
 
-variable {α : Type*} {m : MeasurableSpace α} {μ : Measure α}
+/- These sections are not well named. -/
+
+section NormedRing
+
+variable [NormedRing R]
+
+section Mul
 
 noncomputable instance Linfty.instMul : Mul (Lp R ∞ μ) where
   mul f g := f • g
+
+end Mul
+
+section Const
 
 /-- Note, does not require `IsFiniteMeasure` instance. -/
 theorem memLinfty_const (c : R) : MemLp (fun _ : α => c) ∞ μ := by
@@ -93,6 +107,10 @@ lemma Linfty.const_val (c : R) : (Linfty.const c).1 = AEEqFun.const (β := R) (�
 lemma Linfty.coeFn_const (c : R) : Linfty.const (μ := μ) c =ᵐ[μ] Function.const α c :=
   AEEqFun.coeFn_const α c
 
+end Const
+
+section One
+
 instance Linfty.instOne : One (Lp R ∞ μ) where
   one := ⟨MemLp.toLp (fun (_ : α) => (1 : R)) (memLp_top_const (μ := μ) 1), SetLike.coe_mem _⟩
 
@@ -111,10 +129,18 @@ theorem Linfty.smul_one (f : Lp R ∞ μ) : f • (1 : Lp R ∞ μ) = f := by
   rw [hx2, Pi.smul_apply', hx1, Pi.one_apply]
   simp
 
+end One
+
+section MulOneClass
+
 noncomputable instance Linfty.instMulOneClass : MulOneClass (Lp R ∞ μ) where
   one := 1
   one_mul := one_smul
   mul_one := smul_one
+
+end MulOneClass
+
+section Semigroup
 
 noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ∞ μ) where
   mul f g := f * g
@@ -127,6 +153,10 @@ noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ∞ μ) where
       MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) g h] with x hx1 hx2 hx3 hx4
     rw [smul_eq_mul] at *
     simp [hx1, hx2, hx3, hx4, mul_assoc]
+
+end Semigroup
+
+section Distrib
 
 /-- Needs clean up. -/
 noncomputable instance Linfty.instDistrib : Distrib (Lp R ∞ μ) where
@@ -152,6 +182,10 @@ noncomputable instance Linfty.instDistrib : Distrib (Lp R ∞ μ) where
     rw [← smul_eq_mul, ← smul_eq_mul, h4, h5, Pi.smul_apply', Pi.smul_apply']
     exact Module.add_smul ..
 
+end Distrib
+
+section MulZeroClass
+
 /-- Needs clean up. -/
 noncomputable instance Linfty.instMulZeroClass : MulZeroClass (Lp R ∞ μ) where
   zero_mul := by
@@ -169,6 +203,8 @@ noncomputable instance Linfty.instMulZeroClass : MulZeroClass (Lp R ∞ μ) wher
     rw [h1, ← smul_eq_mul, h2, Pi.smul_apply', h1]
     simp
 
+end MulZeroClass
+
 noncomputable instance Linfty.instMonoidWithZero : MonoidWithZero (Lp R ∞ μ) where
 
 noncomputable instance Linfty.NonUnitalNonAssocSemiring : NonUnitalNonAssocSemiring (Lp R ∞ μ) where
@@ -185,31 +221,57 @@ noncomputable instance Linfty.NonUnitalRing : NonUnitalRing (Lp R ∞ μ) where
 
 noncomputable instance Linfty.Ring : Ring (Lp R ∞ μ) where
 
-#synth Module R (Lp R ∞ μ)
-#synth DistribMulAction R (Lp R ∞ μ)
-#synth DistribSMul R (Lp R ∞ μ)
-#synth SMulZeroClass R (Lp R ∞ μ)
-#synth SMul R (Lp R ∞ μ)
+end NormedRing
 
---Maybe it will be fun to figure out how to define the star operation here.
+section AEEqFunStar
 
-variable [_root_.Star R] [_root_.ContinuousStar R]
+variable [TopologicalSpace R] [Star R] [ContinuousStar R]
 
-def AEEqFun.star : (α →ₘ[μ] R) → α →ₘ[μ] R := fun f => (MeasureTheory.AEEqFun.comp (Star.star) continuous_star <| f)
+instance : Star (α →ₘ[μ] R) where
+  star f := (AEEqFun.comp _ continuous_star f)
 
+#synth Star (α → R)
 
+lemma AEEqFun.coeFn_star (f : α →ₘ[μ] R) : ↑(star f) =ᵐ[μ] (star f : α → R) :=
+  coeFn_comp _ (continuous_star) f
 
-theorem Lp.memLinfty.star_mem (f : Lp R ∞ μ) : AEEqFun.star f.1 ∈ Lp R ∞ μ := sorry
+end AEEqFunStar
 
---How to even define the data of a star operation?
-def Linfty.star' : Lp R ∞ μ → Lp R ∞ μ :=
-  fun f => ⟨MeasureTheory.AEEqFun.comp star continuous_star <| f.1, by exact?⟩
+section AEEqFunNormStar
+
+variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
+
+theorem AEEqFun.norm_star {p : ℝ≥0∞} {f : α →ₘ[μ] R} :
+    eLpNorm (star f) p μ = eLpNorm f p μ := by
+  apply eLpNorm_congr_norm_ae
+  filter_upwards [coeFn_star f] with x hx
+  simp [hx]
+
+end AEEqFunNormStar
+
+section LinftyStar
+
+variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
 noncomputable instance Linfty.Star : Star (Lp R ∞ μ) where
-  star f := Linfty.star'
+  star f := ⟨star (f : α →ₘ[μ] R), by
+    rw [MeasureTheory.Lp.mem_Lp_iff_memLp]
+    constructor
+    · exact AEEqFun.aestronglyMeasurable (star <| f : α →ₘ[μ] R)
+    · simpa [eLpNorm_congr_ae <| AEEqFun.coeFn_star (f : α →ₘ[μ] R), (f.1).norm_star] using Lp.eLpNorm_lt_top f⟩
 
 noncomputable instance Linfty.InvolutiveStar : InvolutiveStar (Lp R ∞ μ) where
   star_involutive := sorry
+
+end LinftyStar
+
+#exit
+
+/-- The trouble with this instance is that `R` needs to be `ℂ` if we are going to be able to define CStarAlg. -/
+noncomputable instance Linfty.RSMul : SMul R (Lp R ∞ μ) where
+  smul c f := (Linfty.const (μ := μ) c) • f
+
+
 
 noncomputable instance Linfty.StarMul : StarMul (Lp R ∞ μ) where
   star_mul := sorry
@@ -221,9 +283,16 @@ noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
   dist_eq := sorry
   norm_mul_le := sorry
 
+-- Some bizarre things are starting to happen. We are declaring instances that Lean can't find. There must be
+-- confusion. It seems to have something to do with the complex `SMul`.
 
---noncomputable instance Linfty.Algebra : Algebra R (Lp R ∞ μ) where
 
+
+#synth SMul R (Lp R ∞ μ)
+
+noncomputable instance Linfty.ComplexAlgebra : Algebra ℂ (Lp R ∞ μ) where
+
+#synth Algebra ℂ (Lp R ∞ μ)
 
 variable [CompleteSpace R]
 
