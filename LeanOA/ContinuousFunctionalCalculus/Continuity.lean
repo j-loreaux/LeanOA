@@ -108,11 +108,11 @@ variable {X A : Type*} [NormedRing A] [StarRing A]
     [ContinuousStar A] [PartialOrder A] [StarOrderedRing A] [NonnegSpectrumClass ℝ A]
     [T2Space A] [IsTopologicalRing A]
 
-open scoped ContinuousFunctionalCalculus NNReal
 
 attribute [fun_prop] continuous_real_toNNReal
 
-theorem continuous_cfc_right_nnreal [TopologicalSpace X] (s : Set ℝ≥0) (hs : IsCompact s) (f : ℝ≥0 → ℝ≥0)
+open scoped NNReal in
+theorem continuous_cfc_left_nnreal [TopologicalSpace X] (s : Set ℝ≥0) (hs : IsCompact s) (f : ℝ≥0 → ℝ≥0)
     (hf : ContinuousOn f s := by cfc_cont_tac)
     (a : X → A) (ha_cont : Continuous a) (ha' : ∀ x, 0 ≤ a x) (ha : ∀ x, spectrum ℝ≥0 (a x) ⊆ s) :
     Continuous (fun x ↦ cfc f (a x)) := by
@@ -170,7 +170,7 @@ theorem continuousAt_cfcₙ_right [TopologicalSpace X] (f : X → R → R) (a : 
   tendsto_cfcₙ_right f (f x₀) a h_tendsto hf hf0 (hf x₀) (hf0 x₀)
 
 open UniformOnFun in
-theorem continuous_cfcₙ [TopologicalSpace X] (f : X → R → R) (a : A)
+theorem continuous_cfcₙ_right [TopologicalSpace X] (f : X → R → R) (a : A)
     (h_cont : Continuous (fun x ↦ ofFun {quasispectrum R a} (f x)))
     (hf : ∀ x, ContinuousOn (f x) (quasispectrum R a) := by cfc_cont_tac)
     (hf0 : ∀ x, f x 0 = 0 := by cfc_zero_tac) :
@@ -181,20 +181,30 @@ theorem continuous_cfcₙ [TopologicalSpace X] (f : X → R → R) (a : A)
   exact fun x ↦ continuousAt_cfcₙ_right f a x (h_cont x)
 
 end Right
+
+section Left
 section RCLike
 
 variable {X 𝕜 A : Type*} {p : A → Prop} [RCLike 𝕜] [NonUnitalNormedRing A] [StarRing A]
     [NormedSpace 𝕜 A] [IsScalarTower 𝕜 A A] [SMulCommClass 𝕜 A A] [ContinuousStar A]
     [NonUnitalIsometricContinuousFunctionalCalculus 𝕜 A p]
 
+/-- not marked as an instance because it would be a bad one in general, but it can
+be useful when working with `ContinuousMapZero` and the non-unital continuous
+functional calculus. -/
+def Set.zeroOffFactMem {X : Type*} [Zero X] (s : Set X) [Fact (0 ∈ s)] :
+    Zero s where
+  zero := ⟨0, Fact.out⟩
+
+scoped[ContinuousMapZero] attribute [instance] Set.zeroOffFactMem
+
 -- This is super ugly, but it's mainly because we need to refactor
 -- `cfcₙHomSuperset` not to use `letI`.
 open scoped NonUnitalContinuousFunctionalCalculus ContinuousMapZero in
 theorem continuous_cfcₙHomSuperset_left
-    [TopologicalSpace X] {s : Set 𝕜} (hs : IsCompact s) (hs0 : 0 ∈ s)
-    (f : letI _ : Zero s := ⟨0, hs0⟩; C(s, 𝕜)₀) (a : X → A)
-    (ha_cont : Continuous a) (ha : ∀ x, quasispectrum 𝕜 (a x) ⊆ s)
-    (ha' : ∀ x, p (a x) := by cfc_tac) :
+    [TopologicalSpace X] {s : Set 𝕜} (hs : IsCompact s) [hs0 : Fact (0 ∈ s)]
+    (f : C(s, 𝕜)₀) (a : X → A) (ha_cont : Continuous a)
+    (ha : ∀ x, quasispectrum 𝕜 (a x) ⊆ s) (ha' : ∀ x, p (a x) := by cfc_tac) :
     Continuous (fun x ↦ cfcₙHomSuperset (ha' x) (ha x) f) := by
   have : CompactSpace s := by rwa [isCompact_iff_compactSpace] at hs
   induction f using ContinuousMapZero.induction_on_of_compact with
@@ -215,7 +225,6 @@ theorem continuous_cfcₙHomSuperset_left
     refine ⟨_, g_cont, fun x ↦ ?_⟩
     rw [← map_sub, cfcₙHomSuperset_apply]
     rw [isometry_cfcₙHom (R := 𝕜) _ (ha' x) |>.norm_map_of_map_zero (map_zero (cfcₙHom (ha' x)))]
-    letI _ : Zero s := ⟨0, hs0⟩
     rw [ContinuousMapZero.norm_def, ContinuousMap.norm_le _ hε.le] at hg ⊢
     aesop
 
@@ -224,11 +233,42 @@ theorem continuous_cfcₙ_left [TopologicalSpace X] {s : Set 𝕜} (hs : IsCompa
     (hf : ContinuousOn f s := by cfc_cont_tac) (hf0 : f 0 = 0 := by cfc_zero_tac)
     (ha' : ∀ x, p (a x) := by cfc_tac) :
     Continuous (fun x ↦ cfcₙ f (a x)) := by
-  convert continuous_cfcₙHomSuperset_left hs hs0 ⟨⟨_, hf.restrict⟩, hf0⟩ a ha_cont ha with x
+  convert continuous_cfcₙHomSuperset_left hs (hs0 := ⟨hs0⟩) ⟨⟨_, hf.restrict⟩, hf0⟩ a ha_cont ha with x
   rw [cfcₙHomSuperset_apply, cfcₙ_apply (hf := hf.mono (ha x))]
   congr!
 
 
 end RCLike
+
+section NNReal
+
+variable {X A : Type*} [NonUnitalNormedRing A] [StarRing A]
+    [NormedSpace ℝ A] [IsScalarTower ℝ A A] [SMulCommClass ℝ A A] [ContinuousStar A]
+    [NonUnitalIsometricContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
+    [PartialOrder A] [StarOrderedRing A] [NonnegSpectrumClass ℝ A]
+    [T2Space A] [IsTopologicalRing A]
+
+open scoped NNReal in
+theorem continuous_cfcₙ_left_nnreal [TopologicalSpace X] (s : Set ℝ≥0)
+    (hs : IsCompact s) (hs0 : 0 ∈ s) (f : ℝ≥0 → ℝ≥0) (a : X → A) (ha_cont : Continuous a)
+    (ha' : ∀ x, 0 ≤ a x) (ha : ∀ x, quasispectrum ℝ≥0 (a x) ⊆ s)
+    (hf : ContinuousOn f s := by cfc_cont_tac) (hf0 : f 0 = 0 := by cfc_zero_tac) :
+    Continuous (fun x ↦ cfcₙ f (a x)) := by
+  conv =>
+    enter [1, x]
+    rw [cfcₙ_nnreal_eq_real]
+  simp only [nonneg_iff_isSelfAdjoint_and_quasispectrumRestricts, forall_and] at ha'
+  refine continuous_cfcₙ_left (hs.image (continuous_algebraMap ℝ≥0 ℝ)) ⟨0, hs0, map_zero _⟩ _ _ ha_cont ?hf ?hs
+  · intro x
+    rw [← ha'.2 x |>.algebraMap_image]
+    exact Set.image_mono (ha x)
+  · apply NNReal.continuous_coe.comp_continuousOn
+    refine hf.comp (by fun_prop) ?_
+    rintro - ⟨x, hx, rfl⟩
+    simpa
+
+end NNReal
+
+end Left
 
 end NonUnital

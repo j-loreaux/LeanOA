@@ -3,6 +3,7 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Unitary
 import Mathlib.Analysis.CStarAlgebra.Exponential
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog
 import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
+import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 import LeanOA.ForMathlib.Algebra.Star.Unitary
 import LeanOA.ForMathlib.Misc
 import LeanOA.ContinuousMap.Uniform
@@ -23,6 +24,7 @@ import LeanOA.ContinuousFunctionalCalculus.Continuity
 + if `‖u - v‖ < 1`, then `u = exp(I • x) v`.
 + the path component of the identity in the unitary group is the set of unitaries `u` which
   are finite products of exponential unitaries.
++ `unitary A` is locally path connected
 
 -/
 
@@ -125,16 +127,172 @@ variable {A : Type*} [CStarAlgebra A]
 open Complex
 
 
-@[aesop safe apply (rule_sets := [CStarAlgebra])]
+@[aesop safe apply (rule_sets := [CStarAlgebra])] -- this has a bad discr tree key :-(
 lemma IsSelfAdjoint.cfc_arg (u : A) : IsSelfAdjoint (cfc (arg · : ℂ → ℂ) u) := by
   simp [isSelfAdjoint_iff, ← cfc_star]
 
-lemma unitary.expUnitary_cfc_arg_eq_of_norm_lt_one (u : unitary A) (hu : ‖(u - 1 : A)‖ < 1) :
+attribute [fun_prop] NormedSpace.exp_continuous
+
+
+lemma Complex.norm_sub_one_sq_eq_of_norm_one {z : ℂ} (hz : ‖z‖ = 1) :
+    ‖z - 1‖ ^ 2 = 2 * (1 - z.re) := by
+  have : z.im * z.im = 1 - z.re * z.re := by
+    replace hz := sq_eq_one_iff.mpr (.inl hz)
+    rw [Complex.sq_norm, normSq_apply] at hz
+    linarith
+  simp [Complex.sq_norm, normSq_apply, this]
+  ring
+
+open Metric in
+lemma Complex.norm_sub_one_sq_eqOn_sphere :
+    (sphere (0 : ℂ) 1).EqOn (‖· - 1‖ ^ 2) (fun z ↦ 2 * (1 - z.re)) :=
+  fun z hz ↦ norm_sub_one_sq_eq_of_norm_one (by simpa using hz)
+
+attribute [aesop 10% apply (rule_sets := [CStarAlgebra])] isStarNormal_of_mem_unitary
+
+open Complex in
+lemma unitary.two_mul_one_sub_le_norm_sub_one_sq {u : A} (hu : u ∈ unitary A)
+    {z : ℂ} (hz : z ∈ spectrum ℂ u) :
+    2 * (1 - z.re) ≤ ‖u - 1‖ ^ 2 := by
+  rw [← Real.sqrt_le_left (by positivity)]
+  have := spectrum.subset_circle_of_unitary hu hz
+  simp only [mem_sphere_iff_norm, sub_zero] at this
+  rw [← cfc_id' ℂ u, ← cfc_one ℂ u, ← cfc_sub ..]
+  convert norm_apply_le_norm_cfc (fun z ↦ z - 1) u hz
+  simpa using congr(Real.sqrt $(norm_sub_one_sq_eq_of_norm_one this)).symm
+
+open Complex in
+lemma unitary.norm_sub_one_sq_eq {u : A} (hu : u ∈ unitary A) {x : ℝ}
+    (hz : IsLeast (re '' (spectrum ℂ u)) x) :
+    ‖u - 1‖ ^ 2 = 2 * (1 - x) := by
+  obtain (_ | _) := subsingleton_or_nontrivial A
+  · exfalso; apply hz.nonempty.of_image.ne_empty; simp
+  rw [← cfc_id' ℂ u, ← cfc_one ℂ u, ← cfc_sub ..]
+  have h_eqOn : (spectrum ℂ u).EqOn (fun z ↦ ‖z - 1‖ ^ 2) (fun z ↦ 2 * (1 - z.re)) :=
+    Complex.norm_sub_one_sq_eqOn_sphere.mono <| spectrum.subset_circle_of_unitary (𝕜 := ℂ) hu
+  have h₂ : IsGreatest ((fun z ↦ 2 * (1 - z.re)) '' (spectrum ℂ u)) (2 * (1 - x)) := by
+    have : Antitone (fun y : ℝ ↦ 2 * (1 - y)) := by intro _ _ _; simp only; gcongr
+    simpa [Set.image_image] using this.map_isLeast hz
+  have h₃ : IsGreatest ((‖· - 1‖ ^ 2) '' spectrum ℂ u) (‖cfc (· - 1 : ℂ → ℂ) u‖ ^ 2) := by
+    have := pow_left_monotoneOn (n := 2) |>.mono (s₂ := ((‖· - 1‖) '' spectrum ℂ u)) (by aesop)
+    simpa [Set.image_image] using this.map_isGreatest (IsGreatest.norm_cfc (fun z : ℂ ↦ z - 1) u)
+  exact h₃.unique (h_eqOn.image_eq ▸ h₂)
+
+-- move to `Analysis.CStarAlgebra.Spectrum`
+theorem spectrum.norm_eq_one_of_unitary {𝕜 : Type*} [NormedField 𝕜] {E : Type*} [NormedRing E]
+    [StarRing E] [CStarRing E] [NormedAlgebra 𝕜 E] [CompleteSpace E] {u : E} (hu : u ∈ unitary E)
+    ⦃z : 𝕜⦄ (hz : z ∈ spectrum 𝕜 u) : ‖z‖ = 1 := by
+  simpa using spectrum.subset_circle_of_unitary hu hz
+
+lemma Complex.norm_le_re_iff_eq_norm {z : ℂ} :
+    ‖z‖ ≤ z.re ↔ z = ‖z‖ := by
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · replace h : z.re = ‖z‖ := le_antisymm (re_le_norm z) h
+    apply ext
+    · simp [h]
+    · rw [re_eq_norm, nonneg_iff] at h
+      simpa using h.2.symm
+  · rw [h]
+    simp
+
+lemma Complex.re_le_neg_norm_iff_eq_neg_norm {z : ℂ} :
+    z.re ≤ -‖z‖ ↔ z = -‖z‖ := by
+  simpa [neg_eq_iff_eq_neg, le_neg] using norm_le_re_iff_eq_norm (z := -z)
+
+lemma Complex.norm_le_im_iff_eq_I_mul_norm {z : ℂ} :
+    ‖z‖ ≤ z.im ↔ z = I * ‖z‖ := by
+  have := norm_le_re_iff_eq_norm (z := -I * z)
+  simp only [Complex.norm_mul, norm_neg, norm_I, one_mul, mul_re, neg_re, I_re,
+    neg_zero, zero_mul, neg_im, I_im, zero_sub, ← neg_mul, neg_neg] at this
+  rw [this, ← smul_eq_mul, eq_comm, ← inv_smul_eq_iff₀ (by simp)]
+  simp [← neg_inv, eq_comm]
+
+lemma Complex.im_le_neg_norm_iff_eq_neg_I_mul_norm {z : ℂ} :
+    z.im ≤ -‖z‖ ↔ z = -(I * ‖z‖) := by
+  simpa [neg_eq_iff_eq_neg, le_neg] using norm_le_im_iff_eq_I_mul_norm (z := -z)
+
+lemma unitary.norm_sub_one_lt_two_iff {u : A} (hu : u ∈ unitary A) :
+    ‖u - 1‖ < 2 ↔ -1 ∉ spectrum ℂ u := by
+  nontriviality A
+  rw [← sq_lt_sq₀ (by positivity) (by positivity)]
+  constructor
+  · intro h h1
+    have := unitary.two_mul_one_sub_le_norm_sub_one_sq hu h1 |>.trans_lt h
+    norm_num at this
+  · contrapose!
+    obtain ⟨x, hx⟩ := spectrum.isCompact (𝕜 := ℂ) u |>.image continuous_re |>.exists_isLeast <| (spectrum.nonempty _).image _
+    rw [unitary.norm_sub_one_sq_eq hu hx]
+    obtain ⟨z, hz, rfl⟩ := hx.1
+    intro key
+    replace key : z.re ≤ -1 := by linarith
+    have hz_norm : ‖z‖ = 1 := spectrum.norm_eq_one_of_unitary hu hz
+    rw [← hz_norm, Complex.re_le_neg_norm_iff_eq_neg_norm, hz_norm] at key
+    exact key ▸ hz
+
+lemma unitary.spectrum_subset_slitPlane_of_norm_lt_two {u : A} (hu : u ∈ unitary A)
+    (hu_norm : ‖u - 1‖ < 2) :
+    spectrum ℂ u ⊆ slitPlane:= by
+  intro z hz
+  rw [mem_slitPlane_iff]
+  have hz_norm : ‖z‖ = 1 := spectrum.norm_eq_one_of_unitary hu hz
+  have := sq_eq_one_iff.mpr <| .inl hz_norm
+  rw [← normSq_eq_norm_sq, normSq_apply] at this
+  by_cases h : z.im = 0
+  · simp [h, ← sq] at this
+    cases this with
+    | inl h => simp [h]
+    | inr h =>
+      have := hz_norm ▸ h.le
+      rw [Complex.re_le_neg_norm_iff_eq_neg_norm, hz_norm, ofReal_one] at this
+      rw [unitary.norm_sub_one_lt_two_iff hu] at hu_norm
+      exact False.elim <| hu_norm (this ▸ hz)
+  · exact .inr h
+
+open scoped Real in
+open NormedSpace Complex in
+lemma unitary.pathConnected_aux (u : unitary A) {t : ℝ} (ht : t ∈ Set.Icc 0 1)
+    (hu : ‖(u - 1 : A)‖ < 2) :
+    ‖exp ℂ (I • cfc (t * arg · : ℂ → ℂ) (u : A)) - 1‖ ≤ ‖(u - 1 : A)‖ := by
+  nontriviality A
+  have hf : ContinuousOn (fun x : ℂ ↦ (t * x.arg : ℂ)) (spectrum ℂ (u : A)) :=
+    .mono (by fun_prop) (unitary.spectrum_subset_slitPlane_of_norm_lt_two u.2 hu)
+  let u_t := selfAdjoint.expUnitary ⟨cfc (t * arg · : ℂ → ℂ) (u : A), by simp [selfAdjoint.mem_iff, ← cfc_star]⟩
+  have hu_t : u_t = exp ℂ (I • cfc (t * arg · : ℂ → ℂ) (u : A)) := selfAdjoint.expUnitary_coe _
+  rw [← hu_t, ← sq_le_sq₀ (by positivity) (by positivity)]
+  obtain ⟨x, hx⟩ := spectrum.isCompact (𝕜 := ℂ) (u_t : A) |>.image continuous_re |>.exists_isLeast <| (spectrum.nonempty _).image _
+  rw [unitary.norm_sub_one_sq_eq u_t.2 hx]
+  obtain ⟨z, hz, rfl⟩ := hx.1
+  rw [hu_t, ← cfc_smul .., ← CFC.exp_eq_normedSpace_exp, ← cfc_comp' .., cfc_map_spectrum ..] at hz
+  obtain ⟨w, hw, hwz⟩ := hz
+  simp at hwz
+  suffices w.re ≤ z.re from calc
+    2 * (1 - z.re) ≤ 2 * (1 - w.re) := by gcongr
+    _ ≤ ‖(u - 1 : A)‖ ^ 2 := unitary.two_mul_one_sub_le_norm_sub_one_sq u.2 hw
+  have hw₁ := spectrum.norm_eq_one_of_unitary u.2 hw
+  rw [← hwz, ← Complex.exp_eq_exp_ℂ, mul_comm I, ← ofReal_mul, exp_ofReal_mul_I_re, ← div_one w.re, ← hw₁,
+    ← cos_arg (by simpa using (hw₁ ▸ one_ne_zero : ‖w‖ ≠ 0)), ← Real.cos_abs (t * w.arg), ← Real.cos_abs]
+  apply Real.cos_le_cos_of_nonneg_of_le_pi (by positivity) (Complex.abs_arg_le_pi _)
+  calc
+    |t * w.arg| ≤ 1 * |w.arg| := by
+      rw [abs_mul]
+      gcongr
+      exact abs_of_nonneg ht.1 |>.symm ▸ ht.2
+    _ = |w.arg| := one_mul _
+
+lemma Metric.nhds_basis_ball_lt {X : Type*} [PseudoMetricSpace X] (x : X) (δ : ℝ) (hδ : 0 < δ) :
+    (nhds x).HasBasis (fun ε ↦ 0 < ε ∧ ε < δ) (ball x ·) := by
+  refine nhds_basis_ball.restrict fun ε hε ↦
+    ⟨min δ ε / 2, by positivity, ?_, ball_subset_ball (le_of_lt ?_)⟩
+  all_goals
+    apply (half_lt_self (by positivity)).trans_le
+    simp
+
+lemma unitary.expUnitary_cfc_arg_eq_of_norm_lt_two (u : unitary A) (hu : ‖(u - 1 : A)‖ < 2) :
     selfAdjoint.expUnitary ⟨cfc (arg · : ℂ → ℂ) (u : A), .cfc_arg (u : A)⟩ = u := by
   nontriviality A
   have h_cont : ContinuousOn (arg · : ℂ → ℂ) (spectrum ℂ (u : A)) :=
     continuous_ofReal.comp_continuousOn continuousOn_arg |>.mono <|
-      spectrum_subset_slitPlane_of_norm_lt_one hu
+      unitary.spectrum_subset_slitPlane_of_norm_lt_two u.2 hu
   ext
   simp only [selfAdjoint.expUnitary_coe]
   rw [← CFC.exp_eq_normedSpace_exp, ← exp_eq_exp_ℂ, ← cfc_smul .., ← cfc_comp' ..]
@@ -145,13 +303,10 @@ lemma unitary.expUnitary_cfc_arg_eq_of_norm_lt_one (u : unitary A) (hu : ‖(u -
   apply Complex.ext
   all_goals simp [log_re, hx₁, log_im]
 
-
-attribute [fun_prop] NormedSpace.exp_continuous
-
-
 open Real in
+@[simps]
 noncomputable
-def unitary.pathToOne (u : unitary A) (hu : ‖(u - 1 : A)‖ < 1) : Path 1 u where
+def unitary.pathToOne (u : unitary A) (hu : ‖(u - 1 : A)‖ < 2) : Path 1 u where
   toFun t := selfAdjoint.expUnitary
     ⟨cfc (t * arg · : ℂ → ℂ) (u : A), by simp [selfAdjoint.mem_iff, ← cfc_star]⟩
   continuous_toFun := by
@@ -159,8 +314,8 @@ def unitary.pathToOne (u : unitary A) (hu : ‖(u - 1 : A)‖ < 1) : Path 1 u wh
     suffices Continuous fun x : unitInterval ↦ cfc (fun z ↦ x * arg z) (u : A) by fun_prop
     obtain (h | h) := subsingleton_or_nontrivial A
     · convert continuous_const (y := (0 : A))
-    refine continuous_cfc (hf := ?hf_cont) _ (u : A) ?h_cont
-    case hf_cont => exact fun _ ↦ ContinuousOn.mono (by fun_prop) (spectrum_subset_slitPlane_of_norm_lt_one hu)
+    refine continuous_cfc_right (hf := ?hf_cont) _ (u : A) ?h_cont
+    case hf_cont => exact fun _ ↦ ContinuousOn.mono (by fun_prop) (unitary.spectrum_subset_slitPlane_of_norm_lt_two u.2 hu)
     case h_cont =>
       apply UniformOnFun.continuous_of_lipschitzWith (fun _ : Set ℂ ↦ ⟨π, by positivity⟩)
       simp only [Set.mem_singleton_iff, UniformOnFun.toFun_ofFun, forall_eq,
@@ -173,7 +328,15 @@ def unitary.pathToOne (u : unitary A) (hu : ‖(u - 1 : A)‖ < 1) : Path 1 u wh
   source' := by ext; simp
   target' := by
     ext
-    simpa using congr(Subtype.val $(unitary.expUnitary_cfc_arg_eq_of_norm_lt_one u hu))
+    simpa using congr(Subtype.val $(unitary.expUnitary_cfc_arg_eq_of_norm_lt_two u hu))
 
+open Metric in
+lemma unitary.ball_one_isPathConnected {δ : ℝ} (hδ₀ : 0 < δ) (hδ₂ : δ < 2) :
+    IsPathConnected (ball (1 : unitary A) δ) := by
+  refine ⟨1, by simpa, fun {u} hu ↦ ?_⟩
+  have hu : ‖(u - 1 : A)‖ < δ := by simpa [Subtype.dist_eq, dist_eq_norm] using hu
+  refine ⟨pathToOne u (hu.trans hδ₂), fun t ↦ ?_⟩
+  simpa [Subtype.dist_eq, dist_eq_norm] using
+    unitary.pathConnected_aux u t.2 (hu.trans hδ₂) |>.trans_lt hu
 
 end ExpUnitary
