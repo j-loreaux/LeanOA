@@ -330,13 +330,28 @@ def unitary.pathToOne (u : unitary A) (hu : ‖(u - 1 : A)‖ < 2) : Path 1 u wh
     ext
     simpa using congr(Subtype.val $(unitary.expUnitary_cfc_arg_eq_of_norm_lt_two u hu))
 
+variable (A) in
 open Metric in
-lemma unitary.ball_one_isPathConnected {δ : ℝ} (hδ₀ : 0 < δ) (hδ₂ : δ < 2) :
+lemma unitary.ball_one_isPathConnected (δ : ℝ) (hδ₀ : 0 < δ) (hδ₂ : δ < 2) :
     IsPathConnected (ball (1 : unitary A) δ) := by
   refine ⟨1, by simpa, fun {u} hu ↦ ?_⟩
   have hu : ‖(u - 1 : A)‖ < δ := by simpa [Subtype.dist_eq, dist_eq_norm] using hu
   refine ⟨pathToOne u (hu.trans hδ₂), fun t ↦ ?_⟩
   simpa [Subtype.dist_eq, dist_eq_norm] using
     unitary.pathConnected_aux u t.2 (hu.trans hδ₂) |>.trans_lt hu
+
+open Metric in
+lemma unitary.ball_isPathConnected (u : unitary A) (δ : ℝ) (hδ₀ : 0 < δ) (hδ₂ : δ < 2) :
+    IsPathConnected (ball (u : unitary A) δ) := by
+  convert unitary.ball_one_isPathConnected A δ hδ₀ hδ₂ |>.image (f := (u * ·)) (by fun_prop)
+  ext v
+  rw [← inv_mul_cancel u]
+  simp [- inv_mul_cancel, Subtype.dist_eq, dist_eq_norm, ← mul_sub]
+
+open Metric in
+instance : LocPathConnectedSpace (unitary A) :=
+  .of_bases (nhds_basis_ball_lt · 2 zero_lt_two) <| by
+    simpa using unitary.ball_isPathConnected
+
 
 end ExpUnitary
