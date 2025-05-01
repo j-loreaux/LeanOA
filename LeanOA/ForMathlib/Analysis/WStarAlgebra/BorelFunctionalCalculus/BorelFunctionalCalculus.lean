@@ -249,8 +249,6 @@ end AEEqFunNormStar
 
 section LpStar
 
-variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
-
 local infixr:25 " →ₛ " => SimpleFunc
 
 instance {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R] : Star (α →ₛ R) where
@@ -266,6 +264,8 @@ protected theorem StronglyMeasurable.star {β : Type*} [TopologicalSpace β]
     [Star β] [ContinuousStar β] (f : α → β) (hf : StronglyMeasurable f) :
     StronglyMeasurable (star f) :=
   ⟨fun n => star (hf.approx n), fun x => (hf.tendsto_approx x).star⟩
+
+variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
 @[simp]
 theorem eLpNorm_star {p : ℝ≥0∞} {f : α → R} :
@@ -297,6 +297,10 @@ noncomputable instance Lp.InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R
     sorry --We seem to be part way there. It may be helpful to write this out on paper to see how it's going to go
 
 end LpStar
+
+--Here's something to do: practice Loogling! This should essentially be the same as what you do when you
+--write out a theorem and try to use `exact?` to prove it, in order to find out if it's already in Mathlib.
+--probably will save time,though!
 
 #exit
 
