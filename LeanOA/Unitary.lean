@@ -8,6 +8,7 @@ import LeanOA.ForMathlib.Algebra.Star.Unitary
 import LeanOA.ForMathlib.Misc
 import LeanOA.ContinuousMap.Uniform
 import LeanOA.ContinuousFunctionalCalculus.Continuity
+import Mathlib.Topology.Algebra.OpenSubgroup
 
 /-! # Properties of unitary elements in a C⋆-algebra
 
@@ -353,5 +354,86 @@ instance : LocPathConnectedSpace (unitary A) :=
   .of_bases (nhds_basis_ball_lt · 2 zero_lt_two) <| by
     simpa using unitary.ball_isPathConnected
 
+section TopologicalGroup
+
+variable {G : Type*} [TopologicalSpace G]
+
+@[to_additive]
+theorem Joined.mul {x y w z : G} [Mul G] [ContinuousMul G] (hxy : Joined x y) (hwz : Joined w z) :
+    Joined (x * w) (y * z) := by
+  obtain ⟨γ₁⟩ := hxy
+  obtain ⟨γ₂⟩ := hwz
+  use γ₁.mul γ₂
+  all_goals simp
+
+/-- The pointwise inverse of a path. -/
+@[to_additive (attr := simps) "The pointwise negation of a path."]
+def Path.inv {x y : G} [Inv G] [ContinuousInv G] (γ : Path x y) :
+    Path (x⁻¹) (y⁻¹) where
+  toFun := γ⁻¹
+  continuous_toFun := map_continuous γ |>.inv
+  source' := congr($(γ.source)⁻¹)
+  target' := congr($(γ.target)⁻¹)
+
+@[to_additive]
+theorem Joined.inv {x y : G} [Inv G] [ContinuousInv G] (hxy : Joined x y) :
+    Joined (x⁻¹) (y⁻¹) := by
+  obtain ⟨γ⟩ := hxy
+  use γ.inv
+  all_goals simp
+
+variable (G)
+/-- The path component of the identity in a topological monoid, as a submonoid. -/
+@[to_additive (attr := simps)
+"The path component of the identity in an additive topological monoid, as an additive submonoid."]
+def Submonoid.pathComponentOne [Monoid G] [ContinuousMul G] : Submonoid G where
+  carrier := pathComponent (1 : G)
+  mul_mem' {g₁ g₂} hg₁ hg₂ := by simpa using hg₁.mul hg₂
+  one_mem' := mem_pathComponent_self 1
+
+/-- The path component of the identity in a topological group, as a subgroup. -/
+@[to_additive (attr := simps!)
+"The path component of the identity in an additive topological group, as an additive subgroup."]
+def Subgroup.pathComponentOne [Group G] [IsTopologicalGroup G] : Subgroup G where
+  toSubmonoid := .pathComponentOne G
+  inv_mem' {g} hg := by simpa using hg.inv
+
+/-- The path component of the identity in a topological group is normal-/
+@[to_additive]
+instance Subgroup.Normal.pathComponentOne [Group G] [IsTopologicalGroup G] :
+    (Subgroup.pathComponentOne G).Normal where
+  conj_mem _ := fun ⟨γ⟩ g ↦ ⟨⟨⟨(g * γ · * g⁻¹), by fun_prop⟩, by simp, by simp⟩⟩
+
+/-- The path component of the identity in a locally path connected topological group,
+as an open normal subgroup. -/
+@[to_additive (attr := simps!)
+"The path component of the identity in a locally path connected additive topological group,
+as an open normal additive subgroup."]
+def OpenNormalSubgroup.pathComponentOne [Group G]
+    [IsTopologicalGroup G] [LocPathConnectedSpace G] :
+    OpenNormalSubgroup (G) where
+  toSubgroup := .pathComponentOne G
+  isOpen' := .pathComponent 1
+  isNormal' := .pathComponentOne G
+
+namespace OpenNormalSubgroup
+
+@[to_additive]
+instance [Group G] [IsTopologicalGroup G] [LocPathConnectedSpace G] :
+    IsClosed (OpenNormalSubgroup.pathComponentOne G : Set G) :=
+  .pathComponent 1
+
+end OpenNormalSubgroup
+
+end TopologicalGroup
+
+-- these instances can be generalized a bit, at least to `CStarRing`
+instance : ContinuousStar (unitary A) where
+  continuous_star := continuous_induced_rng.mpr <| by fun_prop
+
+instance : ContinuousInv (unitary A) where
+  continuous_inv := by simp_rw [← unitary.star_eq_inv]; fun_prop
+
+instance : IsTopologicalGroup (unitary A) where
 
 end ExpUnitary
