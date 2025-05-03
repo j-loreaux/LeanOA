@@ -303,6 +303,8 @@ instance : InvolutiveStar (α →ₛ R) where
     ext x
     simp only [star_apply (star f), star_apply f, star_star]
 
+--Maybe next get this instance for AEEqFun guys then for Lp?
+
 noncomputable instance Lp.InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
   star_involutive := by
     refine Function.involutive_iff_iter_2_eq_id.mpr ?_
