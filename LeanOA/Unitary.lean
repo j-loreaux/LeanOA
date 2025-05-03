@@ -9,6 +9,7 @@ import LeanOA.ForMathlib.Misc
 import LeanOA.ContinuousMap.Uniform
 import LeanOA.ContinuousFunctionalCalculus.Continuity
 import Mathlib.Topology.Algebra.OpenSubgroup
+import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 
 /-! # Properties of unitary elements in a C⋆-algebra
 
@@ -249,36 +250,110 @@ lemma unitary.spectrum_subset_slitPlane_of_norm_lt_two {u : A} (hu : u ∈ unita
       exact False.elim <| hu_norm (this ▸ hz)
   · exact .inr h
 
+/-- The selfadjoint element obtained by taking the argument (using the principal branch and the
+continuous functional calculus) of a unitary whose spectrum does not contain `-1`. This returns
+`0` if the principal branch of the logarithm is not continuous on the spectrum of the unitary
+element. -/
+@[simps]
+noncomputable def unitary.argSelfAdjoint (u : unitary A) : selfAdjoint A :=
+  ⟨cfc (arg · : ℂ → ℂ) (u : A), .cfc_arg (u : A)⟩
+
 open scoped Real in
-open NormedSpace Complex in
-lemma unitary.pathConnected_aux (u : unitary A) {t : ℝ} (ht : t ∈ Set.Icc 0 1)
-    (hu : ‖(u - 1 : A)‖ < 2) :
-    ‖exp ℂ (I • cfc (t * arg · : ℂ → ℂ) (u : A)) - 1‖ ≤ ‖(u - 1 : A)‖ := by
+lemma selfAdjoint.norm_sq_expUnitary_sub_one {x : selfAdjoint A} (hx : ‖x‖ ≤ π) :
+    ‖(expUnitary x - 1 : A)‖ ^ 2 = 2 * (1 - Real.cos ‖x‖) := by
   nontriviality A
-  have hf : ContinuousOn (fun x : ℂ ↦ (t * x.arg : ℂ)) (spectrum ℂ (u : A)) :=
-    .mono (by fun_prop) (unitary.spectrum_subset_slitPlane_of_norm_lt_two u.2 hu)
-  let u_t := selfAdjoint.expUnitary ⟨cfc (t * arg · : ℂ → ℂ) (u : A), by simp [selfAdjoint.mem_iff, ← cfc_star]⟩
-  have hu_t : u_t = exp ℂ (I • cfc (t * arg · : ℂ → ℂ) (u : A)) := selfAdjoint.expUnitary_coe _
-  rw [← hu_t, ← sq_le_sq₀ (by positivity) (by positivity)]
-  obtain ⟨x, hx⟩ := spectrum.isCompact (𝕜 := ℂ) (u_t : A) |>.image continuous_re |>.exists_isLeast <| (spectrum.nonempty _).image _
-  rw [unitary.norm_sub_one_sq_eq u_t.2 hx]
-  obtain ⟨z, hz, rfl⟩ := hx.1
-  rw [hu_t, ← cfc_smul .., ← CFC.exp_eq_normedSpace_exp, ← cfc_comp' .., cfc_map_spectrum ..] at hz
-  obtain ⟨w, hw, hwz⟩ := hz
-  simp at hwz
-  suffices w.re ≤ z.re from calc
-    2 * (1 - z.re) ≤ 2 * (1 - w.re) := by gcongr
-    _ ≤ ‖(u - 1 : A)‖ ^ 2 := unitary.two_mul_one_sub_le_norm_sub_one_sq u.2 hw
-  have hw₁ := spectrum.norm_eq_one_of_unitary u.2 hw
-  rw [← hwz, ← Complex.exp_eq_exp_ℂ, mul_comm I, ← ofReal_mul, exp_ofReal_mul_I_re, ← div_one w.re, ← hw₁,
-    ← cos_arg (by simpa using (hw₁ ▸ one_ne_zero : ‖w‖ ≠ 0)), ← Real.cos_abs (t * w.arg), ← Real.cos_abs]
-  apply Real.cos_le_cos_of_nonneg_of_le_pi (by positivity) (Complex.abs_arg_le_pi _)
-  calc
-    |t * w.arg| ≤ 1 * |w.arg| := by
-      rw [abs_mul]
-      gcongr
-      exact abs_of_nonneg ht.1 |>.symm ▸ ht.2
-    _ = |w.arg| := one_mul _
+  apply unitary.norm_sub_one_sq_eq (expUnitary x).2
+  simp only [expUnitary_coe, AddSubgroupClass.coe_norm]
+  rw [← CFC.exp_eq_normedSpace_exp, ← cfc_comp_smul I _ (x : A), cfc_map_spectrum .., ← x.2.spectrumRestricts.algebraMap_image]
+  simp only [Set.image_image, coe_algebraMap, smul_eq_mul, mul_comm I, ← exp_eq_exp_ℂ, exp_ofReal_mul_I_re]
+  refine ⟨?_, ?_⟩
+  · cases CStarAlgebra.norm_or_neg_norm_mem_spectrum x.2 with
+    | inl h => exact ⟨_, h, rfl⟩
+    | inr h => exact ⟨_, h, by simp⟩
+  · rintro - ⟨y, hy, rfl⟩
+    exact Real.cos_abs y ▸ Real.cos_le_cos_of_nonneg_of_le_pi (by positivity) hx <| spectrum.norm_le_norm_of_mem hy
+
+open scoped Real in
+open unitary selfAdjoint in
+lemma argSelfAdjoint_expUnitary {x : selfAdjoint A} (hx : ‖x‖ < π) :
+    argSelfAdjoint (expUnitary x) = x := by
+  nontriviality A
+  ext
+  have : spectrum ℂ (expUnitary x : A) ⊆ slitPlane := by
+    apply unitary.spectrum_subset_slitPlane_of_norm_lt_two (expUnitary x).2
+    rw [← sq_lt_sq₀ (by positivity) (by positivity), norm_sq_expUnitary_sub_one hx.le]
+    calc
+      2 * (1 - Real.cos ‖x‖) < 2 * (1 - Real.cos π) := by
+        gcongr
+        exact Real.cos_lt_cos_of_nonneg_of_le_pi (by positivity) le_rfl hx
+      _ = 2 ^ 2 := by norm_num
+  simp only [argSelfAdjoint_coe, expUnitary_coe]
+  rw [← CFC.exp_eq_normedSpace_exp, ← cfc_comp_smul .., ← cfc_comp' (hg := ?_)]
+  · conv_rhs => rw [← cfc_id' ℂ (x : A)]
+    refine cfc_congr fun y hy ↦ ?_
+    rw [← x.2.spectrumRestricts.algebraMap_image] at hy
+    obtain ⟨y, hy, rfl⟩ := hy
+    simp [← exp_eq_exp_ℂ, exp_ofReal_mul_I_re, mul_comm I, ← ofReal_mul, exp_ofReal_mul_I_re]
+    replace hy : ‖y‖ < π := spectrum.norm_le_norm_of_mem hy |>.trans_lt hx
+    simp only [Real.norm_eq_abs, abs_lt] at hy
+    rw [← Circle.coe_exp, Circle.arg_exp hy.1 hy.2.le]
+  refine continuous_ofReal.comp_continuousOn <| continuousOn_arg.mono ?_
+  rwa [expUnitary_coe, ← CFC.exp_eq_normedSpace_exp, ← cfc_comp_smul .., cfc_map_spectrum ..] at this
+
+open scoped Real in
+open unitary selfAdjoint in
+lemma expUnitary_argSelfAdjoint {u : unitary A} (hu : ‖(u - 1 : A)‖ < 2) :
+    expUnitary (argSelfAdjoint u) = u := by
+  ext
+  have : ContinuousOn arg (spectrum ℂ (u : A)) :=
+    continuousOn_arg.mono <| unitary.spectrum_subset_slitPlane_of_norm_lt_two u.2 hu
+  rw [expUnitary_coe, argSelfAdjoint_coe, ← CFC.exp_eq_normedSpace_exp, ← cfc_comp_smul .., ← cfc_comp' ..]
+  conv_rhs => rw [← cfc_id' ℂ (u : A)]
+  refine cfc_congr fun y hy ↦ ?_
+  have hy₁ : ‖y‖ = 1 := spectrum.norm_eq_one_of_unitary u.2 hy
+  have : I * y.arg = log y :=
+    Complex.ext (by simp [log_re, spectrum.norm_eq_one_of_unitary u.2 hy]) (by simp [log_im])
+  simpa [← exp_eq_exp_ℂ, this] using exp_log (by aesop)
+
+-- this can be generalized
+@[simp]
+lemma selfAdjoint.expUnitary_zero : expUnitary (0 : selfAdjoint A) = 1 := by
+  ext
+  simp
+
+open scoped Real in
+lemma unitary.norm_argSelfAdjoint_le_pi (u : unitary A) :
+    ‖argSelfAdjoint u‖ ≤ π :=
+  norm_cfc_le (by positivity) fun y hy ↦ by simpa using abs_arg_le_pi y
+
+lemma unitary.norm_argSelfAdjoint {u : unitary A} (hu : ‖(u - 1 : A)‖ < 2) :
+    ‖(u - 1 : A)‖ ^ 2 = 2 * (1 - Real.cos ‖argSelfAdjoint u‖) := by
+  conv_lhs => rw [← expUnitary_argSelfAdjoint hu]
+  exact selfAdjoint.norm_sq_expUnitary_sub_one <| unitary.norm_argSelfAdjoint_le_pi u
+
+lemma unitary.norm_argSelfAdjoint' {u : unitary A} (hu : ‖(u - 1 : A)‖ < 2) :
+    ‖argSelfAdjoint u‖ = Real.arccos (1 - ‖(u - 1 : A)‖ ^ 2 / 2) := by
+  symm
+  apply Real.arccos_eq_of_eq_cos (by positivity) (unitary.norm_argSelfAdjoint_le_pi u)
+  linarith [unitary.norm_argSelfAdjoint hu]
+
+open scoped Real in
+open NormedSpace Complex unitary selfAdjoint in
+lemma unitary.norm_expUnitary_smul_argSelfAdjoint_sub_one_le (u : unitary A)
+    {t : ℝ} (ht : t ∈ Set.Icc 0 1) (hu : ‖(u - 1 : A)‖ < 2) :
+    ‖(expUnitary (t • argSelfAdjoint u) - 1 : A)‖ ≤ ‖(u - 1 : A)‖ := by
+  have key : ‖t • argSelfAdjoint u‖ ≤ ‖argSelfAdjoint u‖ := by
+    rw [← one_mul ‖argSelfAdjoint u‖]
+    simp_rw [AddSubgroupClass.coe_norm, val_smul, norm_smul, Real.norm_eq_abs, abs_of_nonneg ht.1]
+    gcongr
+    exact ht.2
+  rw [← sq_le_sq₀ (by positivity) (by positivity)]
+  rw [selfAdjoint.norm_sq_expUnitary_sub_one (key.trans <| unitary.norm_argSelfAdjoint_le_pi u)]
+  trans 2 * (1 - Real.cos ‖argSelfAdjoint u‖)
+  · gcongr
+    exact Real.cos_le_cos_of_nonneg_of_le_pi (by positivity)
+      (unitary.norm_argSelfAdjoint_le_pi u) key
+  · exact (unitary.norm_argSelfAdjoint hu).ge
 
 lemma Metric.nhds_basis_ball_lt {X : Type*} [PseudoMetricSpace X] (x : X) (δ : ℝ) (hδ : 0 < δ) :
     (nhds x).HasBasis (fun ε ↦ 0 < ε ∧ ε < δ) (ball x ·) := by
@@ -288,28 +363,41 @@ lemma Metric.nhds_basis_ball_lt {X : Type*} [PseudoMetricSpace X] (x : X) (δ : 
     apply (half_lt_self (by positivity)).trans_le
     simp
 
-lemma unitary.expUnitary_cfc_arg_eq_of_norm_lt_two (u : unitary A) (hu : ‖(u - 1 : A)‖ < 2) :
-    selfAdjoint.expUnitary ⟨cfc (arg · : ℂ → ℂ) (u : A), .cfc_arg (u : A)⟩ = u := by
-  nontriviality A
-  have h_cont : ContinuousOn (arg · : ℂ → ℂ) (spectrum ℂ (u : A)) :=
-    continuous_ofReal.comp_continuousOn continuousOn_arg |>.mono <|
-      unitary.spectrum_subset_slitPlane_of_norm_lt_two u.2 hu
-  ext
-  simp only [selfAdjoint.expUnitary_coe]
-  rw [← CFC.exp_eq_normedSpace_exp, ← exp_eq_exp_ℂ, ← cfc_smul .., ← cfc_comp' ..]
-  conv_rhs => rw [← cfc_id' ℂ (u : A)]
-  refine cfc_congr fun x hx ↦ ?_
-  have hx₁ : ‖x‖ = 1 := by simpa using unitary.spectrum_subset_circle u hx
-  convert Complex.exp_log (by simp [← norm_pos_iff, hx₁] : x ≠ 0) using 2
-  apply Complex.ext
-  all_goals simp [log_re, hx₁, log_im]
+lemma unitary.norm_sub_eq (u v : unitary A) :
+    ‖(u - v : A)‖ = ‖((u * star v : unitary A) - 1 : A)‖ := calc
+  ‖(u - v : A)‖ = ‖(u * star v - 1 : A) * v‖ := by simp [sub_mul, mul_assoc]
+  _ = ‖((u * star v : unitary A) - 1 : A)‖ := by simp
 
-open Real in
+open selfAdjoint unitary in
+lemma unitary.expUnitary_eq_mul_inv (u v : unitary A) (huv : ‖(u - v : A)‖ < 2) :
+    expUnitary (argSelfAdjoint (u * star v)) = u * star v :=
+  expUnitary_argSelfAdjoint <| unitary.norm_sub_eq u v ▸ huv
+
+open scoped Real in
+open selfAdjoint Metric in
+/-- the maps `unitary.argSelfAdjoint` and `selfAdjoint.expUnitary` form a partial
+homeomorphism between `ball (1 : unitary A) 2` and `ball (0 : selfAdjoint A) π`. -/
+noncomputable def unitary.partialHomeomorph :
+    PartialHomeomorph (unitary A) (selfAdjoint A) where
+  toFun := argSelfAdjoint
+  invFun := expUnitary
+  source := ball 1 2
+  target := ball 0 π
+  map_source' := sorry
+  map_target' := sorry
+  left_inv' u hu := expUnitary_argSelfAdjoint <| by
+    simpa [Subtype.dist_eq, dist_eq_norm] using hu
+  right_inv' x hx := argSelfAdjoint_expUnitary <| by simpa using hx
+  open_source := isOpen_ball
+  open_target := isOpen_ball
+  continuousOn_toFun := sorry
+  continuousOn_invFun := sorry
+
+open Real selfAdjoint unitary in
 @[simps]
 noncomputable
 def unitary.pathToOne (u : unitary A) (hu : ‖(u - 1 : A)‖ < 2) : Path 1 u where
-  toFun t := selfAdjoint.expUnitary
-    ⟨cfc (t * arg · : ℂ → ℂ) (u : A), by simp [selfAdjoint.mem_iff, ← cfc_star]⟩
+  toFun t := expUnitary ((t : ℝ) • argSelfAdjoint u)
   continuous_toFun := by
     simp only [continuous_induced_rng, Function.comp_def, selfAdjoint.expUnitary_coe]
     suffices Continuous fun x : unitInterval ↦ cfc (fun z ↦ x * arg z) (u : A) by fun_prop
@@ -327,9 +415,7 @@ def unitary.pathToOne (u : unitary A) (hu : ‖(u - 1 : A)‖ < 2) : Path 1 u wh
       gcongr
       exact Complex.abs_arg_le_pi _
   source' := by ext; simp
-  target' := by
-    ext
-    simpa using congr(Subtype.val $(unitary.expUnitary_cfc_arg_eq_of_norm_lt_two u hu))
+  target' := by simpa using expUnitary_argSelfAdjoint hu
 
 variable (A) in
 open Metric in
@@ -339,7 +425,7 @@ lemma unitary.ball_one_isPathConnected (δ : ℝ) (hδ₀ : 0 < δ) (hδ₂ : δ
   have hu : ‖(u - 1 : A)‖ < δ := by simpa [Subtype.dist_eq, dist_eq_norm] using hu
   refine ⟨pathToOne u (hu.trans hδ₂), fun t ↦ ?_⟩
   simpa [Subtype.dist_eq, dist_eq_norm] using
-    unitary.pathConnected_aux u t.2 (hu.trans hδ₂) |>.trans_lt hu
+    unitary.norm_expUnitary_smul_argSelfAdjoint_sub_one_le u t.2 (hu.trans hδ₂) |>.trans_lt hu
 
 open Metric in
 lemma unitary.ball_isPathConnected (u : unitary A) (δ : ℝ) (hδ₀ : 0 < δ) (hδ₂ : δ < 2) :
@@ -428,10 +514,12 @@ end OpenNormalSubgroup
 end TopologicalGroup
 
 -- these instances can be generalized a bit, at least to `CStarRing`
-instance : ContinuousStar (unitary A) where
+instance {R : Type*} [Monoid R] [StarMul R] [TopologicalSpace R] [ContinuousStar R] :
+    ContinuousStar (unitary R) where
   continuous_star := continuous_induced_rng.mpr <| by fun_prop
 
-instance : ContinuousInv (unitary A) where
+instance {R : Type*} [Monoid R] [StarMul R] [TopologicalSpace R] [ContinuousStar R] :
+    ContinuousInv (unitary R) where
   continuous_inv := by simp_rw [← unitary.star_eq_inv]; fun_prop
 
 instance : IsTopologicalGroup (unitary A) where
