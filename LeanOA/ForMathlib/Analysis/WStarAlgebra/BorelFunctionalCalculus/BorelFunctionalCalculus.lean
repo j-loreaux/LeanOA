@@ -254,6 +254,8 @@ local infixr:25 " →ₛ " => SimpleFunc
 instance {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R] : Star (α →ₛ R) where
   star f := f.map Star.star
 
+lemma star_apply [TopologicalSpace R] [Star R] [ContinuousStar R] (f : α →ₛ R) (x : α) : (star f) x = star (f x) := rfl
+
 protected theorem _root_.Filter.EventuallyEq.star {α β : Type*} [Star β] {f g : α → β}
     {l : Filter α} (h : f =ᶠ[l] g) :
     (fun x ↦ star (f x)) =ᶠ[l] fun x ↦ star (g x) :=
@@ -293,20 +295,13 @@ section LpInvolutiveStar
 
 local infixr:25 " →ₛ " => SimpleFunc
 
+variable [TopologicalSpace R] [InvolutiveStar R] [ContinuousStar R]
 
-example {R : Type*} [NormedAddCommGroup R] [Star R] [Star (α →ₛ R)] (f : α →ₛ R) (x : α) : (star f) x = star (f x) := by
-    have g := Pi.star_apply (f.toFun)
-    have := g x
-    apply?
-
-
-/- Interesting! I can't even get this involutive thing to work for simple functions. -/
-instance {R : Type*} [Star (α →ₛ R)] [InvolutiveStar R] : InvolutiveStar (α →ₛ R) where
+instance : InvolutiveStar (α →ₛ R) where
   star_involutive := by
-    dsimp [Function.Involutive]
     intro f
     ext x
-
+    simp only [star_apply (star f), star_apply f, star_star]
 
 noncomputable instance Lp.InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
   star_involutive := by
