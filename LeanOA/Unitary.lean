@@ -383,8 +383,21 @@ noncomputable def unitary.partialHomeomorph :
   invFun := expUnitary
   source := ball 1 2
   target := ball 0 π
-  map_source' := sorry
-  map_target' := sorry
+  map_source' u hu := by
+    simp only [mem_ball, Subtype.dist_eq, OneMemClass.coe_one, dist_eq_norm, sub_zero] at hu ⊢
+    rw [unitary.norm_argSelfAdjoint' hu]
+    calc
+      Real.arccos (1 - ‖(u - 1 : A)‖ ^ 2 / 2) < Real.arccos (1 - 2 ^ 2 / 2) := by
+        apply Real.arccos_lt_arccos (by norm_num) (by gcongr)
+        linarith [(by positivity : 0 ≤ ‖(u - 1 : A)‖ ^ 2 / 2)]
+      _ = π := by norm_num
+  map_target' x hx := by
+    simp only [mem_ball, Subtype.dist_eq, OneMemClass.coe_one, dist_eq_norm, sub_zero] at hx ⊢
+    rw [← sq_lt_sq₀ (by positivity) (by positivity)]
+    rw [selfAdjoint.norm_sq_expUnitary_sub_one hx.le]
+    have : -1 < Real.cos ‖(x : A)‖ := sorry
+    simp [mul_sub, sq]
+    linarith
   left_inv' u hu := expUnitary_argSelfAdjoint <| by
     simpa [Subtype.dist_eq, dist_eq_norm] using hu
   right_inv' x hx := argSelfAdjoint_expUnitary <| by simpa using hx
