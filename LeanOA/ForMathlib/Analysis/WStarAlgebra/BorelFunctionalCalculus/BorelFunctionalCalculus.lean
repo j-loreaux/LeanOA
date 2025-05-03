@@ -287,6 +287,27 @@ protected theorem MemLp.star {p : ℝ≥0∞} {f : α → R} (hf : MemLp f p μ)
 protected noncomputable instance Lp.Star {p : ℝ≥0∞} : Star (Lp R p μ) where
   star f := ⟨star (f : α →ₘ[μ] R), by simpa [Lp.mem_Lp_iff_eLpNorm_lt_top] using Lp.eLpNorm_lt_top f⟩
 
+end LpStar
+
+section LpInvolutiveStar
+
+local infixr:25 " →ₛ " => SimpleFunc
+
+
+example {R : Type*} [NormedAddCommGroup R] [Star R] [Star (α →ₛ R)] (f : α →ₛ R) (x : α) : (star f) x = star (f x) := by
+    have g := Pi.star_apply (f.toFun)
+    have := g x
+    apply?
+
+
+/- Interesting! I can't even get this involutive thing to work for simple functions. -/
+instance {R : Type*} [Star (α →ₛ R)] [InvolutiveStar R] : InvolutiveStar (α →ₛ R) where
+  star_involutive := by
+    dsimp [Function.Involutive]
+    intro f
+    ext x
+
+
 noncomputable instance Lp.InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
   star_involutive := by
     refine Function.involutive_iff_iter_2_eq_id.mpr ?_
@@ -296,7 +317,7 @@ noncomputable instance Lp.InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R
     filter_upwards [AEEqFun.coeFn_star (R := R) (μ := μ) (f := f), AEEqFun.coeFn_star (R := R) (μ := μ) (f := star f)] with x H1 H2
     sorry --We seem to be part way there. It may be helpful to write this out on paper to see how it's going to go
 
-end LpStar
+end LpInvolutiveStar
 
 --Here's something to do: practice Loogling! This should essentially be the same as what you do when you
 --write out a theorem and try to use `exact?` to prove it, in order to find out if it's already in Mathlib.
