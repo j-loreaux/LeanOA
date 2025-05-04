@@ -303,7 +303,11 @@ instance : InvolutiveStar (α →ₛ R) where
     ext x
     simp only [star_apply (star f), star_apply f, star_star]
 
---Maybe next get this instance for AEEqFun guys then for Lp?
+instance : InvolutiveStar (α →ₘ[μ] R) where
+  star_involutive f := by
+    refine AEEqFun.ext_iff.mpr ?_
+    filter_upwards [AEEqFun.coeFn_star (star f), AEEqFun.coeFn_star f] with x hx hy
+    simp only [hx, Pi.star_apply, hy, star_star]
 
 noncomputable instance Lp.InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
   star_involutive := by
