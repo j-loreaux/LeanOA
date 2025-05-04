@@ -293,6 +293,8 @@ end LpStar
 
 section LpInvolutiveStar
 
+section
+
 local infixr:25 " →ₛ " => SimpleFunc
 
 variable [TopologicalSpace R] [InvolutiveStar R] [ContinuousStar R]
@@ -309,14 +311,30 @@ instance : InvolutiveStar (α →ₘ[μ] R) where
     filter_upwards [AEEqFun.coeFn_star (star f), AEEqFun.coeFn_star f] with x hx hy
     simp only [hx, Pi.star_apply, hy, star_star]
 
+end
+
+variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
+
+/-
+Now what is the idea with the involutive star operation below?
+
+It does seem to want to prove equality of star (star f) and f for f an Lp function.
+To do this, we call `Lp.ext_iff.mpr`, which replaces the equality of the Lp
+functions with an ae equality statement for coerced functions.
+
+The double coercion is interesting. The inner coercion is to `AEEqFun` and the outer is to
+bare functions. Can `AEEqFun.coeFn_star` help with this?
+
+Yes. As usual there was a problem with typeclasses. I was confusing some things.
+
+-/
+
 noncomputable instance Lp.InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
-  star_involutive := by
-    refine Function.involutive_iff_iter_2_eq_id.mpr ?_
-    simp only [Function.iterate_succ, Function.iterate_one]
-    ext f
-    simp only [Function.iterate_zero, CompTriple.comp_eq, Function.comp_apply, id_eq]
-    filter_upwards [AEEqFun.coeFn_star (R := R) (μ := μ) (f := f), AEEqFun.coeFn_star (R := R) (μ := μ) (f := star f)] with x H1 H2
-    sorry --We seem to be part way there. It may be helpful to write this out on paper to see how it's going to go
+  star_involutive f := by
+     refine Lp.ext_iff.mpr ?_
+     filter_upwards [AEEqFun.coeFn_star (star f).1, AEEqFun.coeFn_star f.1] with x hx hy
+     simp? [hx, hy]
+     sorry
 
 end LpInvolutiveStar
 
