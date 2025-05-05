@@ -315,7 +315,7 @@ end
 
 variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
-noncomputable instance Lp.InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
+noncomputable instance InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
   star_involutive f := by
      refine Lp.ext_iff.mpr ?_
      filter_upwards
@@ -323,20 +323,21 @@ noncomputable instance Lp.InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R
 
 end LpInvolutiveStar
 
---Here's something to do: practice Loogling! This should essentially be the same as what you do when you
---write out a theorem and try to use `exact?` to prove it, in order to find out if it's already in Mathlib.
---probably will save time,though!
+section SMul
 
-#exit
+variable [NormedRing R] [StarAddMonoid R] [NormedStarGroup R]
 
-/-- The trouble with this instance is that `R` needs to be `ℂ` if we are going to be able to define CStarAlg. -/
 noncomputable instance Linfty.RSMul : SMul R (Lp R ∞ μ) where
   smul c f := (Linfty.const (μ := μ) c) • f
 
 
+/- Do I need to first define star_mul for AEEqFun? -/
 
 noncomputable instance Linfty.StarMul : StarMul (Lp R ∞ μ) where
-  star_mul := sorry
+  star_mul f g := by
+    refine Lp.ext_iff.mpr ?_
+    filter_upwards
+    apply congrFun (congrArg AEEqFun.cast <| star_mul _ _)
 
 noncomputable instance Linfty.StarRing : StarRing (Lp R ∞ μ) where
   star_add := sorry
@@ -351,6 +352,10 @@ noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
 
 
 #synth SMul R (Lp R ∞ μ)
+
+end SMul
+
+#
 
 noncomputable instance Linfty.ComplexAlgebra : Algebra ℂ (Lp R ∞ μ) where
 
