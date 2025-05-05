@@ -65,8 +65,6 @@ theorem AEEqFun.one_smul (f : α →ₘ[μ] β) : (1 : α →ₘ[μ] β) • f =
 
 end AEEqFun
 
-variable {R : Type*}
-
 open scoped ENNReal
 
 /- These sections are not well named. -/
@@ -307,7 +305,7 @@ instance : InvolutiveStar (α →ₛ R) where
 
 instance : InvolutiveStar (α →ₘ[μ] R) where
   star_involutive f := by
-    refine AEEqFun.ext_iff.mpr ?_
+    ext
     filter_upwards [AEEqFun.coeFn_star (star f), AEEqFun.coeFn_star f] with x hx hy
     simp only [hx, Pi.star_apply, hy, star_star]
 
@@ -317,27 +315,38 @@ variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
 noncomputable instance InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
   star_involutive f := by
-     refine Lp.ext_iff.mpr ?_
+     ext
      filter_upwards
      exact congrFun (congrArg AEEqFun.cast <| star_involutive f.1)
 
 end LpInvolutiveStar
 
-section SMul
+section StarMul
+section
 
-variable [NormedRing R] [StarAddMonoid R] [NormedStarGroup R]
+variable {R : Type*} [NormedRing R] [StarRing R] [NormedStarGroup R]
+
+instance : StarMul (α →ₘ[μ] R) where
+  star_mul f g := by
+    ext
+    filter_upwards [AEEqFun.coeFn_star (f * g), AEEqFun.coeFn_mul f g, AEEqFun.coeFn_mul (star g) (star f), AEEqFun.coeFn_star f,
+         AEEqFun.coeFn_star g] with x hx hy hz h1 h2
+    simp only [hx, Pi.star_apply, hy, Pi.mul_apply, hz, h1, h2, star_mul]
+
+end
+
+variable {R : Type*} [NormedRing R] [_root_.StarRing R] [NormedStarGroup R] [ContinuousStar R]
 
 noncomputable instance Linfty.RSMul : SMul R (Lp R ∞ μ) where
   smul c f := (Linfty.const (μ := μ) c) • f
 
-
-/- Do I need to first define star_mul for AEEqFun? -/
-
 noncomputable instance Linfty.StarMul : StarMul (Lp R ∞ μ) where
   star_mul f g := by
-    refine Lp.ext_iff.mpr ?_
-    filter_upwards
-    apply congrFun (congrArg AEEqFun.cast <| star_mul _ _)
+    ext
+    filter_upwards [AEEqFun.coeFn_star (R := R) (f * g), AEEqFun.coeFn_star (R := R) f, AEEqFun.coeFn_star (R := R) g ] with x hx hy hz
+    --have := congrFun (congrArg AEEqFun.cast <| star_mul f.1 g.1) x
+    --something here left to do, but I don't know what it is at the moment...
+    sorry
 
 noncomputable instance Linfty.StarRing : StarRing (Lp R ∞ μ) where
   star_add := sorry
@@ -353,7 +362,7 @@ noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
 
 #synth SMul R (Lp R ∞ μ)
 
-end SMul
+end StarMul
 
 #
 
