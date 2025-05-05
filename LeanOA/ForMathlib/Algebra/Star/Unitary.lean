@@ -1,4 +1,5 @@
 import Mathlib.Algebra.Star.Unitary
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 
 variable {A : Type*} [Monoid A] [StarMul A]
 
@@ -18,3 +19,5 @@ lemma Units.inv_mul_mem_unitary (a b : Aˣ)
 @[simp]
 lemma one_mem_unitary : 1 ∈ unitary A :=
   one_mem _
+
+attribute [aesop 10% apply (rule_sets := [CStarAlgebra])] isStarNormal_of_mem_unitary

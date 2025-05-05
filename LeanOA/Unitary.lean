@@ -7,7 +7,9 @@ import LeanOA.ForMathlib.Algebra.Star.Unitary
 import LeanOA.ForMathlib.Data.Complex.Norm
 import LeanOA.ForMathlib.Data.Complex.Order
 import LeanOA.ForMathlib.Analysis.Complex.Basic
+import LeanOA.ForMathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.Exponential
+import LeanOA.ForMathlib.Analysis.CStarAlgebra.Spectrum
 import LeanOA.ForMathlib.Topology.Connected.LocPathConnected
 import LeanOA.ForMathlib.Topology.Algebra.Star.Unitary
 import LeanOA.ForMathlib.Misc
@@ -57,6 +59,7 @@ lemma IsSelfAdjoint.self_add_I_smul_cfcSqrt_sub_sq_mem_unitary (a : A) (ha : IsS
     Complex.normSq_ofReal_add_I_smul_sqrt_one_sub, Complex.ofReal_one]
   exact spectrum.norm_le_norm_of_mem (ha.spectrumRestricts.apply_mem hx) |>.trans ha_norm
 
+/-- For `a` selfAdjoint with `‖a‖ ≤ 1`, this is the unitary `a + I • √(1 - a ^ 2)`. -/
 @[simps]
 noncomputable def selfAdjoint.unitarySelfAddISMul (a : selfAdjoint A)
     (ha_norm : ‖a‖ ≤ 1) :
@@ -112,7 +115,7 @@ lemma CStarAlgebra.span_unitary : span ℂ (unitary A : Set A) = ⊤ := by
   rw [eq_top_iff]
   rintro x -
   obtain ⟨u, c, rfl, h⟩ := CStarAlgebra.exists_sum_four_unitary x
-  exact sum_mem fun i _ ↦ Submodule.smul_mem _ _ (subset_span (u i).2)
+  exact sum_mem fun i _ ↦ smul_mem _ _ (subset_span (u i).2)
 
 end UnitarySpan
 
@@ -122,13 +125,6 @@ variable {A : Type*} [CStarAlgebra A]
 
 open Complex Metric NormedSpace selfAdjoint unitary
 open scoped Real
-
-
-@[aesop safe apply (rule_sets := [CStarAlgebra])] -- this has a bad discr tree key :-(
-lemma IsSelfAdjoint.cfc_arg (u : A) : IsSelfAdjoint (cfc (arg · : ℂ → ℂ) u) := by
-  simp [isSelfAdjoint_iff, ← cfc_star]
-
-attribute [aesop 10% apply (rule_sets := [CStarAlgebra])] isStarNormal_of_mem_unitary
 
 lemma unitary.two_mul_one_sub_le_norm_sub_one_sq {u : A} (hu : u ∈ unitary A)
     {z : ℂ} (hz : z ∈ spectrum ℂ u) :
@@ -155,12 +151,6 @@ lemma unitary.norm_sub_one_sq_eq {u : A} (hu : u ∈ unitary A) {x : ℝ}
     have := pow_left_monotoneOn (n := 2) |>.mono (s₂ := ((‖· - 1‖) '' spectrum ℂ u)) (by aesop)
     simpa [Set.image_image] using this.map_isGreatest (IsGreatest.norm_cfc (fun z : ℂ ↦ z - 1) u)
   exact h₃.unique (h_eqOn.image_eq ▸ h₂)
-
--- move to `Analysis.CStarAlgebra.Spectrum`
-theorem spectrum.norm_eq_one_of_unitary {𝕜 : Type*} [NormedField 𝕜] {E : Type*} [NormedRing E]
-    [StarRing E] [CStarRing E] [NormedAlgebra 𝕜 E] [CompleteSpace E] {u : E} (hu : u ∈ unitary E)
-    ⦃z : 𝕜⦄ (hz : z ∈ spectrum 𝕜 u) : ‖z‖ = 1 := by
-  simpa using spectrum.subset_circle_of_unitary hu hz
 
 lemma unitary.norm_sub_one_lt_two_iff {u : A} (hu : u ∈ unitary A) :
     ‖u - 1‖ < 2 ↔ -1 ∉ spectrum ℂ u := by
@@ -199,6 +189,10 @@ lemma unitary.spectrum_subset_slitPlane_of_norm_lt_two {u : A} (hu : u ∈ unita
       exact False.elim <| hu_norm (this ▸ hz)
   · exact .inr h
 
+@[aesop safe apply (rule_sets := [CStarAlgebra])]
+lemma IsSelfAdjoint.cfc_arg (u : A) : IsSelfAdjoint (cfc (ofReal ∘ arg : ℂ → ℂ) u) := by
+  simp [isSelfAdjoint_iff, ← cfc_star, Function.comp_def]
+
 /-- The selfadjoint element obtained by taking the argument (using the principal branch and the
 continuous functional calculus) of a unitary whose spectrum does not contain `-1`. This returns
 `0` if the principal branch of the logarithm is not continuous on the spectrum of the unitary
@@ -207,7 +201,6 @@ element. -/
 noncomputable def unitary.argSelfAdjoint (u : unitary A) : selfAdjoint A :=
   ⟨cfc (arg · : ℂ → ℂ) (u : A), .cfc_arg (u : A)⟩
 
-open scoped Real in
 lemma selfAdjoint.norm_sq_expUnitary_sub_one {x : selfAdjoint A} (hx : ‖x‖ ≤ π) :
     ‖(expUnitary x - 1 : A)‖ ^ 2 = 2 * (1 - Real.cos ‖x‖) := by
   nontriviality A
