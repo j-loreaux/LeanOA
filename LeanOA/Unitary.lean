@@ -5,6 +5,7 @@ import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog
 import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 import LeanOA.ForMathlib.Algebra.Star.Unitary
+import LeanOA.ForMathlib.Topology.Connected.LocPathConnected
 import LeanOA.ForMathlib.Misc
 import LeanOA.ContinuousMap.Uniform
 import LeanOA.ContinuousFunctionalCalculus.Continuity
@@ -18,15 +19,6 @@ import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 + `CStarAlgebra.exists_sum_four_unitary`: every element `x` in a unital C⋆-algebra is a linear
   combination of four unitary elements, and the norm of each coefficient does not exceed `‖x‖ / 2`.
 + `CStarAlgebra.span_unitary`: a unital C⋆-algebra is spanned by its unitary elements.
-
-## To do
-
-+ if `‖u - 1‖ < 1`, then there is a selfadjoint `x` such that `u = exp(I • x)`.
-+ if `‖u - 1‖ < 1`, then there is a path of unitaries from `u` to `1`.
-+ if `‖u - v‖ < 1`, then `u = exp(I • x) v`.
-+ the path component of the identity in the unitary group is the set of unitaries `u` which
-  are finite products of exponential unitaries.
-+ `unitary A` is locally path connected
 
 -/
 
@@ -51,7 +43,7 @@ lemma IsSelfAdjoint.self_add_I_smul_cfcSqrt_sub_sq_mem_unitary (a : A) (ha : IsS
     case nonneg =>
       rwa [sub_nonneg, ← CStarAlgebra.norm_le_one_iff_of_nonneg (a ^ 2), ha.sq_norm,
         sq_le_one_iff₀ (by positivity)]
-    -- I *really* want this to be solved with `cfc_pull`. This is a good example of a stress test.
+    -- I *really* want this to be solved with a `cfc_pull` tactic. This is a good example of a stress test.
     rw [cfc_add .., cfc_const_mul .., ← cfc_real_eq_complex (fun x ↦ x) ha, cfc_id' ℝ a,
       ← cfc_real_eq_complex (fun x ↦ √(1 - x ^2)) ha, cfcₙ_eq_cfc, cfc_comp' (√·) (1 - · ^ 2) a,
       cfc_sub .., cfc_pow .., cfc_const_one .., cfc_id' ..]
@@ -78,7 +70,7 @@ lemma selfAdjoint.realPart_unitarySelfAddISMul (a : selfAdjoint A) (ha_norm : �
   simp [IsSelfAdjoint.imaginaryPart (x := CFC.sqrt (1 - a ^ 2 : A)) (by cfc_tac)]
 
 /-- A stepping stone to `CStarAlgebra.exists_sum_four_unitary` that specifies the unitary
-elements precisely. -/
+elements precisely. The `let`s in the statement are intentional. -/
 lemma CStarAlgebra.norm_smul_two_inv_smul_add_four_unitary (x : A) (hx : x ≠ 0) :
     let u₁ : unitary A := selfAdjoint.unitarySelfAddISMul (ℜ (‖x‖⁻¹ • x))
       (by simpa [norm_smul, inv_mul_le_one₀ (norm_pos_iff.2 hx)] using realPart.norm_le x)
@@ -495,80 +487,6 @@ instance : LocPathConnectedSpace (unitary A) :=
   .of_bases (nhds_basis_ball_lt · 2 zero_lt_two) <| by
     simpa using unitary.ball_isPathConnected
 
-section TopologicalGroup
-
-variable {G : Type*} [TopologicalSpace G]
-
-@[to_additive]
-theorem Joined.mul {x y w z : G} [Mul G] [ContinuousMul G] (hxy : Joined x y) (hwz : Joined w z) :
-    Joined (x * w) (y * z) := by
-  obtain ⟨γ₁⟩ := hxy
-  obtain ⟨γ₂⟩ := hwz
-  use γ₁.mul γ₂
-  all_goals simp
-
-/-- The pointwise inverse of a path. -/
-@[to_additive (attr := simps) "The pointwise negation of a path."]
-def Path.inv {x y : G} [Inv G] [ContinuousInv G] (γ : Path x y) :
-    Path (x⁻¹) (y⁻¹) where
-  toFun := γ⁻¹
-  continuous_toFun := map_continuous γ |>.inv
-  source' := congr($(γ.source)⁻¹)
-  target' := congr($(γ.target)⁻¹)
-
-@[to_additive]
-theorem Joined.inv {x y : G} [Inv G] [ContinuousInv G] (hxy : Joined x y) :
-    Joined (x⁻¹) (y⁻¹) := by
-  obtain ⟨γ⟩ := hxy
-  use γ.inv
-  all_goals simp
-
-variable (G)
-/-- The path component of the identity in a topological monoid, as a submonoid. -/
-@[to_additive (attr := simps)
-"The path component of the identity in an additive topological monoid, as an additive submonoid."]
-def Submonoid.pathComponentOne [Monoid G] [ContinuousMul G] : Submonoid G where
-  carrier := pathComponent (1 : G)
-  mul_mem' {g₁ g₂} hg₁ hg₂ := by simpa using hg₁.mul hg₂
-  one_mem' := mem_pathComponent_self 1
-
-/-- The path component of the identity in a topological group, as a subgroup. -/
-@[to_additive (attr := simps!)
-"The path component of the identity in an additive topological group, as an additive subgroup."]
-def Subgroup.pathComponentOne [Group G] [IsTopologicalGroup G] : Subgroup G where
-  toSubmonoid := .pathComponentOne G
-  inv_mem' {g} hg := by simpa using hg.inv
-
-/-- The path component of the identity in a topological group is normal-/
-@[to_additive]
-instance Subgroup.Normal.pathComponentOne [Group G] [IsTopologicalGroup G] :
-    (Subgroup.pathComponentOne G).Normal where
-  conj_mem _ := fun ⟨γ⟩ g ↦ ⟨⟨⟨(g * γ · * g⁻¹), by fun_prop⟩, by simp, by simp⟩⟩
-
-/-- The path component of the identity in a locally path connected topological group,
-as an open normal subgroup. -/
-@[to_additive (attr := simps!)
-"The path component of the identity in a locally path connected additive topological group,
-as an open normal additive subgroup."]
-def OpenNormalSubgroup.pathComponentOne [Group G]
-    [IsTopologicalGroup G] [LocPathConnectedSpace G] :
-    OpenNormalSubgroup (G) where
-  toSubgroup := .pathComponentOne G
-  isOpen' := .pathComponent 1
-  isNormal' := .pathComponentOne G
-
-namespace OpenNormalSubgroup
-
-@[to_additive]
-instance [Group G] [IsTopologicalGroup G] [LocPathConnectedSpace G] :
-    IsClosed (OpenNormalSubgroup.pathComponentOne G : Set G) :=
-  .pathComponent 1
-
-end OpenNormalSubgroup
-
-end TopologicalGroup
-
--- these instances can be generalized a bit, at least to `CStarRing`
 instance {R : Type*} [Monoid R] [StarMul R] [TopologicalSpace R] [ContinuousStar R] :
     ContinuousStar (unitary R) where
   continuous_star := continuous_induced_rng.mpr <| by fun_prop
