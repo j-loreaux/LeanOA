@@ -284,15 +284,6 @@ lemma unitary.norm_expUnitary_smul_argSelfAdjoint_sub_one_le (u : unitary A)
       (unitary.norm_argSelfAdjoint_le_pi u) key
   · exact (unitary.norm_argSelfAdjoint hu).ge
 
-lemma unitary.norm_sub_eq (u v : unitary A) :
-    ‖(u - v : A)‖ = ‖((u * star v : unitary A) - 1 : A)‖ := calc
-  ‖(u - v : A)‖ = ‖(u * star v - 1 : A) * v‖ := by simp [sub_mul, mul_assoc]
-  _ = ‖((u * star v : unitary A) - 1 : A)‖ := by simp
-
-lemma unitary.expUnitary_eq_mul_inv (u v : unitary A) (huv : ‖(u - v : A)‖ < 2) :
-    expUnitary (argSelfAdjoint (u * star v)) = u * star v :=
-  expUnitary_argSelfAdjoint <| unitary.norm_sub_eq u v ▸ huv
-
 @[fun_prop]
 lemma unitary.continuousOn_argSelfAdjoint :
     ContinuousOn (argSelfAdjoint : unitary A → selfAdjoint A) (ball (1 : unitary A) 2) := by
@@ -354,16 +345,24 @@ noncomputable def unitary.partialHomeomorph :
   continuousOn_toFun := by fun_prop
   continuousOn_invFun := by fun_prop
 
-noncomputable instance : NormedSpace ℝ (selfAdjoint A) where
-  norm_smul_le := by simp [norm_smul]
+lemma unitary.norm_sub_eq (u v : unitary A) :
+    ‖(u - v : A)‖ = ‖((u * star v : unitary A) - 1 : A)‖ := calc
+  ‖(u - v : A)‖ = ‖(u * star v - 1 : A) * v‖ := by simp [sub_mul, mul_assoc]
+  _ = ‖((u * star v : unitary A) - 1 : A)‖ := by simp
 
-/-- The path `t ↦ expUnitary (t • argSelfAdjoint u)` from `1 : unitary A` to `u`. -/
+lemma unitary.expUnitary_eq_mul_inv (u v : unitary A) (huv : ‖(u - v : A)‖ < 2) :
+    expUnitary (argSelfAdjoint (u * star v)) = u * star v :=
+  expUnitary_argSelfAdjoint <| unitary.norm_sub_eq u v ▸ huv
+
+/-- The path `t ↦ expUnitary (t • argSelfAdjoint (v * star u)) * u`
+from `u : unitary A` to `v` when `‖v - u‖ < 2`. -/
 @[simps]
-noncomputable def unitary.pathToOne (u : unitary A) (hu : ‖(u - 1 : A)‖ < 2) : Path 1 u where
-  toFun t := expUnitary ((t : ℝ) • argSelfAdjoint u)
+noncomputable def unitary.path (u v : unitary A) (huv : ‖(v - u : A)‖ < 2) :
+    Path u v where
+  toFun t := expUnitary ((t : ℝ) • argSelfAdjoint (v * star u)) * u
   continuous_toFun := by fun_prop
   source' := by ext; simp
-  target' := by simpa using expUnitary_argSelfAdjoint hu
+  target' := by simp [unitary.expUnitary_eq_mul_inv v u huv, mul_assoc]
 
 /-- Any ball of radius `δ < 2` in the unitary group of a unital C⋆-algebra is path connected. -/
 lemma unitary.ball_isPathConnected (u : unitary A) (δ : ℝ) (hδ₀ : 0 < δ) (hδ₂ : δ < 2) :
@@ -375,11 +374,11 @@ lemma unitary.ball_isPathConnected (u : unitary A) (δ : ℝ) (hδ₀ : 0 < δ) 
     simp [- inv_mul_cancel, Subtype.dist_eq, dist_eq_norm, ← mul_sub]
   refine ⟨1, by simpa, fun {u} hu ↦ ?_⟩
   have hu : ‖(u - 1 : A)‖ < δ := by simpa [Subtype.dist_eq, dist_eq_norm] using hu
-  refine ⟨pathToOne u (hu.trans hδ₂), fun t ↦ ?_⟩
+  refine ⟨path 1 u (hu.trans hδ₂), fun t ↦ ?_⟩
   simpa [Subtype.dist_eq, dist_eq_norm] using
     unitary.norm_expUnitary_smul_argSelfAdjoint_sub_one_le u t.2 (hu.trans hδ₂) |>.trans_lt hu
 
-instance : LocPathConnectedSpace (unitary A) :=
+instance unitary.instLocPathConnectedSpace : LocPathConnectedSpace (unitary A) :=
   .of_bases (fun _ ↦ nhds_basis_uniformity <| Metric.uniformity_basis_dist_lt zero_lt_two) <| by
     simpa using unitary.ball_isPathConnected
 
