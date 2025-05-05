@@ -1,10 +1,13 @@
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Unitary
-import Mathlib.Analysis.CStarAlgebra.Exponential
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog
 import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 import LeanOA.ForMathlib.Algebra.Star.Unitary
+import LeanOA.ForMathlib.Data.Complex.Norm
+import LeanOA.ForMathlib.Data.Complex.Order
+import LeanOA.ForMathlib.Analysis.Complex.Basic
+import LeanOA.ForMathlib.Analysis.CStarAlgebra.Exponential
 import LeanOA.ForMathlib.Topology.Connected.LocPathConnected
 import LeanOA.ForMathlib.Misc
 import LeanOA.ContinuousMap.Uniform
@@ -125,23 +128,6 @@ open Complex
 lemma IsSelfAdjoint.cfc_arg (u : A) : IsSelfAdjoint (cfc (arg · : ℂ → ℂ) u) := by
   simp [isSelfAdjoint_iff, ← cfc_star]
 
-attribute [fun_prop] NormedSpace.exp_continuous
-
-
-lemma Complex.norm_sub_one_sq_eq_of_norm_one {z : ℂ} (hz : ‖z‖ = 1) :
-    ‖z - 1‖ ^ 2 = 2 * (1 - z.re) := by
-  have : z.im * z.im = 1 - z.re * z.re := by
-    replace hz := sq_eq_one_iff.mpr (.inl hz)
-    rw [Complex.sq_norm, normSq_apply] at hz
-    linarith
-  simp [Complex.sq_norm, normSq_apply, this]
-  ring
-
-open Metric in
-lemma Complex.norm_sub_one_sq_eqOn_sphere :
-    (sphere (0 : ℂ) 1).EqOn (‖· - 1‖ ^ 2) (fun z ↦ 2 * (1 - z.re)) :=
-  fun z hz ↦ norm_sub_one_sq_eq_of_norm_one (by simpa using hz)
-
 attribute [aesop 10% apply (rule_sets := [CStarAlgebra])] isStarNormal_of_mem_unitary
 
 open Complex in
@@ -177,49 +163,6 @@ theorem spectrum.norm_eq_one_of_unitary {𝕜 : Type*} [NormedField 𝕜] {E : T
     [StarRing E] [CStarRing E] [NormedAlgebra 𝕜 E] [CompleteSpace E] {u : E} (hu : u ∈ unitary E)
     ⦃z : 𝕜⦄ (hz : z ∈ spectrum 𝕜 u) : ‖z‖ = 1 := by
   simpa using spectrum.subset_circle_of_unitary hu hz
-
-lemma Complex.norm_le_re_iff_eq_norm {z : ℂ} :
-    ‖z‖ ≤ z.re ↔ z = ‖z‖ := by
-  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
-  · replace h : z.re = ‖z‖ := le_antisymm (re_le_norm z) h
-    apply ext
-    · simp [h]
-    · rw [re_eq_norm, nonneg_iff] at h
-      simpa using h.2.symm
-  · rw [h]
-    simp
-
-lemma Complex.re_le_neg_norm_iff_eq_neg_norm {z : ℂ} :
-    z.re ≤ -‖z‖ ↔ z = -‖z‖ := by
-  simpa [neg_eq_iff_eq_neg, le_neg] using norm_le_re_iff_eq_norm (z := -z)
-
-lemma Complex.norm_le_im_iff_eq_I_mul_norm {z : ℂ} :
-    ‖z‖ ≤ z.im ↔ z = I * ‖z‖ := by
-  have := norm_le_re_iff_eq_norm (z := -I * z)
-  simp only [Complex.norm_mul, norm_neg, norm_I, one_mul, mul_re, neg_re, I_re,
-    neg_zero, zero_mul, neg_im, I_im, zero_sub, ← neg_mul, neg_neg] at this
-  rw [this, ← smul_eq_mul, eq_comm, ← inv_smul_eq_iff₀ (by simp)]
-  simp [← neg_inv, eq_comm]
-
-lemma Complex.im_le_neg_norm_iff_eq_neg_I_mul_norm {z : ℂ} :
-    z.im ≤ -‖z‖ ↔ z = -(I * ‖z‖) := by
-  simpa [neg_eq_iff_eq_neg, le_neg] using norm_le_im_iff_eq_I_mul_norm (z := -z)
-
-open Metric in
-/-- A subset of circle centered at the origin in `ℂ` of radius `r` is a subset of
-the `slitPlane` if it does not contain `-r`. -/
-lemma subset_slitPlane_of_subset_sphere {r : ℝ} {s : Set ℂ} (hs : s ⊆ sphere 0 r)
-      (hr : (-r : ℂ) ∉ s) :
-      s ⊆ slitPlane := by
-  intro z hz
-  rw [Complex.mem_slitPlane_iff_not_le_zero]
-  by_contra! h
-  have ⟨_, h_im⟩ := h
-  apply hr
-  convert hz
-  rw [← Complex.re_eq_neg_norm] at h
-  rw [← Complex.re_add_im z, h_im, h]
-  simpa using (hs hz).symm
 
 lemma unitary.norm_sub_one_lt_two_iff {u : A} (hu : u ∈ unitary A) :
     ‖u - 1‖ < 2 ↔ -1 ∉ spectrum ℂ u := by
@@ -323,12 +266,6 @@ lemma expUnitary_argSelfAdjoint {u : unitary A} (hu : ‖(u - 1 : A)‖ < 2) :
     Complex.ext (by simp [log_re, spectrum.norm_eq_one_of_unitary u.2 hy]) (by simp [log_im])
   simpa [← exp_eq_exp_ℂ, this] using exp_log (by aesop)
 
--- this can be generalized
-@[simp]
-lemma selfAdjoint.expUnitary_zero : expUnitary (0 : selfAdjoint A) = 1 := by
-  ext
-  simp
-
 open scoped Real in
 lemma unitary.norm_argSelfAdjoint_le_pi (u : unitary A) :
     ‖argSelfAdjoint u‖ ≤ π :=
@@ -380,12 +317,6 @@ open selfAdjoint unitary in
 lemma unitary.expUnitary_eq_mul_inv (u v : unitary A) (huv : ‖(u - v : A)‖ < 2) :
     expUnitary (argSelfAdjoint (u * star v)) = u * star v :=
   expUnitary_argSelfAdjoint <| unitary.norm_sub_eq u v ▸ huv
-
--- generalize me
-@[fun_prop]
-lemma selfAdjoint.continuous_expUnitary : Continuous (expUnitary : selfAdjoint A → unitary A) := by
-  simp only [continuous_induced_rng, Function.comp_def, selfAdjoint.expUnitary_coe]
-  fun_prop
 
 open scoped Real in
 open selfAdjoint Metric in
