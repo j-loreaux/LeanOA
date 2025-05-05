@@ -437,7 +437,7 @@ noncomputable def unitary.partialHomeomorph :
     have huε' : dist u 1 < √ε := Real.lt_sqrt_of_sq_lt huε
     apply ContinuousOn.continuousAt ?_ (Metric.closedBall_mem_nhds_of_mem huε')
     apply ContinuousOn.image_comp_continuous ?_ continuous_subtype_val
-    apply continuousOn_cfc_left (s := sphere 0 1 ∩ {z | 2 * (1 - z.re) ≤ ε}) ?_ _ ?_ |>.mono
+    apply continuousOn_cfc (s := sphere 0 1 ∩ {z | 2 * (1 - z.re) ≤ ε}) ?_ _ ?_ |>.mono
     · rintro - ⟨v, hv, rfl⟩
       simp only [Set.subset_inter_iff, Set.mem_setOf_eq]
       refine ⟨inferInstance, spectrum_subset_circle v, ?_⟩
