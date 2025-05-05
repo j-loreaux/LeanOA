@@ -431,4 +431,55 @@ lemma unitary.mem_pathComponentOne_iff {u : unitary A} :
     | nil => simp
     | cons x xs ih => simpa using (joined_one_expUnitary x).mul ih
 
+/-! ### Lifting unitaries through surjective star homomorphisms -/
+
+variable {B : Type*} [CStarAlgebra B] {φ : A →⋆ₐ[ℂ] B}
+
+lemma IsSelfAdjoint.exists_lift_of_surjective (hφ : Function.Surjective φ) (b : B)
+    (hb : IsSelfAdjoint b) : ∃ a, IsSelfAdjoint a ∧ φ a = b := by
+  obtain ⟨x, rfl⟩ := hφ b
+  refine ⟨(selfAdjointPart ℝ x : A), Subtype.property _, ?_⟩
+  simp [← Complex.coe_smul, hb.star_eq, map_star]
+  module
+
+/-- A star algebra homomorphism, reinterpreted as a linear map between `selfAdjoint`s. -/
+@[simps]
+def StarAlgHom.mapSelfAdjoint {R A B : Type*} [CommRing R] [Star R] [TrivialStar R] [Ring A]
+    [Algebra R A] [StarRing A] [Ring B] [Algebra R B] [StarRing B] [StarModule R A]
+    [StarModule R B] (φ : A →⋆ₐ[R] B) :
+    selfAdjoint A →ₗ[R] selfAdjoint B where
+  toFun x := ⟨φ x, by have := map_star φ (x : A) ▸ congr(φ $(x.2)); exact this⟩
+  map_add' x y := Subtype.ext (map_add φ (x : A) y)
+  map_smul' r x := Subtype.ext (map_smul φ r (x : A))
+
+lemma StarAlgHom.map_expUnitary (x : selfAdjoint A) :
+    φ (expUnitary x) = expUnitary ((φ.restrictScalars ℝ).mapSelfAdjoint x) := by
+  open scoped CStarAlgebra in
+  have := map_continuous φ
+  simp [map_exp ℂ φ this, map_smul]
+
+lemma selfAdjoint.exists_lift_expUnitary_of_surjective (hφ : Function.Surjective φ)
+    (y : selfAdjoint B) :
+    ∃ x : selfAdjoint A, φ (expUnitary x) = expUnitary y := by
+  obtain ⟨x, hx', hx⟩ := y.2.exists_lift_of_surjective  hφ
+  lift x to selfAdjoint A using hx'
+  use x
+  rw [StarAlgHom.map_expUnitary] -- simp non-confluence
+  simp [hx]
+
+lemma unitary.exists_lift_of_surjective_of_mem_pathComponentOne (hφ : Function.Surjective φ)
+    (v : unitary B) (h : v ∈ pathComponent 1) :
+    ∃ u ∈ pathComponent (1 : unitary A), φ u = v := by
+  rw [mem_pathComponentOne_iff] at h
+  obtain ⟨l, rfl⟩ := h
+  induction l with
+  | nil => exact ⟨1, by simp, by simp⟩
+  | cons y ys ih =>
+    simp only [List.map_cons, List.prod_cons, Submonoid.coe_mul]
+    obtain ⟨x, hx⟩ := selfAdjoint.exists_lift_expUnitary_of_surjective hφ y
+    obtain ⟨u, hu_mem, hu⟩ := ih
+    refine ⟨expUnitary x * u,
+      (Submonoid.pathComponentOne (unitary A)).mul_mem (joined_one_expUnitary x) hu_mem, ?_⟩
+    rw [Submonoid.coe_mul, map_mul, hu, hx]
+
 end ExpUnitary
