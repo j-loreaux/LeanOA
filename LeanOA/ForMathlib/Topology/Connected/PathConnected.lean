@@ -13,6 +13,14 @@ theorem Joined.mul {x y w z : G} [Mul G] [ContinuousMul G] (hxy : Joined x y) (h
   all_goals simp
 
 @[to_additive]
+theorem Joined.listProd {l l' : List G} [MulOneClass G] [ContinuousMul G]
+    (h : List.Forall₂ Joined l l') :
+    Joined l.prod l'.prod := by
+  induction h with
+  | nil => rfl
+  | cons h₁ _ h₂ => exact h₁.mul h₂
+
+@[to_additive]
 theorem Joined.inv {x y : G} [Inv G] [ContinuousInv G] (hxy : Joined x y) :
     Joined (x⁻¹) (y⁻¹) := by
   obtain ⟨γ⟩ := hxy

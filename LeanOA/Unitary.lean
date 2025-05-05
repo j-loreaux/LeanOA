@@ -12,6 +12,7 @@ import LeanOA.ForMathlib.Analysis.CStarAlgebra.Exponential
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.Spectrum
 import LeanOA.ForMathlib.Topology.Connected.LocPathConnected
 import LeanOA.ForMathlib.Topology.Algebra.Star.Unitary
+import LeanOA.ForMathlib.Topology.MetricSpace.Thickening
 import LeanOA.ForMathlib.Misc
 import LeanOA.ContinuousMap.Uniform
 import LeanOA.ContinuousFunctionalCalculus.Continuity
@@ -354,6 +355,20 @@ lemma unitary.expUnitary_eq_mul_inv (u v : unitary A) (huv : ‖(u - v : A)‖ <
     expUnitary (argSelfAdjoint (u * star v)) = u * star v :=
   expUnitary_argSelfAdjoint <| unitary.norm_sub_eq u v ▸ huv
 
+/-- For a selfadjoint element `x` in a C⋆-algebra, this is the path from `1` to `expUnitary x`. -/
+@[simps]
+noncomputable def selfAdjoint.expUnitary_pathToOne (x : selfAdjoint A) :
+    Path 1 (expUnitary x) where
+  toFun t := expUnitary ((t : ℝ) • x)
+  continuous_toFun := by fun_prop
+  source' := by simp
+  target' := by simp
+
+@[simp]
+lemma selfAdjoint.joined_one_expUnitary (x : selfAdjoint A) :
+    Joined (1 : unitary A) (expUnitary x) :=
+  ⟨selfAdjoint.expUnitary_pathToOne x⟩
+
 /-- The path `t ↦ expUnitary (t • argSelfAdjoint (v * star u)) * u`
 from `u : unitary A` to `v` when `‖v - u‖ < 2`. -/
 @[simps]
@@ -363,6 +378,10 @@ noncomputable def unitary.path (u v : unitary A) (huv : ‖(v - u : A)‖ < 2) :
   continuous_toFun := by fun_prop
   source' := by ext; simp
   target' := by simp [unitary.expUnitary_eq_mul_inv v u huv, mul_assoc]
+
+lemma unitary.joined (u v : unitary A) (huv : ‖(v - u : A)‖ < 2) :
+    Joined u v :=
+  ⟨unitary.path u v huv⟩
 
 /-- Any ball of radius `δ < 2` in the unitary group of a unital C⋆-algebra is path connected. -/
 lemma unitary.ball_isPathConnected (u : unitary A) (δ : ℝ) (hδ₀ : 0 < δ) (hδ₂ : δ < 2) :
@@ -381,5 +400,24 @@ lemma unitary.ball_isPathConnected (u : unitary A) (δ : ℝ) (hδ₀ : 0 < δ) 
 instance unitary.instLocPathConnectedSpace : LocPathConnectedSpace (unitary A) :=
   .of_bases (fun _ ↦ nhds_basis_uniformity <| Metric.uniformity_basis_dist_lt zero_lt_two) <| by
     simpa using unitary.ball_isPathConnected
+
+/-- The path component of the identity in the unitary group of a C⋆-algebra is the set of
+unitaries that can be expressed as a product of exponentials of selfadjoint elements. -/
+lemma mem_pathComponentOne_iff {u : unitary A} :
+    u ∈ pathComponent 1 ↔ ∃ l : List (selfAdjoint A), (l.map expUnitary).prod = u := by
+  constructor
+  · revert u
+    simp_rw [← Set.mem_range, ← Set.subset_def, pathComponent_eq_connectedComponent]
+    refine IsClopen.connectedComponent_subset ?_ ⟨[], by simp⟩
+    refine .of_thickening_subset_self zero_lt_two ?_
+    intro u hu
+    rw [mem_thickening_iff] at hu
+    obtain ⟨v, ⟨⟨l, (hlv : (l.map expUnitary).prod = v)⟩, huv⟩⟩ := hu
+    refine ⟨argSelfAdjoint (u * star v) :: l, ?_⟩
+    simp [hlv, mul_assoc, unitary.expUnitary_eq_mul_inv u v (by simpa [Subtype.dist_eq, dist_eq_norm] using huv)]
+  · rintro ⟨l, rfl⟩
+    induction l with
+    | nil => simp
+    | cons x xs ih => simpa using (selfAdjoint.joined_one_expUnitary x).mul ih
 
 end ExpUnitary
