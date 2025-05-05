@@ -99,6 +99,12 @@ theorem continuous_cfc_left [TopologicalSpace X] {s : Set 𝕜} (hs : IsCompact 
   rw [cfcHomSuperset_apply, cfc_apply (hf := hf.mono (ha x))]
   congr!
 
+theorem continuousOn_cfc_left {s : Set 𝕜} (hs : IsCompact s) (f : 𝕜 → 𝕜)
+    (hf : ContinuousOn f s := by cfc_cont_tac) :
+    ContinuousOn (cfc f · : A → A) {a | p a ∧ spectrum 𝕜 a ⊆ s} :=
+  continuousOn_iff_continuous_restrict.mpr <|
+    continuous_cfc_left hs f _ continuous_subtype_val (by simp)
+
 end RCLike
 
 section NNReal
@@ -237,6 +243,11 @@ theorem continuous_cfcₙ_left [TopologicalSpace X] {s : Set 𝕜} (hs : IsCompa
   rw [cfcₙHomSuperset_apply, cfcₙ_apply (hf := hf.mono (ha x))]
   congr!
 
+theorem continuousOn_cfcₙ_left {s : Set 𝕜} (hs : IsCompact s) (hs0 : 0 ∈ s) (f : 𝕜 → 𝕜)
+    (hf : ContinuousOn f s := by cfc_cont_tac) (hf0 : f 0 = 0 := by cfc_zero_tac) :
+    ContinuousOn (cfcₙ f · : A → A) {a | p a ∧ quasispectrum 𝕜 a ⊆ s} :=
+  continuousOn_iff_continuous_restrict.mpr <|
+    continuous_cfcₙ_left hs hs0 f _ continuous_subtype_val (by simp)
 
 end RCLike
 

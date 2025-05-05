@@ -213,6 +213,22 @@ lemma Complex.im_le_neg_norm_iff_eq_neg_I_mul_norm {z : ℂ} :
     z.im ≤ -‖z‖ ↔ z = -(I * ‖z‖) := by
   simpa [neg_eq_iff_eq_neg, le_neg] using norm_le_im_iff_eq_I_mul_norm (z := -z)
 
+open Metric in
+/-- A subset of circle centered at the origin in `ℂ` of radius `r` is a subset of
+the `slitPlane` if it does not contain `-r`. -/
+lemma subset_slitPlane_of_subset_sphere {r : ℝ} {s : Set ℂ} (hs : s ⊆ sphere 0 r)
+      (hr : (-r : ℂ) ∉ s) :
+      s ⊆ slitPlane := by
+  intro z hz
+  rw [Complex.mem_slitPlane_iff_not_le_zero]
+  by_contra! h
+  have ⟨_, h_im⟩ := h
+  apply hr
+  convert hz
+  rw [← Complex.re_eq_neg_norm] at h
+  rw [← Complex.re_add_im z, h_im, h]
+  simpa using (hs hz).symm
+
 lemma unitary.norm_sub_one_lt_two_iff {u : A} (hu : u ∈ unitary A) :
     ‖u - 1‖ < 2 ↔ -1 ∉ spectrum ℂ u := by
   nontriviality A
@@ -373,10 +389,17 @@ lemma unitary.expUnitary_eq_mul_inv (u v : unitary A) (huv : ‖(u - v : A)‖ <
     expUnitary (argSelfAdjoint (u * star v)) = u * star v :=
   expUnitary_argSelfAdjoint <| unitary.norm_sub_eq u v ▸ huv
 
+-- generalize me
+@[fun_prop]
+lemma selfAdjoint.continuous_expUnitary : Continuous (expUnitary : selfAdjoint A → unitary A) := by
+  simp only [continuous_induced_rng, Function.comp_def, selfAdjoint.expUnitary_coe]
+  fun_prop
+
 open scoped Real in
 open selfAdjoint Metric in
 /-- the maps `unitary.argSelfAdjoint` and `selfAdjoint.expUnitary` form a partial
 homeomorphism between `ball (1 : unitary A) 2` and `ball (0 : selfAdjoint A) π`. -/
+@[simps]
 noncomputable def unitary.partialHomeomorph :
     PartialHomeomorph (unitary A) (selfAdjoint A) where
   toFun := argSelfAdjoint
@@ -395,7 +418,8 @@ noncomputable def unitary.partialHomeomorph :
     simp only [mem_ball, Subtype.dist_eq, OneMemClass.coe_one, dist_eq_norm, sub_zero] at hx ⊢
     rw [← sq_lt_sq₀ (by positivity) (by positivity)]
     rw [selfAdjoint.norm_sq_expUnitary_sub_one hx.le]
-    have : -1 < Real.cos ‖(x : A)‖ := sorry
+    have : -1 < Real.cos ‖(x : A)‖ :=
+      Real.cos_pi ▸ Real.cos_lt_cos_of_nonneg_of_le_pi (by positivity) le_rfl hx
     simp [mul_sub, sq]
     linarith
   left_inv' u hu := expUnitary_argSelfAdjoint <| by
@@ -403,30 +427,48 @@ noncomputable def unitary.partialHomeomorph :
   right_inv' x hx := argSelfAdjoint_expUnitary <| by simpa using hx
   open_source := isOpen_ball
   open_target := isOpen_ball
-  continuousOn_toFun := sorry
-  continuousOn_invFun := sorry
+  continuousOn_toFun := by
+    rw [Topology.IsInducing.subtypeVal.continuousOn_iff]
+    simp [Function.comp_def]
+    rw [isOpen_ball.continuousOn_iff]
+    intro u (hu : dist u 1 < 2)
+    obtain ⟨ε, huε, hε2⟩ := exists_between (sq_lt_sq₀ (by positivity) (by positivity) |>.mpr hu)
+    have hε : 0 < ε := lt_of_le_of_lt (by positivity) huε
+    have huε' : dist u 1 < √ε := Real.lt_sqrt_of_sq_lt huε
+    apply ContinuousOn.continuousAt ?_ (Metric.closedBall_mem_nhds_of_mem huε')
+    apply ContinuousOn.image_comp_continuous ?_ continuous_subtype_val
+    apply continuousOn_cfc_left (s := sphere 0 1 ∩ {z | 2 * (1 - z.re) ≤ ε}) ?_ _ ?_ |>.mono
+    · rintro - ⟨v, hv, rfl⟩
+      simp only [Set.subset_inter_iff, Set.mem_setOf_eq]
+      refine ⟨inferInstance, spectrum_subset_circle v, ?_⟩
+      intro z hz
+      simp only [Set.mem_setOf_eq]
+      trans ‖(v - 1 : A)‖ ^ 2
+      · exact unitary.two_mul_one_sub_le_norm_sub_one_sq v.2 hz
+      · refine Real.le_sqrt (by positivity) (by positivity) |>.mp ?_
+        simpa [Subtype.dist_eq, dist_eq_norm] using hv
+    · exact isCompact_sphere 0 1 |>.inter_right <| isClosed_le (by fun_prop) (by fun_prop)
+    · refine continuous_ofReal.comp_continuousOn <| continuousOn_arg.mono ?_
+      apply subset_slitPlane_of_subset_sphere Set.inter_subset_left
+      norm_num at hε2 ⊢
+      exact hε2
+  continuousOn_invFun := by fun_prop
+
+open Metric in
+@[fun_prop]
+lemma unitary.continuousOn_argSelfAdjoint :
+    ContinuousOn (argSelfAdjoint : unitary A → selfAdjoint A) (ball (1 : unitary A) 2) :=
+  partialHomeomorph.continuousOn_toFun
+
+noncomputable instance : NormedSpace ℝ (selfAdjoint A) where
+  norm_smul_le := by simp [norm_smul]
 
 open Real selfAdjoint unitary in
 @[simps]
 noncomputable
 def unitary.pathToOne (u : unitary A) (hu : ‖(u - 1 : A)‖ < 2) : Path 1 u where
   toFun t := expUnitary ((t : ℝ) • argSelfAdjoint u)
-  continuous_toFun := by
-    simp only [continuous_induced_rng, Function.comp_def, selfAdjoint.expUnitary_coe]
-    suffices Continuous fun x : unitInterval ↦ cfc (fun z ↦ x * arg z) (u : A) by fun_prop
-    obtain (h | h) := subsingleton_or_nontrivial A
-    · convert continuous_const (y := (0 : A))
-    refine continuous_cfc_right (hf := ?hf_cont) _ (u : A) ?h_cont
-    case hf_cont => exact fun _ ↦ ContinuousOn.mono (by fun_prop) (unitary.spectrum_subset_slitPlane_of_norm_lt_two u.2 hu)
-    case h_cont =>
-      apply UniformOnFun.continuous_of_lipschitzWith (fun _ : Set ℂ ↦ ⟨π, by positivity⟩)
-      simp only [Set.mem_singleton_iff, UniformOnFun.toFun_ofFun, forall_eq,
-        lipschitzWith_iff_dist_le_mul, dist_eq_norm, Subtype.dist_eq, ← sub_mul,
-        ← Complex.ofReal_sub, norm_mul, Complex.norm_real]
-      rintro _ - _ _
-      rw [mul_comm]
-      gcongr
-      exact Complex.abs_arg_le_pi _
+  continuous_toFun := by fun_prop
   source' := by ext; simp
   target' := by simpa using expUnitary_argSelfAdjoint hu
 
