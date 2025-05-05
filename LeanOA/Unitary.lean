@@ -300,14 +300,6 @@ lemma unitary.norm_expUnitary_smul_argSelfAdjoint_sub_one_le (u : unitary A)
       (unitary.norm_argSelfAdjoint_le_pi u) key
   · exact (unitary.norm_argSelfAdjoint hu).ge
 
-lemma Metric.nhds_basis_ball_lt {X : Type*} [PseudoMetricSpace X] (x : X) (δ : ℝ) (hδ : 0 < δ) :
-    (nhds x).HasBasis (fun ε ↦ 0 < ε ∧ ε < δ) (ball x ·) := by
-  refine nhds_basis_ball.restrict fun ε hε ↦
-    ⟨min δ ε / 2, by positivity, ?_, ball_subset_ball (le_of_lt ?_)⟩
-  all_goals
-    apply (half_lt_self (by positivity)).trans_le
-    simp
-
 lemma unitary.norm_sub_eq (u v : unitary A) :
     ‖(u - v : A)‖ = ‖((u * star v : unitary A) - 1 : A)‖ := calc
   ‖(u - v : A)‖ = ‖(u * star v - 1 : A) * v‖ := by simp [sub_mul, mul_assoc]
@@ -415,7 +407,7 @@ lemma unitary.ball_isPathConnected (u : unitary A) (δ : ℝ) (hδ₀ : 0 < δ) 
 
 open Metric in
 instance : LocPathConnectedSpace (unitary A) :=
-  .of_bases (nhds_basis_ball_lt · 2 zero_lt_two) <| by
+  .of_bases (fun _ ↦ nhds_basis_uniformity <| Metric.uniformity_basis_dist_lt zero_lt_two) <| by
     simpa using unitary.ball_isPathConnected
 
 instance {R : Type*} [Monoid R] [StarMul R] [TopologicalSpace R] [ContinuousStar R] :
