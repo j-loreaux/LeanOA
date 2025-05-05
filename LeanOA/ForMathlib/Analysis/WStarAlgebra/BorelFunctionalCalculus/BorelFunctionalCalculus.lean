@@ -231,7 +231,7 @@ instance : Star (α →ₘ[μ] R) where
   star f := (AEEqFun.comp _ continuous_star f)
 
 lemma AEEqFun.coeFn_star (f : α →ₘ[μ] R) : ↑(star f) =ᵐ[μ] (star f : α → R) :=
-  coeFn_comp _ (continuous_star) f
+   coeFn_comp _ (continuous_star) f
 
 end AEEqFunStar
 
@@ -315,26 +315,11 @@ end
 
 variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
-/-
-Now what is the idea with the involutive star operation below?
-
-It does seem to want to prove equality of star (star f) and f for f an Lp function.
-To do this, we call `Lp.ext_iff.mpr`, which replaces the equality of the Lp
-functions with an ae equality statement for coerced functions.
-
-The double coercion is interesting. The inner coercion is to `AEEqFun` and the outer is to
-bare functions. Can `AEEqFun.coeFn_star` help with this?
-
-Yes. As usual there was a problem with typeclasses. I was confusing some things.
-
--/
-
 noncomputable instance Lp.InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
   star_involutive f := by
      refine Lp.ext_iff.mpr ?_
-     filter_upwards [AEEqFun.coeFn_star (star f).1, AEEqFun.coeFn_star f.1] with x hx hy
-     simp? [hx, hy]
-     sorry
+     filter_upwards
+     exact congrFun (congrArg AEEqFun.cast <| star_involutive f.1)
 
 end LpInvolutiveStar
 
