@@ -343,18 +343,22 @@ instance : StarMul (α →ₘ[μ] R) where
 
 end
 
-variable {R : Type*} [NormedRing R] [_root_.StarRing R] [NormedStarGroup R]
+variable {R : Type*} [NormedRing R]
 
-noncomputable instance Linfty.RSMul : SMul R (Lp R ∞ μ) where
-  smul c f := (Linfty.const (μ := μ) c) • f
+lemma Linfty.coeFn_mul (f g : Lp R ∞ μ) : f * g =ᵐ[μ] ⇑f * g :=
+  MeasureTheory.Lp.coeFn_lpSMul f g
 
+variable [_root_.StarRing R] [NormedStarGroup R]
+
+lemma Lp.coeFn_star {p : ℝ≥0∞} (f : Lp R p μ) : (star f : Lp R p μ) =ᵐ[μ] star f :=
+    (f : α →ₘ[μ] R).coeFn_star
 
 noncomputable instance Linfty.StarMul : StarMul (Lp R ∞ μ) where
   star_mul f g := by
     ext
-    filter_upwards [AEEqFun.coeFn_star (R := R) (f * g), AEEqFun.coeFn_star  (R := R) f, AEEqFun.coeFn_star  (R := R) g, AEEqFun.coeFn_mul (γ := R) (star g) (star f) ] with x hx hy hz hw
-    simp only [Pi.star_apply, star_mul] at *
-    sorry
+    filter_upwards [Lp.coeFn_star (f * g), Linfty.coeFn_mul f g,
+      Linfty.coeFn_mul (star g) (star f), Lp.coeFn_star f, Lp.coeFn_star g] with x hx₁ hx₂ hx₃ hx₄ hx₅
+    simp [hx₁, hx₂, hx₃, hx₄, hx₅]
 
 noncomputable instance Linfty.StarRing : StarRing (Lp R ∞ μ) where
   star_add := sorry
