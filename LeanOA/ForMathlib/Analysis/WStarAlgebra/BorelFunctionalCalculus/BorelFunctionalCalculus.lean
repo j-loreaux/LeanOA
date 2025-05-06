@@ -223,7 +223,7 @@ end NormedRing
 
 section AEEqFunStar
 
-variable [TopologicalSpace R] [Star R] [ContinuousStar R]
+variable {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R]
 
 instance : Star (α →ₘ[μ] R) where
   star f := (AEEqFun.comp _ continuous_star f)
@@ -252,7 +252,7 @@ local infixr:25 " →ₛ " => SimpleFunc
 instance {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R] : Star (α →ₛ R) where
   star f := f.map Star.star
 
-lemma star_apply [TopologicalSpace R] [Star R] [ContinuousStar R] (f : α →ₛ R) (x : α) : (star f) x = star (f x) := rfl
+lemma star_apply {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R] (f : α →ₛ R) (x : α) : (star f) x = star (f x) := rfl
 
 protected theorem _root_.Filter.EventuallyEq.star {α β : Type*} [Star β] {f g : α → β}
     {l : Filter α} (h : f =ᶠ[l] g) :
@@ -265,7 +265,7 @@ protected theorem StronglyMeasurable.star {β : Type*} [TopologicalSpace β]
     StronglyMeasurable (star f) :=
   ⟨fun n => star (hf.approx n), fun x => (hf.tendsto_approx x).star⟩
 
-variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
+variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
 @[simp]
 theorem eLpNorm_star {p : ℝ≥0∞} {f : α → R} :
@@ -311,7 +311,7 @@ instance : InvolutiveStar (α →ₘ[μ] R) where
 
 end
 
-variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
+variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
 noncomputable instance InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
   star_involutive f := by
@@ -325,6 +325,14 @@ section StarMul
 section
 
 variable {R : Type*} [NormedRing R] [StarRing R] [NormedStarGroup R]
+
+local infixr:25 " →ₛ " => SimpleFunc
+
+instance : StarMul (α →ₛ R) where
+  star_mul := by
+    intro f g
+    ext
+    simp only [star_apply, SimpleFunc.coe_mul, Pi.mul_apply, star_mul]
 
 instance : StarMul (α →ₘ[μ] R) where
   star_mul f g := by
@@ -344,8 +352,7 @@ noncomputable instance Linfty.StarMul : StarMul (Lp R ∞ μ) where
   star_mul f g := by
     ext
     filter_upwards [AEEqFun.coeFn_star (R := R) (f * g), AEEqFun.coeFn_star (R := R) f, AEEqFun.coeFn_star (R := R) g ] with x hx hy hz
-    --have := congrFun (congrArg AEEqFun.cast <| star_mul f.1 g.1) x
-    --something here left to do, but I don't know what it is at the moment...
+
     sorry
 
 noncomputable instance Linfty.StarRing : StarRing (Lp R ∞ μ) where
