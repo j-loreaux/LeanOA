@@ -343,16 +343,17 @@ instance : StarMul (α →ₘ[μ] R) where
 
 end
 
-variable {R : Type*} [NormedRing R] [_root_.StarRing R] [NormedStarGroup R] [ContinuousStar R]
+variable {R : Type*} [NormedRing R] [_root_.StarRing R] [NormedStarGroup R]
 
 noncomputable instance Linfty.RSMul : SMul R (Lp R ∞ μ) where
   smul c f := (Linfty.const (μ := μ) c) • f
 
+
 noncomputable instance Linfty.StarMul : StarMul (Lp R ∞ μ) where
   star_mul f g := by
     ext
-    filter_upwards [AEEqFun.coeFn_star (R := R) (f * g), AEEqFun.coeFn_star (R := R) f, AEEqFun.coeFn_star (R := R) g ] with x hx hy hz
-
+    filter_upwards [AEEqFun.coeFn_star (R := R) (f * g), AEEqFun.coeFn_star  (R := R) f, AEEqFun.coeFn_star  (R := R) g, AEEqFun.coeFn_mul (γ := R) (star g) (star f) ] with x hx hy hz hw
+    simp only [Pi.star_apply, star_mul] at *
     sorry
 
 noncomputable instance Linfty.StarRing : StarRing (Lp R ∞ μ) where
