@@ -413,8 +413,20 @@ noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp ℂ ∞ μ) 
     map_zero' := zero_smul ℂ 1
     map_add' := fun x y => Module.add_smul x y 1
   }
-  commutes' := sorry
-  smul_def' := sorry
+  commutes' := by
+    dsimp only [Pi.one_apply, Pi.smul_apply, smul_eq_mul, Set.mem_setOf_eq,
+      Pi.mul_apply, id_eq, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
+    intro r f
+    ext
+    filter_upwards [Linfty.coeFn_mul (r • (1 : Lp ℂ ∞ μ)) f, Linfty.coeFn_mul (R := ℂ) f (r • 1),
+      Lp.coeFn_smul (E := ℂ) (p := ∞) r 1, Linfty.coeFn_one (R := ℂ), Lp.coeFn_smul (E := ℂ) (p := ∞) r (1 * f),
+      Linfty.coeFn_mul (R := ℂ) 1 f] with x hx hy hz hw hq hv
+    simp only [hx, Pi.mul_apply, hz, Pi.smul_apply, hw, Pi.ofNat_apply, smul_eq_mul, mul_one, hy,
+      mul_comm]
+  smul_def' := by
+    dsimp only [Pi.one_apply, Pi.smul_apply, smul_eq_mul, Set.mem_setOf_eq,
+      Pi.mul_apply, id_eq, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
+    sorry -- You are here.
   norm_smul_le := sorry
 
 end NormedAlgebra
