@@ -366,8 +366,14 @@ noncomputable instance Linfty.StarMul : StarMul (Lp R ∞ μ) where
       Linfty.coeFn_mul (star g) (star f), Lp.coeFn_star f, Lp.coeFn_star g] with x hx₁ hx₂ hx₃ hx₄ hx₅
     simp [hx₁, hx₂, hx₃, hx₄, hx₅]
 
+noncomputable instance Linfty.StarAddMonoid : StarAddMonoid (Lp R ∞ μ) where
+  star_add f g := by
+    ext
+    filter_upwards [Lp.coeFn_add f g, Lp.coeFn_star (f + g), Lp.coeFn_add (star f) (star g), Lp.coeFn_star f, Lp.coeFn_star g] with x hx hy hz hw hq
+    rw [hy, Pi.star_apply, hx, Pi.add_apply, star_add, hz, Pi.add_apply, hw, hq, Pi.star_apply, Pi.star_apply]
+
 noncomputable instance Linfty.StarRing : StarRing (Lp R ∞ μ) where
-  star_add := sorry
+  star_add := star_add
 
 noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
   dist_eq := sorry
