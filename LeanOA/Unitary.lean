@@ -452,6 +452,15 @@ def StarAlgHom.mapSelfAdjoint {R A B : Type*} [CommRing R] [Star R] [TrivialStar
   map_add' x y := Subtype.ext (map_add φ (x : A) y)
   map_smul' r x := Subtype.ext (map_smul φ r (x : A))
 
+lemma StarAlgHom.mapSelfAdjoint_surjective (hφ : Function.Surjective φ) :
+    Function.Surjective (φ.restrictScalars ℝ).mapSelfAdjoint := by
+  intro y
+  obtain ⟨x, hx, hxy⟩ := y.2.exists_lift_of_surjective hφ _
+  lift x to selfAdjoint A using hx
+  use x
+  ext
+  simpa
+
 lemma StarAlgHom.map_expUnitary (x : selfAdjoint A) :
     φ (expUnitary x) = expUnitary ((φ.restrictScalars ℝ).mapSelfAdjoint x) := by
   open scoped CStarAlgebra in
