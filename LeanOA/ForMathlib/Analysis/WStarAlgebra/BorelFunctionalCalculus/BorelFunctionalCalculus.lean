@@ -71,7 +71,7 @@ open scoped ENNReal
 
 section NormedRing
 
-variable [NormedRing R]
+variable {R : Type*} [NormedRing R]
 
 section Mul
 
@@ -235,7 +235,7 @@ end AEEqFunStar
 
 section AEEqFunNormStar
 
-variable [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
+variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
 theorem AEEqFun.norm_star {p : ℝ≥0∞} {f : α →ₘ[μ] R} :
     eLpNorm (star f) p μ = eLpNorm f p μ := by
@@ -295,7 +295,7 @@ section
 
 local infixr:25 " →ₛ " => SimpleFunc
 
-variable [TopologicalSpace R] [InvolutiveStar R] [ContinuousStar R]
+variable {R : Type*} [TopologicalSpace R] [InvolutiveStar R] [ContinuousStar R]
 
 instance : InvolutiveStar (α →ₛ R) where
   star_involutive := by
@@ -366,6 +366,12 @@ noncomputable instance Linfty.StarMul : StarMul (Lp R ∞ μ) where
       Linfty.coeFn_mul (star g) (star f), Lp.coeFn_star f, Lp.coeFn_star g] with x hx₁ hx₂ hx₃ hx₄ hx₅
     simp [hx₁, hx₂, hx₃, hx₄, hx₅]
 
+end StarMul
+
+section StarRing
+
+variable {R : Type*} [NormedRing R] [_root_.StarRing R] [NormedStarGroup R]
+
 noncomputable instance Linfty.StarAddMonoid : StarAddMonoid (Lp R ∞ μ) where
   star_add f g := by
     ext
@@ -375,20 +381,29 @@ noncomputable instance Linfty.StarAddMonoid : StarAddMonoid (Lp R ∞ μ) where
 noncomputable instance Linfty.StarRing : StarRing (Lp R ∞ μ) where
   star_add := star_add
 
+end StarRing
+
+section NormedRing
+
+variable {R : Type*} [NormedRing R]
+
 noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
-  dist_eq := sorry
-  norm_mul_le := sorry
+  dist_eq f g := rfl
+  norm_mul_le f g := sorry
 
--- Some bizarre things are starting to happen. We are declaring instances that Lean can't find. There must be
--- confusion. It seems to have something to do with the complex `SMul`.
+-- So how do we prove this? Roughly, we have  f * g ≤ ‖ f ‖ • g, and this should be respected by the norm.
+
+end NormedRing
 
 
+-- Some of the things below weirdly cannot be synthesized. I think there are diamonds/duelling instances.
 
-#synth SMul R (Lp R ∞ μ)
+variable {R : Type*} [_root_.NormedRing R] [_root_.InvolutiveStar R] [ContinuousStar R]
 
-end StarMul
+#synth TopologicalSpace R
+#synth Star R
+#synth ContinuousStar R
 
-#
 
 noncomputable instance Linfty.ComplexAlgebra : Algebra ℂ (Lp R ∞ μ) where
 
@@ -403,12 +418,12 @@ noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp R ∞ μ) wh
 #synth Algebra ℂ (Lp R ∞ μ)
 #synth NormedAlgebra ℂ (Lp R ∞ μ)
 
-
 #synth ENNReal.HolderTriple ⊤ ⊤ ⊤
 #synth HSMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
 #synth AddCommGroup (Lp R ⊤ μ)
 #synth Norm (Lp R ⊤ μ)
 #synth MetricSpace (Lp R ⊤ μ)
+#synth Mul (Lp R ⊤ μ)
 #synth HMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
 #synth SMul (Lp R ⊤ μ) (Lp R ⊤ μ) --should be ok because defeq to the other HSMul
 #synth MulOneClass (Lp R ⊤ μ)
