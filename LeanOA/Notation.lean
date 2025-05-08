@@ -25,8 +25,18 @@ scoped[CStarAlgebra] notation "σₙ" => quasispectrum
 
 namespace CStarAlgebra
 
-noncomputable instance unitalElemental {A : Type*} [CStarAlgebra A] (x : A) : CStarAlgebra C⋆¹(x) where
+variable {A : Type*}
 
-noncomputable instance nonUnitalElemental {A : Type*} [NonUnitalCStarAlgebra A] (x : A) : NonUnitalCStarAlgebra C⋆(x) where
+noncomputable instance [CStarAlgebra A] (x : A) :
+    CStarAlgebra C⋆¹(x) where
+
+noncomputable instance [NonUnitalCStarAlgebra A] (x : A) :
+    NonUnitalCStarAlgebra C⋆(x) where
+
+noncomputable instance [CStarAlgebra A] (x : A) [IsStarNormal x] :
+    CommCStarAlgebra C⋆¹(x) where
+
+noncomputable instance [NonUnitalCStarAlgebra A] (x : A) [IsStarNormal x] :
+    NonUnitalCommCStarAlgebra C⋆(x) where
 
 end CStarAlgebra
