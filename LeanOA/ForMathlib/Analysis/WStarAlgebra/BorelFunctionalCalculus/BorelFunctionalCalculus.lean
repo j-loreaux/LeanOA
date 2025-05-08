@@ -341,6 +341,12 @@ instance : StarMul (α →ₘ[μ] R) where
          AEEqFun.coeFn_star g] with x hx hy hz h1 h2
     simp only [hx, Pi.star_apply, hy, Pi.mul_apply, hz, h1, h2, star_mul]
 
+instance : StarAddMonoid (α →ₘ[μ] R) where
+  star_add f g:= by
+    ext
+    filter_upwards [AEEqFun.coeFn_star (f + g), AEEqFun.coeFn_add (star f) (star g), AEEqFun.coeFn_add f g, AEEqFun.coeFn_star f, AEEqFun.coeFn_star g] with x hx hy hz hq hw
+    simp only [hx, Pi.star_apply, hz, Pi.add_apply, star_add, hy, hq, hw]
+
 end
 
 variable {R : Type*} [NormedRing R]
