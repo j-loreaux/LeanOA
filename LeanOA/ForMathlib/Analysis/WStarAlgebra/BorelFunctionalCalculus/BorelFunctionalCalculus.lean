@@ -393,8 +393,35 @@ noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
 
 end NormedRing
 
+section NormedAlgebra
 
--- Some of the things below weirdly cannot be synthesized. I think there are diamonds/duelling instances.
+variable {R : Type*} [_root_.NormedRing R] [_root_.IsBoundedSMul R R]
+
+-- It may be that we need a `ℂ` bounded smul for our StarRing instance. Do we need here to somehow replace `R` with `C`?
+
+noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp ℂ ∞ μ) where
+  smul c f := c • f
+  algebraMap :={
+    toFun := fun (c : ℂ) ↦ c • (1 : Lp ℂ ∞ μ)
+    map_one' := MulAction.one_smul 1
+    map_mul' := by
+      intro f g
+      ext
+      filter_upwards [Lp.coeFn_smul (E := ℂ) (p := ∞) (f * g) 1, Linfty.coeFn_mul (R := ℂ) (f • 1) (g • 1),
+          Lp.coeFn_smul (E := ℂ) (p := ∞) f 1, Lp.coeFn_smul (E := ℂ) (p := ∞) g 1, Linfty.coeFn_one (R := ℂ)] with x hx hy hz hw h1
+      simp only [hx, Pi.smul_apply, smul_eq_mul, hy, Pi.mul_apply, hz, hw, h1, Pi.one_apply, mul_one]
+    map_zero' := zero_smul ℂ 1
+    map_add' := fun x y => Module.add_smul x y 1
+  }
+  commutes' := sorry
+  smul_def' := sorry
+  norm_smul_le := sorry
+
+end NormedAlgebra
+
+--Maybe next see if we can synthesize a `CStarAlgebra` instance... to see what is missing.
+
+--but for now, let's see if we can synthesize all of the stuff below...
 
 variable {R : Type*} [_root_.NormedRing R] [_root_.InvolutiveStar R] [ContinuousStar R]
 
