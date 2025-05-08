@@ -385,20 +385,11 @@ end StarRing
 
 section NormedRing
 
-variable {R : Type*} [NormedRing R]
-
-noncomputable instance Linfty.IsBoundedSMul : IsBoundedSMul (Lp R ∞ μ) (Lp R ∞ μ) where
-  dist_smul_pair' := by
-    intro c x y
-    simp only [smul_eq_mul, dist_zero_right]
-    sorry
-  dist_pair_smul' := sorry
+variable {R : Type*} [NormedRing R] [_root_.IsBoundedSMul R R]
 
 noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
   dist_eq _ _ := rfl
-  norm_mul_le f g := norm_smul_le f g
-
--- So how do we prove this? Roughly, we have  f * g ≤ ‖ f ‖ • g, and this should be respected by the norm.
+  norm_mul_le f g := MeasureTheory.Lp.norm_smul_le f g
 
 end NormedRing
 
