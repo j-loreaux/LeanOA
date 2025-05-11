@@ -399,6 +399,9 @@ variable {R : Type*} [_root_.NormedRing R] [_root_.IsBoundedSMul R R]
 
 -- It may be that we need a `ℂ` bounded smul for our StarRing instance. Do we need here to somehow replace `R` with `C`?
 
+instance : IsScalarTower ℂ (Lp ℂ ∞ μ) (Lp ℂ ∞ μ)where
+  smul_assoc := fun x y z => Lp.smul_assoc x y z
+
 noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp ℂ ∞ μ) where
   smul c f := c • f
   algebraMap :={
@@ -426,7 +429,8 @@ noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp ℂ ∞ μ) 
   smul_def' := by
     dsimp only [Pi.one_apply, Pi.smul_apply, smul_eq_mul, Set.mem_setOf_eq,
       Pi.mul_apply, id_eq, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
-    sorry -- You are here.
+    intro r x
+    rw[smul_mul_assoc, one_mul]
   norm_smul_le := sorry
 
 end NormedAlgebra
