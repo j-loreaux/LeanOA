@@ -431,7 +431,7 @@ noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp ℂ ∞ μ) 
       Pi.mul_apply, id_eq, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
     intro r x
     rw[smul_mul_assoc, one_mul]
-  norm_smul_le := sorry
+  norm_smul_le := fun r x => norm_smul_le r x
 
 end NormedAlgebra
 
