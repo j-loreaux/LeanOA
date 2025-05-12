@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jon Bannon, Jireh Loreaux
 -/
 
+import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Instances
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart.Basic
@@ -71,15 +72,6 @@ lemma abs_nnrpow (a : A) (x : ℝ≥0) :
     abs a ^ x = (star a * a) ^ (x / 2) := by
   simp only [← abs_nnrpow_two_mul, mul_div_left_comm, ne_eq, OfNat.ofNat_ne_zero,
     not_false_eq_true, div_self, mul_one]
-
-lemma sqrt_eq_real_sqrt (a : A) (ha : 0 ≤ a := by cfc_tac) :
-    CFC.sqrt a = cfcₙ Real.sqrt a := by
-  suffices cfcₙ (fun x : ℝ ↦ √x * √x) a = cfcₙ (fun x : ℝ ↦ x) a by
-    rwa [cfcₙ_mul .., cfcₙ_id' ..,
-      ← sqrt_eq_iff _ (hb := cfcₙ_nonneg (fun x _ ↦ Real.sqrt_nonneg x))] at this
-  refine cfcₙ_congr fun x hx ↦ ?_
-  refine Real.mul_self_sqrt ?_
-  exact quasispectrum_nonneg_of_nonneg a ha x hx
 
 lemma abs_of_nonneg (a : A) (ha : 0 ≤ a := by cfc_tac) : abs a = a := by
   rw [abs, ha.star_eq, sqrt_mul_self a ha]
