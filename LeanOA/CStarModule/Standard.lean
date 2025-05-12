@@ -201,7 +201,7 @@ noncomputable instance : CStarModule A ℓ²(A, E) where
 
 noncomputable instance : NormedAddCommGroup ℓ²(A, E) := normedAddCommGroup A
 
-instance : NormedSpace ℂ ℓ²(A, E) := .ofCore <| normedSpaceCore A
+noncomputable instance : NormedSpace ℂ ℓ²(A, E) := .ofCore <| normedSpaceCore A
 
 lemma norm_apply_le (x : ℓ²(A, E)) (i : ι) : ‖x i‖ ≤ ‖x‖ := by
   refine Real.le_sqrt_of_sq_le ?_
