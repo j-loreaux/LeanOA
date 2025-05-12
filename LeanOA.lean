@@ -1,5 +1,7 @@
 import LeanOA.CFCRange
 import LeanOA.CStarModule.Standard
+import LeanOA.ContinuousFunctionalCalculus.Continuity
+import LeanOA.ContinuousMap.Uniform
 import LeanOA.ForMathlib.Algebra.Star.Unitary
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
