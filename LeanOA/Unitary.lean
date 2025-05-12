@@ -30,9 +30,12 @@ variable {A : Type*} [CStarAlgebra A]
 
 section UnitarySpan
 
-variable [PartialOrder A] [StarOrderedRing A]
 open scoped ComplexStarModule
 open Complex
+
+section Ordered
+
+variable [PartialOrder A] [StarOrderedRing A]
 
 /-- If `a : A` is a selfadjoint element in a C⋆-algebra with `‖a‖ ≤ 1`,
 then `a + I • CFC.sqrt (1 - a ^ 2)` is unitary.
@@ -87,10 +90,14 @@ lemma CStarAlgebra.norm_smul_two_inv_smul_add_four_unitary (x : A) (hx : x ≠ 0
   simp only [u₁, u₂, selfAdjoint.realPart_unitarySelfAddISMul,
     realPart_add_I_smul_imaginaryPart, norm_smul_norm_inv_smul]
 
+end Ordered
+
 /-- Every element `x` in a unital C⋆-algebra is a linear combination of four unitary elements,
 and the norm of each coefficient does not exceed `‖x‖ / 2`. -/
 lemma CStarAlgebra.exists_sum_four_unitary (x : A) :
     ∃ u : Fin 4 → unitary A, ∃ c : Fin 4 → ℂ, x = ∑ i, c i • (u i : A) ∧ ∀ i, ‖c i‖ ≤ ‖x‖ / 2 := by
+  let _ := CStarAlgebra.spectralOrder
+  let _ := CStarAlgebra.spectralOrderedRing
   obtain (rfl | hx) := eq_or_ne x 0
   · exact ⟨![1, -1, 1, -1], 0, by simp⟩
   · have := norm_smul_two_inv_smul_add_four_unitary x hx
