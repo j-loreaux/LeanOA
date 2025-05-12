@@ -20,7 +20,6 @@ import LeanOA.ForMathlib.Topology.Connected.PathConnected
 import LeanOA.ForMathlib.Topology.MetricSpace.Thickening
 import LeanOA.ForMathlib.Topology.Path
 import LeanOA.MulNonneg
-import LeanOA.NonnegUnit
 import LeanOA.Notation
 import LeanOA.TopologicalAlgebra
 import LeanOA.Unitary
