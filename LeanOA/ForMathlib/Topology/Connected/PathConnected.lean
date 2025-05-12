@@ -3,15 +3,6 @@ import Mathlib.Topology.Connected.PathConnected
 
 variable {G : Type*} [TopologicalSpace G]
 
-
-@[to_additive]
-theorem Joined.mul {x y w z : G} [Mul G] [ContinuousMul G] (hxy : Joined x y) (hwz : Joined w z) :
-    Joined (x * w) (y * z) := by
-  obtain ⟨γ₁⟩ := hxy
-  obtain ⟨γ₂⟩ := hwz
-  use γ₁.mul γ₂
-  all_goals simp
-
 @[to_additive]
 theorem Joined.listProd {l l' : List G} [MulOneClass G] [ContinuousMul G]
     (h : List.Forall₂ Joined l l') :
