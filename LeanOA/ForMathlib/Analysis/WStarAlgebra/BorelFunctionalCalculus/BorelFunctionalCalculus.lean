@@ -448,6 +448,18 @@ inequality. Maybe we are pulling a scalar in and using one of the known results 
 multiples...
 -/
 
+section NormLemmas
+
+variable {α : Type u_1} {ε : Type u_2} [ENorm ε] {hα : MeasurableSpace α} (f : α → ε) (μ : Measure α)
+
+example : (eLpNormEssSup f μ) * (eLpNormEssSup f μ) ≤ essSup ((fun (x : α) => ‖f x‖ₑ) * (fun (x : α) => ‖f x‖ₑ)) μ := by
+    dsimp [eLpNormEssSup] at *
+    --Maybe we have to pull in one of these norms...but then what happens? Wrong direction?
+    sorry
+
+
+end NormLemmas
+
 instance : CStarRing (Lp ℂ ∞ μ) where
   norm_mul_self_le := by
     simp only [Subtype.forall]
