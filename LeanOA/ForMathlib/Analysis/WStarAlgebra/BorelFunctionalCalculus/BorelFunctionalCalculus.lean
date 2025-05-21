@@ -435,6 +435,72 @@ noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp ℂ ∞ μ) 
 
 end NormedAlgebra
 
+section CStarRing
+
+/- I don't know how to approach the following. In the above we already have Banach algebra structure.
+I don't know what kinds of basic theorems should be used to talk about `(eLpNormEssSup f μ) * (eLpNormEssSup f μ)`.
+Maybe we need to somehow translate this into `essSup ‖f‖ₑ² μ` which can be turned into
+`essSup (‖f‖ₑ * ‖f‖ₑ) μ` which can be turned into `essSup (‖star f‖ₑ * ‖f‖ₑ) μ` which is
+`essSup ‖(star f) * f‖ₑ μ`. This last thing is actually `eLpNormEssSup (star f * f) μ `.
+Maybe let's try proving several little lemmas to this effect, and then put them into the theorem.
+The first result seems the most difficult, at the moment. We may not have an equality there, only an
+inequality. Maybe we are pulling a scalar in and using one of the known results comparing scalar
+multiples...
+-/
+
+instance : CStarRing (Lp ℂ ∞ μ) where
+  norm_mul_self_le := by
+    simp only [Subtype.forall]
+    intro f hf
+    sorry
+
+end CStarRing
+
+#exit
+section CStarAlgebra
+
+--why does the following seem so much more than a CStarRing?
+
+instance : CStarAlgebra (Lp ℂ ∞ μ) where
+  nsmul := sorry
+  nsmul_zero := sorry
+  nsmul_succ := sorry
+  left_distrib := _
+  right_distrib := _
+  zero_mul := _
+  mul_zero := _
+  one_mul := _
+  mul_one := _
+ --keep trying to delete these below!
+  sub_eq_add_neg := _
+  zsmul := _
+  zsmul_zero' := _
+  zsmul_succ' := _
+  zsmul_neg' := _
+  neg_add_cancel := _
+  dist_self := _
+  dist_comm := _
+  dist_triangle := _
+  edist_dist := _
+  uniformity_dist := _
+  eq_of_dist_eq_zero := _
+  dist_eq := _
+  norm_mul_le := _
+  star := _
+  star_involutive := _
+  star_mul := _
+  star_add := _
+  complete := _
+  norm_mul_self_le := _
+  smul := _
+  algebraMap := _
+  commutes' := _
+  smul_def' := _
+  norm_smul_le := _
+  star_smul := _
+
+end CStarAlgebra
+
 --Maybe next see if we can synthesize a `CStarAlgebra` instance... to see what is missing.
 
 --but for now, let's see if we can synthesize all of the stuff below...
