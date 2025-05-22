@@ -460,10 +460,21 @@ example : (eLpNormEssSup f μ) * (eLpNormEssSup f μ) ≤ essSup ((fun (x : α) 
 
 end NormLemmas
 
+open Complex ENNReal in
 instance : CStarRing (Lp ℂ ∞ μ) where
   norm_mul_self_le := by
     simp only [Subtype.forall]
     intro f hf
+    dsimp [norm] at *
+    rw [← ENNReal.toReal_mul]
+    congr!
+    dsimp [eLpNorm, eLpNormEssSup] at *
+    rw [← @ENNReal.essSup_const_mul]
+    congr! with x
+    have H : essSup (fun x => ‖f x‖ₑ) μ = ‖(essSup (fun x => ‖f x‖ₑ) μ)‖ₑ := rfl
+    have L : ‖essSup (fun x => ‖f x‖ₑ) μ‖ₑ * ‖f x‖ₑ = ‖(essSup (fun x => ‖f x‖ₑ) μ) * (f x)‖ₑ := by exact?
+    rw [H, ← norm_smul]
+
     sorry
 
 end CStarRing
