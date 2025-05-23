@@ -460,6 +460,10 @@ example : (eLpNormEssSup f μ) * (eLpNormEssSup f μ) ≤ essSup ((fun (x : α) 
 
 end NormLemmas
 
+-- On ENNReal, squaring is monotone and so we have `Monotone.map_sInf_of_continuousAt'`, which
+-- will allow pulling out the function from the infimum. Note this is an `sInf`, whereas we need
+-- an `inf`. Or maybe not. The point is that this monotonicity of squaring is what we want.
+
 open Complex ENNReal in
 instance : CStarRing (Lp ℂ ∞ μ) where
   norm_mul_self_le := by
