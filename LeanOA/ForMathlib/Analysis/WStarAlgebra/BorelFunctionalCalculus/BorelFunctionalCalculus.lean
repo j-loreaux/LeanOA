@@ -464,9 +464,36 @@ end NormLemmas
 -- will allow pulling out the function from the infimum. Note this is an `sInf`, whereas we need
 -- an `inf`. Or maybe not. The point is that this monotonicity of squaring is what we want.
 
+example (f : Lp ℂ ∞ μ) : ‖f‖ₑ = sInf {c | μ {x | c < ‖f x‖ₑ} = 0} := by
+  rw [Lp.enorm_def, eLpNorm_exponent_top, eLpNormEssSup_eq_essSup_enorm, essSup_eq_sInf]
+
+
+example (f : Lp ℂ ∞ μ) : ‖f‖ₑ = sInf {c | μ {x | c < ‖f x‖ₑ} = 0} := by
+  rw [Lp.enorm_def, eLpNorm]
+  split_ifs
+  · simp_all
+  · rw [eLpNormEssSup_eq_essSup_enorm, essSup_eq_sInf]
+  · simp_all
+
+
 open Complex ENNReal in
 instance : CStarRing (Lp ℂ ∞ μ) where
   norm_mul_self_le := by
+    intro f
+    have L : ‖f‖ₑ = sInf {c | μ {x | c < ‖f x‖ₑ} = 0} := by
+      rw [Lp.enorm_def, eLpNorm_exponent_top, eLpNormEssSup_eq_essSup_enorm, essSup_eq_sInf]
+    have H :=
+     calc
+       ‖f‖ₑ * ‖f‖ₑ = ‖f‖ₑ ^ 2  := by exact Eq.symm (pow_two ‖f‖ₑ)
+                 _ = (sInf {c | μ {x | c < ‖f x‖ₑ} = 0}) ^ (2 : ℕ) := by rw [L]
+                 _ = sInf {a | ∃ (c : ℝ≥0∞),  a = c ^ 2 ∧ μ {x | ‖f x‖ₑ > c} = 0} := sorry
+                 _ = sInf {a | ∃ (c : ℝ≥0∞),  a = c ^ 2 ∧ μ {x | ‖f x‖ₑ ^ 2 > c ^ 2} = 0} := by sorry
+                 _ = sInf {a | ∃ c,  a = c ^ 2 ∧ μ {x | ‖((star f) x) * (f x)‖ₑ > c ^ 2} = 0} := by sorry
+                 _ = ‖star f * f‖ₑ := by sorry
+    sorry
+    --exact Preorder.le_refl ‖star f * f‖
+
+#exit
     simp only [Subtype.forall]
     intro f hf
     dsimp [norm] at *
@@ -483,7 +510,6 @@ instance : CStarRing (Lp ℂ ∞ μ) where
 
 end CStarRing
 
-#exit
 section CStarAlgebra
 
 --why does the following seem so much more than a CStarRing?
