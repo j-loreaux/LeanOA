@@ -16,6 +16,7 @@ import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 import Mathlib.MeasureTheory.Function.LpSeminorm.CompareExp
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import Mathlib.MeasureTheory.Function.Holder
+import Mathlib.Algebra.Order.Group.Pointwise.CompleteLattice
 
 /-!
 # Borel Functional Calculus Class
@@ -460,7 +461,7 @@ example : (eLpNormEssSup f μ) * (eLpNormEssSup f μ) ≤ essSup ((fun (x : α) 
 
 end NormLemmas
 
--- On ENNReal, squaring is monotone and so we have `Monotone.map_sInf_of_continuousAt'`, which
+-- On ENNReal, squaring is monotone and continuous and so we have `Monotone.map_sInf_of_continuousAt'`, which
 -- will allow pulling out the function from the infimum. Note this is an `sInf`, whereas we need
 -- an `inf`. Or maybe not. The point is that this monotonicity of squaring is what we want.
 
@@ -476,12 +477,20 @@ example (f : Lp ℂ ∞ μ) : ‖f‖ₑ = sInf {c | μ {x | c < ‖f x‖ₑ} =
   · simp_all
 
 
+example : Monotone (fun (t: ℝ≥0∞) => t ^ 2) := pow_left_mono 2
+example : Continuous (fun (t : ℝ≥0∞) => t ^ 2) := by exact ENNReal.continuous_pow 2
+example {f : Lp ℂ ∞ μ} : ContinuousAt (fun (t: ℝ≥0∞) => t ^ 2)  (sInf {c | μ {x | c < ‖f x‖ₑ} = 0}) := Continuous.continuousAt (ENNReal.continuous_pow 2)
+example : (fun (t : ℝ≥0∞) => t ^ 2) ∞ = ∞ := rfl
+example {f : Lp ℂ ∞ μ} : (fun (t : ℝ≥0∞) => t ^ 2) (sInf {c | μ {x | c < ‖f x‖ₑ} = 0}) = sInf ((fun (t : ℝ≥0∞) => t ^ 2)'' {c | μ {x | c < ‖f x‖ₑ} = 0}) := by
+   apply Monotone.map_sInf_of_continuousAt (Continuous.continuousAt (ENNReal.continuous_pow 2)) (pow_left_mono 2) (ftop := rfl)
+
+
 open Complex ENNReal in
 instance : CStarRing (Lp ℂ ∞ μ) where
-  norm_mul_self_le := by
-    intro f
+  norm_mul_self_le f := by
     have L : ‖f‖ₑ = sInf {c | μ {x | c < ‖f x‖ₑ} = 0} := by
       rw [Lp.enorm_def, eLpNorm_exponent_top, eLpNormEssSup_eq_essSup_enorm, essSup_eq_sInf]
+    have M := Monotone.map_sInf_of_continuousAt (Continuous.continuousAt (ENNReal.continuous_pow 2)) (pow_left_mono 2) (ftop := rfl)
     have H :=
      calc
        ‖f‖ₑ * ‖f‖ₑ = ‖f‖ₑ ^ 2  := by exact Eq.symm (pow_two ‖f‖ₑ)
@@ -492,6 +501,13 @@ instance : CStarRing (Lp ℂ ∞ μ) where
                  _ = ‖star f * f‖ₑ := by sorry
     sorry
     --exact Preorder.le_refl ‖star f * f‖
+
+/-
+I don't know what to do with this multiplication.
+I actually don't think the mul thing can work, we need squaring for this monotone bit...
+
+
+-/
 
 #exit
     simp only [Subtype.forall]
