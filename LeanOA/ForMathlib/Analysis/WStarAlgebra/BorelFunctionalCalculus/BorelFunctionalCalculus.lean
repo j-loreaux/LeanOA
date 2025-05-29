@@ -490,7 +490,8 @@ instance : CStarRing (Lp ℂ ∞ μ) where
   norm_mul_self_le f := by
     have L : ‖f‖ₑ = sInf {c | μ {x | c < ‖f x‖ₑ} = 0} := by
       rw [Lp.enorm_def, eLpNorm_exponent_top, eLpNormEssSup_eq_essSup_enorm, essSup_eq_sInf]
-    have M := Monotone.map_sInf_of_continuousAt (Continuous.continuousAt (ENNReal.continuous_pow 2)) (pow_left_mono 2) (ftop := rfl)
+    have M : (sInf {c | μ {x | c < ‖f x‖ₑ} = 0}) ^ 2 = sInf ((fun (t : ℝ≥0∞) => t ^ 2)'' {c | μ {x | c < ‖f x‖ₑ} = 0}) :=
+       Monotone.map_sInf_of_continuousAt (Continuous.continuousAt (ENNReal.continuous_pow 2)) (pow_left_mono 2) (ftop := rfl)
     have H :=
      calc
        ‖f‖ₑ * ‖f‖ₑ = ‖f‖ₑ ^ 2  := by exact Eq.symm (pow_two ‖f‖ₑ)
