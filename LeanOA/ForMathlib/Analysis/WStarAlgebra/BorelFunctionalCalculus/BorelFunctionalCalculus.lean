@@ -516,9 +516,19 @@ lemma aux2 {c : ℝ≥0∞} {f : Lp ℂ ∞ μ} : {x | ‖f x‖ₑ > c} = {x | 
   have : ‖f x‖ₑ ≠ ⊤ := enorm_ne_top
   contradiction
   intro k l
-  rw [sq, sq] at h
+  sorry
   --have  mul_self_le_mul_self_iff.mp _ _
   -- I can't seem to figure out how to get this...
+
+lemma aux3 {x : α} {f : Lp ℂ ∞ μ} : ‖f x‖ₑ ^ 2 = ‖((star f) x) * (f x)‖ₑ := by
+   simp only [enorm_mul, sq]
+   congr 1
+   have H := norm_star (f x)
+   refine (ENNReal.toReal_eq_toReal_iff' ?_ ?_).mp ?_
+   sorry
+   --should be able to reduce this to norm_star and Lp.coeFn_star somehow...
+
+lemma aux4 {x : α}  {f : Lp ℂ ∞ μ} : ((star f) x) * (f x) = (star f * f) x := by sorry
 
 open Complex ENNReal in
 instance : CStarRing (Lp ℂ ∞ μ) where
@@ -533,10 +543,19 @@ instance : CStarRing (Lp ℂ ∞ μ) where
                  _ = (sInf {c | μ {x | c < ‖f x‖ₑ} = 0}) ^ (2 : ℕ) := by rw [L]
                  _ = sInf ((fun (t : ℝ≥0∞) => t ^ 2)'' {c | μ {x | c < ‖f x‖ₑ} = 0}) := M
                  _ = sInf {a | ∃ (c : ℝ≥0∞),  a = c ^ 2 ∧ μ {x | ‖f x‖ₑ > c} = 0} := by rw [aux1]
-                 _ = sInf {a | ∃ (c : ℝ≥0∞),  a = c ^ 2 ∧ μ {x | ‖f x‖ₑ ^ 2 > c ^ 2} = 0} := by sorry
-                 _ = sInf {a | ∃ c,  a = c ^ 2 ∧ μ {x | ‖((star f) x) * (f x)‖ₑ > c ^ 2} = 0} := by sorry
-                 _ = ‖star f * f‖ₑ := by sorry
+                 _ = sInf {a | ∃ (c : ℝ≥0∞),  a = c ^ 2 ∧ μ {x | ‖f x‖ₑ ^ 2 > c ^ 2} = 0} := by
+                       congr
+                       simp only [gt_iff_lt, aux2]
+                 _ = sInf {a | ∃ c,  a = c ^ 2 ∧ μ {x | ‖((star f) x) * (f x)‖ₑ > c ^ 2} = 0} := by
+                       congr
+                       simp only [aux3, enorm_mul, gt_iff_lt]
+                 _ = sInf {a | ∃ c,  a = c ^ 2 ∧ μ {x | ‖(star f * f) x‖ₑ > c ^ 2} = 0} := by
+                       congr!
+                       rw [aux4]
+                 _ = ‖star f * f‖ₑ := by sorry --can't yet see how to get this.
     sorry
+    -- Interestingly, this is still only part of the way to the goal. We can't seem to get
+    -- the enorm bit to play nicely with the requested norm bit...yuck.
     --exact Preorder.le_refl ‖star f * f‖
 
 /-
