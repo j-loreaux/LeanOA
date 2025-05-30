@@ -483,7 +483,42 @@ example {f : Lp ℂ ∞ μ} : ContinuousAt (fun (t: ℝ≥0∞) => t ^ 2)  (sInf
 example : (fun (t : ℝ≥0∞) => t ^ 2) ∞ = ∞ := rfl
 example {f : Lp ℂ ∞ μ} : (fun (t : ℝ≥0∞) => t ^ 2) (sInf {c | μ {x | c < ‖f x‖ₑ} = 0}) = sInf ((fun (t : ℝ≥0∞) => t ^ 2)'' {c | μ {x | c < ‖f x‖ₑ} = 0}) := by
    apply Monotone.map_sInf_of_continuousAt (Continuous.continuousAt (ENNReal.continuous_pow 2)) (pow_left_mono 2) (ftop := rfl)
+lemma aux1 {f : Lp ℂ ∞ μ} : ((fun (t : ℝ≥0∞) => t ^ 2)'' {c | μ {x | c < ‖f x‖ₑ} = 0}) = {a | ∃ (c : ℝ≥0∞),  a = c ^ 2 ∧ μ {x | ‖f x‖ₑ > c} = 0} := by
+  ext x
+  constructor
+  intro h
+  simp only [gt_iff_lt, Set.mem_setOf_eq]
+  simp only [Set.mem_image, Set.mem_setOf_eq] at h
+  obtain ⟨c, hc⟩ := h
+  use c
+  exact ⟨(hc.2).symm, hc.1⟩
+  intro h
+  simp only [gt_iff_lt, Set.mem_setOf_eq, Set.mem_image] at *
+  obtain ⟨c, hc⟩ := h
+  use c
+  exact ⟨hc.2, (hc.1).symm⟩
 
+#synth IsStrictOrderedRing NNReal
+#synth Ring NNReal
+#synth LinearOrder NNReal
+
+lemma aux2 {c : ℝ≥0∞} {f : Lp ℂ ∞ μ} : {x | ‖f x‖ₑ > c} = {x | ‖f x‖ₑ ^ 2 > c ^ 2} := by
+  ext x
+  simp only [gt_iff_lt, Set.mem_setOf_eq] at *
+  refine lt_iff_lt_of_le_iff_le ?_
+  constructor
+  intro h
+  exact pow_le_pow_left' h 2
+  intro h
+  refine ENNReal.le_of_top_imp_top_of_toNNReal_le ?_ ?_
+  intro k
+  exfalso
+  have : ‖f x‖ₑ ≠ ⊤ := enorm_ne_top
+  contradiction
+  intro k l
+  rw [sq, sq] at h
+  --have  mul_self_le_mul_self_iff.mp _ _
+  -- I can't seem to figure out how to get this...
 
 open Complex ENNReal in
 instance : CStarRing (Lp ℂ ∞ μ) where
@@ -496,7 +531,8 @@ instance : CStarRing (Lp ℂ ∞ μ) where
      calc
        ‖f‖ₑ * ‖f‖ₑ = ‖f‖ₑ ^ 2  := by exact Eq.symm (pow_two ‖f‖ₑ)
                  _ = (sInf {c | μ {x | c < ‖f x‖ₑ} = 0}) ^ (2 : ℕ) := by rw [L]
-                 _ = sInf {a | ∃ (c : ℝ≥0∞),  a = c ^ 2 ∧ μ {x | ‖f x‖ₑ > c} = 0} := sorry
+                 _ = sInf ((fun (t : ℝ≥0∞) => t ^ 2)'' {c | μ {x | c < ‖f x‖ₑ} = 0}) := M
+                 _ = sInf {a | ∃ (c : ℝ≥0∞),  a = c ^ 2 ∧ μ {x | ‖f x‖ₑ > c} = 0} := by rw [aux1]
                  _ = sInf {a | ∃ (c : ℝ≥0∞),  a = c ^ 2 ∧ μ {x | ‖f x‖ₑ ^ 2 > c ^ 2} = 0} := by sorry
                  _ = sInf {a | ∃ c,  a = c ^ 2 ∧ μ {x | ‖((star f) x) * (f x)‖ₑ > c ^ 2} = 0} := by sorry
                  _ = ‖star f * f‖ₑ := by sorry
