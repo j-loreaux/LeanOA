@@ -503,9 +503,7 @@ end CStarRing
 
 section CStarAlgebra
 
---why does the following seem so much more than a CStarRing?
-
-noncomputable instance : CStarAlgebra (Lp ℂ ∞ μ) where
+noncomputable instance : CStarAlgebra (Lp ℂ ∞ μ) where--
   algebraMap := sorry
   commutes' := sorry
   smul_def' := sorry
