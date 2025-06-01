@@ -400,7 +400,7 @@ variable {R : Type*} [_root_.NormedRing R] [_root_.IsBoundedSMul R R]
 
 -- It may be that we need a `ℂ` bounded smul for our StarRing instance. Do we need here to somehow replace `R` with `C`?
 
-instance : IsScalarTower ℂ (Lp ℂ ∞ μ) (Lp ℂ ∞ μ)where
+instance : IsScalarTower R (Lp R ∞ μ) (Lp R ∞ μ) where
   smul_assoc := fun x y z => Lp.smul_assoc x y z
 
 noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp ℂ ∞ μ) where
@@ -437,52 +437,6 @@ noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp ℂ ∞ μ) 
 end NormedAlgebra
 
 section CStarRing
-
-/- I don't know how to approach the following. In the above we already have Banach algebra structure.
-I don't know what kinds of basic theorems should be used to talk about `(eLpNormEssSup f μ) * (eLpNormEssSup f μ)`.
-Maybe we need to somehow translate this into `essSup ‖f‖ₑ² μ` which can be turned into
-`essSup (‖f‖ₑ * ‖f‖ₑ) μ` which can be turned into `essSup (‖star f‖ₑ * ‖f‖ₑ) μ` which is
-`essSup ‖(star f) * f‖ₑ μ`. This last thing is actually `eLpNormEssSup (star f * f) μ `.
-Maybe let's try proving several little lemmas to this effect, and then put them into the theorem.
-The first result seems the most difficult, at the moment. We may not have an equality there, only an
-inequality. Maybe we are pulling a scalar in and using one of the known results comparing scalar
-multiples...
--/
-
-section NormLemmas
-
-variable {α : Type u_1} {ε : Type u_2} [ENorm ε] {hα : MeasurableSpace α} (f : α → ε) (μ : Measure α)
-
-example : (eLpNormEssSup f μ) * (eLpNormEssSup f μ) ≤ essSup ((fun (x : α) => ‖f x‖ₑ) * (fun (x : α) => ‖f x‖ₑ)) μ := by
-    dsimp [eLpNormEssSup] at *
-    --Maybe we have to pull in one of these norms...but then what happens? Wrong direction?
-    sorry
-
-
-end NormLemmas
-
--- On ENNReal, squaring is monotone and continuous and so we have `Monotone.map_sInf_of_continuousAt'`, which
--- will allow pulling out the function from the infimum. Note this is an `sInf`, whereas we need
--- an `inf`. Or maybe not. The point is that this monotonicity of squaring is what we want.
-
-example (f : Lp ℂ ∞ μ) : ‖f‖ₑ = sInf {c | μ {x | c < ‖f x‖ₑ} = 0} := by
-  rw [Lp.enorm_def, eLpNorm_exponent_top, eLpNormEssSup_eq_essSup_enorm, essSup_eq_sInf]
-
-
-example (f : Lp ℂ ∞ μ) : ‖f‖ₑ = sInf {c | μ {x | c < ‖f x‖ₑ} = 0} := by
-  rw [Lp.enorm_def, eLpNorm]
-  split_ifs
-  · simp_all
-  · rw [eLpNormEssSup_eq_essSup_enorm, essSup_eq_sInf]
-  · simp_all
-
-
-example : Monotone (fun (t: ℝ≥0∞) => t ^ 2) := pow_left_mono 2
-example : Continuous (fun (t : ℝ≥0∞) => t ^ 2) := by exact ENNReal.continuous_pow 2
-example {f : Lp ℂ ∞ μ} : ContinuousAt (fun (t: ℝ≥0∞) => t ^ 2)  (sInf {c | μ {x | c < ‖f x‖ₑ} = 0}) := Continuous.continuousAt (ENNReal.continuous_pow 2)
-example : (fun (t : ℝ≥0∞) => t ^ 2) ∞ = ∞ := rfl
-example {f : Lp ℂ ∞ μ} : (fun (t : ℝ≥0∞) => t ^ 2) (sInf {c | μ {x | c < ‖f x‖ₑ} = 0}) = sInf ((fun (t : ℝ≥0∞) => t ^ 2)'' {c | μ {x | c < ‖f x‖ₑ} = 0}) := by
-   apply Monotone.map_sInf_of_continuousAt (Continuous.continuousAt (ENNReal.continuous_pow 2)) (pow_left_mono 2) (ftop := rfl)
 
 variable {R : Type*} [NormedRing R] [StarRing R] [NormedStarGroup R]
 
@@ -543,25 +497,7 @@ some constant then the essSup of that function is less than that constant. This 
 thought to look for. Interestingly, one can apply that function and convert this to a filter statement that
 one can `filter_upwards` to work with...a trick I really like, now.
 
-
-
-
-
-
-#exit
-    simp only [Subtype.forall]
-    intro f hf
-    dsimp [norm] at *
-    rw [← ENNReal.toReal_mul]
-    congr!
-    dsimp [eLpNorm, eLpNormEssSup] at *
-    rw [← @ENNReal.essSup_const_mul]
-    congr! with x
-    have H : essSup (fun x => ‖f x‖ₑ) μ = ‖(essSup (fun x => ‖f x‖ₑ) μ)‖ₑ := rfl
-    have L : ‖essSup (fun x => ‖f x‖ₑ) μ‖ₑ * ‖f x‖ₑ = ‖(essSup (fun x => ‖f x‖ₑ) μ) * (f x)‖ₑ := by exact?
-    rw [H, ← norm_smul]
-
-    sorry
+-/
 
 end CStarRing
 
@@ -569,43 +505,12 @@ section CStarAlgebra
 
 --why does the following seem so much more than a CStarRing?
 
-instance : CStarAlgebra (Lp ℂ ∞ μ) where
-  nsmul := sorry
-  nsmul_zero := sorry
-  nsmul_succ := sorry
-  left_distrib := _
-  right_distrib := _
-  zero_mul := _
-  mul_zero := _
-  one_mul := _
-  mul_one := _
- --keep trying to delete these below!
-  sub_eq_add_neg := _
-  zsmul := _
-  zsmul_zero' := _
-  zsmul_succ' := _
-  zsmul_neg' := _
-  neg_add_cancel := _
-  dist_self := _
-  dist_comm := _
-  dist_triangle := _
-  edist_dist := _
-  uniformity_dist := _
-  eq_of_dist_eq_zero := _
-  dist_eq := _
-  norm_mul_le := _
-  star := _
-  star_involutive := _
-  star_mul := _
-  star_add := _
-  complete := _
-  norm_mul_self_le := _
-  smul := _
-  algebraMap := _
-  commutes' := _
-  smul_def' := _
-  norm_smul_le := _
-  star_smul := _
+noncomputable instance : CStarAlgebra (Lp ℂ ∞ μ) where
+  algebraMap := sorry
+  commutes' := sorry
+  smul_def' := sorry
+  norm_smul_le := sorry
+  star_smul := sorry
 
 end CStarAlgebra
 
