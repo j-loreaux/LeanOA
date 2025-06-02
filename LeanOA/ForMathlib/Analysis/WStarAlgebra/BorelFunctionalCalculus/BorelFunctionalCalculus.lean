@@ -441,7 +441,17 @@ variable {R : Type*} [NormedRing R] [StarRing R] [NormedStarGroup R]
 
 open ENNReal
 
-lemma norm_le_of_ae_norm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖g x‖ ) : ‖f‖ ≤ ‖g‖ := by sorry
+/- This should probably not involve enorms in the hypotheses...-/
+lemma norm_le_of_ae_norm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ₑ ≤ ‖g x‖ₑ ) : ‖f‖ ≤ ‖g‖ := by
+  dsimp [norm]
+  rw [ENNReal.toReal_le_toReal f.2.ne g.2.ne]
+  apply essSup_le_of_ae_le
+  simp only [eLpNorm_exponent_top]
+  filter_upwards [ae_le_essSup fun x ↦ ‖f x‖ₑ] with x hx
+  have := ae_le_essSup (μ := μ) (fun x ↦ ‖g x‖ₑ)
+ -- it may be that ae_le_trans isn't true? Is that why I can't find it?
+ --being lame here...should be able to directly prove this result...
+
 
 instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
   norm_mul_self_le f := by
