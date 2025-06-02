@@ -396,25 +396,25 @@ end NormedRing
 
 section NormedAlgebra
 
-variable {R : Type*} [_root_.NormedRing R] [_root_.IsBoundedSMul R R]
+variable {R : Type*} [_root_.NormedField R] [_root_.IsBoundedSMul R R]
 
 -- It may be that we need a `ℂ` bounded smul for our StarRing instance. Do we need here to somehow replace `R` with `C`?
 
 instance : IsScalarTower R (Lp R ∞ μ) (Lp R ∞ μ) where
   smul_assoc := fun x y z => Lp.smul_assoc x y z
 
-noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp ℂ ∞ μ) where
+noncomputable instance Linfty.NormedAlgebra : NormedAlgebra R (Lp R ∞ μ) where
   smul c f := c • f
   algebraMap :={
-    toFun := fun (c : ℂ) ↦ c • (1 : Lp ℂ ∞ μ)
+    toFun := fun (c : R) ↦ c • (1 : Lp R ∞ μ)
     map_one' := MulAction.one_smul 1
     map_mul' := by
       intro f g
       ext
-      filter_upwards [Lp.coeFn_smul (E := ℂ) (p := ∞) (f * g) 1, Linfty.coeFn_mul (R := ℂ) (f • 1) (g • 1),
-          Lp.coeFn_smul (E := ℂ) (p := ∞) f 1, Lp.coeFn_smul (E := ℂ) (p := ∞) g 1, Linfty.coeFn_one (R := ℂ)] with x hx hy hz hw h1
+      filter_upwards [Lp.coeFn_smul (E := R) (p := ∞) (f * g) 1, Linfty.coeFn_mul (R := R) (f • 1) (g • 1),
+          Lp.coeFn_smul (E := R) (p := ∞) f 1, Lp.coeFn_smul (E := R) (p := ∞) g 1, Linfty.coeFn_one (R := R)] with x hx hy hz hw h1
       simp only [hx, Pi.smul_apply, smul_eq_mul, hy, Pi.mul_apply, hz, hw, h1, Pi.one_apply, mul_one]
-    map_zero' := zero_smul ℂ 1
+    map_zero' := zero_smul R 1
     map_add' := fun x y => Module.add_smul x y 1
   }
   commutes' := by
@@ -422,9 +422,9 @@ noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp ℂ ∞ μ) 
       Pi.mul_apply, id_eq, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
     intro r f
     ext
-    filter_upwards [Linfty.coeFn_mul (r • (1 : Lp ℂ ∞ μ)) f, Linfty.coeFn_mul (R := ℂ) f (r • 1),
-      Lp.coeFn_smul (E := ℂ) (p := ∞) r 1, Linfty.coeFn_one (R := ℂ), Lp.coeFn_smul (E := ℂ) (p := ∞) r (1 * f),
-      Linfty.coeFn_mul (R := ℂ) 1 f] with x hx hy hz hw hq hv
+    filter_upwards [Linfty.coeFn_mul (r • (1 : Lp R ∞ μ)) f, Linfty.coeFn_mul (R := R) f (r • 1),
+      Lp.coeFn_smul (E := R) (p := ∞) r 1, Linfty.coeFn_one (R := R), Lp.coeFn_smul (E := R) (p := ∞) r (1 * f),
+      Linfty.coeFn_mul (R := R) 1 f] with x hx hy hz hw hq hv
     simp only [hx, Pi.mul_apply, hz, Pi.smul_apply, hw, Pi.ofNat_apply, smul_eq_mul, mul_one, hy,
       mul_comm]
   smul_def' := by
