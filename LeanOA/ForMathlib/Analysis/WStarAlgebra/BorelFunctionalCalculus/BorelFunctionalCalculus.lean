@@ -397,24 +397,23 @@ end NormedRing
 section NormedAlgebra
 
 variable {R : Type*} [_root_.NormedField R] [_root_.IsBoundedSMul R R]
+variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedSpace 𝕜 R] [IsScalarTower 𝕜 R R] --[IsBoundedSMul 𝕜 R] [Module 𝕜 R]
 
--- It may be that we need a `ℂ` bounded smul for our StarRing instance. Do we need here to somehow replace `R` with `C`?
-
-instance : IsScalarTower R (Lp R ∞ μ) (Lp R ∞ μ) where
+instance : IsScalarTower 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
   smul_assoc := fun x y z => Lp.smul_assoc x y z
 
-noncomputable instance Linfty.NormedAlgebra : NormedAlgebra R (Lp R ∞ μ) where
+noncomputable instance Linfty.NormedAlgebra : NormedAlgebra 𝕜 (Lp R ∞ μ) where
   smul c f := c • f
   algebraMap :={
-    toFun := fun (c : R) ↦ c • (1 : Lp R ∞ μ)
+    toFun := fun (c : 𝕜) ↦ c • (1 : Lp R ∞ μ)
     map_one' := MulAction.one_smul 1
     map_mul' := by
-      intro f g
+      intro a b
       ext
-      filter_upwards [Lp.coeFn_smul (E := R) (p := ∞) (f * g) 1, Linfty.coeFn_mul (R := R) (f • 1) (g • 1),
-          Lp.coeFn_smul (E := R) (p := ∞) f 1, Lp.coeFn_smul (E := R) (p := ∞) g 1, Linfty.coeFn_one (R := R)] with x hx hy hz hw h1
-      simp only [hx, Pi.smul_apply, smul_eq_mul, hy, Pi.mul_apply, hz, hw, h1, Pi.one_apply, mul_one]
-    map_zero' := zero_smul R 1
+      filter_upwards [Lp.coeFn_smul (E := R) (p := ∞) (a * b) 1, Linfty.coeFn_mul (R := R) (a • 1) (b • 1),
+          Lp.coeFn_smul (E := R) (p := ∞) a 1, Lp.coeFn_smul (E := R) (p := ∞) b 1, Linfty.coeFn_one (R := R)] with x hx hy hz hw h1
+      rw [hx, Pi.smul_apply, hy, Pi.mul_apply, hz, hw, Pi.smul_apply, h1, Pi.ofNat_apply, Pi.smul_apply, h1, Pi.ofNat_apply, smul_one_mul, mul_smul a b 1]
+    map_zero' := zero_smul 𝕜 1
     map_add' := fun x y => Module.add_smul x y 1
   }
   commutes' := by
@@ -429,9 +428,9 @@ noncomputable instance Linfty.NormedAlgebra : NormedAlgebra R (Lp R ∞ μ) wher
       mul_comm]
   smul_def' := by
     dsimp only [Pi.one_apply, Pi.smul_apply, smul_eq_mul, Set.mem_setOf_eq,
-      Pi.mul_apply, id_eq, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
+      Pi.mul_apply, id_eq, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk, smul_one]
     intro r x
-    rw[smul_mul_assoc, one_mul]
+    rw [← smul_eq_mul, smul_assoc, one_smul]
   norm_smul_le := fun r x => norm_smul_le r x
 
 end NormedAlgebra
@@ -441,6 +440,8 @@ section CStarRing
 variable {R : Type*} [NormedRing R] [StarRing R] [NormedStarGroup R]
 
 open ENNReal
+
+lemma norm_le_of_ae_norm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖g x‖ ) : ‖f‖ ≤ ‖g‖ := by sorry
 
 instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
   norm_mul_self_le f := by
