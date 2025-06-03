@@ -457,12 +457,10 @@ lemma norm_le_of_ae_norm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f
   all_goals exact Lp.eLpNorm_ne_top _
 
 lemma ae_norm_le_norm (f : Lp R ∞ μ) : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖f‖ := by
-  have H : Filter.IsBoundedUnder (· ≤ ·) (MeasureTheory.ae μ) (fun t => ‖f t‖) := by sorry
-  rw [Lp.norm_def]
-  dsimp [eLpNorm, eLpNormEssSup]
-  have K := _root_.ae_le_essSup
-  convert K with x
- -- ofReal_norm_eq_enorm
+  have H1 : Filter.IsBoundedUnder (· ≤ ·) (MeasureTheory.ae μ) (fun t => ‖f t‖ₑ) := by sorry
+  convert _root_.ae_le_essSup
+  rw [← eLpNormEssSup, ← eLpNorm_exponent_top, ←Lp.enorm_def]
+  exact enorm_le_iff_norm_le.symm
 
 #exit
 
