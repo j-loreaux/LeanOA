@@ -437,21 +437,30 @@ end NormedAlgebra
 
 section CStarRing
 
-variable {R : Type*} [NormedRing R] [StarRing R] [NormedStarGroup R]
+variable {R : Type*} [NormedRing R]
 
 open ENNReal
 
-/- This should probably not involve enorms in the hypotheses...-/
-lemma norm_le_of_ae_norm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ₑ ≤ ‖g x‖ₑ ) : ‖f‖ ≤ ‖g‖ := by
-  dsimp [norm]
-  rw [ENNReal.toReal_le_toReal f.2.ne g.2.ne]
-  apply essSup_le_of_ae_le
-  simp only [eLpNorm_exponent_top]
-  filter_upwards [ae_le_essSup fun x ↦ ‖f x‖ₑ] with x hx
-  have := ae_le_essSup (μ := μ) (fun x ↦ ‖g x‖ₑ)
- -- it may be that ae_le_trans isn't true? Is that why I can't find it?
- --being lame here...should be able to directly prove this result...
+lemma enorm_le_of_ae_enorm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ₑ ≤ ‖g‖ₑ) : ‖f‖ₑ ≤ ‖g‖ₑ := by
+  have := essSup_le_of_ae_le _ hf
+  simpa only [Lp.enorm_def, eLpNorm_exponent_top, ge_iff_le]
 
+/-- The following needs golfing...and I'm not sure it's even the right statement we want for golfing below.
+  I can't see how this makes that proof any easier, but it's probably good practice to try to prove this! -/
+lemma norm_le_of_ae_norm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖g‖) : ‖f‖ ≤ ‖g‖ := by
+  rw [Lp.norm_def, Lp.norm_def, ENNReal.toReal_le_toReal]
+  have H := enorm_le_of_ae_enorm_le f g
+  simp only [Lp.enorm_def, eLpNorm_exponent_top] at H
+  apply H --maybe this can be done cleverly with `refine`?
+  convert hf with x
+  have K : ‖g‖ₑ = eLpNormEssSup (↑↑g) μ := by
+    simp only [Lp.enorm_def, eLpNorm_exponent_top]
+  rw [← K]
+  simp [enorm_eq_nnnorm]
+  norm_cast
+  all_goals exact Lp.eLpNorm_ne_top _
+
+variable [StarRing R] [NormedStarGroup R]
 
 instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
   norm_mul_self_le f := by
