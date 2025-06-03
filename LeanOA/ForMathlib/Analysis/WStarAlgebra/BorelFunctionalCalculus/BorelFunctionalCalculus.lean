@@ -441,6 +441,10 @@ variable {R : Type*} [NormedRing R]
 
 open ENNReal
 
+-- Still not sure the following two lemmas are what we want. I *think* I got the naming standard
+-- right, but I'm not so sure. Will test this by eventually trying to use these to clean up the proof
+-- of the `CStarRing` instance below.
+
 lemma enorm_le_of_ae_enorm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ₑ ≤ ‖g‖ₑ) : ‖f‖ₑ ≤ ‖g‖ₑ := by
   have := essSup_le_of_ae_le _ hf
   simpa only [Lp.enorm_def, eLpNorm_exponent_top, ge_iff_le]
@@ -448,9 +452,19 @@ lemma enorm_le_of_ae_enorm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, �
 lemma norm_le_of_ae_norm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖g‖) : ‖f‖ ≤ ‖g‖ := by
   rw [Lp.norm_def, Lp.norm_def, ENNReal.toReal_le_toReal, ← Lp.enorm_def, ← Lp.enorm_def]
   apply enorm_le_of_ae_enorm_le
-  convert hf with x
+  convert hf
   exact enorm_le_iff_norm_le
   all_goals exact Lp.eLpNorm_ne_top _
+
+lemma ae_norm_le_norm (f : Lp R ∞ μ) : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖f‖ := by
+  have H : Filter.IsBoundedUnder (· ≤ ·) (MeasureTheory.ae μ) (fun t => ‖f t‖) := by sorry
+  rw [Lp.norm_def]
+  dsimp [eLpNorm, eLpNormEssSup]
+  have K := _root_.ae_le_essSup
+  convert K with x
+ -- ofReal_norm_eq_enorm
+
+#exit
 
 variable [StarRing R] [NormedStarGroup R]
 
@@ -476,7 +490,6 @@ instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
     norm_cast
     exact CStarRing.nnnorm_star_mul_self.symm
 
-#exit
 
 /-
 Now let's break down the above proof, because I don't think I could have come up with it myself, because
