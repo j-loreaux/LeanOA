@@ -464,6 +464,11 @@ lemma ae_norm_le_norm (f : Lp R ∞ μ) : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ �
 
 variable [StarRing R] [NormedStarGroup R]
 
+-- The next exercise is to try to use these lemmas to simplify Jireh's proof below. It may very well
+-- be that the statements I have proved are the wrong statements because I don't really get the naming convention.
+-- The test of this might be to try the simplification.
+
+
 instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
   norm_mul_self_le f := by
     -- first convert it to an inequality about `ENNReal` with the `essSup` on the *left* side
