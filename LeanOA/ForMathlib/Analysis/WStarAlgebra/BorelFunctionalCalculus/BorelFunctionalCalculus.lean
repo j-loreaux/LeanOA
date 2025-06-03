@@ -445,19 +445,11 @@ lemma enorm_le_of_ae_enorm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, �
   have := essSup_le_of_ae_le _ hf
   simpa only [Lp.enorm_def, eLpNorm_exponent_top, ge_iff_le]
 
-/-- The following needs golfing...and I'm not sure it's even the right statement we want for golfing below.
-  I can't see how this makes that proof any easier, but it's probably good practice to try to prove this! -/
 lemma norm_le_of_ae_norm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖g‖) : ‖f‖ ≤ ‖g‖ := by
-  rw [Lp.norm_def, Lp.norm_def, ENNReal.toReal_le_toReal]
-  have H := enorm_le_of_ae_enorm_le f g
-  simp only [Lp.enorm_def, eLpNorm_exponent_top] at H
-  apply H --maybe this can be done cleverly with `refine`?
+  rw [Lp.norm_def, Lp.norm_def, ENNReal.toReal_le_toReal, ← Lp.enorm_def, ← Lp.enorm_def]
+  apply enorm_le_of_ae_enorm_le
   convert hf with x
-  have K : ‖g‖ₑ = eLpNormEssSup (↑↑g) μ := by
-    simp only [Lp.enorm_def, eLpNorm_exponent_top]
-  rw [← K]
-  simp [enorm_eq_nnnorm]
-  norm_cast
+  exact enorm_le_iff_norm_le
   all_goals exact Lp.eLpNorm_ne_top _
 
 variable [StarRing R] [NormedStarGroup R]
@@ -483,6 +475,8 @@ instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
     simp [sq, hx_mul, hx_star, enorm_eq_nnnorm]
     norm_cast
     exact CStarRing.nnnorm_star_mul_self.symm
+
+#exit
 
 /-
 Now let's break down the above proof, because I don't think I could have come up with it myself, because
