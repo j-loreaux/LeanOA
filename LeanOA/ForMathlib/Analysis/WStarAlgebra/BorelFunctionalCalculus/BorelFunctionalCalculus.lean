@@ -441,23 +441,21 @@ variable {R : Type*} [NormedRing R]
 
 open ENNReal
 
--- Still not sure the following two lemmas are what we want. I *think* I got the naming standard
--- right, but I'm not so sure. Will test this by eventually trying to use these to clean up the proof
--- of the `CStarRing` instance below.
-
 lemma enorm_le_of_ae_enorm_le (f : Lp R ∞ μ) (c : ℝ≥0∞) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ₑ ≤ c) : ‖f‖ₑ ≤ c := by
   have := essSup_le_of_ae_le _ hf
   simpa only [Lp.enorm_def, eLpNorm_exponent_top, ge_iff_le]
 
-lemma norm_le_of_ae_norm_le (f : Lp R ∞ μ) (c : ℝ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ c) : ‖f‖ ≤ c := by
-    rw [Lp.norm_def, ← Lp.enorm_def]
-  --rw [Lp.norm_def, ENNReal.toReal_le_toReal, ← Lp.enorm_def, ← Lp.enorm_def]
-    --apply enorm_le_of_ae_enorm_le
-    convert hf
-    --exact enorm_le_iff_norm_le
-  --all_goals exact Lp.eLpNorm_ne_top _
-    sorry
---How to get this coercion to work?
+
+/- The issue in the instance below is coming from the `hc` positivity condition here.
+   so there are a couple of things to deal with. One, removing this hc, and Two...filling in the sorries.-/
+lemma norm_le_of_ae_norm_le (f : Lp R ∞ μ) (c : ℝ) {hc : 0 ≤ c} (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ c) : ‖f‖ ≤ c := by
+    rw [← ENNReal.ofReal_le_ofReal_iff (p := ‖f‖ ) hc, Lp.norm_def, ← Lp.enorm_def, ENNReal.ofReal_toReal]
+    apply enorm_le_of_ae_enorm_le
+    · convert hf with x
+      constructor
+      · sorry
+      · sorry
+    · exact enorm_ne_top
 
 lemma ae_norm_le_norm (f : Lp R ∞ μ) : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖f‖ := by
   have : Filter.IsBoundedUnder (· ≤ ·) (MeasureTheory.ae μ) (fun t => ‖f t‖ₑ) := by isBoundedDefault
@@ -467,16 +465,13 @@ lemma ae_norm_le_norm (f : Lp R ∞ μ) : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ �
 
 variable [StarRing R] [NormedStarGroup R]
 
--- The next exercise is to try to use these lemmas to simplify Jireh's proof below. It may very well
--- be that the statements I have proved are the wrong statements because I don't really get the naming convention.
--- The test of this might be to try the simplification.
-
 instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
   norm_mul_self_le f := by
     rw [← sq, ← Real.le_sqrt (by positivity) (by positivity), Real.sqrt_eq_rpow]
     apply norm_le_of_ae_norm_le
+    have H : 0 ≤ ‖star f * f‖ ^ (1 / 2) := by positivity
     filter_upwards [ae_norm_le_norm (star f * f), Lp.coeFn_star f, Linfty.coeFn_mul (star f) f] with x hx hx_star hx_mul
-    refine (Real.rpow_inv_le_iff_of_pos (norm_nonneg _) (norm_nonneg _) (by norm_num)).mp ?_
+    refine Real.rpow_inv_le_iff_of_pos (norm_nonneg _) (norm_nonneg _) (by norm_num)|>.mp ?_
     simp only [one_div, inv_inv, Real.rpow_two]
     convert hx
     simp [sq, hx_mul, hx_star]
