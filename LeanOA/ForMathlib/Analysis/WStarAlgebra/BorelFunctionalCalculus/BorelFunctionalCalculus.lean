@@ -445,16 +445,19 @@ open ENNReal
 -- right, but I'm not so sure. Will test this by eventually trying to use these to clean up the proof
 -- of the `CStarRing` instance below.
 
-lemma enorm_le_of_ae_enorm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ₑ ≤ ‖g‖ₑ) : ‖f‖ₑ ≤ ‖g‖ₑ := by
+lemma enorm_le_of_ae_enorm_le (f : Lp R ∞ μ) (c : ℝ≥0∞) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ₑ ≤ c) : ‖f‖ₑ ≤ c := by
   have := essSup_le_of_ae_le _ hf
   simpa only [Lp.enorm_def, eLpNorm_exponent_top, ge_iff_le]
 
-lemma norm_le_of_ae_norm_le (f g : Lp R ∞ μ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖g‖) : ‖f‖ ≤ ‖g‖ := by
-  rw [Lp.norm_def, Lp.norm_def, ENNReal.toReal_le_toReal, ← Lp.enorm_def, ← Lp.enorm_def]
-  apply enorm_le_of_ae_enorm_le
-  convert hf
-  exact enorm_le_iff_norm_le
-  all_goals exact Lp.eLpNorm_ne_top _
+lemma norm_le_of_ae_norm_le (f : Lp R ∞ μ) (c : ℝ) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ c) : ‖f‖ ≤ c := by
+    rw [Lp.norm_def, ← Lp.enorm_def]
+  --rw [Lp.norm_def, ENNReal.toReal_le_toReal, ← Lp.enorm_def, ← Lp.enorm_def]
+    --apply enorm_le_of_ae_enorm_le
+    convert hf
+    --exact enorm_le_iff_norm_le
+  --all_goals exact Lp.eLpNorm_ne_top _
+    sorry
+--How to get this coercion to work?
 
 lemma ae_norm_le_norm (f : Lp R ∞ μ) : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖f‖ := by
   have : Filter.IsBoundedUnder (· ≤ ·) (MeasureTheory.ae μ) (fun t => ‖f t‖ₑ) := by isBoundedDefault
@@ -468,64 +471,16 @@ variable [StarRing R] [NormedStarGroup R]
 -- be that the statements I have proved are the wrong statements because I don't really get the naming convention.
 -- The test of this might be to try the simplification.
 
-
 instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
   norm_mul_self_le f := by
-    -- first convert it to an inequality about `ENNReal` with the `essSup` on the *left* side
-    -- this allows us to apply `essSup_le_of_ae_le`
-    rw [← sq, ← Real.le_sqrt (by positivity) (by positivity), Lp.norm_def, Real.sqrt_eq_rpow,
-      Lp.norm_def, ENNReal.toReal_rpow, ENNReal.toReal_le_toReal
-      f.2.ne (ENNReal.rpow_ne_top_of_nonneg (by positivity) (star f * f).2.ne)]
-    simp only [eLpNorm_exponent_top]
-    -- this is the key lemma that allows us to convert the `essSup` to an `ae`-inequality
-    apply essSup_le_of_ae_le
-    -- `ENNReal.ae_le_essSup` is the other key lemma, but we have to apply it to the right function.
-    filter_upwards [ae_le_essSup (fun x ↦ ‖(star f * f) x‖ₑ), Lp.coeFn_star f, Linfty.coeFn_mul (star f) f] with x hx hx_star hx_mul
-    -- the rest is just shenanigans and can probably be golfed.
-    -- We should add `CStarRing.enorm_star_mul_self` lemma, and then we won't have to convert
-    -- to `nnnorm`.
-    rw [← rpow_inv_le_iff (by positivity)]
-    simp only [one_div, inv_inv, rpow_ofNat]
+    rw [← sq, ← Real.le_sqrt (by positivity) (by positivity), Real.sqrt_eq_rpow]
+    apply norm_le_of_ae_norm_le
+    filter_upwards [ae_norm_le_norm (star f * f), Lp.coeFn_star f, Linfty.coeFn_mul (star f) f] with x hx hx_star hx_mul
+    refine (Real.rpow_inv_le_iff_of_pos (norm_nonneg _) (norm_nonneg _) (by norm_num)).mp ?_
+    simp only [one_div, inv_inv, Real.rpow_two]
     convert hx
-    simp [sq, hx_mul, hx_star, enorm_eq_nnnorm]
-    norm_cast
-    exact CStarRing.nnnorm_star_mul_self.symm
-
-
-/-
-Now let's break down the above proof, because I don't think I could have come up with it myself, because
-I'm not really aware of the various bits that happened. I'd like to even understand what happened with his
-comments.
-
-First, we are supposed to be converting this to an inequality about ENNReal...which is something we were
-struggling with. How did he do it?
-
-Here is the first rewrite chain:
-
- * Rw `‖f‖ * ‖f‖` on the lhs by `‖f‖ ^ 2` by `rw [← sq]`.
- * Rw `‖f‖ ^ 2 ≤ ‖star f * f‖` as `‖f‖ ≤ √‖star f * f‖` using `Real.le_sqrt`, using the `positivity`
-   tactic to tell Lean that the quantities on both sides are nonnegative. Note, interestingly, that the
-   theorem is an iff, and that `←` can be used to specify the direction of the rewrite.
- * Rw lhs `‖f‖` as `(eLpNorm ↑↑f ⊤ μ).toReal`, which is precisely `Lp.norm_def`.
- * Rw rhs `√` as 1/2 power using `Real.sqrt_eq_rpow`.
- * Rw rhs `‖star f * f‖ ^ (1 / 2)` as `(eLpNorm ↑↑(star f * f) ⊤ μ).toReal ^ (1 / 2)` using `Lp.norm_def` again.
- * Move the power through the coercion using `ENNReal.toReal_rpow`
- * Translate the `toReal` inequality back to an `ENNReal` inequality using `ENNReal.toReal_le_toReal`
-   ...needs argument `(ha : a ≠ ⊤)` provided by `f.2.ne`, and `(hb : a ≠ ⊤)` provided by
-   `(ENNReal.rpow_ne_top_of_nonneg (by positivity) (star f * f).2.ne)`. Note for this the need to have
-   the rpow not equal top, so this theorem was needed with the positivity tactic.
-
-Minor simplification simp only `eLpNorm_exponent_top` changes the `eLpNorm` to `eLpNormEssSup`, this essentially
-notes explicitly that we are looking at the `p = ⊤` case.
-
-The application of this next result seems like a key step. What is happening there?
-
-Note that the `eLpNormEssSup` is actually an `essSup`. The lemma says that if a function is a.e. less than
-some constant then the essSup of that function is less than that constant. This is a basic thing I should have
-thought to look for. Interestingly, one can apply that function and convert this to a filter statement that
-one can `filter_upwards` to work with...a trick I really like, now.
-
--/
+    simp [sq, hx_mul, hx_star]
+    exact CStarRing.norm_star_mul_self.symm
 
 end CStarRing
 
