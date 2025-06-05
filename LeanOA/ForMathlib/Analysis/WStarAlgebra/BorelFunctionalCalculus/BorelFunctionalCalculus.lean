@@ -439,23 +439,26 @@ section CStarRing
 
 variable {R : Type*} [NormedRing R]
 
+open scoped NNReal
 open ENNReal
 
 lemma enorm_le_of_ae_enorm_le (f : Lp R ∞ μ) (c : ℝ≥0∞) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ₑ ≤ c) : ‖f‖ₑ ≤ c := by
   have := essSup_le_of_ae_le _ hf
   simpa only [Lp.enorm_def, eLpNorm_exponent_top, ge_iff_le]
 
+example (f : Lp R ∞ μ) (c : ℝ) (hc : 0 ≤ c) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ c) : ‖f‖ ≤ c := by
+  lift c to ℝ≥0 using hc
+  have hf' : ∀ᵐ x ∂μ, ‖f x‖ₑ ≤ c := by
+    filter_upwards [hf] with x hx
+    simpa using ENNReal.ofReal_le_ofReal hx
+  simpa only [enorm_le_coe] using enorm_le_of_ae_enorm_le f c hf'
 
-/- The issue in the instance below is coming from the `hc` positivity condition here.
-   so there are a couple of things to deal with. One, removing this hc, and Two...filling in the sorries.-/
-lemma norm_le_of_ae_norm_le (f : Lp R ∞ μ) (c : ℝ) {hc : 0 ≤ c} (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ c) : ‖f‖ ≤ c := by
-    rw [← ENNReal.ofReal_le_ofReal_iff (p := ‖f‖ ) hc, Lp.norm_def, ← Lp.enorm_def, ENNReal.ofReal_toReal]
-    apply enorm_le_of_ae_enorm_le
-    · convert hf with x
-      constructor
-      · sorry
-      · sorry
-    · exact enorm_ne_top
+lemma nnnorm_le_of_ae_nnnorm_le (f : Lp R ∞ μ) (c : ℝ≥0) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖₊ ≤ c) : ‖f‖₊ ≤ c := by
+  have hf' : ∀ᵐ x ∂μ, ‖f x‖ₑ ≤ c := by filter_upwards [hf]; simp
+  simpa only [enorm_le_coe] using enorm_le_of_ae_enorm_le f c hf'
+
+lemma norm_le_of_ae_norm_le (f : Lp R ∞ μ) (c : ℝ) (hc : 0 ≤ c) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ c) : ‖f‖ ≤ c :=
+  nnnorm_le_of_ae_nnnorm_le f ⟨c, hc⟩ hf
 
 lemma ae_norm_le_norm (f : Lp R ∞ μ) : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖f‖ := by
   have : Filter.IsBoundedUnder (· ≤ ·) (MeasureTheory.ae μ) (fun t => ‖f t‖ₑ) := by isBoundedDefault
@@ -468,8 +471,7 @@ variable [StarRing R] [NormedStarGroup R]
 instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
   norm_mul_self_le f := by
     rw [← sq, ← Real.le_sqrt (by positivity) (by positivity), Real.sqrt_eq_rpow]
-    apply norm_le_of_ae_norm_le
-    have H : 0 ≤ ‖star f * f‖ ^ (1 / 2) := by positivity
+    apply norm_le_of_ae_norm_le _ _ (by positivity)
     filter_upwards [ae_norm_le_norm (star f * f), Lp.coeFn_star f, Linfty.coeFn_mul (star f) f] with x hx hx_star hx_mul
     refine Real.rpow_inv_le_iff_of_pos (norm_nonneg _) (norm_nonneg _) (by norm_num)|>.mp ?_
     simp only [one_div, inv_inv, Real.rpow_two]
