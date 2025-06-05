@@ -396,8 +396,8 @@ end NormedRing
 
 section NormedAlgebra
 
-variable {R : Type*} [_root_.NormedField R] [_root_.IsBoundedSMul R R]
-variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedSpace 𝕜 R] [IsScalarTower 𝕜 R R] --[IsBoundedSMul 𝕜 R] [Module 𝕜 R]
+variable {R : Type*} [_root_.NormedRing R] [_root_.IsBoundedSMul R R]
+variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
 
 instance : IsScalarTower 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
   smul_assoc := fun x y z => Lp.smul_assoc x y z
@@ -424,8 +424,7 @@ noncomputable instance Linfty.NormedAlgebra : NormedAlgebra 𝕜 (Lp R ∞ μ) w
     filter_upwards [Linfty.coeFn_mul (r • (1 : Lp R ∞ μ)) f, Linfty.coeFn_mul (R := R) f (r • 1),
       Lp.coeFn_smul (E := R) (p := ∞) r 1, Linfty.coeFn_one (R := R), Lp.coeFn_smul (E := R) (p := ∞) r (1 * f),
       Linfty.coeFn_mul (R := R) 1 f] with x hx hy hz hw hq hv
-    simp only [hx, Pi.mul_apply, hz, Pi.smul_apply, hw, Pi.ofNat_apply, smul_eq_mul, mul_one, hy,
-      mul_comm]
+    simp only [hx, Pi.mul_apply, hz, Pi.smul_apply, hw, Pi.ofNat_apply, smul_eq_mul, mul_one, hy, mul_comm, mul_smul_comm, Algebra.smul_mul_assoc, one_mul]
   smul_def' := by
     dsimp only [Pi.one_apply, Pi.smul_apply, smul_eq_mul, Set.mem_setOf_eq,
       Pi.mul_apply, id_eq, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk, smul_one]
@@ -445,13 +444,6 @@ open ENNReal
 lemma enorm_le_of_ae_enorm_le (f : Lp R ∞ μ) (c : ℝ≥0∞) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ₑ ≤ c) : ‖f‖ₑ ≤ c := by
   have := essSup_le_of_ae_le _ hf
   simpa only [Lp.enorm_def, eLpNorm_exponent_top, ge_iff_le]
-
-example (f : Lp R ∞ μ) (c : ℝ) (hc : 0 ≤ c) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ c) : ‖f‖ ≤ c := by
-  lift c to ℝ≥0 using hc
-  have hf' : ∀ᵐ x ∂μ, ‖f x‖ₑ ≤ c := by
-    filter_upwards [hf] with x hx
-    simpa using ENNReal.ofReal_le_ofReal hx
-  simpa only [enorm_le_coe] using enorm_le_of_ae_enorm_le f c hf'
 
 lemma nnnorm_le_of_ae_nnnorm_le (f : Lp R ∞ μ) (c : ℝ≥0) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖₊ ≤ c) : ‖f‖₊ ≤ c := by
   have hf' : ∀ᵐ x ∂μ, ‖f x‖ₑ ≤ c := by filter_upwards [hf]; simp
@@ -481,163 +473,31 @@ instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
 
 end CStarRing
 
+section StarModule
+
+variable {R : Type*} [_root_.NormedRing R] [_root_.IsBoundedSMul R R]
+variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R] [Star 𝕜]
+variable [StarRing R] [NormedStarGroup R]
+
+noncomputable instance : StarModule 𝕜 (Lp R ∞ μ) where
+  star_smul := by
+     intro r a
+     rw [@Lp.ext_iff]
+     filter_upwards with x
+     --Finish this and you'll have a `CStarAlgebra` structure on Linfty. Then you can move on to try to get this
+     --is a W* algebra.
+
+end StarModule
+
 section CStarAlgebra
 
-noncomputable instance : CStarAlgebra (Lp ℂ ∞ μ) where--
-  algebraMap := sorry
-  commutes' := sorry
-  smul_def' := sorry
-  norm_smul_le := sorry
-  star_smul := sorry
+noncomputable instance {R : Type*} [CStarAlgebra R] : CStarAlgebra (Lp R ∞ μ) where
+
+--Go back and omit all names of instances. Let Lean name your instances.
 
 end CStarAlgebra
 
---Maybe next see if we can synthesize a `CStarAlgebra` instance... to see what is missing.
-
---but for now, let's see if we can synthesize all of the stuff below...
-
-variable {R : Type*} [_root_.NormedRing R] [_root_.InvolutiveStar R] [ContinuousStar R]
-
-#synth TopologicalSpace R
-#synth Star R
-#synth ContinuousStar R
-
-
-noncomputable instance Linfty.ComplexAlgebra : Algebra ℂ (Lp R ∞ μ) where
-
-#synth Algebra ℂ (Lp R ∞ μ)
-
-variable [CompleteSpace R]
-
-noncomputable instance Linfty.CompleteSpace : CompleteSpace (Lp R ∞ μ) where
-
-noncomputable instance Linfty.NormedAlgebra : NormedAlgebra ℂ (Lp R ∞ μ) where
-
-#synth Algebra ℂ (Lp R ∞ μ)
-#synth NormedAlgebra ℂ (Lp R ∞ μ)
-
-#synth ENNReal.HolderTriple ⊤ ⊤ ⊤
-#synth HSMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
-#synth AddCommGroup (Lp R ⊤ μ)
-#synth Norm (Lp R ⊤ μ)
-#synth MetricSpace (Lp R ⊤ μ)
-#synth Mul (Lp R ⊤ μ)
-#synth HMul (Lp R ⊤ μ) (Lp R ⊤ μ) (Lp R ⊤ μ)
-#synth SMul (Lp R ⊤ μ) (Lp R ⊤ μ) --should be ok because defeq to the other HSMul
-#synth MulOneClass (Lp R ⊤ μ)
-#synth Semigroup (Lp R ⊤ μ)
-#synth NonAssocSemiring (Lp R ⊤ μ)
-#synth NonUnitalSemiring (Lp R ⊤ μ)
-#synth Monoid (Lp R ⊤ μ)
-#synth MonoidWithZero (Lp R ⊤ μ)
-#synth Semiring (Lp R ⊤ μ)
-#synth AddGroupWithOne (Lp R ⊤ μ)
-#synth Ring (Lp R ∞ μ)
-#synth Star (Lp R ∞ μ)
-#synth InvolutiveStar (Lp R ∞ μ)
-#synth CompleteSpace (Lp R ∞ μ)
-#synth Algebra ℂ (Lp R ∞ μ)
-section LpArithmetic
-
-open TopologicalSpace MeasureTheory Filter
-open scoped NNReal ENNReal Topology MeasureTheory Uniformity symmDiff
-
-variable {α E F G : Type*} {m m0 : MeasurableSpace α} {p : ℝ≥0∞} {q : ℝ} {μ ν : Measure α}
-  [NormedAddCommGroup E] [NormedAddCommGroup F] [NormedAddCommGroup G]
-
-/-Since we are having difficulties with the general construction, let's just try to prove a theorem
-saying that if one looks at the a.e. class of the product of two essentially bounded functions,
-then the resulting function is also essentially bounded. We then can move on to see how to best say this
-with instances, etc.-/
-namespace Memℒp
-
-variable {f g : α → ℂ} (hf : MemLp f ⊤ μ) (hg : MemLp g ⊤ μ)
-
-
-
---The following result needs a better name. The use `infty_mul` means something like `⊤ * a` in the library so that's no good.
--- What we want is `Memℒ∞.mul`, I think.
-theorem MemLinfty.mul {f g : α → ℂ} (hg : MemLp g ⊤ μ) (hf : MemLp f ⊤ μ)  : MemLp (f * g) ⊤ μ := MemLp.mul hg hf
-
-#check (MemLp.toLp (MemLinfty.mul hg hf)).2
-
-theorem Mem {f g : α → ℂ} (hg : MemLp g ⊤ μ) (hf : MemLp f ⊤ μ) : Prop := (MemLp.toLp MemLinfty.mul hg hf).2
-
-
-
-  --⟨ MeasureTheory.AEStronglyMeasurable.mul (aestronglyMeasurable hf) (aestronglyMeasurable hg),
-  -- by simp only [eLpNorm, ENNReal.top_ne_zero, ↓reduceIte, eLpNormEssSup, Pi.mul_apply, nnnorm_mul, ENNReal.coe_mul]
-  --    exact LE.le.trans_lt (ENNReal.essSup_mul_le (fun x ↦ ‖f x‖₊) (fun x ↦ ‖g x‖₊)) (WithTop.mul_lt_top hf.2 hg.2) ⟩
-
---The above is working too hard. We already have  `MeasureTheory.Memℒp.mul` in the library.
-
---Now we need to define the multiplication on the L infty space itself. But this is in an `AddSubgroup`, so is a bit unusual...
-
--- We also have `MeasureTheory.AEEqFun.instMul` for a multiplication instance at the level of classes of measurable functions.
-
-noncomputable def ml (f g : α →ₘ[μ] ℂ) (hf : f ∈  Lp ℂ ⊤ μ) (hg : g ∈  Lp ℂ ⊤ μ) := MemLp.toLp _ (MemLinfty.mul ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hf) ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hg))
-
-
-noncomputable instance LinftyMul : Mul (Lp ℂ ⊤ μ) where
-  mul := fun
-    | .mk f hf => fun
-      | .mk g hg => .mk (f * g) (by
-        have H := MemLp.toLp (f * g) (MemLinfty.mul ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hf) ((MeasureTheory.Lp.mem_Lp_iff_memℒp).mp hg)))
-
-
-
---maybe some kind of coercion on the RHS can be used here...
-
-theorem toLinfty_mul {f g : α → E} (hf : MemLp f ⊤ μ) (hg : MemLp g ⊤ μ) :
-    (hf.mul hg).toLp (f * g) = hf.toLp f * hg.toLp g :=
-  rfl
-
-/- How should one define an HMul on Linfty? Should we be able to get a multiplication on equivalence
-classes of measurable functions, even? This would be the right level of generality...in that we
-then only would need to provide a proof of essential boundedness of the product. -/
-
-end Memℒp
-
-section Instances
-
-variable {A : Type*} [CStarAlgebra A] [WStarAlgebra A] (a : A) (μ : MeasureTheory.Measure (spectrum ℂ a))
-
-#check Lp ℂ 1 μ
-
-#check Lp ℂ ⊤ μ
-
-#check (Lp ℂ ⊤ μ).add
-
-#check Add (Lp ℂ ⊤ μ)
-
-#exit
-
--- Is there a ring structure on the essentially bounded functions?
-instance Linfty_Ring : Ring (Lp ℂ ⊤ μ) where
-  add := (Lp ℂ ⊤ μ).add.add
-  add_assoc := add_assoc
-  zero := (Lp ℂ ⊤ μ).zero.zero
-  zero_add := zero_add
-  add_zero := add_zero
-  nsmul := sorry
-  add_comm := add_comm
-  mul f g := by
-    simp [eLpNorm_congr_ae AEEqFun.coeFn_mul f g]
-    sorry
-  left_distrib := sorry
-  right_distrib := sorry
-  zero_mul := sorry
-  mul_zero := sorry
-  mul_assoc := sorry
-  one := sorry
-  one_mul := sorry
-  mul_one := sorry
-  neg := sorry
-  zsmul := sorry
-  neg_add_cancel := neg_add_cancel
-
---Maybe get this running and then try to define instances to get L∞ to be a Ring, StarRing, etc...
-end Instances
+section BFC
 
 class BorelFunctionalCalculus {A : Type*} (p : outParam (A → Prop))
     [CStarAlgebra A] [WStarAlgebra A] : Prop where
@@ -652,3 +512,5 @@ class BorelFunctionalCalculus {A : Type*} (p : outParam (A → Prop))
 --This Lp (spectrum ℂ a) ∞ μ must also be a *--algebra..this should somehow be in the type synonym.
 --Once we have this, we need to replace all instances of C(spectrum ℂ a, ℂ) with Lp (spectrum ℂ a) ∞ μ.
 --Still need the essential range for this spectrum result.
+
+end BFC
