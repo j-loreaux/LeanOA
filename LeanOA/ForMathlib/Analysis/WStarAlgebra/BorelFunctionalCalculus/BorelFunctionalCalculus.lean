@@ -477,25 +477,23 @@ section StarModule
 
 variable {R : Type*} [_root_.NormedRing R] [_root_.IsBoundedSMul R R]
 variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R] [Star 𝕜]
-variable [StarRing R] [NormedStarGroup R]
+variable [StarRing R] [NormedStarGroup R] [StarModule 𝕜 R]
 
-#synth Module 𝕜 (Lp R ∞ μ)
+#synth StarModule 𝕜 (α → R)
 
-#synth Star (α →ₘ[μ] R)
-
-#synth Module 𝕜 (α →ₘ[μ] R)
+example (c : 𝕜) (f : α → R) : star (c • f) = (star c) • (star f) := by exact?
 
 noncomputable instance : StarModule 𝕜 (α →ₘ[μ] R) where
   star_smul := by
      intro c f
      refine AEEqFun.ext_iff.mpr ?_
-     filter_upwards []
-     sorry
+     filter_upwards [AEEqFun.coeFn_star (c • f), AEEqFun.coeFn_smul c f, (AEEqFun.coeFn_smul (star c) (star f)).symm, AEEqFun.coeFn_star f] with x hstar1 hsmul1 hsmul2 hstar2
+     simp only [hstar1, Pi.star_apply, hsmul1, Pi.smul_apply, star_smul, ← hsmul2, hstar2]
 
 noncomputable instance : StarModule 𝕜 (Lp R ∞ μ) where
   star_smul := by
-    intro c f
-    sorry
+    intro r f
+    apply?
 
 /- What should be going on here? We have that `R` is a `𝕜` module, and
 that `(Lp R ∞ μ)` is also. Ah. This is trying to get us that the star operation respects complex conjugation.
@@ -549,7 +547,72 @@ We need to prove this, and probably to relocate it once we do. These kinds of th
 
 Ok, this should be able to change this, by eq.trans somehow, into a proof that `{x : α | star c • (star ↑f) x = ↑(star c • star f) x}`
 is conull. This final equality should hold pointwise, right? Let's try to figure out exactly how this coercion statement is working to
-be sure.
+be sure. On the RHS of the equality an ae representative of `star c • star f` is selected by the axiom of choice, and then applied to `x`.
+on the LHS of the equality, an ae representative of `f` is selected by choice. I don't see how this is going to coincide.
+
+Have to use coeFn_smul on the RHS as well...let's look at how that is proven. That tracks back to
+`AEEqFun.coeFn_comp` and this goes back to `AEEqFun.coeFn_mk`. I'll leave this bit black boxed for the moment.
+
+It seems we need that `{x : α | star c • (↑star f x}) = ↑(star c • star f) x} ` is μ-conull. Let's gather these to check if the
+chain is complete:
+
+we will prove that if the following are μ-conull,
+
+`{x : α | ↑(star (c • f)) x = star ↑(c • f) x}` -- AEEqFun.coeFn_star (c • f)
+`{x : α | (star ↑(c • f)) x = star (c • ↑f) x}` -- AEEqFun.coeFn_smul c f
+`{x : α | star (c • ↑f) x = star c • (star ↑f) x}` --needs `Pi.star_smul`
+`{x : α | star c • ↑(star f) x}` -- ← AEEqFun.coeFn_star f
+`{x : α | star c • ↑(star f) x} = ↑(star c • star f) x}` -- ← AEEqFun.coeFn_smul (star c) (star f)
+
+then
+
+`{x : α | ↑(star (c • f)) x = ↑(star c • star f) x}` is μ-conull.
+
+
+What's the easiest way to prove `Pi.star_smul`? What is the paper proof of this?
+We want to show that for all x, `(star (c • f)) x = (star c • star f) x`. What's the
+easy way to this? We can get
+
+`(star (c • f)) x = star ((c • f)) x)` by Pi.star_apply or Pi.star_def, I can't recall which.
+`star ((c • f)) x) = star (c • (f x))` by Pi.smul_apply
+`= star c • star (f x)` by star_smul on numbers... Maybe this works...
+it doesn't. We neeed star_mul...or to work over `R` a `StarModule 𝕜 R` as well. The generality of
+this lemma is certainly not right.
+
+`star (c • (f x)) = star (c * (f x))` by smul_eq_mul
+
+Wait, do we need that `R` is a StarModule already? The internal mul here makes no sense.
+
+* Do we actually *need* Pi.star_smul? (It seems that we do!)
+* If so, what is the most general set of hypotheses we can get away with for this lemma?
+
+What do we need for the statement, minimally?
+
+We need a scalar ring K, where this `c` comes from. We need `SMul K R`. We need `Star K`, we need `Star R`.
+Then we have functions from a type `α` into `R`. This isn't general enough either, though, right? We should
+be able to do this for general `Pi` types, which are dependent products. There can be `R x` for every `x`, each
+with different `Star (R x)` instances. This may be ok, though.
+
+Wait. Now it seems funny that I can't find this. If we make `R` into a StarModule over `𝕜`, then we get a `star_smul` result as one of
+the fields of this structure. It doesn't appear as `Pi.star_smul`, but it seems that it should be there.
+
+Yes, the lemma `example (c : 𝕜) (f : α → R) : star (c • f) = (star c) • (star f) := star_smul c f` works.
+
+So now I can construct a working proof of that instance for AEEqFun:
+`
+noncomputable instance : StarModule 𝕜 (α →ₘ[μ] R) where
+  star_smul := by
+     intro c f
+     refine AEEqFun.ext_iff.mpr ?_
+     filter_upwards [AEEqFun.coeFn_star (c • f), AEEqFun.coeFn_smul c f, (AEEqFun.coeFn_smul (star c) (star f)).symm, AEEqFun.coeFn_star f] with x hstar1 hsmul1 hsmul2 hstar2
+     simp only [hstar1, Pi.star_apply, hsmul1, Pi.smul_apply, star_smul, ← hsmul2, hstar2]
+
+
+Now I want to do a similar thing for Lp. Maybe the idea is the same, but to use different coercions. It would be neat to be able
+to connect this to what I just did, and it might be a good idea to write the API so that this stacks properly.
+
+
+
 -/
 
 end StarModule
