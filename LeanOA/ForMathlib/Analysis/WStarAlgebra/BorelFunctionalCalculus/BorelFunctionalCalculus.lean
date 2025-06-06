@@ -548,7 +548,8 @@ Mathlib. I suspect there may not be one. We have `Pi.star`, but I do not see `Pi
 We need to prove this, and probably to relocate it once we do. These kinds of things perhaps should be PRed.
 
 Ok, this should be able to change this, by eq.trans somehow, into a proof that `{x : α | star c • (star ↑f) x = ↑(star c • star f) x}`
-is conull. Why, finally, should this equality hold?
+is conull. This final equality should hold pointwise, right? Let's try to figure out exactly how this coercion statement is working to
+be sure.
 -/
 
 end StarModule
