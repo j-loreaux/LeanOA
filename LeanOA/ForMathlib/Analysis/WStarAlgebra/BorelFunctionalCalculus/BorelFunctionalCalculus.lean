@@ -479,13 +479,77 @@ variable {R : Type*} [_root_.NormedRing R] [_root_.IsBoundedSMul R R]
 variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R] [Star 𝕜]
 variable [StarRing R] [NormedStarGroup R]
 
+#synth Module 𝕜 (Lp R ∞ μ)
+
+#synth Star (α →ₘ[μ] R)
+
+#synth Module 𝕜 (α →ₘ[μ] R)
+
+noncomputable instance : StarModule 𝕜 (α →ₘ[μ] R) where
+  star_smul := by
+     intro c f
+     refine AEEqFun.ext_iff.mpr ?_
+     filter_upwards []
+     sorry
+
 noncomputable instance : StarModule 𝕜 (Lp R ∞ μ) where
   star_smul := by
-     intro r a
-     rw [@Lp.ext_iff]
-     filter_upwards with x
-     --Finish this and you'll have a `CStarAlgebra` structure on Linfty. Then you can move on to try to get this
-     --is a W* algebra.
+    intro c f
+    sorry
+
+/- What should be going on here? We have that `R` is a `𝕜` module, and
+that `(Lp R ∞ μ)` is also. Ah. This is trying to get us that the star operation respects complex conjugation.
+Said another way, we have star (c • f) = star c • star f. How does this proof work? Well, if `f` is an Linfty element,
+it's an ae equiv class of functions together with a norm condition. How is the SMul defined? Naively, it's defined
+pointwise. But this isn't right. It must be defined for the ae class of functions. One can perhaps think of this
+as in terms of the ae filter.
+
+Taking apart what the module structure on Lp is, looking at the Lp.instModule instance, it's an Lp.Submodule, which in
+turn is a submodule of elements of aeEq functions satisfying a norm condition. The module condition on AEEqFun is defined
+in terms of germs. A Germ of functions α → β at a filter l is the Quotient of the germ Setoid. Now what is a Setoid?
+It is a type with a distinguished equivalence relation. The germSetoid is associated to the equivalence relation of
+eventual equality along a filter. In our case, it's the a.e. filter. (We must remember the quotient approach in type
+theory as in Kevin's post.) So we can assert with reasonable confidence that the SMul on AEEqFun is given by proving
+that the pointwise SMul respects equality along the ae filter.
+
+Ok. So the SMul instance on Lp must bundle together the AEEqfun smul with a proof that the norm remains finite after that
+SMul. We see here how the CoeFn stuff can be helpful, since it is painful to work with all of this bundling.
+
+Now, is there a Star instance on the AEEqFun type? Yes. You defined this in an earlier section AEEqFunStar.
+Do we need to prove that there is a StarModule instance on AEEqFunStar? It seems that this would be a natural thing to do.
+There is already a 𝕜 module structure on these functions. Now is there a StarModule structure? No.
+Let's try to make one of these.
+
+Actually, pausing for a second, is that a good idea? If we define this instance, we will have access to a `StarModule`
+structure on AEEqFun even when we don't have Lp functions, whereas if we define it only on Lp functions, we will be able
+to coerce to a star module structure on AEEqFun, but won't have it available otherwise. It's therefore probably best to
+try to define this on AEEqFun first and then build up to Lp.
+
+So we are trying to get `star_smul` for these AEEqFuns. The goal state looks like `↑(star (c • f)) =ᶠ[ae μ] ↑(star c • star f)`.
+Here, the coercion is to bare functions, and we are talking about equality almost everywhere, which is a particular
+case of Filter.EventuallyEqual. In this case the set of points on which the two functions are equal is conull...this is what
+it means to be a.e. equal, since the ae filter is the filter of conull sets.
+
+To get this result, we are going to need eventual equality of the function coercions. This requires `coeFn_star, coeFn_smul` at
+least. I believe we proved these above. Yes, `AEEqFun.coeFn_star` was defined in the above AEEqFunStar section
+and I presume `AEEqFun.coeFn_smul` is the right result for smul. Yes it's here in Mathlib as `MeasureTheory.AEEqFun.coeFn_smul`
+
+Now we can use `filter_upwards`. Here's something interesting. If filter_upwards determines `s ∈ f` from
+a number of other `r_i ∈ F` via closure under intersection and upward inclusion properties of filters, what is
+happening with equality along a filter? Our target in this case isn't whether a single set lies in the ae filter, is it?
+Yes. It's the set of points on which two things are ae equal. We are trying to show that the set
+`{x : α | ↑(star (c • f)) x = ↑(star c • star f) x}` is μ-conull. By using filter_upwards, we are going to determine this
+by showing that `{x : α | ↑(star (c • f)) x = star ↑(c • f) x}`, `{x : α | (star ↑(c • f)) x = star (c • ↑f) x}`
+and `{x : α | star (c • ↑f) x = star c • (star ↑f) x}` are all μ-co-null. Wait, I am unclear on the Prop appearing in this last one.
+It looks like some kind of `Pi.star_smul` statement. Certainly `Pi.smul` gives us `(c • f) x = c • (f x)`...where we
+probably don't need the latter parentheses, but I have to check to see whether there is a `Pi.star_smul` result in
+Mathlib. I suspect there may not be one. We have `Pi.star`, but I do not see `Pi.star_smul`.
+
+We need to prove this, and probably to relocate it once we do. These kinds of things perhaps should be PRed.
+
+Ok, this should be able to change this, by eq.trans somehow, into a proof that `{x : α | star c • (star ↑f) x = ↑(star c • star f) x}`
+is conull. Why, finally, should this equality hold?
+-/
 
 end StarModule
 
