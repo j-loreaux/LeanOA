@@ -79,7 +79,7 @@ variable {R : Type*} [NormedRing R]
 
 section Mul
 
-noncomputable instance Linfty.instMul : Mul (Lp R ∞ μ) where
+noncomputable instance : Mul (Lp R ∞ μ) where
   mul f g := f • g
 
 end Mul
@@ -135,16 +135,16 @@ end One
 
 section MulOneClass
 
-noncomputable instance Linfty.instMulOneClass : MulOneClass (Lp R ∞ μ) where
+noncomputable instance : MulOneClass (Lp R ∞ μ) where
   one := 1
-  one_mul := one_smul
-  mul_one := smul_one
+  one_mul := Linfty.one_smul
+  mul_one := Linfty.smul_one
 
 end MulOneClass
 
 section Semigroup
 
-noncomputable instance Linfty.instSemigroup : Semigroup (Lp R ∞ μ) where
+noncomputable instance : Semigroup (Lp R ∞ μ) where
   mul f g := f * g
   mul_assoc := by
     intro f g h
@@ -161,7 +161,7 @@ end Semigroup
 section Distrib
 
 /-- Needs clean up. -/
-noncomputable instance Linfty.instDistrib : Distrib (Lp R ∞ μ) where
+noncomputable instance : Distrib (Lp R ∞ μ) where
   left_distrib := by
     intro f g h
     ext
@@ -189,7 +189,7 @@ end Distrib
 section MulZeroClass
 
 /-- Needs clean up. -/
-noncomputable instance Linfty.instMulZeroClass : MulZeroClass (Lp R ∞ μ) where
+noncomputable instance : MulZeroClass (Lp R ∞ μ) where
   zero_mul := by
     intro f
     ext
@@ -207,21 +207,21 @@ noncomputable instance Linfty.instMulZeroClass : MulZeroClass (Lp R ∞ μ) wher
 
 end MulZeroClass
 
-noncomputable instance Linfty.instMonoidWithZero : MonoidWithZero (Lp R ∞ μ) where
+noncomputable instance : MonoidWithZero (Lp R ∞ μ) where
 
-noncomputable instance Linfty.NonUnitalNonAssocSemiring : NonUnitalNonAssocSemiring (Lp R ∞ μ) where
+noncomputable instance : NonUnitalNonAssocSemiring (Lp R ∞ μ) where
 
-noncomputable instance Linfty.instNonAssocSemiring : NonAssocSemiring (Lp R ∞ μ) where
+noncomputable instance : NonAssocSemiring (Lp R ∞ μ) where
 
-noncomputable instance Linfty.NonUnitalSemiring : NonUnitalSemiring (Lp R ∞ μ) where
+noncomputable instance : NonUnitalSemiring (Lp R ∞ μ) where
 
-noncomputable instance Linfty.Semiring : Semiring (Lp R ∞ μ) where
+noncomputable instance : Semiring (Lp R ∞ μ) where
 
-noncomputable instance Linfty.AddGroupWithOne : AddGroupWithOne (Lp R ∞ μ) where
+noncomputable instance : AddGroupWithOne (Lp R ∞ μ) where
 
-noncomputable instance Linfty.NonUnitalRing : NonUnitalRing (Lp R ∞ μ) where
+noncomputable instance : NonUnitalRing (Lp R ∞ μ) where
 
-noncomputable instance Linfty.Ring : Ring (Lp R ∞ μ) where
+noncomputable instance : Ring (Lp R ∞ μ) where
 
 end NormedRing
 
@@ -317,7 +317,7 @@ end
 
 variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
-noncomputable instance InvolutiveStar {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
+noncomputable instance {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
   star_involutive f := by
      ext
      filter_upwards
@@ -363,7 +363,7 @@ variable [_root_.StarRing R] [NormedStarGroup R]
 lemma Lp.coeFn_star {p : ℝ≥0∞} (f : Lp R p μ) : (star f : Lp R p μ) =ᵐ[μ] star f :=
     (f : α →ₘ[μ] R).coeFn_star
 
-noncomputable instance Linfty.StarMul : StarMul (Lp R ∞ μ) where
+noncomputable instance : StarMul (Lp R ∞ μ) where
   star_mul f g := by
     ext
     filter_upwards [Lp.coeFn_star (f * g), Linfty.coeFn_mul f g,
@@ -376,13 +376,13 @@ section StarRing
 
 variable {R : Type*} [NormedRing R] [_root_.StarRing R] [NormedStarGroup R]
 
-noncomputable instance Linfty.StarAddMonoid : StarAddMonoid (Lp R ∞ μ) where
+noncomputable instance : StarAddMonoid (Lp R ∞ μ) where
   star_add f g := by
     ext
     filter_upwards [Lp.coeFn_add f g, Lp.coeFn_star (f + g), Lp.coeFn_add (star f) (star g), Lp.coeFn_star f, Lp.coeFn_star g] with x hx hy hz hw hq
     rw [hy, Pi.star_apply, hx, Pi.add_apply, star_add, hz, Pi.add_apply, hw, hq, Pi.star_apply, Pi.star_apply]
 
-noncomputable instance Linfty.StarRing : StarRing (Lp R ∞ μ) where
+noncomputable instance : StarRing (Lp R ∞ μ) where
   star_add := star_add
 
 end StarRing
