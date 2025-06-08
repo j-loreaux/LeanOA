@@ -68,7 +68,10 @@ end AEEqFun
 
 open scoped ENNReal
 
-/- These sections are not well named. -/
+/- These sections are not well named.
+-- Go back and omit all names of instances. Let Lean name your instances.
+-- also incorporate all of Jireh's suggestions. Write to incorporate, and then remove the
+-- comments afterward. Then you can return to dealing with the BFC declaration below. -/
 
 section NormedRing
 
@@ -479,10 +482,6 @@ variable {R : Type*} [_root_.NormedRing R] [_root_.IsBoundedSMul R R]
 variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R] [Star 𝕜]
 variable [StarRing R] [NormedStarGroup R] [StarModule 𝕜 R]
 
-#synth StarModule 𝕜 (α → R)
-
-example (c : 𝕜) (f : α → R) : star (c • f) = (star c) • (star f) := by exact?
-
 noncomputable instance : StarModule 𝕜 (α →ₘ[μ] R) where
   star_smul := by
      intro c f
@@ -493,127 +492,8 @@ noncomputable instance : StarModule 𝕜 (α →ₘ[μ] R) where
 noncomputable instance : StarModule 𝕜 (Lp R ∞ μ) where
   star_smul := by
     intro r f
-    apply?
-
-/- What should be going on here? We have that `R` is a `𝕜` module, and
-that `(Lp R ∞ μ)` is also. Ah. This is trying to get us that the star operation respects complex conjugation.
-Said another way, we have star (c • f) = star c • star f. How does this proof work? Well, if `f` is an Linfty element,
-it's an ae equiv class of functions together with a norm condition. How is the SMul defined? Naively, it's defined
-pointwise. But this isn't right. It must be defined for the ae class of functions. One can perhaps think of this
-as in terms of the ae filter.
-
-Taking apart what the module structure on Lp is, looking at the Lp.instModule instance, it's an Lp.Submodule, which in
-turn is a submodule of elements of aeEq functions satisfying a norm condition. The module condition on AEEqFun is defined
-in terms of germs. A Germ of functions α → β at a filter l is the Quotient of the germ Setoid. Now what is a Setoid?
-It is a type with a distinguished equivalence relation. The germSetoid is associated to the equivalence relation of
-eventual equality along a filter. In our case, it's the a.e. filter. (We must remember the quotient approach in type
-theory as in Kevin's post.) So we can assert with reasonable confidence that the SMul on AEEqFun is given by proving
-that the pointwise SMul respects equality along the ae filter.
-
-Ok. So the SMul instance on Lp must bundle together the AEEqfun smul with a proof that the norm remains finite after that
-SMul. We see here how the CoeFn stuff can be helpful, since it is painful to work with all of this bundling.
-
-Now, is there a Star instance on the AEEqFun type? Yes. You defined this in an earlier section AEEqFunStar.
-Do we need to prove that there is a StarModule instance on AEEqFunStar? It seems that this would be a natural thing to do.
-There is already a 𝕜 module structure on these functions. Now is there a StarModule structure? No.
-Let's try to make one of these.
-
-Actually, pausing for a second, is that a good idea? If we define this instance, we will have access to a `StarModule`
-structure on AEEqFun even when we don't have Lp functions, whereas if we define it only on Lp functions, we will be able
-to coerce to a star module structure on AEEqFun, but won't have it available otherwise. It's therefore probably best to
-try to define this on AEEqFun first and then build up to Lp.
-
-So we are trying to get `star_smul` for these AEEqFuns. The goal state looks like `↑(star (c • f)) =ᶠ[ae μ] ↑(star c • star f)`.
-Here, the coercion is to bare functions, and we are talking about equality almost everywhere, which is a particular
-case of Filter.EventuallyEqual. In this case the set of points on which the two functions are equal is conull...this is what
-it means to be a.e. equal, since the ae filter is the filter of conull sets.
-
-To get this result, we are going to need eventual equality of the function coercions. This requires `coeFn_star, coeFn_smul` at
-least. I believe we proved these above. Yes, `AEEqFun.coeFn_star` was defined in the above AEEqFunStar section
-and I presume `AEEqFun.coeFn_smul` is the right result for smul. Yes it's here in Mathlib as `MeasureTheory.AEEqFun.coeFn_smul`
-
-Now we can use `filter_upwards`. Here's something interesting. If filter_upwards determines `s ∈ f` from
-a number of other `r_i ∈ F` via closure under intersection and upward inclusion properties of filters, what is
-happening with equality along a filter? Our target in this case isn't whether a single set lies in the ae filter, is it?
-Yes. It's the set of points on which two things are ae equal. We are trying to show that the set
-`{x : α | ↑(star (c • f)) x = ↑(star c • star f) x}` is μ-conull. By using filter_upwards, we are going to determine this
-by showing that `{x : α | ↑(star (c • f)) x = star ↑(c • f) x}`, `{x : α | (star ↑(c • f)) x = star (c • ↑f) x}`
-and `{x : α | star (c • ↑f) x = star c • (star ↑f) x}` are all μ-co-null. Wait, I am unclear on the Prop appearing in this last one.
-It looks like some kind of `Pi.star_smul` statement. Certainly `Pi.smul` gives us `(c • f) x = c • (f x)`...where we
-probably don't need the latter parentheses, but I have to check to see whether there is a `Pi.star_smul` result in
-Mathlib. I suspect there may not be one. We have `Pi.star`, but I do not see `Pi.star_smul`.
-
-We need to prove this, and probably to relocate it once we do. These kinds of things perhaps should be PRed.
-
-Ok, this should be able to change this, by eq.trans somehow, into a proof that `{x : α | star c • (star ↑f) x = ↑(star c • star f) x}`
-is conull. This final equality should hold pointwise, right? Let's try to figure out exactly how this coercion statement is working to
-be sure. On the RHS of the equality an ae representative of `star c • star f` is selected by the axiom of choice, and then applied to `x`.
-on the LHS of the equality, an ae representative of `f` is selected by choice. I don't see how this is going to coincide.
-
-Have to use coeFn_smul on the RHS as well...let's look at how that is proven. That tracks back to
-`AEEqFun.coeFn_comp` and this goes back to `AEEqFun.coeFn_mk`. I'll leave this bit black boxed for the moment.
-
-It seems we need that `{x : α | star c • (↑star f x}) = ↑(star c • star f) x} ` is μ-conull. Let's gather these to check if the
-chain is complete:
-
-we will prove that if the following are μ-conull,
-
-`{x : α | ↑(star (c • f)) x = star ↑(c • f) x}` -- AEEqFun.coeFn_star (c • f)
-`{x : α | (star ↑(c • f)) x = star (c • ↑f) x}` -- AEEqFun.coeFn_smul c f
-`{x : α | star (c • ↑f) x = star c • (star ↑f) x}` --needs `Pi.star_smul`
-`{x : α | star c • ↑(star f) x}` -- ← AEEqFun.coeFn_star f
-`{x : α | star c • ↑(star f) x} = ↑(star c • star f) x}` -- ← AEEqFun.coeFn_smul (star c) (star f)
-
-then
-
-`{x : α | ↑(star (c • f)) x = ↑(star c • star f) x}` is μ-conull.
-
-
-What's the easiest way to prove `Pi.star_smul`? What is the paper proof of this?
-We want to show that for all x, `(star (c • f)) x = (star c • star f) x`. What's the
-easy way to this? We can get
-
-`(star (c • f)) x = star ((c • f)) x)` by Pi.star_apply or Pi.star_def, I can't recall which.
-`star ((c • f)) x) = star (c • (f x))` by Pi.smul_apply
-`= star c • star (f x)` by star_smul on numbers... Maybe this works...
-it doesn't. We neeed star_mul...or to work over `R` a `StarModule 𝕜 R` as well. The generality of
-this lemma is certainly not right.
-
-`star (c • (f x)) = star (c * (f x))` by smul_eq_mul
-
-Wait, do we need that `R` is a StarModule already? The internal mul here makes no sense.
-
-* Do we actually *need* Pi.star_smul? (It seems that we do!)
-* If so, what is the most general set of hypotheses we can get away with for this lemma?
-
-What do we need for the statement, minimally?
-
-We need a scalar ring K, where this `c` comes from. We need `SMul K R`. We need `Star K`, we need `Star R`.
-Then we have functions from a type `α` into `R`. This isn't general enough either, though, right? We should
-be able to do this for general `Pi` types, which are dependent products. There can be `R x` for every `x`, each
-with different `Star (R x)` instances. This may be ok, though.
-
-Wait. Now it seems funny that I can't find this. If we make `R` into a StarModule over `𝕜`, then we get a `star_smul` result as one of
-the fields of this structure. It doesn't appear as `Pi.star_smul`, but it seems that it should be there.
-
-Yes, the lemma `example (c : 𝕜) (f : α → R) : star (c • f) = (star c) • (star f) := star_smul c f` works.
-
-So now I can construct a working proof of that instance for AEEqFun:
-`
-noncomputable instance : StarModule 𝕜 (α →ₘ[μ] R) where
-  star_smul := by
-     intro c f
-     refine AEEqFun.ext_iff.mpr ?_
-     filter_upwards [AEEqFun.coeFn_star (c • f), AEEqFun.coeFn_smul c f, (AEEqFun.coeFn_smul (star c) (star f)).symm, AEEqFun.coeFn_star f] with x hstar1 hsmul1 hsmul2 hstar2
-     simp only [hstar1, Pi.star_apply, hsmul1, Pi.smul_apply, star_smul, ← hsmul2, hstar2]
-
-
-Now I want to do a similar thing for Lp. Maybe the idea is the same, but to use different coercions. It would be neat to be able
-to connect this to what I just did, and it might be a good idea to write the API so that this stacks properly.
-
-
-
--/
+    refine SetLike.coe_eq_coe.mp ?_
+    exact star_smul  (R := 𝕜) (A := α →ₘ[μ] R) r f
 
 end StarModule
 
@@ -621,7 +501,7 @@ section CStarAlgebra
 
 noncomputable instance {R : Type*} [CStarAlgebra R] : CStarAlgebra (Lp R ∞ μ) where
 
---Go back and omit all names of instances. Let Lean name your instances.
+
 
 end CStarAlgebra
 
