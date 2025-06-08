@@ -52,6 +52,9 @@ namespace MeasureTheory
 
 variable {α : Type*} {m : MeasurableSpace α} {μ : Measure α}
 
+-- Should we gather *all* the AEEqFun results in the following section, and have an Lp section for the
+-- properly Lp results?
+
 section AEEqFun
 
 variable {β : Type*} [TopologicalSpace β] [MulOneClass β] [ContinuousMul β]
