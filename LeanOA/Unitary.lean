@@ -1,18 +1,14 @@
-import LeanOA.ContinuousFunctionalCalculus.Continuity
-import LeanOA.ForMathlib.Algebra.Star.Unitary
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.Basic
-import LeanOA.ForMathlib.Analysis.CStarAlgebra.Exponential
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.Spectrum
 import LeanOA.ForMathlib.Analysis.Complex.Basic
-import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 import LeanOA.ForMathlib.Data.Complex.Norm
 import LeanOA.ForMathlib.Data.Complex.Order
 import LeanOA.ForMathlib.Misc
 import LeanOA.ForMathlib.Topology.Algebra.Star.Unitary
-import LeanOA.ForMathlib.Topology.Connected.PathConnected
-import LeanOA.ForMathlib.Topology.MetricSpace.Thickening
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Continuity
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Unitary
+import Mathlib.Analysis.CStarAlgebra.Exponential
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog
 
@@ -60,7 +56,7 @@ This is the key tool to show that a C⋆-algebra is spanned by its unitary eleme
 lemma IsSelfAdjoint.self_add_I_smul_cfcSqrt_sub_sq_mem_unitary (a : A) (ha : IsSelfAdjoint a)
     (ha_norm : ‖a‖ ≤ 1) : a + I • CFC.sqrt (1 - a ^ 2) ∈ unitary A := by
   obtain (_ | _) := subsingleton_or_nontrivial A
-  · simp [Subsingleton.elim (a + I • CFC.sqrt (1 - a ^ 2)) 1]
+  · simp [Subsingleton.elim (a + I • CFC.sqrt (1 - a ^ 2)) 1, one_mem (unitary A)]
   have key : a + I • CFC.sqrt (1 - a ^ 2) = cfc (fun x : ℂ ↦ x.re + I * √(1 - x.re ^ 2)) a := by
     rw [CFC.sqrt_eq_real_sqrt (1 - a ^ 2) ?nonneg]
     case nonneg =>
@@ -314,7 +310,7 @@ lemma unitary.continuousOn_argSelfAdjoint :
   have huε' : dist u 1 < √ε := Real.lt_sqrt_of_sq_lt huε
   apply ContinuousOn.continuousAt ?_ (closedBall_mem_nhds_of_mem huε')
   apply ContinuousOn.image_comp_continuous ?_ continuous_subtype_val
-  apply continuousOn_cfc (s := sphere 0 1 ∩ {z | 2 * (1 - z.re) ≤ ε}) ?_ _ ?_ |>.mono
+  apply continuousOn_cfc A (s := sphere 0 1 ∩ {z | 2 * (1 - z.re) ≤ ε}) ?_ _ ?_ |>.mono
   · rintro - ⟨v, hv, rfl⟩
     simp only [Set.subset_inter_iff, Set.mem_setOf_eq]
     refine ⟨inferInstance, spectrum_subset_circle v, ?_⟩
