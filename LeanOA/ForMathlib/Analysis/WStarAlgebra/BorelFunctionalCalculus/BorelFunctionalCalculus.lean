@@ -33,6 +33,8 @@ We develop the basic definition of the `BorelFunctionalCalculus` class, imitatin
 -/
 
 
+--NEXT : Get rid of all `MeasureTheory` prefixes. You are in the measure theory namespace!
+
 section BorelSpace
 
 open BorelSpace
