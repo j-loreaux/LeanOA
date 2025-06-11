@@ -11,6 +11,7 @@ import LeanOA.ForMathlib.Data.Complex.Order
 import LeanOA.ForMathlib.Misc
 import LeanOA.ForMathlib.Topology.Algebra.Star.Unitary
 import LeanOA.MulNonneg
+import LeanOA.NonnegUnit
 import LeanOA.Notation
 import LeanOA.TopologicalAlgebra
 import LeanOA.Unitary
