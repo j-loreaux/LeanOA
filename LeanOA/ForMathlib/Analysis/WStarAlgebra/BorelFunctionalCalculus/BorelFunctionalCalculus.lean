@@ -198,15 +198,14 @@ theorem Linfty.coeFn_one : ⇑(1 : Lp R ∞ μ) =ᶠ[ae μ] 1 := coeFn_const ..
 theorem Linfty.one_smul (f : Lp R ∞ μ) : (1 : Lp R ∞ μ) • f = f := by
   ext
   filter_upwards [Linfty.coeFn_one (R := R) ..,
-    MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) 1 f] with x hx1 hx2
-  simp [- smul_eq_mul, hx1, hx2]
+    Linfty.coeFn_mul 1 f] with x hx1 hx2
+  simp [hx1, hx2]
 
 theorem Linfty.smul_one (f : Lp R ∞ μ) : f • (1 : Lp R ∞ μ) = f := by
   ext
   filter_upwards [Linfty.coeFn_one (R := R) ..,
-    MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f (1 : Lp R ∞ μ)] with x hx1 hx2
-  rw [hx2, Pi.smul_apply', hx1, Pi.one_apply]
-  simp
+    Linfty.coeFn_mul f (1 : Lp R ∞ μ)] with x hx1 hx2
+  simp_all only [Pi.one_apply, Pi.mul_apply, mul_one, smul_eq_mul]
 
 end Linfty
 
@@ -238,11 +237,8 @@ noncomputable instance : Semigroup (Lp R ∞ μ) where
   mul_assoc := by
     intro f g h
     ext
-    filter_upwards [MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) (f * g) h,
-      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f  (g * h),
-      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f g,
-      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) g h] with x hx1 hx2 hx3 hx4
-    rw [smul_eq_mul] at *
+    filter_upwards [Linfty.coeFn_mul (f * g) h, Linfty.coeFn_mul f  (g * h),
+      Linfty.coeFn_mul f g, Linfty.coeFn_mul g h] with x hx1 hx2 hx3 hx4
     simp [hx1, hx2, hx3, hx4, mul_assoc]
 
 end Linfty
@@ -256,24 +252,19 @@ noncomputable instance : Distrib (Lp R ∞ μ) where
   left_distrib := by
     intro f g h
     ext
-    filter_upwards [MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f (g + h),
+    filter_upwards [Linfty.coeFn_mul f (g + h),
       MeasureTheory.Lp.coeFn_add (p := ∞) g h,
       MeasureTheory.Lp.coeFn_add (p := ∞) (f * g) (f * h),
-      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f g,
-      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f h] with x h1 h2 h3 h4 h5
-    rw [smul_eq_mul] at *
-    rw [h3, Pi.add_apply, h4, h5, h1, Pi.smul_apply', h2, Pi.add_apply, Pi.smul_apply', Pi.smul_apply']
-    exact DistribSMul.smul_add ..
+      Linfty.coeFn_mul f g, Linfty.coeFn_mul f h] with x h1 h2 h3 h4 h5
+    rw [h3, Pi.add_apply, h4, h5, h1, Pi.mul_apply, h2, Pi.add_apply, Pi.mul_apply, Pi.mul_apply, mul_add]
   right_distrib := by
     intro f g h
     ext
-    filter_upwards [MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) (f + g) h, MeasureTheory.Lp.coeFn_add (p := ∞) f g,
-       MeasureTheory.Lp.coeFn_add (p := ∞) (f * h) (g * h),  MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f h,
-       MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) g h] with x h1 h2 h3 h4 h5
-    rw [Pi.smul_apply', h2, Pi.add_apply] at h1
-    rw [← smul_eq_mul, h1, h3, Pi.add_apply]
-    rw [← smul_eq_mul, ← smul_eq_mul, h4, h5, Pi.smul_apply', Pi.smul_apply']
-    exact Module.add_smul ..
+    filter_upwards [Linfty.coeFn_mul (f + g) h, MeasureTheory.Lp.coeFn_add (p := ∞) f g,
+       MeasureTheory.Lp.coeFn_add (p := ∞) (f * h) (g * h), Linfty.coeFn_mul f h,
+       Linfty.coeFn_mul g h] with x h1 h2 h3 h4 h5
+    rw [Pi.mul_apply, h2, Pi.add_apply] at h1
+    rw [h1, h3, Pi.add_apply, h4, h5, Pi.mul_apply, Pi.mul_apply, add_mul]
 
 end Distrib
 
@@ -284,17 +275,15 @@ noncomputable instance : MulZeroClass (Lp R ∞ μ) where
   zero_mul := by
     intro f
     ext
-    filter_upwards [Lp.coeFn_zero (E := R) ..,
-      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) (0 : Lp R ∞ μ) f] with x h1 h2
-    rw [h1, ← smul_eq_mul, h2, Pi.smul_apply', h1]
-    simp
+    filter_upwards [Lp.coeFn_zero (E := R) (p := ∞) ..,
+      Linfty.coeFn_mul (0 : Lp R ∞ μ) f] with x h1 h2
+    simp_all only [ZeroMemClass.coe_zero, Pi.zero_apply, Pi.mul_apply, zero_mul]
   mul_zero := by
     intro f
     ext
-    filter_upwards [Lp.coeFn_zero (E := R) ..,
-      MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) f (0 : Lp R ∞ μ)] with x h1 h2
-    rw [h1, ← smul_eq_mul, h2, Pi.smul_apply', h1]
-    simp
+    filter_upwards [Lp.coeFn_zero (E := R) (p := ∞) ..,
+      Linfty.coeFn_mul f (0 : Lp R ∞ μ)] with x h1 h2
+    simp_all only [ZeroMemClass.coe_zero, Pi.zero_apply, Pi.mul_apply, mul_zero]
 
 end MulZeroClass
 
