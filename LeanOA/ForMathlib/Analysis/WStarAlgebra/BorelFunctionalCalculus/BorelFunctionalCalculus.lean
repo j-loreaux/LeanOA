@@ -54,170 +54,11 @@ open ENNReal
 
 variable {α : Type*} {m : MeasurableSpace α} {μ : Measure α}
 
-/- Should we gather *all* the AEEqFun results in the following section, and have an Lp section for the
- properly Lp results?
-
- Maybe it would be good to collect the entire AEEqFun body of results here, perhaps with relevant subsections.
-
-First, though, let me look into all of Jireh's critique.
-
-I am wondering now about what is the right way to organize this. We can collect all of the results at each of
-the levels, StronlyMeasurable, AEStronglyMeasurable, AEEqFun, etc. Does this make sense to do, though?
-
-It may be that later I am looking for something about StronglyMeasurable functions, a star operation. But why would
-I be doing that if not to move forward and look at it for Lp or something?
-
-Indeed this should be organized for usage. Maybe it makes more sense to gather together all
-star results in one place. This seems more usable. More various Star instances being stored together,
-especially those that stack and make for other things. So maybe the problem here is that my `Star` and
-`Strongly Measurable` sections are inverted below. We may want a `Star` section with all the flavors of
-`Star` organized as subsections. This also might allow for better organization of the variable
-declarations. Let's see if we can do this nicely.
-
-Maybe we should work from more basic declarations toward more complicated ones, as well, perhaps
-in the order that they appear in the fields of CStarAlgebra, or something. `Star` operations are
-added later on, it seems to me.
-
-Let's play devil's advocate for a moment to compare. Is there ever going to be any reason to think about `Star`
-on AEEqFuns by themselves? I can't foresee this, unless there is something to be done with some algebraic versions
-that I don't know about.
-
-That said, if there are a bunch of results (say, simp lemmas) for one class of functions, it may be nice to be able to
-see if these are missing for the other classes of functions. If all of these are being treated together, it may not be easy
-to see what is missing. Note that a moment ago you noticed a duplication of a result about AEEqFun, since the second occurrence
-did not appear among AEEqFun results.
-
-Maybe the right idea is to look at how this is done in Mathlib?
-
-For some reason I seem frozen on this. I think the problem is that I'm worried that a choice I make will cause major edits to be
-needed, and there seems to be less pain to not do anything. There is a third alternative, though, to more carefully weigh the alternatives explicitly.
-
-Let's map this out carefully. Suppose we have AEEqFun and Lp, for simplicity, and suppose we have Mul, Star, One to deal with. We have two
-choices for the organization, basically (there may be others, but looking at this might suggest them):
-------------------------------
-Option 1:
-
-section AEEqFun
-
-section Mul
-
-*Mul results for AEEqFun*
-
-end Mul
-
 section Star
-
-*Star results for AEEqFun*
-
-end Star
-
-section One
-
-*One results for Lp*
-
-end One
-
-end AEEqFun
-
-section Lp
-
-section Mul
-
-*Mul results for Lp*
-
-end Mul
-
-section Star
-
-*Star results for Lp*
-
-end Star
-
-section One
-
-*One results for Lp*
-
-end One
-
-end Lp
-----------------------------
-Option 2
-
-section Mul
-
-section AEEqFun
-
-*Mul results for AEEqFun*
-
-end AEEqFun
-
-section Lp
-
-*Mul results for Lp*
-
-end Lp
-
-end Mul
-
-section Star
-
-section AEEqFun
-
-*Star results for AEEqFun*
-
-end AEEqFun
-
-section Lp
-
-*Star results for Lp*
-
-end Lp
-
-end Star
-
-section One
-
-section AEEqFun
-
-*One results for AEEqFun*
-
-end AEEqFun
-
-section Lp
-
-*One results for Lp*
-
-end Lp
-
-end One
-
-These are equal in length, as they ought to be, and in terms of finding things in the library, it probably won't matter for finding them.
-That's interesting to note. Maybe, then, the primary reason to consider one of these over the other is design consideration, in the sense
-that we can spot when results are missing more preemptively. Also, it seems that what we are doing is developing these properties in a way
-that builds from lower level constructs to higher level constructs. That process would be facilitated if the properties were the primary
-section names: In section `Star`, we build the star machinery for increasingly complicated structures, and this design tracks how that happens.
-
-Later on when PRing this stuff to Mathlib, one might use #find_home to locate these individual results nearer to results that contain similar
-input hypotheses.
-
-This brings up another point: Should we be trying to maximize the generality of these results in the successive sections? That would help us
-make portability better later on and would shorten proofs. Maybe it's important to stop and think through the individual results to see if the
-generality of input hypotheses can be maximized. However, if that fails, one might be able to just leave the generality levels where they are.
-
-## Verdict: Include subsections of sections treating properties, in order to track the successive development levels needed, with a view towards
-## moving this stuff into Mathlib using #find_home later on.
-
-One reason this might bite us in the behind is that too general a statement may require more file imports later. But this is always a trade off.
-
- -/
-
-#exit
 
 section StronglyMeasurable
 
 local infixr:25 " →ₛ " => SimpleFunc
-
-section Star
 
 instance {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R] : Star (α →ₛ R) where
   star f := f.map Star.star
@@ -235,13 +76,9 @@ protected theorem StronglyMeasurable.star {β : Type*} [TopologicalSpace β]
     StronglyMeasurable (star f) :=
   ⟨fun n => star (hf.approx n), fun x => (hf.tendsto_approx x).star⟩
 
-end Star
-
 end StronglyMeasurable
 
 section AEStronglyMeasurable
-
-section Star
 
 variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
@@ -249,27 +86,9 @@ protected theorem AEStronglyMeasurable.star {f : α → R} (hf : AEStronglyMeasu
     AEStronglyMeasurable (star f) μ :=
   ⟨star (hf.mk f), hf.stronglyMeasurable_mk.star, hf.ae_eq_mk.star⟩
 
-end Star
-
 end AEStronglyMeasurable
 
 section AEEqFun
-
-section One
-
-variable {β : Type*} [TopologicalSpace β] [MulOneClass β] [ContinuousMul β]
-
-theorem AEEqFun.one_mul (f : α →ₘ[μ] β) : 1 * f = f := by
-  ext
-  filter_upwards [coeFn_mul 1 f, coeFn_one (β := β)] with x hx1 hx2
-  simp [hx1, hx2]
-
-theorem AEEqFun.one_smul (f : α →ₘ[μ] β) : (1 : α →ₘ[μ] β) • f = f := by
-  simp only [smul_eq_mul, AEEqFun.one_mul]
-
-end One
-
-section Star
 
 variable {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R]
 
@@ -279,9 +98,12 @@ instance : Star (α →ₘ[μ] R) where
 lemma AEEqFun.coeFn_star (f : α →ₘ[μ] R) : ↑(star f) =ᵐ[μ] (star f : α → R) :=
    coeFn_comp _ (continuous_star) f
 
+end AEEqFun
+
 end Star
 
 section NormStar
+section AEEqFun
 
 variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
@@ -295,32 +117,33 @@ theorem eLpNorm_star {p : ℝ≥0∞} {f : α → R} : eLpNorm (star f) p μ = e
 theorem AEEqFun.eLpNorm_star {p : ℝ≥0∞} {f : α →ₘ[μ] R} : eLpNorm (star f : α →ₘ[μ] R) p μ = eLpNorm f p μ :=
   eLpNorm_congr_ae (coeFn_star f) |>.trans <| by simp
 
-end NormStar
-
 end AEEqFun
 
+end NormStar
 
-/- These sections are not well named.
--- Go back and omit all names of instances. Let Lean name your instances.
--- also incorporate all of Jireh's suggestions. Write to incorporate, and then remove the
--- comments afterward. Then you can return to dealing with the BFC declaration below. -/
-
-section Linfty
-
-section NormedRing
-
-variable {R : Type*} [NormedRing R]
 
 section Mul
 
+section Linfty
+
+variable {R : Type*} [NormedRing R]
+
 noncomputable instance : Mul (Lp R ∞ μ) where
   mul f g := f • g
+
+lemma Linfty.coeFn_mul (f g : Lp R ∞ μ) : f * g =ᵐ[μ] ⇑f * g :=
+  MeasureTheory.Lp.coeFn_lpSMul f g
+
+end Linfty
 
 end Mul
 
 section Const
 
-/-- Note, does not require `IsFiniteMeasure` instance. -/
+variable {R : Type*} [NormedRing R]
+section Linfty
+
+/-- Note: Unlike for general Lp, this does not require `IsFiniteMeasure` instance. -/
 theorem memLinfty_const (c : R) : MemLp (fun _ : α => c) ∞ μ := by
   refine ⟨aestronglyMeasurable_const, ?_⟩
   by_cases hμ : μ = 0
@@ -343,9 +166,29 @@ lemma Linfty.const_val (c : R) : (Linfty.const c).1 = AEEqFun.const (β := R) (�
 lemma Linfty.coeFn_const (c : R) : Linfty.const (μ := μ) c =ᵐ[μ] Function.const α c :=
   AEEqFun.coeFn_const α c
 
+end Linfty
+
 end Const
 
 section One
+
+section AEEqFun
+
+variable {β : Type*} [TopologicalSpace β] [MulOneClass β] [ContinuousMul β]
+
+theorem AEEqFun.one_mul (f : α →ₘ[μ] β) : 1 * f = f := by
+  ext
+  filter_upwards [coeFn_mul 1 f, coeFn_one (β := β)] with x hx1 hx2
+  simp [hx1, hx2]
+
+theorem AEEqFun.one_smul (f : α →ₘ[μ] β) : (1 : α →ₘ[μ] β) • f = f := by
+  simp only [smul_eq_mul, AEEqFun.one_mul]
+
+end AEEqFun
+
+section Linfty
+
+variable {R : Type*} [NormedRing R]
 
 instance Linfty.instOne : One (Lp R ∞ μ) where
   one := ⟨MemLp.toLp (fun (_ : α) => (1 : R)) (memLp_top_const (μ := μ) 1), SetLike.coe_mem _⟩
@@ -365,18 +208,30 @@ theorem Linfty.smul_one (f : Lp R ∞ μ) : f • (1 : Lp R ∞ μ) = f := by
   rw [hx2, Pi.smul_apply', hx1, Pi.one_apply]
   simp
 
+end Linfty
+
 end One
 
+section NormedRing
+
+variable {R : Type*} [NormedRing R]
+
 section MulOneClass
+
+section Linfty
 
 noncomputable instance : MulOneClass (Lp R ∞ μ) where
   one := 1
   one_mul := Linfty.one_smul
   mul_one := Linfty.smul_one
 
+end Linfty
+
 end MulOneClass
 
 section Semigroup
+
+section Linfty
 
 noncomputable instance : Semigroup (Lp R ∞ μ) where
   mul f g := f * g
@@ -389,6 +244,8 @@ noncomputable instance : Semigroup (Lp R ∞ μ) where
       MeasureTheory.Lp.coeFn_lpSMul (𝕜 := R) (p := ∞) (q := ∞) (r := ∞) g h] with x hx1 hx2 hx3 hx4
     rw [smul_eq_mul] at *
     simp [hx1, hx2, hx3, hx4, mul_assoc]
+
+end Linfty
 
 end Semigroup
 
@@ -469,15 +326,21 @@ protected theorem MemLp.star {p : ℝ≥0∞} {f : α → R} (hf : MemLp f p μ)
 protected noncomputable instance {p : ℝ≥0∞} : Star (Lp R p μ) where
   star f := ⟨star (f : α →ₘ[μ] R), by simpa [Lp.mem_Lp_iff_eLpNorm_lt_top] using Lp.eLpNorm_lt_top f⟩
 
+lemma Lp.coeFn_star {p : ℝ≥0∞} (f : Lp R p μ) : (star f : Lp R p μ) =ᵐ[μ] star f :=
+    (f : α →ₘ[μ] R).coeFn_star
+
 end LpStar
 
 section LpInvolutiveStar
 
-section
+section AEEqFun
 
 local infixr:25 " →ₛ " => SimpleFunc
 
 variable {R : Type*} [TopologicalSpace R] [InvolutiveStar R] [ContinuousStar R]
+
+/- Included this auxilary SimpleFunction result into the AEEqFun section. Not clear to me that one
+   even needs to *name* that section, since it is only scoping the above variables for two results. -/
 
 instance : InvolutiveStar (α →ₛ R) where
   star_involutive := by
@@ -491,7 +354,7 @@ instance : InvolutiveStar (α →ₘ[μ] R) where
     filter_upwards [AEEqFun.coeFn_star (star f), AEEqFun.coeFn_star f] with x hx hy
     simp only [hx, Pi.star_apply, hy, star_star]
 
-end
+end AEEqFun
 
 variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
@@ -504,7 +367,7 @@ noncomputable instance {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
 end LpInvolutiveStar
 
 section StarMul
-section
+section AEEqFun
 
 variable {R : Type*} [NormedRing R] [StarRing R] [NormedStarGroup R]
 
@@ -529,17 +392,10 @@ instance : StarAddMonoid (α →ₘ[μ] R) where
     filter_upwards [AEEqFun.coeFn_star (f + g), AEEqFun.coeFn_add (star f) (star g), AEEqFun.coeFn_add f g, AEEqFun.coeFn_star f, AEEqFun.coeFn_star g] with x hx hy hz hq hw
     simp only [hx, Pi.star_apply, hz, Pi.add_apply, star_add, hy, hq, hw]
 
-end
+end AEEqFun
 
 variable {R : Type*} [NormedRing R]
-
-lemma Linfty.coeFn_mul (f g : Lp R ∞ μ) : f * g =ᵐ[μ] ⇑f * g :=
-  MeasureTheory.Lp.coeFn_lpSMul f g
-
-variable [_root_.StarRing R] [NormedStarGroup R]
-
-lemma Lp.coeFn_star {p : ℝ≥0∞} (f : Lp R p μ) : (star f : Lp R p μ) =ᵐ[μ] star f :=
-    (f : α →ₘ[μ] R).coeFn_star
+variable [StarRing R] [NormedStarGroup R]
 
 noncomputable instance : StarMul (Lp R ∞ μ) where
   star_mul f g := by
@@ -561,7 +417,7 @@ noncomputable instance : StarAddMonoid (Lp R ∞ μ) where
     rw [hy, Pi.star_apply, hx, Pi.add_apply, star_add, hz, Pi.add_apply, hw, hq, Pi.star_apply, Pi.star_apply]
 
 noncomputable instance : StarRing (Lp R ∞ μ) where
-  star_add := star_add
+  star_add := star_add -- Why can't this just be a "where"? What is happening?
 
 end StarRing
 
@@ -681,7 +537,7 @@ noncomputable instance {R : Type*} [CStarAlgebra R] : CStarAlgebra (Lp R ∞ μ)
 
 end CStarAlgebra
 
-end Linfty
+
 
 section BFC
 
