@@ -33,24 +33,21 @@ We develop the basic definition of the `BorelFunctionalCalculus` class, imitatin
 -/
 
 
---NEXT : Get rid of all `MeasureTheory` prefixes. You are in the measure theory namespace!
-
+namespace MeasureTheory
 section BorelSpace
 
 open BorelSpace
 
 variable {X : Type*} [TopologicalSpace X] [MeasurableSpace X] [BorelSpace X]
 
-def support (μ : MeasureTheory.Measure X) : Set X := {x : X | ∀ U ∈ nhds x, μ (interior U) > 0}
+def support (μ : Measure X) : Set X := {x : X | ∀ U ∈ nhds x, μ (interior U) > 0}
 
 variable {Y : Type*} [TopologicalSpace Y] [MeasurableSpace Y] [BorelSpace Y]
 
-def ess_range (μ : MeasureTheory.Measure X) (f : X → Y) : Set Y :=
-  support (MeasureTheory.Measure.map f μ)
+def ess_range (μ : Measure X) (f : X → Y) : Set Y :=
+  support (Measure.map f μ)
 
 end BorelSpace
-
-namespace MeasureTheory
 
 open ENNReal
 
@@ -134,7 +131,7 @@ noncomputable instance : Mul (Lp R ∞ μ) where
   mul f g := f • g
 
 lemma Linfty.coeFn_mul (f g : Lp R ∞ μ) : f * g =ᵐ[μ] ⇑f * g :=
-  MeasureTheory.Lp.coeFn_lpSMul f g
+  Lp.coeFn_lpSMul f g
 
 end Linfty
 
@@ -255,15 +252,14 @@ noncomputable instance : Distrib (Lp R ∞ μ) where
     intro f g h
     ext
     filter_upwards [Linfty.coeFn_mul f (g + h),
-      MeasureTheory.Lp.coeFn_add (p := ∞) g h,
-      MeasureTheory.Lp.coeFn_add (p := ∞) (f * g) (f * h),
+      Lp.coeFn_add (p := ∞) g h, Lp.coeFn_add (p := ∞) (f * g) (f * h),
       Linfty.coeFn_mul f g, Linfty.coeFn_mul f h] with x h1 h2 h3 h4 h5
     rw [h3, Pi.add_apply, h4, h5, h1, Pi.mul_apply, h2, Pi.add_apply, Pi.mul_apply, Pi.mul_apply, mul_add]
   right_distrib := by
     intro f g h
     ext
-    filter_upwards [Linfty.coeFn_mul (f + g) h, MeasureTheory.Lp.coeFn_add (p := ∞) f g,
-       MeasureTheory.Lp.coeFn_add (p := ∞) (f * h) (g * h), Linfty.coeFn_mul f h,
+    filter_upwards [Linfty.coeFn_mul (f + g) h, Lp.coeFn_add (p := ∞) f g,
+       Lp.coeFn_add (p := ∞) (f * h) (g * h), Linfty.coeFn_mul f h,
        Linfty.coeFn_mul g h] with x h1 h2 h3 h4 h5
     rw [Pi.mul_apply, h2, Pi.add_apply] at h1
     rw [h1, h3, Pi.add_apply, h4, h5, Pi.mul_apply, Pi.mul_apply, add_mul]
@@ -418,7 +414,7 @@ variable {R : Type*} [NormedRing R] [_root_.IsBoundedSMul R R]
 
 noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
   dist_eq _ _ := rfl
-  norm_mul_le f g := MeasureTheory.Lp.norm_smul_le f g
+  norm_mul_le f g := Lp.norm_smul_le f g
 
 end NormedRing
 
@@ -481,7 +477,7 @@ lemma norm_le_of_ae_norm_le (f : Lp R ∞ μ) (c : ℝ) (hc : 0 ≤ c) (hf : ∀
   nnnorm_le_of_ae_nnnorm_le f ⟨c, hc⟩ hf
 
 lemma ae_norm_le_norm (f : Lp R ∞ μ) : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ ‖f‖ := by
-  have : Filter.IsBoundedUnder (· ≤ ·) (MeasureTheory.ae μ) (fun t => ‖f t‖ₑ) := by isBoundedDefault
+  have : Filter.IsBoundedUnder (· ≤ ·) (ae μ) (fun t => ‖f t‖ₑ) := by isBoundedDefault
   convert _root_.ae_le_essSup
   rw [← eLpNormEssSup, ← eLpNorm_exponent_top, ←Lp.enorm_def]
   exact enorm_le_iff_norm_le.symm
