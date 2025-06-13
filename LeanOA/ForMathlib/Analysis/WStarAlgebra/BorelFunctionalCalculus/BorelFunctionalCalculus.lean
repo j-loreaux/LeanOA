@@ -424,10 +424,10 @@ variable {R : Type*} [NormedRing R] [IsBoundedSMul R R]
 variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
 
 instance : IsScalarTower 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
-  smul_assoc := fun _ _ _ => Lp.smul_assoc _ _ _
+  smul_assoc := Lp.smul_assoc
 
 instance : SMulCommClass 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
-  smul_comm := fun _ _ _ => Lp.smul_comm _ _ _
+  smul_comm := Lp.smul_comm
 
 noncomputable instance : Algebra 𝕜 (Lp R ∞ μ) := Algebra.ofModule (smul_mul_assoc) (mul_smul_comm)
 
@@ -439,7 +439,7 @@ variable {R : Type*} [NormedRing R] [IsBoundedSMul R R]
 variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
 
 noncomputable instance : NormedAlgebra 𝕜 (Lp R ∞ μ) where
-  norm_smul_le := fun _ _ => norm_smul_le _ _
+  norm_smul_le := norm_smul_le
 
 end NormedAlgebra
 
