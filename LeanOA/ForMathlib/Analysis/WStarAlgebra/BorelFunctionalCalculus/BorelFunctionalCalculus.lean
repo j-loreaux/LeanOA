@@ -404,7 +404,7 @@ noncomputable instance : StarAddMonoid (Lp R ∞ μ) where
     rw [hy, Pi.star_apply, hx, Pi.add_apply, star_add, hz, Pi.add_apply, hw, hq, Pi.star_apply, Pi.star_apply]
 
 noncomputable instance : StarRing (Lp R ∞ μ) where
-  star_add := star_add -- Why can't this just be a "where"? What is happening?
+  star_add := star_add
 
 end StarRing
 
