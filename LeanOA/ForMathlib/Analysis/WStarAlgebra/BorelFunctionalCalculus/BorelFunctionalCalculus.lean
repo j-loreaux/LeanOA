@@ -395,7 +395,7 @@ end StarMul
 
 section StarRing
 
-variable {R : Type*} [NormedRing R] [_root_.StarRing R] [NormedStarGroup R]
+variable {R : Type*} [NormedRing R] [StarRing R] [NormedStarGroup R]
 
 noncomputable instance : StarAddMonoid (Lp R ∞ μ) where
   star_add f g := by
@@ -410,9 +410,9 @@ end StarRing
 
 section NormedRing
 
-variable {R : Type*} [NormedRing R] [_root_.IsBoundedSMul R R]
+variable {R : Type*} [NormedRing R] [IsBoundedSMul R R]
 
-noncomputable instance Linfty.NormedRing : NormedRing (Lp R ∞ μ) where
+noncomputable instance : NormedRing (Lp R ∞ μ) where
   dist_eq _ _ := rfl
   norm_mul_le f g := Lp.norm_smul_le f g
 
@@ -420,13 +420,15 @@ end NormedRing
 
 section NormedAlgebra
 
-variable {R : Type*} [_root_.NormedRing R] [_root_.IsBoundedSMul R R]
+variable {R : Type*} [NormedRing R] [IsBoundedSMul R R]
 variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
 
 instance : IsScalarTower 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
   smul_assoc := fun x y z => Lp.smul_assoc x y z
 
-noncomputable instance Linfty.NormedAlgebra : NormedAlgebra 𝕜 (Lp R ∞ μ) where
+/- See Jireh's remarks. It is possible to shorten this considerably by getting the `Algebra` instance from
+   things you already have. We need to learn to look for these kinds of things. -/
+noncomputable instance : NormedAlgebra 𝕜 (Lp R ∞ μ) where
   smul c f := c • f
   algebraMap :={
     toFun := fun (c : 𝕜) ↦ c • (1 : Lp R ∞ μ)
@@ -499,7 +501,7 @@ end CStarRing
 
 section StarModule
 
-variable {R : Type*} [_root_.NormedRing R] [_root_.IsBoundedSMul R R]
+variable {R : Type*} [NormedRing R] [IsBoundedSMul R R]
 variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R] [Star 𝕜]
 variable [StarRing R] [NormedStarGroup R] [StarModule 𝕜 R]
 
