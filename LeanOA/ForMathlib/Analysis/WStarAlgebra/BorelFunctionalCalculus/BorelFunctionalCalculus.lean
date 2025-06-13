@@ -418,45 +418,28 @@ noncomputable instance : NormedRing (Lp R ∞ μ) where
 
 end NormedRing
 
-section NormedAlgebra
+section Algebra
 
 variable {R : Type*} [NormedRing R] [IsBoundedSMul R R]
 variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
 
 instance : IsScalarTower 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
-  smul_assoc := fun x y z => Lp.smul_assoc x y z
+  smul_assoc := fun _ _ _ => Lp.smul_assoc _ _ _
 
-/- See Jireh's remarks. It is possible to shorten this considerably by getting the `Algebra` instance from
-   things you already have. We need to learn to look for these kinds of things. -/
+instance : SMulCommClass 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
+  smul_comm := fun _ _ _ => Lp.smul_comm _ _ _
+
+noncomputable instance : Algebra 𝕜 (Lp R ∞ μ) := Algebra.ofModule (smul_mul_assoc) (mul_smul_comm)
+
+end Algebra
+
+section NormedAlgebra
+
+variable {R : Type*} [NormedRing R] [IsBoundedSMul R R]
+variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
+
 noncomputable instance : NormedAlgebra 𝕜 (Lp R ∞ μ) where
-  smul c f := c • f
-  algebraMap :={
-    toFun := fun (c : 𝕜) ↦ c • (1 : Lp R ∞ μ)
-    map_one' := MulAction.one_smul 1
-    map_mul' := by
-      intro a b
-      ext
-      filter_upwards [Lp.coeFn_smul (E := R) (p := ∞) (a * b) 1, Linfty.coeFn_mul (R := R) (a • 1) (b • 1),
-          Lp.coeFn_smul (E := R) (p := ∞) a 1, Lp.coeFn_smul (E := R) (p := ∞) b 1, Linfty.coeFn_one (R := R)] with x hx hy hz hw h1
-      rw [hx, Pi.smul_apply, hy, Pi.mul_apply, hz, hw, Pi.smul_apply, h1, Pi.ofNat_apply, Pi.smul_apply, h1, Pi.ofNat_apply, smul_one_mul, mul_smul a b 1]
-    map_zero' := zero_smul 𝕜 1
-    map_add' := fun x y => Module.add_smul x y 1
-  }
-  commutes' := by
-    dsimp only [Pi.one_apply, Pi.smul_apply, smul_eq_mul, Set.mem_setOf_eq,
-      Pi.mul_apply, id_eq, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
-    intro r f
-    ext
-    filter_upwards [Linfty.coeFn_mul (r • (1 : Lp R ∞ μ)) f, Linfty.coeFn_mul (R := R) f (r • 1),
-      Lp.coeFn_smul (E := R) (p := ∞) r 1, Linfty.coeFn_one (R := R), Lp.coeFn_smul (E := R) (p := ∞) r (1 * f),
-      Linfty.coeFn_mul (R := R) 1 f] with x hx hy hz hw hq hv
-    simp only [hx, Pi.mul_apply, hz, Pi.smul_apply, hw, Pi.ofNat_apply, smul_eq_mul, mul_one, hy, mul_comm, mul_smul_comm, Algebra.smul_mul_assoc, one_mul]
-  smul_def' := by
-    dsimp only [Pi.one_apply, Pi.smul_apply, smul_eq_mul, Set.mem_setOf_eq,
-      Pi.mul_apply, id_eq, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk, smul_one]
-    intro r x
-    rw [← smul_eq_mul, smul_assoc, one_smul]
-  norm_smul_le := fun r x => norm_smul_le r x
+  norm_smul_le := fun _ _ => norm_smul_le _ _
 
 end NormedAlgebra
 
