@@ -102,6 +102,7 @@ end AEEqFun
 end Star
 
 section NormStar
+
 section AEEqFun
 
 variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
@@ -123,8 +124,6 @@ end NormStar
 
 section Mul
 
-section Linfty
-
 variable {R : Type*} [NormedRing R]
 
 noncomputable instance : Mul (Lp R ∞ μ) where
@@ -133,14 +132,11 @@ noncomputable instance : Mul (Lp R ∞ μ) where
 lemma Linfty.coeFn_mul (f g : Lp R ∞ μ) : f * g =ᵐ[μ] ⇑f * g :=
   Lp.coeFn_lpSMul f g
 
-end Linfty
-
 end Mul
 
 section Const
 
 variable {R : Type*} [NormedRing R]
-section Linfty
 
 /-- Note: Unlike for general Lp, this does not require `IsFiniteMeasure` instance. -/
 theorem memLinfty_const (c : R) : MemLp (fun _ : α => c) ∞ μ := by
@@ -165,8 +161,6 @@ lemma Linfty.const_val (c : R) : (Linfty.const c).1 = AEEqFun.const (β := R) (�
 lemma Linfty.coeFn_const (c : R) : Linfty.const (μ := μ) c =ᵐ[μ] Function.const α c :=
   AEEqFun.coeFn_const α c
 
-end Linfty
-
 end Const
 
 section One
@@ -184,8 +178,6 @@ theorem AEEqFun.one_smul (f : α →ₘ[μ] β) : (1 : α →ₘ[μ] β) • f =
   simp only [smul_eq_mul, AEEqFun.one_mul]
 
 end AEEqFun
-
-section Linfty
 
 variable {R : Type*} [NormedRing R]
 
@@ -206,8 +198,6 @@ theorem Linfty.smul_one (f : Lp R ∞ μ) : f • (1 : Lp R ∞ μ) = f := by
     Linfty.coeFn_mul f (1 : Lp R ∞ μ)] with x hx1 hx2
   simp_all only [Pi.one_apply, Pi.mul_apply, mul_one, smul_eq_mul]
 
-end Linfty
-
 end One
 
 section NormedRing
@@ -216,20 +206,13 @@ variable {R : Type*} [NormedRing R]
 
 section MulOneClass
 
-section Linfty
-
 noncomputable instance : MulOneClass (Lp R ∞ μ) where
-  one := 1
   one_mul := Linfty.one_smul
   mul_one := Linfty.smul_one
-
-end Linfty
 
 end MulOneClass
 
 section Semigroup
-
-section Linfty
 
 noncomputable instance : Semigroup (Lp R ∞ μ) where
   mul f g := f * g
@@ -239,8 +222,6 @@ noncomputable instance : Semigroup (Lp R ∞ μ) where
     filter_upwards [Linfty.coeFn_mul (f * g) h, Linfty.coeFn_mul f  (g * h),
       Linfty.coeFn_mul f g, Linfty.coeFn_mul g h] with x hx1 hx2 hx3 hx4
     simp [hx1, hx2, hx3, hx4, mul_assoc]
-
-end Linfty
 
 end Semigroup
 
@@ -325,9 +306,6 @@ section AEEqFun
 local infixr:25 " →ₛ " => SimpleFunc
 
 variable {R : Type*} [TopologicalSpace R] [InvolutiveStar R] [ContinuousStar R]
-
-/- Included this auxilary SimpleFunction result into the AEEqFun section. Not clear to me that one
-   even needs to *name* that section, since it is only scoping the above variables for two results. -/
 
 instance : InvolutiveStar (α →ₛ R) where
   star_involutive := by
