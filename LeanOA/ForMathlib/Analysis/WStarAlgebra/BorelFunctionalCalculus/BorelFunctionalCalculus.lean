@@ -55,41 +55,32 @@ variable {α : Type*} {m : MeasurableSpace α} {μ : Measure α}
 
 section Star
 
-section StronglyMeasurable
-
 local infixr:25 " →ₛ " => SimpleFunc
 
-instance {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R] : Star (α →ₛ R) where
+variable {R : Type*} [Star R]
+
+instance : Star (α →ₛ R) where
   star f := f.map Star.star
 
-lemma star_apply {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R] (f : α →ₛ R) (x : α) : (star f) x = star (f x) := rfl
+lemma star_apply (f : α →ₛ R) (x : α) : (star f) x = star (f x) := rfl
 
-protected theorem _root_.Filter.EventuallyEq.star {α β : Type*} [Star β] {f g : α → β}
+protected theorem _root_.Filter.EventuallyEq.star {f g : α → R}
     {l : Filter α} (h : f =ᶠ[l] g) :
     (fun x ↦ star (f x)) =ᶠ[l] fun x ↦ star (g x) :=
   h.fun_comp Star.star
 
+variable [TopologicalSpace R] [ContinuousStar R]
+
 @[measurability]
-protected theorem StronglyMeasurable.star {β : Type*} [TopologicalSpace β]
-    [Star β] [ContinuousStar β] (f : α → β) (hf : StronglyMeasurable f) :
+protected theorem StronglyMeasurable.star (f : α → R) (hf : StronglyMeasurable f) :
     StronglyMeasurable (star f) :=
   ⟨fun n => star (hf.approx n), fun x => (hf.tendsto_approx x).star⟩
 
-end StronglyMeasurable
-
-section AEStronglyMeasurable
-
-variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
+variable {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R]
 
 protected theorem AEStronglyMeasurable.star {f : α → R} (hf : AEStronglyMeasurable f μ) :
     AEStronglyMeasurable (star f) μ :=
   ⟨star (hf.mk f), hf.stronglyMeasurable_mk.star, hf.ae_eq_mk.star⟩
-
-end AEStronglyMeasurable
-
-section AEEqFun
-
-variable {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R]
 
 instance : Star (α →ₘ[μ] R) where
   star f := (AEEqFun.comp _ continuous_star f)
@@ -97,18 +88,12 @@ instance : Star (α →ₘ[μ] R) where
 lemma AEEqFun.coeFn_star (f : α →ₘ[μ] R) : ↑(star f) =ᵐ[μ] (star f : α → R) :=
    coeFn_comp _ (continuous_star) f
 
-end AEEqFun
-
 end Star
 
 section NormStar
 
-section AEEqFun
-
 variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
 
-/- Not sure about locating the following here. The function `f` is a bare function whereas I am trying to
-organize things right now so that all of these results take AEEqFun guys as inputs. Maybe it is ok, though. -/
 @[simp]
 theorem eLpNorm_star {p : ℝ≥0∞} {f : α → R} : eLpNorm (star f) p μ = eLpNorm f p μ :=
   eLpNorm_congr_norm_ae <| .of_forall <| by simp
@@ -117,14 +102,60 @@ theorem eLpNorm_star {p : ℝ≥0∞} {f : α → R} : eLpNorm (star f) p μ = e
 theorem AEEqFun.eLpNorm_star {p : ℝ≥0∞} {f : α →ₘ[μ] R} : eLpNorm (star f : α →ₘ[μ] R) p μ = eLpNorm f p μ :=
   eLpNorm_congr_ae (coeFn_star f) |>.trans <| by simp
 
-end AEEqFun
-
 end NormStar
 
+section LpStar
 
-section Mul
+variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
+
+protected theorem MemLp.star {p : ℝ≥0∞} {f : α → R} (hf : MemLp f p μ) : MemLp (star f) p μ :=
+  ⟨hf.1.star, by simpa using hf.2⟩
+
+protected noncomputable instance {p : ℝ≥0∞} : Star (Lp R p μ) where
+  star f := ⟨star (f : α →ₘ[μ] R), by simpa [Lp.mem_Lp_iff_eLpNorm_lt_top] using Lp.eLpNorm_lt_top f⟩
+
+lemma Lp.coeFn_star {p : ℝ≥0∞} (f : Lp R p μ) : (star f : Lp R p μ) =ᵐ[μ] star f :=
+    (f : α →ₘ[μ] R).coeFn_star
+
+end LpStar
+
+section LpInvolutiveStar
+
+section AEEqFun
+
+local infixr:25 " →ₛ " => SimpleFunc
+
+variable {R : Type*} [TopologicalSpace R] [InvolutiveStar R] [ContinuousStar R]
+
+instance : InvolutiveStar (α →ₛ R) where
+  star_involutive := by
+    intro f
+    ext x
+    simp only [star_apply (star f), star_apply f, star_star]
+
+instance : InvolutiveStar (α →ₘ[μ] R) where
+  star_involutive f := by
+    ext
+    filter_upwards [AEEqFun.coeFn_star (star f), AEEqFun.coeFn_star f] with x hx hy
+    simp only [hx, Pi.star_apply, hy, star_star]
+
+end AEEqFun
+
+variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
+
+noncomputable instance {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
+  star_involutive f := by
+     ext
+     filter_upwards
+     exact congrFun (congrArg AEEqFun.cast <| star_involutive f.1)
+
+end LpInvolutiveStar
+
+section NormedRing
 
 variable {R : Type*} [NormedRing R]
+
+section Mul
 
 noncomputable instance : Mul (Lp R ∞ μ) where
   mul f g := f • g
@@ -135,8 +166,6 @@ lemma Linfty.coeFn_mul (f g : Lp R ∞ μ) : f * g =ᵐ[μ] ⇑f * g :=
 end Mul
 
 section Const
-
-variable {R : Type*} [NormedRing R]
 
 /-- Note: Unlike for general Lp, this does not require `IsFiniteMeasure` instance. -/
 theorem memLinfty_const (c : R) : MemLp (fun _ : α => c) ∞ μ := by
@@ -179,7 +208,6 @@ theorem AEEqFun.one_smul (f : α →ₘ[μ] β) : (1 : α →ₘ[μ] β) • f =
 
 end AEEqFun
 
-variable {R : Type*} [NormedRing R]
 
 instance Linfty.instOne : One (Lp R ∞ μ) where
   one := ⟨MemLp.toLp (fun (_ : α) => (1 : R)) (memLp_top_const (μ := μ) 1), SetLike.coe_mem _⟩
@@ -199,10 +227,6 @@ theorem Linfty.smul_one (f : Lp R ∞ μ) : f • (1 : Lp R ∞ μ) = f := by
   simp_all only [Pi.one_apply, Pi.mul_apply, mul_one, smul_eq_mul]
 
 end One
-
-section NormedRing
-
-variable {R : Type*} [NormedRing R]
 
 section MulOneClass
 
@@ -282,59 +306,10 @@ noncomputable instance : NonUnitalRing (Lp R ∞ μ) where
 
 noncomputable instance : Ring (Lp R ∞ μ) where
 
-end NormedRing
-
-section LpStar
-
-variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
-
-protected theorem MemLp.star {p : ℝ≥0∞} {f : α → R} (hf : MemLp f p μ) : MemLp (star f) p μ :=
-  ⟨hf.1.star, by simpa using hf.2⟩
-
-protected noncomputable instance {p : ℝ≥0∞} : Star (Lp R p μ) where
-  star f := ⟨star (f : α →ₘ[μ] R), by simpa [Lp.mem_Lp_iff_eLpNorm_lt_top] using Lp.eLpNorm_lt_top f⟩
-
-lemma Lp.coeFn_star {p : ℝ≥0∞} (f : Lp R p μ) : (star f : Lp R p μ) =ᵐ[μ] star f :=
-    (f : α →ₘ[μ] R).coeFn_star
-
-end LpStar
-
-section LpInvolutiveStar
-
-section AEEqFun
-
-local infixr:25 " →ₛ " => SimpleFunc
-
-variable {R : Type*} [TopologicalSpace R] [InvolutiveStar R] [ContinuousStar R]
-
-instance : InvolutiveStar (α →ₛ R) where
-  star_involutive := by
-    intro f
-    ext x
-    simp only [star_apply (star f), star_apply f, star_star]
-
-instance : InvolutiveStar (α →ₘ[μ] R) where
-  star_involutive f := by
-    ext
-    filter_upwards [AEEqFun.coeFn_star (star f), AEEqFun.coeFn_star f] with x hx hy
-    simp only [hx, Pi.star_apply, hy, star_star]
-
-end AEEqFun
-
-variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
-
-noncomputable instance {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
-  star_involutive f := by
-     ext
-     filter_upwards
-     exact congrFun (congrArg AEEqFun.cast <| star_involutive f.1)
-
-end LpInvolutiveStar
-
 section StarMul
 section AEEqFun
 
-variable {R : Type*} [NormedRing R] [StarRing R] [NormedStarGroup R]
+variable [StarRing R] [NormedStarGroup R]
 
 local infixr:25 " →ₛ " => SimpleFunc
 
@@ -359,7 +334,6 @@ instance : StarAddMonoid (α →ₘ[μ] R) where
 
 end AEEqFun
 
-variable {R : Type*} [NormedRing R]
 variable [StarRing R] [NormedStarGroup R]
 
 noncomputable instance : StarMul (Lp R ∞ μ) where
@@ -373,7 +347,7 @@ end StarMul
 
 section StarRing
 
-variable {R : Type*} [NormedRing R] [StarRing R] [NormedStarGroup R]
+variable [StarRing R] [NormedStarGroup R]
 
 noncomputable instance : StarAddMonoid (Lp R ∞ μ) where
   star_add f g := by
@@ -386,19 +360,16 @@ noncomputable instance : StarRing (Lp R ∞ μ) where
 
 end StarRing
 
-section NormedRing
+section IsBoundedSMul
 
-variable {R : Type*} [NormedRing R] [IsBoundedSMul R R]
+variable [IsBoundedSMul R R]
 
 noncomputable instance : NormedRing (Lp R ∞ μ) where
   dist_eq _ _ := rfl
   norm_mul_le f g := Lp.norm_smul_le f g
 
-end NormedRing
-
 section Algebra
 
-variable {R : Type*} [NormedRing R] [IsBoundedSMul R R]
 variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
 
 instance : IsScalarTower 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
@@ -413,7 +384,6 @@ end Algebra
 
 section NormedAlgebra
 
-variable {R : Type*} [NormedRing R] [IsBoundedSMul R R]
 variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
 
 noncomputable instance : NormedAlgebra 𝕜 (Lp R ∞ μ) where
@@ -422,8 +392,6 @@ noncomputable instance : NormedAlgebra 𝕜 (Lp R ∞ μ) where
 end NormedAlgebra
 
 section CStarRing
-
-variable {R : Type*} [NormedRing R]
 
 open scoped NNReal
 open ENNReal
@@ -445,7 +413,8 @@ lemma ae_norm_le_norm (f : Lp R ∞ μ) : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ �
   rw [← eLpNormEssSup, ← eLpNorm_exponent_top, ←Lp.enorm_def]
   exact enorm_le_iff_norm_le.symm
 
-variable [StarRing R] [NormedStarGroup R]
+/- The next result only needs R to be a `NormedStarGroup`, but we have `R` as a `NormedRing`. Just a warning. -/
+variable [StarRing R]
 
 instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
   norm_mul_self_le f := by
@@ -462,7 +431,6 @@ end CStarRing
 
 section StarModule
 
-variable {R : Type*} [NormedRing R] [IsBoundedSMul R R]
 variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R] [Star 𝕜]
 variable [StarRing R] [NormedStarGroup R] [StarModule 𝕜 R]
 
@@ -481,6 +449,9 @@ noncomputable instance : StarModule 𝕜 (Lp R ∞ μ) where
 
 end StarModule
 
+end IsBoundedSMul
+
+end NormedRing
 section CStarAlgebra
 
 noncomputable instance {R : Type*} [CStarAlgebra R] : CStarAlgebra (Lp R ∞ μ) where
