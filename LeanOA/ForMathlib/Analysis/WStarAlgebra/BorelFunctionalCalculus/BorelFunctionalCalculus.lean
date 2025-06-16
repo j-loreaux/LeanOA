@@ -102,12 +102,6 @@ theorem eLpNorm_star {p : ℝ≥0∞} {f : α → R} : eLpNorm (star f) p μ = e
 theorem AEEqFun.eLpNorm_star {p : ℝ≥0∞} {f : α →ₘ[μ] R} : eLpNorm (star f : α →ₘ[μ] R) p μ = eLpNorm f p μ :=
   eLpNorm_congr_ae (coeFn_star f) |>.trans <| by simp
 
-end NormStar
-
-section LpStar
-
-variable {R : Type*} [NormedAddCommGroup R] [StarAddMonoid R] [NormedStarGroup R]
-
 protected theorem MemLp.star {p : ℝ≥0∞} {f : α → R} (hf : MemLp f p μ) : MemLp (star f) p μ :=
   ⟨hf.1.star, by simpa using hf.2⟩
 
@@ -117,9 +111,9 @@ protected noncomputable instance {p : ℝ≥0∞} : Star (Lp R p μ) where
 lemma Lp.coeFn_star {p : ℝ≥0∞} (f : Lp R p μ) : (star f : Lp R p μ) =ᵐ[μ] star f :=
     (f : α →ₘ[μ] R).coeFn_star
 
-end LpStar
+end NormStar
 
-section LpInvolutiveStar
+section InvolutiveStar
 
 section AEEqFun
 
@@ -149,7 +143,7 @@ noncomputable instance {p : ℝ≥0∞} : InvolutiveStar (Lp R p μ) where
      filter_upwards
      exact congrFun (congrArg AEEqFun.cast <| star_involutive f.1)
 
-end LpInvolutiveStar
+end InvolutiveStar
 
 section NormedRing
 
