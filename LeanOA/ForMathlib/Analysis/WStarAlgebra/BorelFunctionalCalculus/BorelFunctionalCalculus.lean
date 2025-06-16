@@ -204,7 +204,7 @@ theorem AEEqFun.one_mul (f : α →ₘ[μ] β) : 1 * f = f := by
   simp [hx1, hx2]
 
 theorem AEEqFun.one_smul (f : α →ₘ[μ] β) : (1 : α →ₘ[μ] β) • f = f := by
-  simp only [smul_eq_mul, AEEqFun.one_mul]
+  simp [smul_eq_mul, AEEqFun.one_mul]
 
 end AEEqFun
 
@@ -224,7 +224,7 @@ theorem Linfty.smul_one (f : Lp R ∞ μ) : f • (1 : Lp R ∞ μ) = f := by
   ext
   filter_upwards [Linfty.coeFn_one (R := R) ..,
     Linfty.coeFn_mul f (1 : Lp R ∞ μ)] with x hx1 hx2
-  simp_all only [Pi.one_apply, Pi.mul_apply, mul_one, smul_eq_mul]
+  simp_all [Pi.one_apply, Pi.mul_apply, mul_one, smul_eq_mul]
 
 end One
 
@@ -239,19 +239,17 @@ end MulOneClass
 section Semigroup
 
 noncomputable instance : Semigroup (Lp R ∞ μ) where
-  mul f g := f * g
   mul_assoc := by
     intro f g h
     ext
     filter_upwards [Linfty.coeFn_mul (f * g) h, Linfty.coeFn_mul f  (g * h),
       Linfty.coeFn_mul f g, Linfty.coeFn_mul g h] with x hx1 hx2 hx3 hx4
-    simp [hx1, hx2, hx3, hx4, mul_assoc]
+    simp [hx1, Pi.mul_apply, hx3, mul_assoc, hx2, hx4]
 
 end Semigroup
 
 section Distrib
 
-/-- Needs clean up. -/
 noncomputable instance : Distrib (Lp R ∞ μ) where
   left_distrib := by
     intro f g h
@@ -273,20 +271,19 @@ end Distrib
 
 section MulZeroClass
 
-/-- Needs clean up. -/
 noncomputable instance : MulZeroClass (Lp R ∞ μ) where
   zero_mul := by
     intro f
     ext
     filter_upwards [Lp.coeFn_zero (E := R) (p := ∞) ..,
-      Linfty.coeFn_mul (0 : Lp R ∞ μ) f] with x h1 h2
+      Linfty.coeFn_mul 0 f] with x h1 h2
     simp_all only [ZeroMemClass.coe_zero, Pi.zero_apply, Pi.mul_apply, zero_mul]
   mul_zero := by
     intro f
     ext
     filter_upwards [Lp.coeFn_zero (E := R) (p := ∞) ..,
-      Linfty.coeFn_mul f (0 : Lp R ∞ μ)] with x h1 h2
-    simp_all only [ZeroMemClass.coe_zero, Pi.zero_apply, Pi.mul_apply, mul_zero]
+      Linfty.coeFn_mul f 0] with x h1 h2
+    simp_all [ZeroMemClass.coe_zero, Pi.zero_apply, Pi.mul_apply, mul_zero]
 
 end MulZeroClass
 
@@ -317,20 +314,20 @@ instance : StarMul (α →ₛ R) where
   star_mul := by
     intro f g
     ext
-    simp only [star_apply, SimpleFunc.coe_mul, Pi.mul_apply, star_mul]
+    simp [star_apply, SimpleFunc.coe_mul, Pi.mul_apply, star_mul]
 
 instance : StarMul (α →ₘ[μ] R) where
   star_mul f g := by
     ext
     filter_upwards [AEEqFun.coeFn_star (f * g), AEEqFun.coeFn_mul f g, AEEqFun.coeFn_mul (star g) (star f), AEEqFun.coeFn_star f,
          AEEqFun.coeFn_star g] with x hx hy hz h1 h2
-    simp only [hx, Pi.star_apply, hy, Pi.mul_apply, hz, h1, h2, star_mul]
+    simp [hx, Pi.star_apply, hy, Pi.mul_apply, hz, h1, h2, star_mul]
 
 instance : StarAddMonoid (α →ₘ[μ] R) where
   star_add f g:= by
     ext
     filter_upwards [AEEqFun.coeFn_star (f + g), AEEqFun.coeFn_add (star f) (star g), AEEqFun.coeFn_add f g, AEEqFun.coeFn_star f, AEEqFun.coeFn_star g] with x hx hy hz hq hw
-    simp only [hx, Pi.star_apply, hz, Pi.add_apply, star_add, hy, hq, hw]
+    simp [hx, Pi.star_apply, hz, Pi.add_apply, star_add, hy, hq, hw]
 
 end AEEqFun
 
@@ -360,45 +357,12 @@ noncomputable instance : StarRing (Lp R ∞ μ) where
 
 end StarRing
 
-section IsBoundedSMul
-
-variable [IsBoundedSMul R R]
-
-noncomputable instance : NormedRing (Lp R ∞ μ) where
-  dist_eq _ _ := rfl
-  norm_mul_le f g := Lp.norm_smul_le f g
-
-section Algebra
-
-variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
-
-instance : IsScalarTower 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
-  smul_assoc := Lp.smul_assoc
-
-instance : SMulCommClass 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
-  smul_comm := Lp.smul_comm
-
-noncomputable instance : Algebra 𝕜 (Lp R ∞ μ) := Algebra.ofModule (smul_mul_assoc) (mul_smul_comm)
-
-end Algebra
-
-section NormedAlgebra
-
-variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
-
-noncomputable instance : NormedAlgebra 𝕜 (Lp R ∞ μ) where
-  norm_smul_le := norm_smul_le
-
-end NormedAlgebra
-
-section CStarRing
-
 open scoped NNReal
 open ENNReal
 
 lemma enorm_le_of_ae_enorm_le (f : Lp R ∞ μ) (c : ℝ≥0∞) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ₑ ≤ c) : ‖f‖ₑ ≤ c := by
   have := essSup_le_of_ae_le _ hf
-  simpa only [Lp.enorm_def, eLpNorm_exponent_top, ge_iff_le]
+  simpa [Lp.enorm_def, eLpNorm_exponent_top, ge_iff_le]
 
 lemma nnnorm_le_of_ae_nnnorm_le (f : Lp R ∞ μ) (c : ℝ≥0) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖₊ ≤ c) : ‖f‖₊ ≤ c := by
   have hf' : ∀ᵐ x ∂μ, ‖f x‖ₑ ≤ c := by filter_upwards [hf]; simp
@@ -412,8 +376,32 @@ lemma ae_norm_le_norm (f : Lp R ∞ μ) : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ �
   convert _root_.ae_le_essSup
   rw [← eLpNormEssSup, ← eLpNorm_exponent_top, ←Lp.enorm_def]
   exact enorm_le_iff_norm_le.symm
+section IsBoundedSMul
 
-/- The next result only needs R to be a `NormedStarGroup`, but we have `R` as a `NormedRing`. Just a warning. -/
+variable [IsBoundedSMul R R]
+
+noncomputable instance : NormedRing (Lp R ∞ μ) where
+  dist_eq _ _ := rfl
+  norm_mul_le _ _ := Lp.norm_smul_le _ _
+
+section NormedAlgebra
+
+variable {𝕜 : Type u_6} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
+
+instance : IsScalarTower 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
+  smul_assoc := Lp.smul_assoc
+
+instance : SMulCommClass 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
+  smul_comm := Lp.smul_comm
+
+noncomputable instance : Algebra 𝕜 (Lp R ∞ μ) := Algebra.ofModule (smul_mul_assoc) (mul_smul_comm)
+
+noncomputable instance : NormedAlgebra 𝕜 (Lp R ∞ μ) where
+  norm_smul_le := norm_smul_le
+
+end NormedAlgebra
+
+section CStarRing
 
 instance [StarRing R] [CStarRing R] : CStarRing (Lp R ∞ μ) where
   norm_mul_self_le f := by
@@ -423,7 +411,7 @@ instance [StarRing R] [CStarRing R] : CStarRing (Lp R ∞ μ) where
     refine Real.rpow_inv_le_iff_of_pos (norm_nonneg _) (norm_nonneg _) (by norm_num)|>.mp ?_
     simp only [one_div, inv_inv, Real.rpow_two]
     convert hx
-    simp [sq, hx_mul, hx_star]
+    simp only [sq, hx_mul, Pi.mul_apply, hx_star, Pi.star_apply]
     exact CStarRing.norm_star_mul_self.symm
 
 end CStarRing
@@ -437,14 +425,14 @@ noncomputable instance : StarModule 𝕜 (α →ₘ[μ] R) where
   star_smul := by
      intro c f
      refine AEEqFun.ext_iff.mpr ?_
-     filter_upwards [AEEqFun.coeFn_star (c • f), AEEqFun.coeFn_smul c f, (AEEqFun.coeFn_smul (star c) (star f)).symm, AEEqFun.coeFn_star f] with x hstar1 hsmul1 hsmul2 hstar2
-     simp only [hstar1, Pi.star_apply, hsmul1, Pi.smul_apply, star_smul, ← hsmul2, hstar2]
+     filter_upwards [AEEqFun.coeFn_star (c • f), AEEqFun.coeFn_smul c f, AEEqFun.coeFn_smul (star c) (star f) |>.symm, AEEqFun.coeFn_star f] with x hstar1 hsmul1 hsmul2 hstar2
+     simp [hstar1, Pi.star_apply, hsmul1, Pi.smul_apply, star_smul, ← hsmul2, hstar2]
 
 noncomputable instance : StarModule 𝕜 (Lp R ∞ μ) where
   star_smul := by
     intro r f
     refine SetLike.coe_eq_coe.mp ?_
-    exact star_smul  (R := 𝕜) (A := α →ₘ[μ] R) r f
+    exact star_smul (A := α →ₘ[μ] R) ..
 
 end StarModule
 
