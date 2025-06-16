@@ -414,9 +414,8 @@ lemma ae_norm_le_norm (f : Lp R ∞ μ) : ∀ᵐ(x : α) ∂μ, ‖f x‖ ≤ �
   exact enorm_le_iff_norm_le.symm
 
 /- The next result only needs R to be a `NormedStarGroup`, but we have `R` as a `NormedRing`. Just a warning. -/
-variable [StarRing R]
 
-instance [CStarRing R] : CStarRing (Lp R ∞ μ) where
+instance [StarRing R] [CStarRing R] : CStarRing (Lp R ∞ μ) where
   norm_mul_self_le f := by
     rw [← sq, ← Real.le_sqrt (by positivity) (by positivity), Real.sqrt_eq_rpow]
     apply norm_le_of_ae_norm_le _ _ (by positivity)
