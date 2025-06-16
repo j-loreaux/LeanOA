@@ -358,7 +358,6 @@ noncomputable instance : StarRing (Lp R ∞ μ) where
 end StarRing
 
 open scoped NNReal
-open ENNReal
 
 lemma enorm_le_of_ae_enorm_le (f : Lp R ∞ μ) (c : ℝ≥0∞) (hf : ∀ᵐ(x : α) ∂μ, ‖f x‖ₑ ≤ c) : ‖f‖ₑ ≤ c := by
   have := essSup_le_of_ae_le _ hf
