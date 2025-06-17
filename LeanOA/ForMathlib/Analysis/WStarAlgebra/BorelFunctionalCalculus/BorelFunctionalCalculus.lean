@@ -37,19 +37,36 @@ namespace MeasureTheory
 section BorelSpace
 
 open BorelSpace
+namespace Measure
 
 variable {X : Type*} [TopologicalSpace X] [MeasurableSpace X] [BorelSpace X]
 
-def support (μ : Measure X) : Set X := {x : X | ∀ U ∈ nhds x, μ (U) > 0}
+protected def support (μ : Measure X) : Set X := {x : X | ∀ (U : TopologicalSpace.OpenNhdsOf x), μ (U) > 0}
+
+/-- Needs correct naming convention. -/
+theorem support_complement_is_union_of_msr_zero (μ : Measure X) : (μ.support)ᶜ = {x : X | ∃ (U : TopologicalSpace.OpenNhdsOf x), μ (U) = 0} := by
+    simp only [compl, Measure.support, Set.mem_setOf_eq, not_forall, not_lt, nonpos_iff_eq_zero]
+
+theorem uniony_thing (μ : Measure X) : {x : X | ∃ (U : TopologicalSpace.OpenNhdsOf x), μ (U) = 0} = ⋃₀ (TopologicalSpace.OpenNhdsOf x) := by sorry
+
+
+/-- Have to figure out the naming convention for the following. -/
+theorem is_closed_support (μ : Measure X) : IsClosed μ.support := by sorry
+
+  sorry
+
+#exit
 
 variable {Y : Type*} [TopologicalSpace Y] [MeasurableSpace Y] [BorelSpace Y]
 
-def ess_range (μ : Measure X) (f : X → Y) : Set Y :=
-  support (Measure.map f μ)
+def essRange (μ : Measure X) (f : X → Y) : Set Y :=
+  Measure.support (map f μ)
 
-theorem ess_range_eq_of_ae_eq {μ : Measure X} (f g : X → Y) (hfg : f =ᵐ[μ] g) : ess_range μ f = ess_range μ g := by
-  dsimp [ess_range, support]; ext ; congr! 6
+theorem essRange_eq_of_ae_eq {μ : Measure X} (f g : X → Y) (hfg : f =ᵐ[μ] g) : essRange μ f = essRange μ g := by
+  dsimp [essRange, Measure.support]; ext ; congr! 6
   exact congrFun (congrArg DFunLike.coe <| Measure.map_congr hfg) _
+
+end Measure
 
 end BorelSpace
 
