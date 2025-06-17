@@ -48,9 +48,7 @@ def ess_range (μ : Measure X) (f : X → Y) : Set Y :=
   support (Measure.map f μ)
 
 theorem ess_range_eq_of_ae_eq {μ : Measure X} (f g : X → Y) (hfg : f =ᵐ[μ] g) : ess_range μ f = ess_range μ g := by
-  dsimp [ess_range, support]
-  ext y
-  congr! 6
+  dsimp [ess_range, support]; ext ; congr! 6
   exact congrFun (congrArg DFunLike.coe <| Measure.map_congr hfg) _
 
 end BorelSpace
