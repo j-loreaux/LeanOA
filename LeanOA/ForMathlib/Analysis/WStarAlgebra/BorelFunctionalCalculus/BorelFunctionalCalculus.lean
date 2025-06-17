@@ -40,12 +40,18 @@ open BorelSpace
 
 variable {X : Type*} [TopologicalSpace X] [MeasurableSpace X] [BorelSpace X]
 
-def support (μ : Measure X) : Set X := {x : X | ∀ U ∈ nhds x, μ (interior U) > 0}
+def support (μ : Measure X) : Set X := {x : X | ∀ U ∈ nhds x, μ (U) > 0}
 
 variable {Y : Type*} [TopologicalSpace Y] [MeasurableSpace Y] [BorelSpace Y]
 
 def ess_range (μ : Measure X) (f : X → Y) : Set Y :=
   support (Measure.map f μ)
+
+theorem ess_range_eq_of_ae_eq {μ : Measure X} (f g : X → Y) (hfg : f =ᵐ[μ] g) : ess_range μ f = ess_range μ g := by
+  dsimp [ess_range, support]
+  ext y
+  congr! 6 with x U hU
+  exact congrFun (congrArg DFunLike.coe <| MeasureTheory.Measure.map_congr hfg) U
 
 end BorelSpace
 
