@@ -4,6 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jon Bannon, Jireh Loreaux
 -/
 
+import Mathlib.Tactic
+import Mathlib.Topology.Defs.Filter
 import Mathlib.Topology.ContinuousMap.Star
 import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Topology.ContinuousMap.Ordered
@@ -37,25 +39,68 @@ namespace MeasureTheory
 section BorelSpace
 
 open BorelSpace
+
 namespace Measure
+
+open scoped Topology
 
 variable {X : Type*} [TopologicalSpace X] [MeasurableSpace X] [BorelSpace X]
 
-protected def support (μ : Measure X) : Set X := {x : X | ∀ (U : TopologicalSpace.OpenNhdsOf x), μ (U) > 0}
+def support (μ : Measure X) : Set X := {x : X | ∀ U ∈ 𝓝 x, μ U > 0}
 
-/-- Needs correct naming convention. -/
-theorem support_complement_is_union_of_msr_zero (μ : Measure X) : (μ.support)ᶜ = {x : X | ∃ (U : TopologicalSpace.OpenNhdsOf x), μ (U) = 0} := by
-    simp only [compl, Measure.support, Set.mem_setOf_eq, not_forall, not_lt, nonpos_iff_eq_zero]
+theorem Filter.HasBasis.mem_measureSupport {μ : Measure X} {ι : Sort*} {l : Filter X} {p : ι → Prop}
+    {s : ι → Set X} {x : X} (hl : (𝓝 x).HasBasis p s) :
+    x ∈ μ.support ↔ ∀ (i : ι), p i → μ (s i) > 0 := by
+  sorry
 
-theorem uniony_thing (μ : Measure X) : {x : X | ∃ (U : TopologicalSpace.OpenNhdsOf x), μ (U) = 0} = ⋃₀ (TopologicalSpace.OpenNhdsOf x) := by sorry
+/-
+What is this result above? We have a filter on a type α, and a predicate. and an indexed family of sets `s`. Note no
+`BorelSpace` attribute is needed, weirdly.
 
+So p is a predicate on the ι, i.e. for all i : ι, p i : Prop. We have that s selects subsets of X, so each s i is a
+subset of X. I guess what is this HasBasis bit? That's the most important part.
+
+What is a filter basis? Well, in this case we have s is the basis (a collection of subsets) "bounded by p" if
+t is in the filter iff t contains as a subset some element of s that satisfies p, i.e. there is some s i
+a subset of t such that for that i,  p i holds. This is kind of funny. We have that this index set is
+simultaneously picking out subsets of X (so these are actually themselves predicates by how Lean sees sets)
+and propositions. So we are getting something like pairs of props.
+
+So this is the strange hypothesis...that the neighborhood filter has s as a basis with respect to this
+predicate p, i.e. a t is a neighborhood of x (i.e. contains an open set containing x) iff there is an i
+such that s i is in t and p i holds. It would be good to have an example of this to think about.
+
+What's the conclusion, though? We want to say that x being in the support of μ is the same as
+p holding for every i implies that the measure of all s i are positive.
+
+And here is our example! We can view p as the predicate IsOpen (as a subset of X) and then we are precisely
+using s to pick s i such that p i (the statement IsOpen s i). This is like a subtype thing.
+
+-/
+
+theorem support_eq_forall_isOpen (μ : Measure X) : μ.support = {x : X | ∀ u : Set X, x ∈ u → IsOpen u → μ u > 0} := by
+  ext x
+  have := Filter.HasBasis.mem_measureSupport (p := IsOpen {X := X})
+
+
+lemma isClosed_support (μ : Measure X) : IsClosed μ.support := by
+  simp only [support, gt_iff_lt]
+  conv =>
+    enter [1, 1, x]
+    rw [(nhds_basis_opens x).forall_iff (fun u v huv hu ↦ hu.trans_le (μ.mono huv))]
+  simp only [and_imp, isClosed_iff_frequently, Set.mem_setOf_eq]
+  intro x h
+  simp only [(nhds_basis_opens x).frequently_iff, and_imp] at h
+  peel h with u hxu hu _
+  obtain ⟨y, hyu, hy⟩ := this
+  exact hy u hyu hu
 
 /-- Have to figure out the naming convention for the following. -/
 theorem is_closed_support (μ : Measure X) : IsClosed μ.support := by sorry
 
   sorry
 
-#exit
+
 
 variable {Y : Type*} [TopologicalSpace Y] [MeasurableSpace Y] [BorelSpace Y]
 
