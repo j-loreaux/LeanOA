@@ -51,7 +51,19 @@ def support (μ : Measure X) : Set X := {x : X | ∀ U ∈ 𝓝 x, μ U > 0}
 theorem Filter.HasBasis.mem_measureSupport {μ : Measure X} {ι : Sort*} {l : Filter X} {p : ι → Prop}
     {s : ι → Set X} {x : X} (hl : (𝓝 x).HasBasis p s) :
     x ∈ μ.support ↔ ∀ (i : ι), p i → μ (s i) > 0 := by
-  sorry
+  simp only [support, gt_iff_lt, Set.mem_setOf_eq]
+  refine Filter.HasBasis.forall_iff hl ?_
+  intro s t hst
+  have := μ.mono hst
+  simp at this
+  apply gt_of_ge_of_gt
+  simpa
+  -- needs cleanup.
+
+  --conv =>
+  --  enter [1, 1, x]
+  --  rw [(nhds_basis_opens x).forall_iff (fun u v huv hu ↦ hu.trans_le (μ.mono huv))]
+
 
 /-
 What is this result above? We have a filter on a type α, and a predicate. and an indexed family of sets `s`. Note no
