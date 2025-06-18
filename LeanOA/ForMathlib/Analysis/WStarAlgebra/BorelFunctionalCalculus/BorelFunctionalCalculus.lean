@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jon Bannon, Jireh Loreaux
 -/
 
-import Mathlib.Tactic
+import Mathlib.Tactic.Peel
 import Mathlib.Topology.Defs.Filter
 import Mathlib.Topology.ContinuousMap.Star
 import Mathlib.Tactic.ContinuousFunctionalCalculus
@@ -78,10 +78,8 @@ using s to pick s i such that p i (the statement IsOpen s i). This is like a sub
 
 -/
 
-theorem support_eq_forall_isOpen (μ : Measure X) : μ.support = {x : X | ∀ u : Set X, x ∈ u → IsOpen u → μ u > 0} := by
-  ext x
-  have := Filter.HasBasis.mem_measureSupport (p := IsOpen {X := X})
-
+theorem support_eq_forall_isOpen {μ : Measure X} : μ.support = {x : X | ∀ u : Set X, x ∈ u → IsOpen u → μ u > 0} := by
+  ext x; simpa using Filter.HasBasis.mem_measureSupport (l := 𝓝 x) (nhds_basis_opens _)
 
 lemma isClosed_support (μ : Measure X) : IsClosed μ.support := by
   simp only [support, gt_iff_lt]
