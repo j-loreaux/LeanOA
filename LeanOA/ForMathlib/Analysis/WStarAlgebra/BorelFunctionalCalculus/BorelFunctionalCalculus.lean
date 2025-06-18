@@ -82,23 +82,13 @@ theorem support_eq_forall_isOpen {μ : Measure X} : μ.support = {x : X | ∀ u 
   ext x; simpa using Filter.HasBasis.mem_measureSupport (l := 𝓝 x) (nhds_basis_opens _)
 
 lemma isClosed_support (μ : Measure X) : IsClosed μ.support := by
-  simp only [support, gt_iff_lt]
-  conv =>
-    enter [1, 1, x]
-    rw [(nhds_basis_opens x).forall_iff (fun u v huv hu ↦ hu.trans_le (μ.mono huv))]
-  simp only [and_imp, isClosed_iff_frequently, Set.mem_setOf_eq]
+  rw [support_eq_forall_isOpen]
+  simp only [gt_iff_lt, isClosed_iff_frequently, Set.mem_setOf_eq]
   intro x h
   simp only [(nhds_basis_opens x).frequently_iff, and_imp] at h
   peel h with u hxu hu _
   obtain ⟨y, hyu, hy⟩ := this
   exact hy u hyu hu
-
-/-- Have to figure out the naming convention for the following. -/
-theorem is_closed_support (μ : Measure X) : IsClosed μ.support := by sorry
-
-  sorry
-
-
 
 variable {Y : Type*} [TopologicalSpace Y] [MeasurableSpace Y] [BorelSpace Y]
 
