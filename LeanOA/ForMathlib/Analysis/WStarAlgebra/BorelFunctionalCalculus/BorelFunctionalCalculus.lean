@@ -82,8 +82,7 @@ theorem support_eq_forall_isOpen {μ : Measure X} : μ.support = {x : X | ∀ u 
   ext x; simpa using Filter.HasBasis.mem_measureSupport (l := 𝓝 x) (nhds_basis_opens _)
 
 lemma isClosed_support (μ : Measure X) : IsClosed μ.support := by
-  rw [support_eq_forall_isOpen]
-  simp only [gt_iff_lt, isClosed_iff_frequently, Set.mem_setOf_eq]
+  simp only [support_eq_forall_isOpen, gt_iff_lt, isClosed_iff_frequently, Set.mem_setOf_eq]
   intro x h
   simp only [(nhds_basis_opens x).frequently_iff, and_imp] at h
   peel h with u hxu hu _
