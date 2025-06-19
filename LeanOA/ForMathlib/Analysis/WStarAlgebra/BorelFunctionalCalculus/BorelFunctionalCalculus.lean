@@ -44,71 +44,45 @@ namespace Measure
 
 open scoped Topology
 
-variable {X : Type*} [TopologicalSpace X] [MeasurableSpace X] [BorelSpace X]
+section Support
 
-def support (μ : Measure X) : Set X := {x : X | ∀ U ∈ 𝓝 x, μ U > 0}
+variable {X : Type*} [TopologicalSpace X] [MeasurableSpace X]
 
-theorem Filter.HasBasis.mem_measureSupport {μ : Measure X} {ι : Sort*} {l : Filter X} {p : ι → Prop}
+def support (μ : Measure X) : Set X := {x : X | ∀ U ∈ 𝓝 x, 0 < μ U}
+
+variable {μ : Measure X}
+
+theorem _root_.Filter.HasBasis.mem_measureSupport {ι : Sort*} {p : ι → Prop}
     {s : ι → Set X} {x : X} (hl : (𝓝 x).HasBasis p s) :
-    x ∈ μ.support ↔ ∀ (i : ι), p i → μ (s i) > 0 := by
-  simp only [support, gt_iff_lt, Set.mem_setOf_eq]
-  refine Filter.HasBasis.forall_iff hl ?_
-  intro s t hst
-  have := μ.mono hst
-  simp at this
-  apply gt_of_ge_of_gt
-  simpa
-  -- needs cleanup.
+    x ∈ μ.support ↔ ∀ (i : ι), p i → 0 < μ (s i) := by
+  simp [support, hl.forall_iff (fun s t hst hs ↦ (hs.trans_le (μ.mono hst) : 0 < μ t))]
 
-  --conv =>
-  --  enter [1, 1, x]
-  --  rw [(nhds_basis_opens x).forall_iff (fun u v huv hu ↦ hu.trans_le (μ.mono huv))]
-
-
-/-
-What is this result above? We have a filter on a type α, and a predicate. and an indexed family of sets `s`. Note no
-`BorelSpace` attribute is needed, weirdly.
-
-So p is a predicate on the ι, i.e. for all i : ι, p i : Prop. We have that s selects subsets of X, so each s i is a
-subset of X. I guess what is this HasBasis bit? That's the most important part.
-
-What is a filter basis? Well, in this case we have s is the basis (a collection of subsets) "bounded by p" if
-t is in the filter iff t contains as a subset some element of s that satisfies p, i.e. there is some s i
-a subset of t such that for that i,  p i holds. This is kind of funny. We have that this index set is
-simultaneously picking out subsets of X (so these are actually themselves predicates by how Lean sees sets)
-and propositions. So we are getting something like pairs of props.
-
-So this is the strange hypothesis...that the neighborhood filter has s as a basis with respect to this
-predicate p, i.e. a t is a neighborhood of x (i.e. contains an open set containing x) iff there is an i
-such that s i is in t and p i holds. It would be good to have an example of this to think about.
-
-What's the conclusion, though? We want to say that x being in the support of μ is the same as
-p holding for every i implies that the measure of all s i are positive.
-
-And here is our example! We can view p as the predicate IsOpen (as a subset of X) and then we are precisely
-using s to pick s i such that p i (the statement IsOpen s i). This is like a subtype thing.
-
--/
-
-theorem support_eq_forall_isOpen {μ : Measure X} : μ.support = {x : X | ∀ u : Set X, x ∈ u → IsOpen u → μ u > 0} := by
-  ext x; simpa using Filter.HasBasis.mem_measureSupport (l := 𝓝 x) (nhds_basis_opens _)
+theorem support_eq_forall_isOpen : μ.support = {x : X | ∀ u : Set X, x ∈ u → IsOpen u → 0 < μ u} := by
+  simp [Set.ext_iff, (nhds_basis_opens _).mem_measureSupport]
 
 lemma isClosed_support (μ : Measure X) : IsClosed μ.support := by
-  simp only [support_eq_forall_isOpen, gt_iff_lt, isClosed_iff_frequently, Set.mem_setOf_eq]
-  intro x h
-  simp only [(nhds_basis_opens x).frequently_iff, and_imp] at h
-  peel h with u hxu hu _
-  obtain ⟨y, hyu, hy⟩ := this
+  simp only [support_eq_forall_isOpen, isClosed_iff_frequently, Set.mem_setOf_eq,
+    (nhds_basis_opens _).frequently_iff, and_imp]
+  intro x h u hxu hu
+  obtain ⟨y, hyu, hy⟩ := h u hxu hu
   exact hy u hyu hu
 
-variable {Y : Type*} [TopologicalSpace Y] [MeasurableSpace Y] [BorelSpace Y]
+end Support
+
+section essRange
+
+variable {X : Type*} [MeasurableSpace X]
+
+variable {Y : Type*} [TopologicalSpace Y] [MeasurableSpace Y]
 
 def essRange (μ : Measure X) (f : X → Y) : Set Y :=
-  Measure.support (map f μ)
+  support (map f μ)
 
 theorem essRange_eq_of_ae_eq {μ : Measure X} (f g : X → Y) (hfg : f =ᵐ[μ] g) : essRange μ f = essRange μ g := by
-  dsimp [essRange, Measure.support]; ext ; congr! 6
+  dsimp [essRange, support]; ext ; congr! 6
   exact congrFun (congrArg DFunLike.coe <| Measure.map_congr hfg) _
+
+end essRange
 
 end Measure
 
