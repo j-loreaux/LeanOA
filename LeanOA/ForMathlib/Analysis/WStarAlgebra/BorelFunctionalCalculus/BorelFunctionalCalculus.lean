@@ -478,7 +478,7 @@ noncomputable instance {R : Type*} [CStarAlgebra R] : CStarAlgebra (Lp R ∞ μ)
 end CStarAlgebra
 
 
-
+/-
 section BFC
 
 class BorelFunctionalCalculus {A : Type*} (p : outParam (A → Prop))
@@ -496,3 +496,4 @@ class BorelFunctionalCalculus {A : Type*} (p : outParam (A → Prop))
 --Still need the essential range for this spectrum result.
 
 end BFC
+-/
