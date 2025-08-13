@@ -44,7 +44,7 @@ namespace Measure
 
 open scoped Topology
 
-section Support
+section Support --SECTION HAS BEEN PRed.
 
 variable {X : Type*} [TopologicalSpace X] [MeasurableSpace X]
 
@@ -94,16 +94,16 @@ variable {α : Type*} {m : MeasurableSpace α} {μ : Measure α}
 
 section Star
 
-local infixr:25 " →ₛ " => SimpleFunc
+local infixr:25 " →ₛ " => SimpleFunc --PRd
 
 variable {R : Type*} [Star R]
 
-instance : Star (α →ₛ R) where
+instance : Star (α →ₛ R) where --PRd
   star f := f.map Star.star
 
-lemma star_apply (f : α →ₛ R) (x : α) : (star f) x = star (f x) := rfl
+lemma star_apply (f : α →ₛ R) (x : α) : (star f) x = star (f x) := rfl --PRd
 
-protected theorem _root_.Filter.EventuallyEq.star {f g : α → R}
+protected theorem _root_.Filter.EventuallyEq.star {f g : α → R} --PRd
     {l : Filter α} (h : f =ᶠ[l] g) :
     (fun x ↦ star (f x)) =ᶠ[l] fun x ↦ star (g x) :=
   h.fun_comp Star.star
@@ -111,20 +111,20 @@ protected theorem _root_.Filter.EventuallyEq.star {f g : α → R}
 variable [TopologicalSpace R] [ContinuousStar R]
 
 @[measurability]
-protected theorem StronglyMeasurable.star (f : α → R) (hf : StronglyMeasurable f) :
+protected theorem StronglyMeasurable.star (f : α → R) (hf : StronglyMeasurable f) : --PRd
     StronglyMeasurable (star f) :=
   ⟨fun n => star (hf.approx n), fun x => (hf.tendsto_approx x).star⟩
 
 variable {R : Type*} [TopologicalSpace R] [Star R] [ContinuousStar R]
 
-protected theorem AEStronglyMeasurable.star {f : α → R} (hf : AEStronglyMeasurable f μ) :
+protected theorem AEStronglyMeasurable.star {f : α → R} (hf : AEStronglyMeasurable f μ) : --PRd
     AEStronglyMeasurable (star f) μ :=
   ⟨star (hf.mk f), hf.stronglyMeasurable_mk.star, hf.ae_eq_mk.star⟩
 
-instance : Star (α →ₘ[μ] R) where
+instance : Star (α →ₘ[μ] R) where --PRd
   star f := (AEEqFun.comp _ continuous_star f)
 
-lemma AEEqFun.coeFn_star (f : α →ₘ[μ] R) : ↑(star f) =ᵐ[μ] (star f : α → R) :=
+lemma AEEqFun.coeFn_star (f : α →ₘ[μ] R) : ↑(star f) =ᵐ[μ] (star f : α → R) := --PRd
    coeFn_comp _ (continuous_star) f
 
 end Star
@@ -160,13 +160,13 @@ local infixr:25 " →ₛ " => SimpleFunc
 
 variable {R : Type*} [TopologicalSpace R] [InvolutiveStar R] [ContinuousStar R]
 
-instance : InvolutiveStar (α →ₛ R) where
+instance : InvolutiveStar (α →ₛ R) where --PRd
   star_involutive := by
     intro f
     ext x
     simp only [star_apply (star f), star_apply f, star_star]
 
-instance : InvolutiveStar (α →ₘ[μ] R) where
+instance : InvolutiveStar (α →ₘ[μ] R) where --PRd
   star_involutive f := by
     ext
     filter_upwards [AEEqFun.coeFn_star (star f), AEEqFun.coeFn_star f] with x hx hy
