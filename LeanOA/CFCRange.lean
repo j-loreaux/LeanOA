@@ -91,7 +91,7 @@ protected theorem Commute.cfc {a b : A} (hb₁ : Commute a b)
   cfc_cases (fun x ↦ Commute x b) a f (Commute.zero_left _)
     fun hf ha ↦ hb₁.cfcHom ha hb₂ ⟨_, hf.restrict⟩
 
-/-- For `a` selfadjoint, an element commutes with `cfc f a` if it commutes with both `a` and `star a`.
+/-- For `a` selfadjoint, an element commutes with `cfc f a` if it commutes with `a`.
 
 If the base ring is `ℝ` or `ℝ≥0`, see `Commute.cfc_real` or `Commute.cfc_nnreal` which don't require
 the `IsSelfAdjoint` hypothesis on `a` (due to the junk value `cfc f a = 0`). -/
@@ -235,7 +235,7 @@ protected theorem Commute.cfcₙ {a b : A} (hb₁ : Commute a b)
   cfcₙ_cases (fun x ↦ Commute x b) a f (Commute.zero_left _)
     fun hf hf₀ ha ↦ hb₁.cfcₙHom ha hb₂ ⟨⟨_, hf.restrict⟩, hf₀⟩
 
-/-- For `a` selfadjoint, an element commutes with `cfcₙ f a` if it commutes with both `a` and `star a`.
+/-- For `a` selfadjoint, an element commutes with `cfcₙ f a` if it commutes with `a`.
 
 If the base ring is `ℝ` or `ℝ≥0`, see `Commute.cfcₙ_real` or `Commute.cfcₙ_nnreal` which don't require
 the `IsSelfAdjoint` hypothesis on `a` (due to the junk value `cfcₙ f a = 0`). -/
