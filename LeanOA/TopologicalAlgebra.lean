@@ -1,8 +1,23 @@
 import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
+import Mathlib.Topology.Algebra.StarSubalgebra
 
 /-! # missing lemmas about topological star algebras -/
 
 open Topology
+
+
+namespace Set
+
+-- Mathlib.Topology.Algebra.Group.Basic
+lemma isClosed_centralizer {M : Type*} (s : Set M) [Mul M] [TopologicalSpace M]
+    [ContinuousMul M] [T2Space M] : IsClosed (centralizer s) := by
+  rw [centralizer, setOf_forall]
+  refine isClosed_sInter ?_
+  rintro - ⟨m, ht, rfl⟩
+  refine isClosed_imp (by simp) <| isClosed_eq ?_ ?_
+  all_goals fun_prop
+
+end Set
 
 -- missing lemma
 lemma NonUnitalStarAlgHom.range_eq_map_top {F R A B : Type*} [CommSemiring R] [StarRing R] [NonUnitalSemiring A]
@@ -12,6 +27,23 @@ lemma NonUnitalStarAlgHom.range_eq_map_top {F R A B : Type*} [CommSemiring R] [S
     NonUnitalStarAlgHom.range φ = NonUnitalStarSubalgebra.map φ ⊤ := by
   aesop
 
+namespace StarAlgebra
+
+open StarSubalgebra
+
+variable (R : Type*) {A : Type*} [CommSemiring R] [StarRing R] [Semiring A] [Algebra R A]
+  [StarRing A] [StarModule R A] [TopologicalSpace A] [IsTopologicalSemiring A] [ContinuousStar A]
+  [T2Space A]
+
+lemma topologicalClosure_adjoin_le_centralizer_centralizer (s : Set A) :
+    (adjoin R s).topologicalClosure ≤ centralizer R (centralizer R s) :=
+  topologicalClosure_minimal (adjoin_le_centralizer_centralizer R s) (Set.isClosed_centralizer _)
+
+lemma elemental.le_centralizer_centralizer (x : A) :
+    elemental R x ≤ centralizer R (centralizer R {x}) :=
+  topologicalClosure_adjoin_le_centralizer_centralizer R {x}
+
+end StarAlgebra
 namespace NonUnitalSubalgebra
 
 variable {F R A B : Type*} [CommSemiring R]
@@ -55,3 +87,21 @@ lemma topologicalClosure_map (hφ : IsClosedEmbedding φ) :
   SetLike.coe_injective <| hφ.closure_image_eq _
 
 end NonUnitalStarSubalgebra
+
+namespace NonUnitalStarAlgebra
+
+open NonUnitalStarSubalgebra
+
+variable (R : Type*) {A : Type*} [CommSemiring R] [StarRing R] [NonUnitalSemiring A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
+  [StarRing A] [StarModule R A] [TopologicalSpace A] [IsTopologicalSemiring A] [ContinuousStar A]
+  [T2Space A] [ContinuousConstSMul R A]
+
+lemma topologicalClosure_adjoin_le_centralizer_centralizer (s : Set A) :
+    (adjoin R s).topologicalClosure ≤ centralizer R (centralizer R s) :=
+  topologicalClosure_minimal _ (adjoin_le_centralizer_centralizer R s) (Set.isClosed_centralizer _)
+
+lemma elemental.le_centralizer_centralizer (x : A) :
+    elemental R x ≤ centralizer R (centralizer R {x}) :=
+  topologicalClosure_adjoin_le_centralizer_centralizer R {x}
+
+end NonUnitalStarAlgebra
