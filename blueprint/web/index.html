@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  MathJax = { 
+    tex: {
+		    inlineMath: [['$','$'], ['\\(','\\)']]
+	} }
+</script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+<meta name="generator" content="plasTeX" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Operator Algebras in Lean</title>
+<link rel="stylesheet" href="styles/theme-white.css" />
+<link rel="stylesheet" href="styles/amsthm.css" />
+<link rel="stylesheet" href="styles/showmore.css" />
+<link rel="stylesheet" href="styles/blueprint.css" />
+<link rel="stylesheet" href="styles/extra_styles.css" />
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<div class="content">
+<div class="content-wrapper">
+
+
+<div class="main-text">
+<div class="titlepage">
+<h1>Operator Algebras in Lean</h1>
+<p class="authors">
+<span class="author">Jireh Loreaux</span>
+</p>
+</div>
+<h1 id="a0000000002">0.1 Introduction</h1>
+<h1 id="a0000000003">0.2 Continuous functional calculus</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:continuous_functional_calculus">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">1</span>
+    <span class="definition_thmtitle">Continuous functional calculus</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="index.html#def:continuous_functional_calculus">#</a>
+    
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://j-loreaux.github.io/LeanOA/docs/find/#doc/ContinuousFunctionalCalculus" class="lean_decl">ContinuousFunctionalCalculus</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   A \(*\)-\(R\)-algebra is said to have a continuous functional calculus for elements satisfying a predicate \(p\) if, for each \(a\) satisfying \(p\), there is a \(*\)-homomorphism \(\phi _a : C(\sigma _{R}(a), R) \to A\) sending the identity function to \(a\), and which is a closed embedding. Moreover, \(\sigma _{R}(a)\) is compact and nonempty, and \(\phi _a\) satisfies the spectral mapping property (i.e., \(\sigma _{R}(\phi _a(f)) = f(\sigma _{R}(a))\)). </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:nonunital_continuous_functional_calculus">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">2</span>
+    <span class="definition_thmtitle">Non-unital continuous functional calculus</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="index.html#def:nonunital_continuous_functional_calculus">#</a>
+    
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://j-loreaux.github.io/LeanOA/docs/find/#doc/ContinuousFunctionalCalculus" class="lean_decl">ContinuousFunctionalCalculus</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   A non-unital \(*\)-\(R\)-algebra is said to have a non-unital continuous functional calculus for elements satisfying a predicate \(p\) if, for each \(a\) satisfying \(p\), there is a non-unital \(*\)-homomorphism \(\phi _a : C(\sigma '_{R}(a), R)_0 \to A\) (here \(C(\sigma '_{R}(a), R)_0\) is the collection of functions vanishing at zero on the quasispectrum) sending the identity function to \(a\), and which is a closed embedding. Moreover, \(\sigma '_{R}(a)\) is compact (it’s always nonempty because it contains \(0\)), and \(\phi '_a\) satisfies the spectral mapping property (i.e., \(\sigma '_{R}(\phi '_a(f)) = f(\sigma '_{R}(a))\)). </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:cfc">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">3</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="index.html#def:cfc">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="index.html#def:continuous_functional_calculus">Definition 1</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://j-loreaux.github.io/LeanOA/docs/find/#doc/cfc" class="lean_decl">cfc</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   Given \(a \in A\) satisfying \(p\) and \(f : R → R\) continuous on \(\sigma _{R}(a)\), we define \(f(a) := \phi '_a(f)\) (and we give it a junk value of zero when either \(a\) does not satisfy \(p\) or \(f\) is not continuous on the spectrum). </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:cfcₙ">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">4</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="index.html#def:cfcₙ">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="index.html#def:nonunital_continuous_functional_calculus">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://j-loreaux.github.io/LeanOA/docs/find/#doc/cfcₙ" class="lean_decl">cfcₙ</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   Given \(a \in A\) satisfying \(p\) and \(f : R → R\) continuous on \(\sigma _{R}(a)\) and \(f(0) = 0\), we define \(f(a) := \phi '_a(f)\) (and we give it a junk value of zero when and of the conditions on \(a\) and \(f\) are not met). </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:gelfand_cfc_iso">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">5</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="index.html#thm:gelfand_cfc_iso">#</a>
+    
+    <a class="icon proof" href="index.html#a0000000004"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+</a>
+    
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://j-loreaux.github.io/LeanOA/docs/find/#doc/continuousFunctionalCalculus" class="lean_decl">continuousFunctionalCalculus</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>  For every normal element \(a\) in a unital \(C^*\)-algebra \(A\) there is a \(*\)-isomorphism between \(C(\sigma _{}(a), ℂ)\) and the \(C^*\)-subalgebra of \(A\) generated by \(a\). </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000004">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  <p>Use the Gelfand transform. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:cstar_algebra_cfc">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">6</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="index.html#thm:cstar_algebra_cfc">#</a>
+    
+    <a class="icon proof" href="index.html#a0000000005"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="index.html#def:continuous_functional_calculus">Definition 1</a></li>
+          
+          <li><a href="index.html#thm:gelfand_cfc_iso">Theorem 5</a></li>
+          
+          <li><a href="index.html#thm:gelfand_cfc_iso">Theorem 5</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://j-loreaux.github.io/LeanOA/docs/find/#doc/IsStarNormal.instContinuousFunctionalCalculus" class="lean_decl">IsStarNormal.instContinuousFunctionalCalculus</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>   Every unital \(C^*\)-algebra has a continuous functional calculus for normal elements. </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000005">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  <p> Compose the \(*\)-isomorphism of Theorem&#160;<a href="index.html#thm:gelfand_cfc_iso">5</a>, which is an isometry because its an isomorphism of \(C^*\)-algebras, with the inclusion of \(C^{*}_1(a)\) (the unital \(C^*\)-subalgebra generated by \(a\)) into \(A\). The latter is also an isometry and therefore a closed embedding. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:cfc_complex_to_real">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">7</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="index.html#thm:cfc_complex_to_real">#</a>
+    
+    <a class="icon proof" href="index.html#a0000000006"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="index.html#def:continuous_functional_calculus">Definition 1</a></li>
+          
+          <li><a href="index.html#def:continuous_functional_calculus">Definition 1</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://j-loreaux.github.io/LeanOA/docs/find/#doc/IsSelfAdjoint.instContinuousFunctionalCalculus" class="lean_decl">IsSelfAdjoint.instContinuousFunctionalCalculus</a></li>
+          
+          <li><a href="https://j-loreaux.github.io/LeanOA/docs/find/#doc/foo" class="lean_decl">foo</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>   Every unital \(*\)-algebra \(A\) with a continuous functional calculus for normal elements over \(\mathbb {C}\) has a continuous functional calculus for self-adjoint elements over \(\mathbb {R}\). </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000006">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  <p> Since self-adjoint elements are normal, the continuous functional calculus for normal elements over \(\mathbb {C}\) with its spectral mapping property guarantees that the \(\mathbb {C}\)-spectrum of \(a \in A\) normal is actually contained in \(\mathbb {R}\), and so coincides with the \(\mathbb {R}\)-spectrum of \(a\). Therefore, the map which sends \(f \in C(\sigma _{\mathbb {R}}(a), \mathbb {R})\) to \(\hat f \in C(\sigma _{\mathbb {C}}(a), \mathbb {C})\) is a \(*\)-homomorphism, and composing it with \(\phi _a\) yields the desired \(*\)-homomorphism for the contnuous functional calculus over \(\mathbb {R}\) for self-adjoint elements. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:cfc_real_to_nnreal">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">8</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="index.html#thm:cfc_real_to_nnreal">#</a>
+    
+    <a class="icon proof" href="index.html#a0000000007"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="index.html#def:continuous_functional_calculus">Definition 1</a></li>
+          
+          <li><a href="index.html#thm:cfc_complex_to_real">Theorem 7</a></li>
+          
+          <li><a href="index.html#def:continuous_functional_calculus">Definition 1</a></li>
+          
+          <li><a href="index.html#thm:cfc_complex_to_real">Theorem 7</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://j-loreaux.github.io/LeanOA/docs/find/#doc/Nonneg.instContinuousFunctionalCalculus" class="lean_decl">Nonneg.instContinuousFunctionalCalculus</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>   Every unital \(*\)-algebra \(A\) which is a \(*\)-ordered ring (i.e., nonnegative elements are those of the form \(x^* x\)) with the property that nonnegative elements have nonnegative spectrum, and with a continuous functional calculus for self-adjoint elements over \(\mathbb {R}\) has a continuous functional calculus for self-adjoint elements over \(\mathbb {R}_{\ge 0}\). </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000007">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  <p> Omitted. </p>
+
+  </div>
+</div>
+<h1 id="a0000000008">0.3 Products of nonnegative elements are nonnegative</h1>
+
+</div> <!--main-text -->
+</div> <!-- content-wrapper -->
+</div> <!-- content -->
+</div> <!-- wrapper -->
+
+<nav class="prev_up_next">
+  <svg  id="showmore-minus" class="icon icon-eye-minus showmore"><use xlink:href="symbol-defs.svg#icon-eye-minus"></use></svg>
+
+  <svg  id="showmore-plus" class="icon icon-eye-plus showmore"><use xlink:href="symbol-defs.svg#icon-eye-plus"></use></svg>
+
+</nav>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/plastex.js"></script>
+<script type="text/javascript" src="js/svgxuse.js"></script>
+<script type="text/javascript" src="js/js.cookie.min.js"></script>
+<script type="text/javascript" src="js/showmore.js"></script>
+</body>
+</html>
