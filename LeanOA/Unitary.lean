@@ -2,7 +2,6 @@ import LeanOA.ForMathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.Spectrum
 import LeanOA.ForMathlib.Analysis.Complex.Basic
 import LeanOA.ForMathlib.Data.Complex.Norm
-import LeanOA.ForMathlib.Data.Complex.Order
 import LeanOA.ForMathlib.Misc
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Continuity
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
@@ -182,7 +181,7 @@ lemma unitary.norm_sub_one_lt_two_iff {u : A} (hu : u ∈ unitary A) :
     intro key
     replace key : z.re ≤ -1 := by linarith
     have hz_norm : ‖z‖ = 1 := spectrum.norm_eq_one_of_unitary hu hz
-    rw [← hz_norm, Complex.re_le_neg_norm_iff_eq_neg_norm, hz_norm] at key
+    rw [← hz_norm, ← RCLike.re_eq_complex_re, RCLike.re_le_neg_norm_iff_eq_neg_norm, hz_norm] at key
     exact key ▸ hz
 
 lemma unitary.spectrum_subset_slitPlane_of_norm_lt_two {u : A} (hu : u ∈ unitary A)
@@ -199,7 +198,7 @@ lemma unitary.spectrum_subset_slitPlane_of_norm_lt_two {u : A} (hu : u ∈ unita
     | inl h => simp [h]
     | inr h =>
       have := hz_norm ▸ h.le
-      rw [Complex.re_le_neg_norm_iff_eq_neg_norm, hz_norm, ofReal_one] at this
+      rw [← RCLike.re_eq_complex_re, RCLike.re_le_neg_norm_iff_eq_neg_norm, hz_norm, RCLike.ofReal_one] at this
       rw [norm_sub_one_lt_two_iff hu] at hu_norm
       exact False.elim <| hu_norm (this ▸ hz)
   · exact .inr h

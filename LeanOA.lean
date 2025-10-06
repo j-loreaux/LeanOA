@@ -1,4 +1,3 @@
-import LeanOA.CFCRange
 import LeanOA.CStarModule.Standard
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
@@ -7,10 +6,8 @@ import LeanOA.ForMathlib.Analysis.CStarAlgebra.Spectrum
 import LeanOA.ForMathlib.Analysis.Complex.Basic
 import LeanOA.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 import LeanOA.ForMathlib.Data.Complex.Norm
-import LeanOA.ForMathlib.Data.Complex.Order
 import LeanOA.ForMathlib.Misc
 import LeanOA.ForMathlib.Topology.Algebra.Star.Unitary
 import LeanOA.MulNonneg
 import LeanOA.Notation
-import LeanOA.TopologicalAlgebra
 import LeanOA.Unitary
