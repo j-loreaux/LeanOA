@@ -433,5 +433,3 @@ lemma unitary.mem_pathComponentOne_iff {u : unitary A} :
     | cons x xs ih => simpa using (joined_one_expUnitary x).mul ih
 
 end ExpUnitary
-
-#min_imports
