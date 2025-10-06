@@ -46,7 +46,7 @@ lemma abs_neg (a : A) : abs (-a) = abs a := by
   simp [abs]
 
 @[simp]
-lemma abs_nonneg {a : A} : 0 ≤ abs a := sqrt_nonneg
+lemma abs_nonneg {a : A} : 0 ≤ abs a := sqrt_nonneg _
 
 lemma abs_star (a : A) (ha : IsStarNormal a := by cfc_tac) : abs (star a) = abs a := by
   simp [abs, star_comm_self']
@@ -140,9 +140,9 @@ variable [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
 variable [StarModule 𝕜 A] [StarModule ℝ A] [IsScalarTower ℝ 𝕜 A] in
 lemma abs_rclike_smul (r : 𝕜) (a : A) : abs (r • a) = ‖r‖ • abs a := by
   trans abs (‖r‖ • a)
-  · simp [abs, mul_smul_comm, smul_mul_assoc, abs_mul_abs_self, star_smul, ← smul_assoc]
+  · simp [abs, mul_smul_comm, smul_mul_assoc, star_smul, ← smul_assoc]
     simp only [RCLike.real_smul_eq_coe_smul (K := 𝕜)]
-    simp [-algebraMap_smul, ← smul_mul_assoc, smul_smul, ← mul_comm (starRingEnd _ _), RCLike.conj_mul, sq]
+    simp [-algebraMap_smul, ← smul_mul_assoc, ← mul_comm (starRingEnd _ _), RCLike.conj_mul, sq]
   · simp [abs_smul]
 
 lemma abs_sq_eq_cfcₙ_norm_sq (a : A) (ha : p a := by cfc_tac) :

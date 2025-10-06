@@ -1,13 +1,13 @@
 import Mathlib.Analysis.CStarAlgebra.Basic
 import Mathlib.Analysis.SpecialFunctions.Complex.Arg
 import Mathlib.Analysis.Normed.Algebra.Spectrum
-import Mathlib.Data.Complex.Module
+import Mathlib.LinearAlgebra.Complex.Module
 import Mathlib.Data.Real.Sqrt
 
 -- goes in `Data.Complex.Basic`
 lemma Complex.normSq_ofReal_add_I_smul_sqrt_one_sub {x : ℝ} (hx : ‖x‖ ≤ 1) :
     normSq (x + I * √(1 - x ^ 2)) = 1 := by
-  simp [mul_comm I, normSq_add_mul_I, ← ofReal_pow,
+  simp [mul_comm I, normSq_add_mul_I,
     Real.sq_sqrt (x := 1 - x ^ 2) (by nlinarith [abs_le.mp hx])]
 
 -- goes in `Analysis.CStarAlgebra.Basic`

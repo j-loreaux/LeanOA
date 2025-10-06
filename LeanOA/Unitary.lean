@@ -4,9 +4,8 @@ import LeanOA.ForMathlib.Analysis.Complex.Basic
 import LeanOA.ForMathlib.Data.Complex.Norm
 import LeanOA.ForMathlib.Data.Complex.Order
 import LeanOA.ForMathlib.Misc
-import LeanOA.ForMathlib.Topology.Algebra.Star.Unitary
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Continuity
+import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Unitary
 import Mathlib.Analysis.CStarAlgebra.Exponential
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
@@ -81,7 +80,7 @@ noncomputable def selfAdjoint.unitarySelfAddISMul (a : selfAdjoint A)
 
 lemma selfAdjoint.star_coe_unitarySelfAddISMul (a : selfAdjoint A) (ha_norm : ‖a‖ ≤ 1) :
     (star (unitarySelfAddISMul a ha_norm) : A) = a - I • CFC.sqrt (1 - a ^ 2 : A) := by
-  simp [a.2, IsSelfAdjoint.star_eq, ← sub_eq_add_neg,
+  simp [IsSelfAdjoint.star_eq, ← sub_eq_add_neg,
     IsSelfAdjoint.of_nonneg (CFC.sqrt_nonneg (a := (1 - a ^ 2 : A)))]
 
 lemma selfAdjoint.realPart_unitarySelfAddISMul (a : selfAdjoint A) (ha_norm : ‖a‖ ≤ 1) :
@@ -249,7 +248,7 @@ lemma argSelfAdjoint_expUnitary {x : selfAdjoint A} (hx : ‖x‖ < π) :
     refine cfc_congr fun y hy ↦ ?_
     rw [← x.2.spectrumRestricts.algebraMap_image] at hy
     obtain ⟨y, hy, rfl⟩ := hy
-    simp [← exp_eq_exp_ℂ, exp_ofReal_mul_I_re, mul_comm I, ← ofReal_mul, exp_ofReal_mul_I_re]
+    simp [← exp_eq_exp_ℂ, mul_comm I]
     replace hy : ‖y‖ < π := spectrum.norm_le_norm_of_mem hy |>.trans_lt hx
     simp only [Real.norm_eq_abs, abs_lt] at hy
     rw [← Circle.coe_exp, Circle.arg_exp hy.1 hy.2.le]
@@ -329,8 +328,8 @@ lemma unitary.continuousOn_argSelfAdjoint :
 /-- the maps `unitary.argSelfAdjoint` and `selfAdjoint.expUnitary` form a partial
 homeomorphism between `ball (1 : unitary A) 2` and `ball (0 : selfAdjoint A) π`. -/
 @[simps]
-noncomputable def unitary.partialHomeomorph :
-    PartialHomeomorph (unitary A) (selfAdjoint A) where
+noncomputable def unitary.openPartialHomeomorph :
+    OpenPartialHomeomorph (unitary A) (selfAdjoint A) where
   toFun := argSelfAdjoint
   invFun := expUnitary
   source := ball 1 2
@@ -434,3 +433,5 @@ lemma unitary.mem_pathComponentOne_iff {u : unitary A} :
     | cons x xs ih => simpa using (joined_one_expUnitary x).mul ih
 
 end ExpUnitary
+
+#min_imports

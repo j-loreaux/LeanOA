@@ -1,4 +1,4 @@
-import Mathlib.Data.Complex.Norm
+import Mathlib.Analysis.Complex.Norm
 
 namespace Complex
 
