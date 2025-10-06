@@ -1,4 +1,4 @@
-import Mathlib.Data.Complex.Order
+import Mathlib.Analysis.Complex.Order
 
 namespace Complex
 
@@ -23,7 +23,7 @@ lemma norm_le_im_iff_eq_I_mul_norm {z : ℂ} :
   simp only [Complex.norm_mul, norm_neg, norm_I, one_mul, mul_re, neg_re, I_re,
     neg_zero, zero_mul, neg_im, I_im, zero_sub, ← neg_mul, neg_neg] at this
   rw [this, ← smul_eq_mul, eq_comm, ← inv_smul_eq_iff₀ (by simp)]
-  simp [← neg_inv, eq_comm]
+  simp [eq_comm]
 
 lemma im_le_neg_norm_iff_eq_neg_I_mul_norm {z : ℂ} :
     z.im ≤ -‖z‖ ↔ z = -(I * ‖z‖) := by

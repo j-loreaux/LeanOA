@@ -281,7 +281,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
           enter [1, 1, 2, i]
           rw [this i (x N i) (x m i)]
           simp only [← Pi.sub_apply]
-        simp only [Finset.sum_add_distrib, Finset.sum_sub_distrib]
+        simp only [Finset.sum_add_distrib]
         have h₁ : ‖∑ i ∈ t, ⟪(x N - x m) i, (x N - x m) i⟫_A‖ ≤ ε / 8 := by
           refine norm_sum_inner_apply_le (x N - x m) t |>.trans ?_
           exact Real.le_sqrt (by positivity) (by positivity) |>.mp hN
@@ -302,7 +302,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
               refine mul_le_mul ?_ (by rwa [← norm_neg, neg_sub]) (by positivity) (by positivity)
               simp only [x', norm_def]
               convert Real.sqrt_le_sqrt hxN.le using 3
-              rw [tsum_eq_sum fun i (hi : i ∉ t) ↦ by simp [x', hi]]
+              rw [tsum_eq_sum fun i (hi : i ∉ t) ↦ by simp [hi]]
               congr! 2 with i hi
               all_goals simp [hi]
         -- ooh, we *really* want the `setm` tactic below, that would be *sooo* much nicer
