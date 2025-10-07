@@ -9,5 +9,6 @@ import LeanOA.ForMathlib.Data.Complex.Norm
 import LeanOA.ForMathlib.Misc
 import LeanOA.ForMathlib.Topology.Algebra.Star.Unitary
 import LeanOA.MulNonneg
+import LeanOA.NonnegUnit
 import LeanOA.Notation
 import LeanOA.Unitary
