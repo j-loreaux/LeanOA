@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  17 OCT 2025 18:31
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  17 OCT 2025 18:35
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -689,135 +689,6 @@ LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
 (Font)              scaled to size 6.99925pt on input line 17.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
 (Font)              scaled to size 4.99947pt on input line 17.
-
-! Undefined control sequence.
-l.18 ...s a $*$-homomorphism $\phi_a : C(\spectrum
-                                                  [R]{a}, R) \to A$ sending ...
-
-? 
-! Undefined control sequence.
-<recently read> \spectrum 
-                          
-l.19   Moreover, $\spectrum
-                           [R]{a}$ is compact and nonempty, and $\phi_a$ sat...
-
-? 
-! Undefined control sequence.
-<recently read> \spectrum 
-                          
-l.19 ...pectral mapping property (i.e., $\spectrum
-                                                  [R]{\phi_a(f)} = f(\spectr...
-
-? 
-! Undefined control sequence.
-l.19 ...e., $\spectrum[R]{\phi_a(f)} = f(\spectrum
-                                                  [R]{a})$).
-? 
-! Undefined control sequence.
-l.27 ...*$-homomorphism $\phi_a : C(\quasispectrum
-                                                  [R]{a}, R)_0 \to A$ (here ...
-
-? 
-! Undefined control sequence.
-l.27 ...R]{a}, R)_0 \to A$ (here $C(\quasispectrum
-                                                  [R]{a}, R)_0$ is the colle...
-
-? 
-! Undefined control sequence.
-<recently read> \quasispectrum 
-                               
-l.28   Moreover, $\quasispectrum
-                                [R]{a}$ is compact (it's always nonempty bec...
-
-? 
-! Undefined control sequence.
-<recently read> \quasispectrum 
-                               
-l.28 ...al mapping property (i.e., $\quasispectrum
-                                                  [R]{\phi'_a(f)} = f(\quasi...
-
-? 
-! Undefined control sequence.
-l.28 ...spectrum[R]{\phi'_a(f)} = f(\quasispectrum
-                                                  [R]{a})$).
-? 
-
-LaTeX Warning: Reference `def:continuous_functional_calculus' on page 1 undefin
-ed on input line 35.
-
-! Undefined control sequence.
-<recently read> \spectrum 
-                          
-l.36 ...$ and $f : R → R$ continuous on $\spectrum
-                                                  [R]{a}$, we define $f(a) :...
-
-? 
-
-LaTeX Warning: Reference `def:nonunital_continuous_functional_calculus' on page
- 1 undefined on input line 43.
-
-! Undefined control sequence.
-<recently read> \spectrum 
-                          
-l.44 ...$ and $f : R → R$ continuous on $\spectrum
-                                                  [R]{a}$ and $f(0) = 0$, we...
-
-? 
-! Undefined control sequence.
-l.51 ... is a $*$-isomorphism between $C(\spectrum
-                                                  {a}, ℂ)$ and the $C^*$-sub...
-
-? 
-
-LaTeX Warning: Reference `def:continuous_functional_calculus' on page 1 undefin
-ed on input line 63.
-
-
-LaTeX Warning: Reference `thm:gelfand_cfc_iso' on page 1 undefined on input lin
-e 63.
-
-
-LaTeX Warning: Reference `thm:gelfand_cfc_iso' on page 1 undefined on input lin
-e 69.
-
-
-LaTeX Warning: Reference `thm:gelfand_cfc_iso' on page 1 undefined on input lin
-e 70.
-
-
-LaTeX Warning: Reference `def:continuous_functional_calculus' on page 1 undefin
-ed on input line 77.
-
-
-LaTeX Warning: Reference `def:continuous_functional_calculus' on page 1 undefin
-ed on input line 83.
-
-! Undefined control sequence.
-l.85 ...re, the map which sends $f \in C(\spectrum
-                                                  [\mathbb{R}]{a}, \mathbb{R...
-
-? 
-! Undefined control sequence.
-l.85 ...}, \mathbb{R})$ to $\hat f \in C(\spectrum
-                                                  [\mathbb{C}]{a}, \mathbb{C...
-
-? 
-
-LaTeX Warning: Reference `def:continuous_functional_calculus' on page 1 undefin
-ed on input line 92.
-
-
-LaTeX Warning: Reference `thm:cfc_complex_to_real' on page 1 undefined on input
- line 92.
-
-
-LaTeX Warning: Reference `def:continuous_functional_calculus' on page 1 undefin
-ed on input line 98.
-
-
-LaTeX Warning: Reference `thm:cfc_complex_to_real' on page 1 undefined on input
- line 98.
-
 )
 
 [1] (/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.aux)
@@ -825,27 +696,14 @@ LaTeX Warning: Reference `thm:cfc_complex_to_real' on page 1 undefined on input
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
-
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
-
-Package rerunfilecheck Warning: File `print.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `print.out':
-(rerunfilecheck)             Before: D41D8CD98F00B204E9800998ECF8427E;0
-(rerunfilecheck)             After:  5B43202F11BAF285881AC56B6FE333E6;606.
+Package rerunfilecheck Info: File `print.out' has not changed.
+(rerunfilecheck)             Checksum: 5B43202F11BAF285881AC56B6FE333E6;606.
  ) 
 Here is how much of TeX's memory you used:
- 16704 strings out of 475366
- 308566 string characters out of 5762340
- 904240 words of memory out of 5000000
- 39483 multiletter control sequences out of 15000+600000
+ 16707 strings out of 475366
+ 308591 string characters out of 5762340
+ 905240 words of memory out of 5000000
+ 39486 multiletter control sequences out of 15000+600000
  564168 words of font info for 80 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
  90i,6n,107p,542b,413s stack positions out of 10000i,1000n,20000p,200000b,200000s

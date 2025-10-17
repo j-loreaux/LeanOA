@@ -1,7 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1760740290.38211 "print.tex" "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.pdf" "print" 1760740302.81095 2
-  "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.aux" 1760740302.7304 1075 96ebff415b5c4186ef20b6b6c472644f "pdflatex"
-  "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.out" 1760740302.73117 606 5b43202f11baf285881ac56b6fe333e6 "pdflatex"
+["pdflatex"] 1760740508.6579 "print.tex" "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.pdf" "print" 1760740509.15152 0
+  "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.aux" 1760740509.09589 1075 96ebff415b5c4186ef20b6b6c472644f "pdflatex"
+  "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.out" 1760740509.09617 606 5b43202f11baf285881ac56b6fe333e6 "pdflatex"
   "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136768653 1528 f853c4d1b4e0550255e02831fdc8496f ""
   "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1246382020 916 f87d7c45f9c908e672703b83b72241a3 ""
   "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam5.tfm" 1246382020 924 9904cf1d39e9767e7a3622f2a125a565 ""
@@ -83,7 +83,7 @@
   "/usr/local/texlive/2025basic/texmf-var/web2c/xetex/xelatex.fmt" 1741448333 5092505 adc40861f530b10866b2cb3b1638f0b6 ""
   "/usr/local/texlive/2025basic/texmf.cnf" 1741448314 628 81d1ada0f601fb1ffa62f1323192d946 ""
   "content.tex" 1760740003.75269 5383 0f7534d4880ca7f80ea0915cdbbae71a ""
-  "macros/common.tex" 1760739424.47225 820 60fafcc3aa944a5e60030581a943ef6b ""
+  "macros/common.tex" 1760740482.49535 917 ca8419097dbd17a8af1ff70320561d6e ""
   "macros/print.tex" 1760714907.66709 1101 87627b2ec24fef68edc71c13f43f7bab ""
   "print.tex" 1760714907.66727 1126 b029e61114846f84f5b6116eb7f52b25 ""
   (generated)
