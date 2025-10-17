@@ -1,11 +1,13 @@
 # Fdb version 4
-["pdflatex"] 1760739569.21935 "print.tex" "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.pdf" "print" 1760739569.68079 0
-  "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.aux" 1760739569.63002 128 852fc3e86949e4a73cd552c13992dc37 "pdflatex"
-  "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.out" 1760739569.46189 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
+["pdflatex"] 1760740290.38211 "print.tex" "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.pdf" "print" 1760740302.81095 2
+  "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.aux" 1760740302.7304 1075 96ebff415b5c4186ef20b6b6c472644f "pdflatex"
+  "/Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.out" 1760740302.73117 606 5b43202f11baf285881ac56b6fe333e6 "pdflatex"
   "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136768653 1528 f853c4d1b4e0550255e02831fdc8496f ""
   "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1246382020 916 f87d7c45f9c908e672703b83b72241a3 ""
+  "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam5.tfm" 1246382020 924 9904cf1d39e9767e7a3622f2a125a565 ""
   "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam7.tfm" 1246382020 928 2dc8d444221b7a635bb58038579b861a ""
   "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm10.tfm" 1246382020 908 2921f8a10601f252058503cc6570e581 ""
+  "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm5.tfm" 1246382020 940 75ac932a52f80982a9f8ea75d03a34cf ""
   "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm7.tfm" 1246382020 940 228d6584342e91276bf566bcf9716b83 ""
   "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/cm/cmmi12.tfm" 1136768653 1524 4414a8315f39513458b80dfc63bff03a ""
   "/usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/cm/cmmi6.tfm" 1136768653 1512 f21f83efb36853c0b70002322c1ab3ad ""
@@ -80,7 +82,7 @@
   "/usr/local/texlive/2025basic/texmf-dist/web2c/texmf.cnf" 1739380943 42148 61becc7c670cd061bb319c643c27fdd4 ""
   "/usr/local/texlive/2025basic/texmf-var/web2c/xetex/xelatex.fmt" 1741448333 5092505 adc40861f530b10866b2cb3b1638f0b6 ""
   "/usr/local/texlive/2025basic/texmf.cnf" 1741448314 628 81d1ada0f601fb1ffa62f1323192d946 ""
-  "content.tex" 1760739424.47206 363 d68ec385ab7b5b65ef8d18eff416b83d ""
+  "content.tex" 1760740003.75269 5383 0f7534d4880ca7f80ea0915cdbbae71a ""
   "macros/common.tex" 1760739424.47225 820 60fafcc3aa944a5e60030581a943ef6b ""
   "macros/print.tex" 1760714907.66709 1101 87627b2ec24fef68edc71c13f43f7bab ""
   "print.tex" 1760714907.66727 1126 b029e61114846f84f5b6116eb7f52b25 ""

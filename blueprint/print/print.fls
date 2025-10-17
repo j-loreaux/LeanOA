@@ -182,6 +182,12 @@ INPUT ./content.tex
 INPUT ./content.tex
 INPUT ./content.tex
 INPUT content.tex
+INPUT /usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm
+INPUT /usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam7.tfm
+INPUT /usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam5.tfm
+INPUT /usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm10.tfm
+INPUT /usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm7.tfm
+INPUT /usr/local/texlive/2025basic/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm5.tfm
 INPUT /Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.aux
 INPUT /Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.out
 INPUT /Users/jonbannon/ForkLeanOA/LeanOA/blueprint/print/print.out
