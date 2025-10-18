@@ -22,10 +22,10 @@ title: Operator Algebras in Lean
 #email: your-email@example.com
 description: by Jireh Loreaux
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://j-loreaux.github.io/LeanOA" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://jonbannon.github.io/LeanOA" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username:
-github_username: j-loreaux
-repository: j-loreaux/LeanOA
+github_username: JonBannon
+repository: JonBannon/LeanOA
 
 # Build settings
 remote_theme: pages-themes/midnight@v0.2.0 
