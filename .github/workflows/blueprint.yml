@@ -62,7 +62,7 @@ jobs:
           fi
       
       - name: Install graphviz system deps
-          run: |
+        run: |
           sudo apt-get update
           sudo apt-get install -y graphviz graphviz-dev pkg-config
 
