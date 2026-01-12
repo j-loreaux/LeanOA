@@ -60,6 +60,11 @@ jobs:
             echo "The 'home_page' folder does not exist in the repository."
             echo "HOME_PAGE_EXISTS=false" >> $GITHUB_ENV
           fi
+      
+      - name: Install graphviz system deps
+          run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz graphviz-dev pkg-config
 
       - name: Build blueprint and copy to `home_page/blueprint`
         uses: xu-cheng/texlive-action@v2
@@ -74,7 +79,7 @@ jobs:
             python3 -m venv env
             source env/bin/activate
             pip install --upgrade pip requests wheel
-            pip install pygraphviz --global-option=build_ext --global-option="-L/usr/lib/graphviz/" --global-option="-R/usr/lib/graphviz/"
+            pip install pygraphviz
             pip install leanblueprint
             leanblueprint pdf
             mkdir -p home_page
