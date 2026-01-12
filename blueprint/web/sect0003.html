@@ -12,10 +12,9 @@
 <meta name="generator" content="plasTeX" />
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Operator Algebras in Lean: Products of nonnegative elements are nonnegative</title>
-<link rel="next" href="sect0004.html" title="Sakai’s Book" />
-<link rel="prev" href="sect0002.html" title="Continuous functional calculus" />
-<link rel="up" href="index.html" title="Operator Algebras in Lean" />
+<title>Operator Algebras in Lean: Normal Implies Ultraweakly Continuous</title>
+<link rel="prev" href="sect0002.html" title="Ultraweakly Continuous Implies Normal" />
+<link rel="up" href="sect0001.html" title="Normality and Ultraweak–Continuity for Positive Functionals" />
 <link rel="stylesheet" href="styles/theme-white.css" />
 <link rel="stylesheet" href="styles/amsthm.css" />
 <link rel="stylesheet" href="styles/showmore.css" />
@@ -32,21 +31,15 @@
 <div class="wrapper">
 <nav class="toc">
 <ul class="sub-toc-0">
-<li class="">
-  <a href="sect0001.html"><span class="toc_ref">0.1</span> <span class="toc_entry">Introduction</span></a>
- </li>
-<li class="">
-  <a href="sect0002.html"><span class="toc_ref">0.2</span> <span class="toc_entry">Continuous functional calculus</span></a>
+<li class=" active">
+  <a href="sect0001.html"><span class="toc_ref">0.1</span> <span class="toc_entry">Normality and Ultraweak–Continuity for Positive Functionals</span></a>
+  <span class="expand-toc">▼</span>
+  <ul class="sub-toc-1 active">
+     <li class="">
+  <a href="sect0002.html"><span class="toc_ref">0.1.1</span> <span class="toc_entry">Ultraweakly Continuous Implies Normal</span></a>
  </li>
 <li class=" active current">
-  <a href="sect0003.html"><span class="toc_ref">0.3</span> <span class="toc_entry">Products of nonnegative elements are nonnegative</span></a>
- </li>
-<li class="">
-  <a href="sect0004.html"><span class="toc_ref">1</span> <span class="toc_entry">Sakai’s Book</span></a>
-  <span class="expand-toc">▶</span>
-  <ul class="sub-toc-1">
-     <li class="">
-  <a href="sect0005.html"><span class="toc_ref">1.1</span> <span class="toc_entry">Definitions of \(C^{*}\)–algebras and \(W^{*}\)–algebras</span></a>
+  <a href="sect0003.html"><span class="toc_ref">0.1.2</span> <span class="toc_entry">Normal Implies Ultraweakly Continuous</span></a>
  </li>
 
   </ul>
@@ -60,7 +53,481 @@
 
 
 <div class="main-text">
-<h1 id="a0000000004">0.3 Products of nonnegative elements are nonnegative</h1>
+<h2 id="a0000000004">0.1.2 Normal Implies Ultraweakly Continuous</h2>
+<div class="theorem_thmwrapper theorem-style-plain" id="lem: selfadjoint_le_norm">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">1</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: selfadjoint_le_norm">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p> For all self-adjoint \(x\in M\), \(\| x\| 1-x \ge 0\). </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000005">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem: proj_sub_of_subproj">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">2</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: proj_sub_of_subproj">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p> For all \(p,q\in \mathcal{P}(M)\) such that \(q\le p\), \(p-q\in \mathcal{P}(M)\). </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000006">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem: proj_of_sup_proj">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">3</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: proj_of_sup_proj">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p> For every increasing bounded net \((p_{\alpha })\) of projections in \(M\), the supremum \(p\) is a projection in \(M\) </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000007">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<p>If \(P:\mathcal{P}(M)\to \text{Prop}\) is a predicate, the usual ordering “\(\le \)” on projections induces an order on the set \(\{ p\in \mathcal{P}(M)|P(p)\} \). In what follows there will be no confusion if we also denote this induced order by “\(\le \)”. </p>
+<p>The following lemma undoubtedly exists in Mathlib in more generality already. </p>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem: uw_pos_sep_pts">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">4</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: uw_pos_sep_pts">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p> For every nonzero element \(a\in M\), there is a \(\sigma (M,M_{*})\)–continuous positive linear functional \(\psi \) on \(M\) such that \(\psi (a)\ne 0\). </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000008">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem: exists_uw_ge_normal">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">5</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: exists_uw_ge_normal">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p> For every positive normal linear functional \(\varphi \) and nonzero \(p\in \mathcal{P}(M)\) there exists a positive \(\sigma (M,M_{*})\)–continuous linear functional \(\psi \) such that \(\varphi (p){\lt}\psi (p)\). </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000009">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem: msr_th_lemma">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">6</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: msr_th_lemma">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p> For all positive linear functionals \(\varphi ,\psi \) with \(\varphi \) normal and \(\psi \) \(\sigma (M,M_{*})\)–continuous and every nonzero \(p\in \mathcal{P}(M)\) such that \(\varphi (p){\lt}\psi (p)\), there exists a nonzero \(p_1 \in \mathcal{P}(M)\) such that \(p_1\le p\) and for all nonzero \(q\in \mathcal{P}(M)\) with \(q\le p_1\), we have \(\varphi (q){\lt}\psi (q)\). </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000010">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<p>Recall that a compact Hausdorff space is <b class="bfseries">Stonean</b> if the closure of every open set is open. </p>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem: fin_lin_approx_of_stonean">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">7</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: fin_lin_approx_of_stonean">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p> Let \(K\) be a Stonean space. Then every element \(a\) in \(C(K)\) can be uniformly approximated by finite linear combinations of projections in \(C(K)\). If \(a\ge 0\) then the coefficients of the approximating linear combinations may be chosen nonnegative. </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000011">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem: cut_down_of_wstar">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">8</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: cut_down_of_wstar">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p> If \(p\in M\) is a projection, \(pMp\) is also a \(W^{*}\) algebra with identity \(p\). </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000012">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem: spec_masa_wstar_stonean">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">9</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: spec_masa_wstar_stonean">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p> If \(C\) is any maximal commutative \(C^*\)–subalgebra of the \(W^{*}\)–algebra \(M\), its spectrum space (maximal ideal space) is Stonean. </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000013">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem: zorn_base">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">10</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: zorn_base">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p> Let \(\varphi \) be a normal positive linear functional on \(M\) and consider the predicate \(P:\mathcal{P}(M)\to \text{Prop}\) defined, for \(p\in \mathcal{P}(M)\), by “\(M\ni x \mapsto \varphi (xp)\) is \(\sigma (M,M_{*})\)–continuous”. If \((p_{\alpha })\) is a chain of projections in \(M\) such that \(P(p_{\alpha })\) is true for each \(\alpha \), then \(P(\sup (p_{\alpha }))\) is true. Hence by Zorn’s Lemma there is a maximal \(p_0\in \mathcal{P}(M)\) such that \(P(p_0)\) is true. </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000014">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem: bdd_sigma_cts_iff_bdd_s_cts">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">11</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: bdd_sigma_cts_iff_bdd_s_cts">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p> A linear functional \(\rho \) on \(M\) is \(\sigma \) continuous on the unit sphere (hence \(\sigma \)–continuous) if and only if it is \(s\)–continuous on the unit sphere (hence \(s\)–continuous). </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000015">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem: wstar_of_masa">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">12</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#lem: wstar_of_masa">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p> A maximal abelian \(*\)–subalgebra of a \(W^{*}\)–algebra \(M\) is also a \(W^{*}\)–algebra. </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000016">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="sigma_cts_of_normal">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">13</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#sigma_cts_of_normal">#</a>
+    
+    <a class="icon proof" href="sect0003.html#a0000000017"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0003.html#lem: zorn_base">Lemma 10</a></li>
+          
+          <li><a href="sect0003.html#lem: exists_uw_ge_normal">Lemma 5</a></li>
+          
+          <li><a href="sect0003.html#lem: msr_th_lemma">Lemma 6</a></li>
+          
+          <li><a href="sect0003.html#lem: cut_down_of_wstar">Lemma 8</a></li>
+          
+          <li><a href="sect0003.html#lem: spec_masa_wstar_stonean">Lemma 9</a></li>
+          
+          <li><a href="sect0003.html#lem: fin_lin_approx_of_stonean">Lemma 7</a></li>
+          
+          <li><a href="sect0003.html#lem: bdd_sigma_cts_iff_bdd_s_cts">Lemma 11</a></li>
+          
+          <li><a href="sect0003.html#lem: wstar_of_masa">Lemma 12</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>  Every positive normal linear functional \(\varphi \) on \(M\) is \(\sigma (M,M_{*})\)–continuous. </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000017">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  <p>The claim is obvious for the zero functional. Let \(\varphi \) be a nonzero positive normal linear functional. By Lemma <a href="sect0003.html#lem: zorn_base">10</a> we have a maximal \(p_0\in \mathcal{P}(M)\) such that \(M\ni x \mapsto \varphi (xp_0)\) is \(\sigma (M,M_{*})\)–continuous. Assume for the purposes of finding a contradiction that \(p_0\ne 1\). By Lemma <a href="sect0003.html#lem: exists_uw_ge_normal">5</a> there is a \(\sigma (M,M_{*})\)–continuous positive functional \(\psi \) on \(M\) such that \(\varphi (1-p_0){\lt}\psi (1-p_0)\). By Lemma <a href="sect0003.html#lem: msr_th_lemma">6</a> there is a nonzero subprojection \(p\le 1-p_0\) in \(M\) such that \(\varphi (q){\lt} \psi (q)\) for every nonzero \(q\le p\) in \(M\). Let \(x\in pMp\) be on the unit sphere. Then \(x^{*}x\) is positive and hence normal, so the \(C^{*}\)–subalgebra of \(pMp\) generated by \(x^{*}x\) and \(p\) is commutative, and is hence contained in a maximal abelian \(*\)–subalgebra \(A\) of \(pMp\). Now \(A\) is a \(W^{*}\)–subalgebra of \(pMp\) by Lemma <a href="sect0003.html#lem: wstar_of_masa">12</a> and hence is a maximal commutative \(C^{*}\)–subalgebra of \(pMp\). Via the Gelfand Transform, \(A\) is star isomorphic to \(C(K)\), where \(K\) is Stonean by Lemmas <a href="sect0003.html#lem: cut_down_of_wstar">8</a> and <a href="sect0003.html#lem: spec_masa_wstar_stonean">9</a>. By Lemma <a href="sect0003.html#lem: fin_lin_approx_of_stonean">7</a> it follows that \(\varphi (a)\le \psi (a)\) for every \(a\ge 0\) in \(A\), which holds a fortiori for \(a\ge 0\) in \(C^{*}(x^{*}x,p)\). In particular, \(\varphi (px^{*}xp)\le \psi (px^{*}xp)\). Therefore, </p>
+<div class="displaymath" id="a0000000018">
+  \begin{align}  |\varphi (x(p_0+p))|& \le |\varphi (xp_0)|+|\varphi (xp)|\\ \nonumber & \le |\varphi (xp_0)|+\varphi (1)^{1/2}\varphi (px^{*}xp)^{1/2}\\ \nonumber & \le |\varphi (xp_0)|+\varphi (1)^{1/2}\psi (px^{*}xp)^{1/2}. \end{align}
+</div>
+<p> Since \(x\mapsto \varphi (xp_0)\) is \(\sigma \)–continuous, it is \(s\)-continuous by Lemma <a href="sect0003.html#lem: bdd_sigma_cts_iff_bdd_s_cts">11</a>. The seminorm \(x \mapsto \psi (px^{*}xp)^{1/2}\) is a defining seminorm for the \(s\)–topology on \(M\). It follows that \(x\mapsto \varphi (x(p_0+p))\) is \(s\)-continuous and therefore \(\sigma \)–continuous. This contradicts the maximality of \(p_0\), and therefore \(p_0=1\) and the result follows. </p>
+
+  </div>
+</div>
 
 </div> <!--main-text -->
 </div> <!-- content-wrapper -->
@@ -72,11 +539,9 @@
 
   <svg  id="showmore-plus" class="icon icon-eye-plus showmore"><use xlink:href="symbol-defs.svg#icon-eye-plus"></use></svg>
 
-  <a href="sect0002.html" title="Continuous functional calculus"><svg  class="icon icon-arrow-left "><use xlink:href="symbol-defs.svg#icon-arrow-left"></use></svg>
+  <a href="sect0002.html" title="Ultraweakly Continuous Implies Normal"><svg  class="icon icon-arrow-left "><use xlink:href="symbol-defs.svg#icon-arrow-left"></use></svg>
 </a>
-  <a href="index.html" title="Operator Algebras in Lean"><svg  class="icon icon-arrow-up "><use xlink:href="symbol-defs.svg#icon-arrow-up"></use></svg>
-</a>
-  <a href="sect0004.html" title="Sakai’s Book"><svg  class="icon icon-arrow-right "><use xlink:href="symbol-defs.svg#icon-arrow-right"></use></svg>
+  <a href="sect0001.html" title="Normality and Ultraweak–Continuity for Positive Functionals"><svg  class="icon icon-arrow-up "><use xlink:href="symbol-defs.svg#icon-arrow-up"></use></svg>
 </a>
 </nav>
 
