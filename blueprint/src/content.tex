@@ -6,6 +6,11 @@
 % the current file can be a simple sequence of \input. Otherwise It
 % can start with a \section or \chapter for instance.
 
+\section{WStarAlgebras and their Topologies}
+
+In this section we define the topologies and need to prove that $W^{*}$--algebras are closed with respect to these. Must also put these
+dependencies explicitly into the results that use them below. 
+
 \section{Normality and Ultraweak Continuity for Positive Functionals}
 
 In what follows, let $M$ be a (nonzero) $W^{*}$--algebra. Let $\mathcal{P}(M)$
@@ -19,7 +24,7 @@ is \textbf{positive} if $\varphi(x)\ge 0$ whenever $x\ge 0$.
 
 \subsection{Ultraweakly Continuous Implies Normal} 
 
-This is 1.7.4 in Sakai. Roughly, taking an increasing net of projections, it converges to the sup strongly, hence $\sigma$-topology,
+This is 1.7.4 in Sakai. Roughly, taking an increasing net of projections, it converges to the supremum strongly, hence $\sigma$-topology,
 and the $\sigma$-continuity finishes the proof.
 
 \begin{theorem}
@@ -95,7 +100,14 @@ $q\in \mathcal{P}(M)$ with $q\le p_1$, we have $\varphi(q)<\psi(q)$.
   We proceed by contradiction. Suppose the conclusion does not hold. Then, for every nonzero subprojection
   $p_1$ of $p$ there is a nonzero subprojection $q\le p_1$ such that $\varphi(q)\ge \psi(q)$. In particular,
   (letting $p_1=q$) there is a $q\le p$ such that $\varphi(q)\ge \psi(q)$. If $(q_\alpha)$ is a chain
-  of such nonzero projections, by Lemma \ref{lem: proj_of_sup_proj}
+  of such nonzero projections, by Theorem \ref{lem: sigma_cont_of_normal (Sak 1.7.4)} $q_{\alpha}\to \sup q_{\alpha}$ 
+  in the $\sigma$--topology, and by Lemma \ref{lem: proj_of_sup_proj} we know this supremum is a subprojection of $p_1$. Since $\varphi$
+  is positive and normal, and $\psi$ is positive and $\sigma$--continuous, we have $\varphi(\sup q_{\alpha})\ge \psi(\sup q_{\alpha})$.
+  Therefore, by Zorn's Lemma, there is a maximal $q_{0}\le p$ such that $\varphi(q_0)\ge \psi(q_0)$. We claim $q_{0}=p$. If not, 
+  $p-q_0$ is a nonzero subprojection of $p$ by Lemma \ref{lem: proj_sub_of_subproj}, and there exists a nonzero projection $q_{1}\le p-q_{0}$
+  such that $\varphi(q_{1})\ge \psi(q_{1})$. But then $q_{0}$ is a proper subprojection of $q_0+q_1$ and by linearity and positivity 
+  $\varphi(q_0+q_1)\ge \psi(q_0+q_1)$ contradicting the maximality of $q_0$. Thus $p=q_0$ and so $\varphi(p) \ge \psi(p)$, contradicting 
+  the hypothesis $\varphi(p)<\psi(p)$.  
 \end{proof}
 
 Recall that a compact Hausdorff space is \textbf{Stonean} if the closure of every open set is open.
