@@ -145,14 +145,16 @@ of Theorem \ref{thm: sigma_cts_of_normal}.
 
 \begin{lemma}
   \label{lem: zorn_base}
-  \uses{lem: proj_sub_of_subproj, lem: selfadjoint_le_norm}
+  \uses{lem: proj_sub_of_subproj,lem: selfadjoint_le_norm,lem: sigma_cont_of_normal (Sak 1.7.4),lem: proj_of_sup_proj}
   Let $\varphi$ be a normal positive linear functional on $M$ and consider the predicate $P:\mathcal{P}(M)\to \text{Prop}$ defined, for $p\in \mathcal{P}(M)$, by 
   ``$M\ni x \mapsto \varphi(xp)$ is $\sigma(M,M_{*})$--continuous''. If $(p_{\alpha})$ is a chain of projections in $M$ such that $P(p_{\alpha})$ is true for each $\alpha$,
   then $P(\sup(p_{\alpha}))$ is true. Hence by Zorn's Lemma there is a maximal $p_0\in \mathcal{P}(M)$ such that $P(p_0)$ is true.  
 \end{lemma}
 
 \begin{proof}
-  Let $x$ be on the unit sphere. By Lemma \ref{lem: proj_sub_of_subproj} we know $p-p_\alpha$ is a projection. By the $C^{*}$--property
+  Let $x$ be on the unit sphere and let $p$ be the supremum of the $p_{\alpha}$. By Theorem \ref{lem: sigma_cont_of_normal (Sak 1.7.4)} and Lemma \ref{lem: proj_of_sup_proj} 
+  we know $p_{\alpha}$ converges in $\sigma$--topology to $p$, and $p$ is a projection. 
+  By Lemma \ref{lem: proj_sub_of_subproj} we know $p-p_\alpha$ is a projection. By the $C^{*}$--property
   of the norm ($\|x^{*}x\|=\|x\|^{2}$), Lemma \ref{lem: selfadjoint_le_norm} and the positivity of $\varphi$ we have $\varphi(x^{*}x)\le \varphi(1)$.
   Now these facts together with Cauchy-Schwartz and the monotonicity of square roots, 
   \begin{align}
