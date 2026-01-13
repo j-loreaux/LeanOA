@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  12 JAN 2026 13:07
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  13 JAN 2026 09:19
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -671,10 +671,6 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 [1
 
 ] (./content.tex
-Overfull \hbox (4.1846pt too wide) in paragraph at lines 9--9
-[]\TU/lmr/bx/n/14.4 Normality and Ultraweak–Continuity for Positive Func-
- []
-
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
 (Font)              scaled to size 10.00107pt on input line 11.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
@@ -689,24 +685,43 @@ LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
 (Font)              scaled to size 4.99947pt on input line 11.
 
 
-[1])
+[1]
 
-[2] (/Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.aux)
+LaTeX Warning: Reference `lem: spec_masa_wstar_stonean' on page 2 undefined on 
+input line 172.
+
+
+LaTeX Warning: Reference `lem: fin_lin_approx_of_stonean' on page 2 undefined o
+n input line 172.
+
+
+LaTeX Warning: Reference `lem: bdd_sigma_cts_iff_bdd_s_cts' on page 2 undefined
+ on input line 172.
+
+
+
+[2])
+
+[3] (/Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
+
+
+LaTeX Warning: There were undefined references.
+
 Package rerunfilecheck Info: File `print.out' has not changed.
-(rerunfilecheck)             Checksum: D1E4804DA9858BABF913ADFF92EE5413;868.
+(rerunfilecheck)             Checksum: B3FC0F7CE15A7F7DDFE91925AF79FF4B;1092.
  ) 
 Here is how much of TeX's memory you used:
- 16727 strings out of 473832
- 308222 string characters out of 5729482
- 913329 words of memory out of 5000000
- 39591 multiletter control sequences out of 15000+600000
+ 16731 strings out of 473832
+ 308394 string characters out of 5729482
+ 915329 words of memory out of 5000000
+ 39595 multiletter control sequences out of 15000+600000
  564208 words of font info for 85 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 90i,8n,107p,542b,423s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,8n,107p,542b,477s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on /Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.pdf (3 pag
+Output written on /Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.pdf (4 pag
 es).
