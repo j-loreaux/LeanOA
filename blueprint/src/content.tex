@@ -140,14 +140,29 @@ Recall that a compact Hausdorff space is \textbf{Stonean} if the closure of ever
 \begin{proof}
 \end{proof}
 
+Note that the following likely contains the most crucial use of the normality of $\varphi$ for the later proof 
+of Theorem \ref{thm: sigma_cts_of_normal}.
+
 \begin{lemma}
   \label{lem: zorn_base}
+  \uses{lem: proj_sub_of_subproj, lem: selfadjoint_le_norm}
   Let $\varphi$ be a normal positive linear functional on $M$ and consider the predicate $P:\mathcal{P}(M)\to \text{Prop}$ defined, for $p\in \mathcal{P}(M)$, by 
   ``$M\ni x \mapsto \varphi(xp)$ is $\sigma(M,M_{*})$--continuous''. If $(p_{\alpha})$ is a chain of projections in $M$ such that $P(p_{\alpha})$ is true for each $\alpha$,
   then $P(\sup(p_{\alpha}))$ is true. Hence by Zorn's Lemma there is a maximal $p_0\in \mathcal{P}(M)$ such that $P(p_0)$ is true.  
 \end{lemma}
 
 \begin{proof}
+  Let $x$ be on the unit sphere. By Lemma \ref{lem: proj_sub_of_subproj} we know $p-p_\alpha$ is a projection. By the $C^{*}$--property
+  of the norm ($\|x^{*}x\|=\|x\|^{2}), Lemma \ref{lem: selfadjoint_le_norm} and the positivity of $\varphi$ we have $\varphi(x^{*}x)\le \varphi(1)$.
+  Now these facts together with Cauchy-Schwartz and the monotonicity of square roots, 
+  \begin{align}
+    |\varphi(x(p-p_{\alpha}))|&\le \varphi(x^{*}x)^{1/2}\varphi(p-p_{\alpha})^{1/2}\\ \nonumber
+    &\le \varphi(1)^{1/2}\varphi(p-p_{\alpha})^{1/2}.
+  \end{align}
+  Hence, by the definition of operator norm, $\|\varphi(\cdot(p-p_{\alpha}))\|\le \varphi(1)^{1/2}\varphi(p-p_{\alpha})^{1/2}$. The right
+  hand side converges to 0 with $\alpha$ due to the normality of $\varphi$ and therefore $\varphi(\cdot p_{\alpha})$ converges to $\varphi(\cdot p)$
+  in norm. Since the set of $\sigma$--continuous functionals on $M$ is norm closed, it follows that $\sigma(\cdot p)$ is $\sigma$--continuous.
+  We obtain a maximal $p_{0}$ by Zorn's Lemma.
 \end{proof}
 
 \begin{lemma}
@@ -168,7 +183,7 @@ Recall that a compact Hausdorff space is \textbf{Stonean} if the closure of ever
 \end{proof}
 
 \begin{theorem}
-  \label{sigma_cts_of_normal}
+  \label{thm: sigma_cts_of_normal}
   \uses{lem: zorn_base, lem: exists_uw_ge_normal, lem: msr_th_lemma, lem: cut_down_of_wstar, lem: spec_masa_wstar_stonean, lem: fin_lin_approx_of_stonean, lem: bdd_sigma_cts_iff_bdd_s_cts, lem: wstar_of_masa}
   Every positive normal linear functional $\varphi$ on $M$ is $\sigma(M,M_{*})$--continuous.
 \end{theorem}
