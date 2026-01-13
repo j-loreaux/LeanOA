@@ -68,8 +68,6 @@ If $P:\mathcal{P}(M)\to \text{Prop}$ is a predicate, the usual ordering ``$\le$'
 induces an order on the set $\{p\in \mathcal{P}(M)|P(p)\}$. In what follows there will be no confusion if 
 we also denote this induced order by ``$\le$''.
 
-The following lemma undoubtedly exists in Mathlib in more generality already.
-
 \begin{lemma}
   \label{lem: uw_pos_sep_pts}
 For every nonzero element $a\in M$, there is a $\sigma(M,M_{*})$--continuous positive linear
@@ -86,6 +84,9 @@ functional $\psi$ on $M$ such that $\psi(a)\ne 0$.
 \end{lemma}
 
 \begin{proof}
+  By Lemma \ref{lem: uw_pos_sep_pts} there is a $\sigma(M,M_{*})$--continuous positive linear
+  functional $\psi_0$ on $M$ such that $\psi_0(p)\ne 0$. Rescale this functional by a positive constant to obtain
+  $\psi$ such that $\varphi(p)<\psi(p)$.
 \end{proof}
 
 \begin{lemma}
