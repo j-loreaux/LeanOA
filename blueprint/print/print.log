@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  13 JAN 2026 12:31
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  14 JAN 2026 16:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -684,27 +684,86 @@ LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
 (Font)              scaled to size 4.99947pt on input line 11.
 
+Missing character: There is no ≥ (U+2265) in font [lmroman10-italic]:mapping=te
+x-text;!
+
+LaTeX Warning: Reference `lem: pos_iff_star_mul_self (Sak 1.4.4)' on page 1 und
+efined on input line 35.
+
+
+LaTeX Warning: Reference `lem: pos_iff_star_mul_self (Sak 1.4.4)' on page 1 und
+efined on input line 40.
+
+Missing character: There is no ≤ (U+2264) in font [lmroman10-italic]:mapping=te
+x-text;!
+
+LaTeX Warning: Reference `lem: star_conj_pos' on page 1 undefined on input line
+ 69.
+
+
+LaTeX Warning: Reference `lem: proj_le_one' on page 1 undefined on input line 6
+9.
+
+
+! LaTeX Error: \symcalallowed only in math mode.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.70   Let \mathcal
+                   {A} be a $C^{*}$--algebra and $p,q \in \mathcal{A}$ be pr...
+
+? 
+
+LaTeX Warning: Reference `lem: star_conj_pos' on page 1 undefined on input line
+ 74.
+
+
+LaTeX Warning: Reference `lem: proj_le_one' on page 1 undefined on input line 7
+4.
+
+
+LaTeX Warning: Reference `lem: star_conj_pos' on page 1 undefined on input line
+ 75.
+
+
 
 [1]
 
-[2])
+[2]
 
-[3] (/Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.aux)
+[3])
+
+[4] (/Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
-Package rerunfilecheck Info: File `print.out' has not changed.
-(rerunfilecheck)             Checksum: B3FC0F7CE15A7F7DDFE91925AF79FF4B;1092.
+
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+
+Package rerunfilecheck Warning: File `print.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `print.out':
+(rerunfilecheck)             Before: B3FC0F7CE15A7F7DDFE91925AF79FF4B;1092
+(rerunfilecheck)             After:  C85C7CB5E24C841EE4E2ADFDEC2F82CB;1333.
  ) 
 Here is how much of TeX's memory you used:
- 16728 strings out of 473832
- 308303 string characters out of 5729482
- 915329 words of memory out of 5000000
- 39592 multiletter control sequences out of 15000+600000
+ 16736 strings out of 473832
+ 308523 string characters out of 5729482
+ 917329 words of memory out of 5000000
+ 39600 multiletter control sequences out of 15000+600000
  564208 words of font info for 85 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 90i,8n,107p,542b,477s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,8n,107p,542b,439s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on /Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.pdf (4 pag
+Output written on /Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.pdf (5 pag
 es).
