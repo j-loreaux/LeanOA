@@ -11,6 +11,73 @@
 In this section we define the topologies and need to prove that $W^{*}$--algebras are closed with respect to these. Must also put these
 dependencies explicitly into the results that use them below. 
 
+\section{Order Lemmas}
+
+Let $\mathcal{A}$ be a unital $C^{*}$--algebra in this section. We collect lemmas for the ordering of elements in $\mathcal{A}$. 
+Recall that a selfadjoint element $a \in \mathcal{A}$ is said to be \textbf{positive} if its spectrum is contained in $\mathbb{R}_{\ge 0}$. 
+This is written $a\ge 0$. If $a,b \in A$ are selfadjoint then $b \le a$ if $b-a \ge 0$.
+(TO DO: adapt this to Jireh's fully general ordering on all elements without mentioning the selfadjoint ones.)
+
+\begin{lemma}
+  \label{lem: pos_iff_star_mul_self (Sak 1.4.4)}
+  Let $h \in \mathcal{A}$. TFAE:
+  \begin{enumerate}
+  \item h \ge 0;
+  \item There exists $x\in \mathcal{A}$ such that $h=x^{*}x$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{corollary}
+  \label{lem: star_conj_pos}
+  \uses{lem: pos_iff_star_mul_self (Sak 1.4.4)}
+  If $h,a \in \mathcal{A}$ with $h\ge 0$ then $a^{*}ha\ge 0$
+\end{corollary}
+
+\begin{proof}
+  By \ref{lem: pos_iff_star_mul_self (Sak 1.4.4)}, $a^{*}ha=a^{*}x^{*}xa=(xa)^{*}(xa)\ge 0$.
+\end{proof}
+
+\begin{lemma}
+  \label{lem: selfadjoint_le_norm}
+  For all self-adjoint $x\in \mathcal{A}$, $\|x\|1-x \ge 0$.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\section{Projection Lemmas}
+
+Let $\mathcal{A}$ be a unital $C^{*}$--algebra in this section. In this section we collect relevant results about (selfadjoint) projections in $\mathcal{A}$. 
+Recall that an element $p$ in a $C^{*}$--algebra is a projection if $p^2=p^{*}=p$. By the Spectral Mapping Theorem (or using the full Gelfand Duality),
+a selfadjoint element $a\in A$ is a projection if and only if the spectrum of $a$ is contained in $\{0,1\}$.
+
+\begin{lemma}
+  \label{lem: proj_le_one}
+  \uses{lem: selfadjoint_le_norm}
+  For all projections $p\in \mathcal{A}$, p \le 1.
+\end{lemma}
+
+\begin{proof}
+  We can get this by Sakai 1.2.3. and \ref{lem: selfadjoint_le_norm} We should include that result here.
+\end{proof}
+
+\begin{lemma}
+  \label{lem: sub_pos_cut}
+  \uses{lem: star_conj_pos, lem: proj_le_one}
+  Let \mathcal{A} be a $C^{*}$--algebra and $p,q \in \mathcal{A}$ be projections. Then $p-q\ge 0$ iff $qpq = q$.
+\end{lemma}
+
+\begin{proof}
+  By Lemma \ref{lem: star_conj_pos}, if $p-q \ge 0$ then $q(p-q)q=qpq-q^3=qpq-q \ge 0$. By Lemma \ref{lem: proj_le_one}, we have $p\le 1$ and 
+  employing Lemma \ref{lem: star_conj_pos} we obtain $qpq\le q1q=q$. Since $qpq\ge q$ and $qpq\le q$ we have $qpq=q$. 
+\end{proof}
+
+
+
+
 \section{Normality and Ultraweak Continuity for Positive Functionals}
 
 In what follows, let $M$ be a (nonzero) $W^{*}$--algebra. Let $\mathcal{P}(M)$
@@ -19,8 +86,6 @@ We say $\varphi$ is \textbf{normal} if whenever $(p_{\alpha})$ is an increasing 
 we have $\varphi(p_{\alpha})\to \varphi(p)$. In this section we show that this property is equivalent to 
 $\sigma(M, M_{*})$--continuity. We say that a linear functional $\varphi$ on $M$
 is \textbf{positive} if $\varphi(x)\ge 0$ whenever $x\ge 0$.
-
-\textit{To do : Net results must be replaced by filter results.}
 
 \subsection{Ultraweakly Continuous Implies Normal} 
 
@@ -38,14 +103,6 @@ and the $\sigma$-continuity finishes the proof.
 \end{proof}
 
 \subsection{Normal Implies Ultraweakly Continuous}
-
-\begin{lemma}
-  \label{lem: selfadjoint_le_norm}
-  For all self-adjoint $x\in M$, $\|x\|1-x \ge 0$.
-\end{lemma}
-
-\begin{proof}
-\end{proof}
 
 \begin{lemma}
   \label{lem: proj_sub_of_subproj}

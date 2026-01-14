@@ -1,7 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1768313970.05909 "print.tex" "/Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.pdf" "print" 1768313970.86804 0
-  "/Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.aux" 1768313970.64117 1608 c3aae129266b786c1c9b699021344c9d "pdflatex"
-  "/Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.out" 1768313970.64151 1092 b3fc0f7ce15a7f7ddfe91925af79ff4b "pdflatex"
+["pdflatex"] 1768325486.42197 "print.tex" "/Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.pdf" "print" 1768325487.2042 0
+  "/Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.aux" 1768325487.13213 1613 4ebb1b95e6d9744892b5b790b70b0a19 "pdflatex"
+  "/Users/jon/ForkLeanOA/LeanOA/blueprint/print/print.out" 1768325487.13252 1092 b3fc0f7ce15a7f7ddfe91925af79ff4b "pdflatex"
   "/usr/local/texlive/2025/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136768653 1528 f853c4d1b4e0550255e02831fdc8496f ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1246382020 916 f87d7c45f9c908e672703b83b72241a3 ""
@@ -83,7 +83,7 @@
   "/usr/local/texlive/2025/texmf-dist/web2c/texmf.cnf" 1739380943 42148 61becc7c670cd061bb319c643c27fdd4 ""
   "/usr/local/texlive/2025/texmf-var/web2c/xetex/xelatex.fmt" 1741450550 5639796 b6822fbf027c6598cec2e241e0925725 ""
   "/usr/local/texlive/2025/texmf.cnf" 1741450484 577 418a7058ec8e006d8704f60ecd22c938 ""
-  "content.tex" 1768313796.72001 9485 8fe6caa59d61d43ee5a51eec6af32e08 ""
+  "content.tex" 1768325387.05194 11237 87986fb647d4df96e4363c3ed2b8a94e ""
   "macros/common.tex" 1761145206.99186 917 ca8419097dbd17a8af1ff70320561d6e ""
   "macros/print.tex" 1761145206.99195 1101 87627b2ec24fef68edc71c13f43f7bab ""
   "print.tex" 1768241236.52897 1134 564599f8bad81b95cf42bc4e3d114590 ""
