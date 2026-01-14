@@ -16,7 +16,8 @@ lemma spectrum_subset_slitPlane_of_norm_lt_one {A : Type*} [NormedRing A]
   have := spectrum.subset_closedBall_norm (𝕜 := ℂ) (u - 1) |>.trans <|
     Metric.closedBall_subset_ball hu
   rw [← map_one (algebraMap ℂ A), ← spectrum.sub_singleton_eq, Set.sub_singleton] at this
-  exact fun x hx ↦ add_sub_cancel 1 x ▸ Complex.mem_slitPlane_of_norm_lt_one (by simpa using this ⟨x, hx, rfl⟩)
+  exact fun x hx ↦ add_sub_cancel 1 x ▸
+    Complex.mem_slitPlane_of_norm_lt_one (by simpa using this ⟨x, hx, rfl⟩)
 
 lemma ContinuousLinearMap.norm_postcomp_le {𝕜₁ 𝕜₂ 𝕜₃ : Type*} [NontriviallyNormedField 𝕜₁]
     [NontriviallyNormedField 𝕜₂] [NontriviallyNormedField 𝕜₃] {σ : 𝕜₁ →+* 𝕜₂} {τ : 𝕜₂ →+* 𝕜₃}

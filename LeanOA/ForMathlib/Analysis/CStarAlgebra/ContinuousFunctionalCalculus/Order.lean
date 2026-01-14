@@ -1,9 +1,9 @@
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 
-variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+variable {ι A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 /-- If `x : ι → A` is summable and `y` is dominated by `x` (i.e., `0 ≤ y i ≤ x i` for `i : ι`), then
-`y` is also summable.  -/
+`y` is also summable. -/
 lemma CStarAlgebra.dominated_convergence {x y : ι → A} (hx : Summable x)
     (hy_nonneg : ∀ i, 0 ≤ y i) (h_le : ∀ i, y i ≤ x i) : Summable y := by
   rw [summable_iff_vanishing] at hx ⊢

@@ -11,10 +11,11 @@ import Mathlib.Analysis.Normed.Lp.lpSpace
 
 /-! # The standard C⋆-module
 
-Given a family `E : ι → Type*` of C⋆-modules over a C⋆-algebra `A`, the *standard C⋆-module* `ℓ²(A, E)`
-consists of the additive subgroup of `Π i, E i` consisting of those `x : Π i, E i` such that the sum
-`∑' i, ⟪x i, x i⟫_A` converges. Note that such convergence is a consequence of, but not equivalent to,
-the convergence of `∑' i, ‖x i‖ ^ 2`. Because of the similarity with `lp` for `p = 2`, we develop the
+Given a family `E : ι → Type*` of C⋆-modules over a C⋆-algebra `A`, the *standard C⋆-module*
+`ℓ²(A, E)` consists of the additive subgroup of `Π i, E i` consisting of those `x : Π i, E i`
+such that the sum `∑' i, ⟪x i, x i⟫_A` converges. Note that such convergence is a consequence
+of, but not equivalent to, the convergence of `∑' i, ‖x i‖ ^ 2`. Because of the similarity
+with `lp` for `p = 2`, we develop the
 API in an analogous manner.
 
 `ℓ²(A, E)` is naturally a complete C⋆-module over `A`, with `A`-valued inner product given by
@@ -22,11 +23,12 @@ API in an analogous manner.
 
 ## Main declarations
 
-+ `CStarModule.MemStandard`: The property on `x : Π i, E i` saying that `∑' i, ⟪x i, x i⟫_A` converges.
-+ `CStarModule.Standard`: The standard C⋆-module `ℓ²(A, E)` which is the additive subgroup with carrier
-  `{x : Π i, E i | MemStandard A x}`.
-+ `CStarAlgebra.dominated_convergence`: If `x y : ι → A` are sequences of nonnegative elements with `x`
-  summable and `y` dominated by `x`, then `y` is also summable.
++ `CStarModule.MemStandard`: The property on `x : Π i, E i` saying that `∑' i, ⟪x i, x i⟫_A`
+  converges.
++ `CStarModule.Standard`: The standard C⋆-module `ℓ²(A, E)` which is the additive subgroup
+  with carrier `{x : Π i, E i | MemStandard A x}`.
++ `CStarAlgebra.dominated_convergence`: If `x y : ι → A` are sequences of nonnegative elements
+  with `x` summable and `y` dominated by `x`, then `y` is also summable.
 + `CStarModule.Standard.inst`: The standard C⋆-module `ℓ²(A, E)` is a C⋆-module over `A`.
 + `CStarModule.Standard.instCompleteSpace`: The standard C⋆-module `ℓ²(A, E)` is a complete space.
 -/
@@ -101,14 +103,15 @@ lemma MemStandard.sub {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard
 lemma MemStandard.summable_inner {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard A y) :
     Summable fun i ↦ ⟪x i, y i⟫_A := by
   conv in ⟪x _, y _⟫_A => rw [polarization']
-  apply_rules (config := { transparency := .reducible }) [Summable.const_smul, Summable.add, Summable.sub]
+  apply_rules (config := { transparency := .reducible })
+    [Summable.const_smul, Summable.add, Summable.sub]
   · exact hy.add hx
   · exact hy.sub hx
   · exact hy.add (hx.complex_smul _)
   · exact hy.sub (hx.complex_smul _)
 
 variable (A E) in
-/-- The standard C⋆-module  -/
+/-- The standard C⋆-module. -/
 def Standard : Type _ :=
   { carrier := {x | MemStandard A x}
     zero_mem' := .zero
@@ -123,9 +126,10 @@ namespace Standard
 
 /-- Create a term of `ℓ²(A, E)` from an `x : Π i, E i` and a proof `hx : MemStandard x`.
 
-Note, because `ℓ²(A, E)` is defeq to the subtype `{x : Π i, E i /‌/ MemStandard x}`, Lean will accept
-anonymous constructor syntax `⟨x, hx⟩ : ℓ²(A, E)`, but this is defeq abuse, and can make it hard to work
-with the resulting term. Instead, users should be prefer to use this bespoke `Standard.mk` function. -/
+Note, because `ℓ²(A, E)` is defeq to the subtype `{x : Π i, E i // MemStandard x}`, Lean
+will accept anonymous constructor syntax `⟨x, hx⟩ : ℓ²(A, E)`, but this is defeq abuse,
+and can make it hard to work with the resulting term. Instead, users should be prefer
+to use this bespoke `Standard.mk` function. -/
 def mk (x : Π i, E i) (hx : MemStandard A x) : ℓ²(A, E) := ⟨x, hx⟩
 
 /-- The map from `ℓ²(A, E)` to `Π i, E i`. -/
@@ -235,11 +239,12 @@ theorem tendsto_of_tendsto_pi {F : ℕ → ℓ²(A, E)} (hF : CauchySeq F) {f : 
   refine (hF.eventually_eventually hε').mono ?_
   rintro n (hn : ∀ᶠ l in atTop, ‖F n - F l‖ < ε / √2)
   simp only [Metric.mem_closedBall, dist_eq_norm, norm_def, Real.sqrt_le_iff, hε.le, true_and]
-  obtain ⟨s, hs⟩ := (F n - f).memStandard.tsum_vanishing (Metric.ball_mem_nhds 0 (by positivity : 0 < ε ^ 2 / 2))
+  obtain ⟨s, hs⟩ := (F n - f).memStandard.tsum_vanishing <|
+    Metric.ball_mem_nhds 0 (by positivity : 0 < ε ^ 2 / 2)
   rw [← (F n - f).memStandard.sum_add_tsum_compl (s := s) , ← add_halves (ε ^ 2)]
   apply norm_add_le _ _ |>.trans ?_
   gcongr
-  · apply le_of_tendsto (f := fun l ↦ ‖∑ x ∈ s, ⟪(F n - F l) x, (F n - F l) x⟫_A‖) (x := atTop) ?_ ?_
+  · apply le_of_tendsto (f := fun l ↦ ‖∑ x ∈ s, ⟪(F n - F l) x, (F n - F l) x⟫_A‖) (x := atTop)
     · refine tendsto_norm.comp <| tendsto_finset_sum s fun i hi ↦ ?_
       rw [tendsto_pi_nhds] at hf
       have := tendsto_const_nhds (x := F n i) |>.sub (hf i)
