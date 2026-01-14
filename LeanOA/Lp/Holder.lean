@@ -142,7 +142,8 @@ lemma Memℓp.holder {e : (i : ι) → E i} {f : (i : ι) → F i} (he : Memℓp
   obtain ⟨D, hD, hDf⟩ := memℓp_gen_iff'' hq |>.mp hf
   exact memℓp_gen' <| Memℓp.holder_gen_bound r hp hq B hBK hK hC hCe hDf
 
--- here we bundle `B` because `e` and `f` are bundled.
+/-- The map between `lp` spaces satisfying `ENNReal.HolderTriple` induced by a
+uniformly bounded family of continuous bilinear maps on the underlying spaces. -/
 @[simps]
 def lp.holder (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i) {K : ℝ} (hBK : ∀ i, ‖B i‖ ≤ K)
     (e : lp E p) (f : lp F q) :
@@ -150,6 +151,7 @@ def lp.holder (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i) {K : ℝ} (hB
   val := fun i ↦ B i (e i) (f i)
   property := (lp.memℓp e).holder _ (lp.memℓp f) B hBK
 
+/-- `lp.holder` as a bilinear map. -/
 @[simps!]
 def lp.holderₗ (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i) {K : ℝ} (hBK : ∀ i, ‖B i‖ ≤ K) :
     lp E p →ₗ[𝕜] lp F q →ₗ[𝕜] lp G r :=
@@ -159,6 +161,7 @@ def lp.holderₗ (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i) {K : ℝ} 
     (fun _ _ _ ↦ by ext; simp)
     (fun _ _ _ ↦ by ext; simp)
 
+/-- `lp.holder` as a continuous bilinear map. -/
 noncomputable def lp.holderL [Fact (1 ≤ p)] [Fact (1 ≤ q)] [Fact (1 ≤ r)]
     (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i) {K : ℝ≥0} (hBK : ∀ i, ‖B i‖ ≤ K) :
     lp E p →L[𝕜] lp F q →L[𝕜] lp G r :=
@@ -198,7 +201,7 @@ noncomputable def lp.holderL [Fact (1 ≤ p)] [Fact (1 ≤ q)] [Fact (1 ≤ r)]
             all_goals positivity
           all_goals positivity
 
-noncomputable def lp.norm_holderL_le [Fact (1 ≤ p)] [Fact (1 ≤ q)] [Fact (1 ≤ r)]
+lemma lp.norm_holderL_le [Fact (1 ≤ p)] [Fact (1 ≤ q)] [Fact (1 ≤ r)]
     (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i) {K : ℝ≥0} (hBK : ∀ i, ‖B i‖ ≤ K) :
     ‖lp.holderL (p := p) (q := q) r B hBK‖ ≤ K :=
   LinearMap.mkContinuous₂_norm_le _ K.2 _

@@ -1,7 +1,9 @@
 import Mathlib.Analysis.Normed.Lp.lpSpace
 import Mathlib.Analysis.Normed.Lp.LpEquiv
 
+@[inherit_doc]
 scoped [lp] notation "ℓ^" p "(" ι ", " 𝕜 ")" => lp (fun _ : ι ↦ 𝕜) p
+@[inherit_doc]
 scoped [lp] notation "ℓ¹(" ι ", " 𝕜 ")" => lp (fun _ : ι ↦ 𝕜) 1
 
 open scoped lp ENNReal
@@ -78,7 +80,9 @@ theorem memℓp_gen_iff'' {f : (i : ι) → E i} (hp : 0 < p.toReal) :
   refine ⟨fun hf ↦ ?_, fun ⟨C, _, hC⟩ ↦ memℓp_gen' hC⟩
   exact ⟨_, tsum_nonneg fun i ↦ (by positivity), memℓp_gen_iff' hp |>.mp hf⟩
 
+-- note, probably we should make a bare function version of this too, or just call this one `ofLE`.
 variable (E) in
+/-- Inclusion map from `lp E p` to `lp E q` for `p ≤ q`, as an additive monoid homomorphism. -/
 def lp.addMonoidHomOfLE (h : p ≤ q) :
     lp E p →+ lp E q where
   toFun f := ⟨f.1, lp.memℓp f |>.of_exponent_ge h⟩
@@ -96,6 +100,7 @@ lemma lp.addMonoidHomOfLE_comp (hpq : p ≤ q) (hqr : q ≤ r) :
   ext; rfl
 
 variable (𝕜 E) in
+/-- `lp.addMonoidHomOfLE` as a linear map. -/
 def lp.linearMapOfLE (h : p ≤ q) :
     lp E p →ₗ[𝕜] lp E q where
   toFun f := ⟨f, lp.memℓp f |>.of_exponent_ge h⟩
@@ -132,8 +137,9 @@ def lp.evalCLM [Fact (1 ≤ p)] (i : ι) : lp E p →L[𝕜] E i :=
     have hp : p ≠ 0 := zero_lt_one.trans_le Fact.out |>.ne'
     simpa only [evalₗ_apply, one_mul, ge_iff_le] using lp.norm_apply_le_norm hp x i
 
+/-- The basis for `ℓ⁰(ι, 𝕜)` given by `lp.single`. -/
 @[simps]
-noncomputable def lp.zeroBasis : Module.Basis ι 𝕜 (lp (fun _ : ι ↦ 𝕜) 0) where
+noncomputable def lp.zeroBasis : Module.Basis ι 𝕜 ℓ^0(ι, 𝕜) where
   repr :=
     { toFun x := .ofSupportFinite ⇑x <| memℓp_zero_iff.mp x.2
       invFun x := ⟨⇑x, memℓp_zero_iff.mpr x.finite_support⟩

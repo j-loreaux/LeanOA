@@ -118,6 +118,7 @@ def Standard : Type _ :=
     add_mem' := .add
     smul_mem' := .complex_smul : Submodule ℂ (Π i, E i) }
 
+@[inherit_doc]
 scoped[CStarAlgebra] notation "ℓ²(" A ", " E ")" => CStarModule.Standard A E
 
 open scoped CStarAlgebra
