@@ -63,39 +63,6 @@
 
 <div class="main-text">
 <h2 id="a0000000007">0.4.2 Normal Implies Ultraweakly Continuous</h2>
-<div class="lemma_thmwrapper theorem-style-plain" id="lem: proj_sub_of_subproj">
-  <div class="lemma_thmheading">
-    <span class="lemma_thmcaption">
-    Lemma
-    </span>
-    <span class="lemma_thmlabel">7</span>
-    <div class="thm_header_extras">
-
-        </div>
-    <div class="thm_header_hidden_extras">
-
-    <a class="icon proof" href="sect0006.html#lem: proj_sub_of_subproj">#</a>
-    
-    
-    
-        </div>
-  </div>
-  <div class="lemma_thmcontent">
-  <p> For all \(p,q\in \mathcal{P}(M)\) such that \(q\le p\), \(p-q\in \mathcal{P}(M)\). </p>
-
-  </div>
-</div>
-<div class="proof_wrapper" id="a0000000014">
-  <div class="proof_heading">
-    <span class="proof_caption">
-    Proof
-    </span>
-    <span class="expand-proof">▶</span>
-  </div>
-  <div class="proof_content">
-  
-  </div>
-</div>
 <div class="lemma_thmwrapper theorem-style-plain" id="lem: proj_of_sup_proj">
   <div class="lemma_thmheading">
     <span class="lemma_thmcaption">
@@ -118,7 +85,7 @@
 
   </div>
 </div>
-<div class="proof_wrapper" id="a0000000015">
+<div class="proof_wrapper" id="a0000000014">
   <div class="proof_heading">
     <span class="proof_caption">
     Proof
@@ -152,7 +119,7 @@
 
   </div>
 </div>
-<div class="proof_wrapper" id="a0000000016">
+<div class="proof_wrapper" id="a0000000015">
   <div class="proof_heading">
     <span class="proof_caption">
     Proof
@@ -176,7 +143,7 @@
 
     <a class="icon proof" href="sect0006.html#lem: exists_uw_ge_normal">#</a>
     
-    <a class="icon proof" href="sect0006.html#a0000000017"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+    <a class="icon proof" href="sect0006.html#a0000000016"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
 </a>
     
     
@@ -188,7 +155,7 @@
 
   </div>
 </div>
-<div class="proof_wrapper" id="a0000000017">
+<div class="proof_wrapper" id="a0000000016">
   <div class="proof_heading">
     <span class="proof_caption">
     Proof
@@ -213,7 +180,7 @@
 
     <a class="icon proof" href="sect0006.html#lem: msr_th_lemma">#</a>
     
-    <a class="icon proof" href="sect0006.html#a0000000018"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+    <a class="icon proof" href="sect0006.html#a0000000017"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
 </a>
     
     
@@ -229,11 +196,11 @@
         
         <ul class="uses">
           
-          <li><a href="sect0005.html#lem: sigma_cont_of_normal (Sak 1.7.4)">Theorem 6</a></li>
+          <li><a href="sect0005.html#lem: sigma_cont_of_normal (Sak 1.7.4)">Theorem 7</a></li>
           
           <li><a href="sect0006.html#lem: proj_of_sup_proj">Lemma 8</a></li>
           
-          <li><a href="sect0006.html#lem: proj_sub_of_subproj">Lemma 7</a></li>
+          <li><a href="sect0003.html#cor: proj_sub_of_subproj">Corollary 6</a></li>
           
         </ul>
     
@@ -249,7 +216,7 @@
 
   </div>
 </div>
-<div class="proof_wrapper" id="a0000000018">
+<div class="proof_wrapper" id="a0000000017">
   <div class="proof_heading">
     <span class="proof_caption">
     Proof
@@ -257,7 +224,7 @@
     <span class="expand-proof">▶</span>
   </div>
   <div class="proof_content">
-  <p>We proceed by contradiction. Suppose the conclusion does not hold. Then, for every nonzero subprojection \(p_1\) of \(p\) there is a nonzero subprojection \(q\le p_1\) such that \(\varphi (q)\ge \psi (q)\). In particular, (letting \(p_1=q\)) there is a \(q\le p\) such that \(\varphi (q)\ge \psi (q)\). If \((q_\alpha )\) is a chain of such nonzero projections, \(q_{\alpha }\to \sup q_{\alpha }\) in the \(\sigma \)–topology by Theorem <a href="sect0005.html#lem: sigma_cont_of_normal (Sak 1.7.4)">6</a>, and by Lemma <a href="sect0006.html#lem: proj_of_sup_proj">8</a> we know this supremum is a subprojection of \(p_1\). Since \(\varphi \) is positive and normal, and \(\psi \) is positive and \(\sigma \)–continuous, we have \(\varphi (\sup q_{\alpha })\ge \psi (\sup q_{\alpha })\). Therefore, by Zorn’s Lemma, there is a maximal \(q_{0}\le p\) such that \(\varphi (q_0)\ge \psi (q_0)\). We claim \(q_{0}=p\). If not, \(p-q_0\) is a nonzero subprojection of \(p\) by Lemma <a href="sect0006.html#lem: proj_sub_of_subproj">7</a>, and there exists a nonzero projection \(q_{1}\le p-q_{0}\) such that \(\varphi (q_{1})\ge \psi (q_{1})\). But then \(q_{0}\) is a proper subprojection of \(q_0+q_1\) and by linearity and positivity \(\varphi (q_0+q_1)\ge \psi (q_0+q_1)\) contradicting the maximality of \(q_0\). Thus \(p=q_0\) and so \(\varphi (p) \ge \psi (p)\), contradicting the hypothesis \(\varphi (p){\lt}\psi (p)\). </p>
+  <p>We proceed by contradiction. Suppose the conclusion does not hold. Then, for every nonzero subprojection \(p_1\) of \(p\) there is a nonzero subprojection \(q\le p_1\) such that \(\varphi (q)\ge \psi (q)\). In particular, (letting \(p_1=q\)) there is a \(q\le p\) such that \(\varphi (q)\ge \psi (q)\). If \((q_\alpha )\) is a chain of such nonzero projections, \(q_{\alpha }\to \sup q_{\alpha }\) in the \(\sigma \)–topology by Theorem <a href="sect0005.html#lem: sigma_cont_of_normal (Sak 1.7.4)">7</a>, and by Lemma <a href="sect0006.html#lem: proj_of_sup_proj">8</a> we know this supremum is a subprojection of \(p_1\). Since \(\varphi \) is positive and normal, and \(\psi \) is positive and \(\sigma \)–continuous, we have \(\varphi (\sup q_{\alpha })\ge \psi (\sup q_{\alpha })\). Therefore, by Zorn’s Lemma, there is a maximal \(q_{0}\le p\) such that \(\varphi (q_0)\ge \psi (q_0)\). We claim \(q_{0}=p\). If not, \(p-q_0\) is a nonzero subprojection of \(p\) by Lemma <a href="sect0003.html#cor: proj_sub_of_subproj">6</a>, and there exists a nonzero projection \(q_{1}\le p-q_{0}\) such that \(\varphi (q_{1})\ge \psi (q_{1})\). But then \(q_{0}\) is a proper subprojection of \(q_0+q_1\) and by linearity and positivity \(\varphi (q_0+q_1)\ge \psi (q_0+q_1)\) contradicting the maximality of \(q_0\). Thus \(p=q_0\) and so \(\varphi (p) \ge \psi (p)\), contradicting the hypothesis \(\varphi (p){\lt}\psi (p)\). </p>
 
   </div>
 </div>
@@ -284,7 +251,7 @@
 
   </div>
 </div>
-<div class="proof_wrapper" id="a0000000019">
+<div class="proof_wrapper" id="a0000000018">
   <div class="proof_heading">
     <span class="proof_caption">
     Proof
@@ -317,7 +284,7 @@
 
   </div>
 </div>
-<div class="proof_wrapper" id="a0000000020">
+<div class="proof_wrapper" id="a0000000019">
   <div class="proof_heading">
     <span class="proof_caption">
     Proof
@@ -350,7 +317,7 @@
 
   </div>
 </div>
-<div class="proof_wrapper" id="a0000000021">
+<div class="proof_wrapper" id="a0000000020">
   <div class="proof_heading">
     <span class="proof_caption">
     Proof
@@ -375,7 +342,7 @@
 
     <a class="icon proof" href="sect0006.html#lem: zorn_base">#</a>
     
-    <a class="icon proof" href="sect0006.html#a0000000022"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+    <a class="icon proof" href="sect0006.html#a0000000021"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
 </a>
     
     
@@ -391,11 +358,11 @@
         
         <ul class="uses">
           
-          <li><a href="sect0006.html#lem: proj_sub_of_subproj">Lemma 7</a></li>
+          <li><a href="sect0003.html#cor: proj_sub_of_subproj">Corollary 6</a></li>
           
           <li><a href="sect0002.html#lem: selfadjoint_le_norm">Lemma 3</a></li>
           
-          <li><a href="sect0005.html#lem: sigma_cont_of_normal (Sak 1.7.4)">Theorem 6</a></li>
+          <li><a href="sect0005.html#lem: sigma_cont_of_normal (Sak 1.7.4)">Theorem 7</a></li>
           
           <li><a href="sect0006.html#lem: proj_of_sup_proj">Lemma 8</a></li>
           
@@ -413,7 +380,7 @@
 
   </div>
 </div>
-<div class="proof_wrapper" id="a0000000022">
+<div class="proof_wrapper" id="a0000000021">
   <div class="proof_heading">
     <span class="proof_caption">
     Proof
@@ -421,8 +388,8 @@
     <span class="expand-proof">▶</span>
   </div>
   <div class="proof_content">
-  <p>Let \(x\) be on the unit sphere and let \(p\) be the supremum of the \(p_{\alpha }\). By Theorem <a href="sect0005.html#lem: sigma_cont_of_normal (Sak 1.7.4)">6</a> and Lemma <a href="sect0006.html#lem: proj_of_sup_proj">8</a> we know \(p_{\alpha }\) converges in \(\sigma \)–topology to \(p\), and \(p\) is a projection. By Lemma <a href="sect0006.html#lem: proj_sub_of_subproj">7</a> we know \(p-p_\alpha \) is a projection. By the \(C^{*}\)–property of the norm (\(\| x^{*}x\| =\| x\| ^{2}\)), Lemma <a href="sect0002.html#lem: selfadjoint_le_norm">3</a> and the positivity of \(\varphi \) we have \(\varphi (x^{*}x)\le \varphi (1)\). Now these facts together with Cauchy-Schwartz and the monotonicity of square roots, </p>
-<div class="displaymath" id="a0000000023">
+  <p>Let \(x\) be on the unit sphere and let \(p\) be the supremum of the \(p_{\alpha }\). By Theorem <a href="sect0005.html#lem: sigma_cont_of_normal (Sak 1.7.4)">7</a> and Lemma <a href="sect0006.html#lem: proj_of_sup_proj">8</a> we know \(p_{\alpha }\) converges in \(\sigma \)–topology to \(p\), and \(p\) is a projection. By Lemma <a href="sect0003.html#cor: proj_sub_of_subproj">6</a> we know \(p-p_\alpha \) is a projection. By the \(C^{*}\)–property of the norm (\(\| x^{*}x\| =\| x\| ^{2}\)), Lemma <a href="sect0002.html#lem: selfadjoint_le_norm">3</a> and the positivity of \(\varphi \) we have \(\varphi (x^{*}x)\le \varphi (1)\). Now these facts together with Cauchy-Schwartz and the monotonicity of square roots, </p>
+<div class="displaymath" id="a0000000022">
   \begin{align}  |\varphi (x(p-p_{\alpha }))|& \le \varphi (x^{*}x)^{1/2}\varphi (p-p_{\alpha })^{1/2}\\ \nonumber & \le \varphi (1)^{1/2}\varphi (p-p_{\alpha })^{1/2}. \end{align}
 </div>
 <p> Hence, by the definition of operator norm, \(\| \varphi (\cdot (p-p_{\alpha }))\| \le \varphi (1)^{1/2}\varphi (p-p_{\alpha })^{1/2}\). The right hand side converges to 0 with \(\alpha \) due to the normality of \(\varphi \) and therefore \(\varphi (\cdot p_{\alpha })\) converges to \(\varphi (\cdot p)\) in norm. Since the set of \(\sigma \)–continuous functionals on \(M\) is norm closed, it follows that \(\sigma (\cdot p)\) is \(\sigma \)–continuous. We obtain a maximal \(p_{0}\) by Zorn’s Lemma. </p>
@@ -451,7 +418,7 @@
 
   </div>
 </div>
-<div class="proof_wrapper" id="a0000000024">
+<div class="proof_wrapper" id="a0000000023">
   <div class="proof_heading">
     <span class="proof_caption">
     Proof
@@ -484,7 +451,7 @@
 
   </div>
 </div>
-<div class="proof_wrapper" id="a0000000025">
+<div class="proof_wrapper" id="a0000000024">
   <div class="proof_heading">
     <span class="proof_caption">
     Proof
@@ -508,7 +475,7 @@
 
     <a class="icon proof" href="sect0006.html#thm: sigma_cts_of_normal">#</a>
     
-    <a class="icon proof" href="sect0006.html#a0000000026"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+    <a class="icon proof" href="sect0006.html#a0000000025"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
 </a>
     
     
@@ -554,7 +521,7 @@
 
   </div>
 </div>
-<div class="proof_wrapper" id="a0000000026">
+<div class="proof_wrapper" id="a0000000025">
   <div class="proof_heading">
     <span class="proof_caption">
     Proof
@@ -563,7 +530,7 @@
   </div>
   <div class="proof_content">
   <p>The claim is obvious for the zero functional. Let \(\varphi \) be a nonzero positive normal linear functional. By Lemma <a href="sect0006.html#lem: zorn_base">15</a> we have a maximal \(p_0\in \mathcal{P}(M)\) such that \(M\ni x \mapsto \varphi (xp_0)\) is \(\sigma (M,M_{*})\)–continuous. Assume for the purposes of finding a contradiction that \(p_0\ne 1\). By Lemma <a href="sect0006.html#lem: exists_uw_ge_normal">10</a> there is a \(\sigma (M,M_{*})\)–continuous positive functional \(\psi \) on \(M\) such that \(\varphi (1-p_0){\lt}\psi (1-p_0)\). By Lemma <a href="sect0006.html#lem: msr_th_lemma">11</a> there is a nonzero subprojection \(p\le 1-p_0\) in \(M\) such that \(\varphi (q){\lt} \psi (q)\) for every nonzero \(q\le p\) in \(M\). Let \(x\in pMp\) be on the unit sphere. Then \(x^{*}x\) is positive and hence normal, so the \(C^{*}\)–subalgebra of \(pMp\) generated by \(x^{*}x\) and \(p\) is commutative, and is hence contained in a maximal abelian \(*\)–subalgebra \(A\) of \(pMp\). Now \(A\) is a \(W^{*}\)–subalgebra of \(pMp\) by Lemma <a href="sect0006.html#lem: wstar_of_masa">17</a> and hence is a maximal commutative \(C^{*}\)–subalgebra of \(pMp\). Via the Gelfand Transform, \(A\) is star isomorphic to \(C(K)\), where \(K\) is Stonean by Lemmas <a href="sect0006.html#lem: cut_down_of_wstar">13</a> and <a href="sect0006.html#lem: spec_masa_wstar_stonean (Sak 1.7.5)">14</a>. By Lemma <a href="sect0006.html#lem: fin_lin_approx_of_stonean (Sak 1.3.1)">12</a> it follows that \(\varphi (a)\le \psi (a)\) for every \(a\ge 0\) in \(A\), which holds a fortiori for \(a\ge 0\) in \(C^{*}(x^{*}x,p)\). In particular, \(\varphi (px^{*}xp)\le \psi (px^{*}xp)\). Therefore, </p>
-<div class="displaymath" id="a0000000027">
+<div class="displaymath" id="a0000000026">
   \begin{align}  |\varphi (x(p_0+p))|& \le |\varphi (xp_0)|+|\varphi (xp)|\\ \nonumber & \le |\varphi (xp_0)|+\varphi (1)^{1/2}\varphi (px^{*}xp)^{1/2}\\ \nonumber & \le |\varphi (xp_0)|+\varphi (1)^{1/2}\psi (px^{*}xp)^{1/2}. \end{align}
 </div>
 <p> Since \(x\mapsto \varphi (xp_0)\) is \(\sigma \)–continuous, it is \(s\)-continuous by Lemma <a href="sect0006.html#lem: bdd_sigma_cts_iff_bdd_s_cts (Sak 1.8.10)">16</a>. The seminorm \(x \mapsto \psi (px^{*}xp)^{1/2}\) is a defining seminorm for the \(s\)–topology on \(M\). It follows that \(x\mapsto \varphi (x(p_0+p))\) is \(s\)-continuous and therefore \(\sigma \)–continuous. This contradicts the maximality of \(p_0\), and therefore \(p_0=1\) and the result follows. </p>
