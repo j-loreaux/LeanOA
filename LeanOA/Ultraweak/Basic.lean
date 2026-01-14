@@ -28,6 +28,7 @@ abbrev Ultraweak (𝕜 P M : Type*) [RCLike 𝕜] [NormedAddCommGroup M] [Normed
 
 @[inherit_doc]
 scoped[Ultraweak] notation "σ("P ", " M")_" 𝕜 => Ultraweak 𝕜 P M
+@[inherit_doc]
 scoped[Ultraweak] notation "σ("P ", " M")" => Ultraweak ℂ P M
 -- σ(P, M)_𝕜
 -- sometimes we have to write `(σ(P, M)_𝕜)` so that this doesn't use the `FunLike` instance on
