@@ -311,7 +311,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
               ∑ i ∈ t, ⟪(x m - x N) i, x N i⟫_A + ∑ i ∈ t, ⟪x N i, x N i⟫_A‖
             ≤ ‖∑ i ∈ t, ⟪(x N - x m) i, (x N - x m) i⟫_A‖ + ‖∑ i ∈ t, ⟪x N i, (x m - x N) i⟫_A‖ +
                 ‖∑ i ∈ t, ⟪(x m - x N) i, x N i⟫_A‖ + ‖∑ i ∈ t, ⟪x N i, x N i⟫_A‖ :=
-            norm_add_le _ _ |>.trans <| add_le_add_right norm_add₃_le _
+            norm_add_le _ _ |>.trans <| add_le_add_left norm_add₃_le _
           _ ≤ ε / 8 + ε / 8 + ε / 8 + ε / 8 := by
             gcongr
             rw [← norm_star, star_sum]

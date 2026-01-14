@@ -1,7 +1,7 @@
 import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
 import Mathlib.Topology.Algebra.StarSubalgebra
-import Mathlib.Analysis.CStarAlgebra.Classes
 import Mathlib.Algebra.Algebra.Spectrum.Quasispectrum
+import Mathlib.Data.Complex.Basic
 
 /-! # Notation for C⋆-algebras
 
@@ -21,22 +21,3 @@ scoped[CStarAlgebra] notation "σ" => spectrum
 
 @[inherit_doc]
 scoped[CStarAlgebra] notation "σₙ" => quasispectrum
-
-
-namespace CStarAlgebra
-
-variable {A : Type*}
-
-noncomputable instance [CStarAlgebra A] (x : A) :
-    CStarAlgebra C⋆¹(x) where
-
-noncomputable instance [NonUnitalCStarAlgebra A] (x : A) :
-    NonUnitalCStarAlgebra C⋆(x) where
-
-noncomputable instance [CStarAlgebra A] (x : A) [IsStarNormal x] :
-    CommCStarAlgebra C⋆¹(x) where
-
-noncomputable instance [NonUnitalCStarAlgebra A] (x : A) [IsStarNormal x] :
-    NonUnitalCommCStarAlgebra C⋆(x) where
-
-end CStarAlgebra
