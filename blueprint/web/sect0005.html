@@ -12,9 +12,10 @@
 <meta name="generator" content="plasTeX" />
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Operator Algebras in Lean: Definitions of \(C^{*}\)–algebras and \(W^{*}\)–algebras</title>
-<link rel="prev" href="sect0004.html" title="Sakai’s Book" />
-<link rel="up" href="sect0004.html" title="Sakai’s Book" />
+<title>WStarAlgebras have Unique Preduals: Ultraweakly Continuous Implies Normal</title>
+<link rel="next" href="sect0006.html" title="Normal Implies Ultraweakly Continuous" />
+<link rel="prev" href="sect0004.html" title="Normality and Ultraweak Continuity for Positive Functionals" />
+<link rel="up" href="sect0004.html" title="Normality and Ultraweak Continuity for Positive Functionals" />
 <link rel="stylesheet" href="styles/theme-white.css" />
 <link rel="stylesheet" href="styles/amsthm.css" />
 <link rel="stylesheet" href="styles/showmore.css" />
@@ -25,27 +26,30 @@
 <body>
 <header>
 <svg  id="toc-toggle" class="icon icon-list-numbered "><use xlink:href="symbol-defs.svg#icon-list-numbered"></use></svg>
-<h1 id="doc_title"><a href="index.html">Operator Algebras in Lean</a></h1>
+<h1 id="doc_title"><a href="index.html">WStarAlgebras have Unique Preduals</a></h1>
 </header>
 
 <div class="wrapper">
 <nav class="toc">
 <ul class="sub-toc-0">
 <li class="">
-  <a href="sect0001.html"><span class="toc_ref">0.1</span> <span class="toc_entry">Introduction</span></a>
+  <a href="sect0001.html"><span class="toc_ref">0.1</span> <span class="toc_entry">WStarAlgebras and their Topologies</span></a>
  </li>
 <li class="">
-  <a href="sect0002.html"><span class="toc_ref">0.2</span> <span class="toc_entry">Continuous functional calculus</span></a>
+  <a href="sect0002.html"><span class="toc_ref">0.2</span> <span class="toc_entry">Order Lemmas</span></a>
  </li>
 <li class="">
-  <a href="sect0003.html"><span class="toc_ref">0.3</span> <span class="toc_entry">Products of nonnegative elements are nonnegative</span></a>
+  <a href="sect0003.html"><span class="toc_ref">0.3</span> <span class="toc_entry">Projection Lemmas</span></a>
  </li>
 <li class=" active">
-  <a href="sect0004.html"><span class="toc_ref">1</span> <span class="toc_entry">Sakai’s Book</span></a>
+  <a href="sect0004.html"><span class="toc_ref">0.4</span> <span class="toc_entry">Normality and Ultraweak Continuity for Positive Functionals</span></a>
   <span class="expand-toc">▼</span>
   <ul class="sub-toc-1 active">
      <li class=" active current">
-  <a href="sect0005.html"><span class="toc_ref">1.1</span> <span class="toc_entry">Definitions of \(C^{*}\)–algebras and \(W^{*}\)–algebras</span></a>
+  <a href="sect0005.html"><span class="toc_ref">0.4.1</span> <span class="toc_entry">Ultraweakly Continuous Implies Normal</span></a>
+ </li>
+<li class="">
+  <a href="sect0006.html"><span class="toc_ref">0.4.2</span> <span class="toc_entry">Normal Implies Ultraweakly Continuous</span></a>
  </li>
 
   </ul>
@@ -59,73 +63,39 @@
 
 
 <div class="main-text">
-<h1 id="a0000000006">1.1 Definitions of \(C^{*}\)–algebras and \(W^{*}\)–algebras</h1>
-<div class="definition_thmwrapper theorem-style-definition" id="def:CStarAlgebra">
-  <div class="definition_thmheading">
-    <span class="definition_thmcaption">
-    Definition
+<h2 id="a0000000006">0.4.1 Ultraweakly Continuous Implies Normal</h2>
+<p>This is 1.7.4 in Sakai. Roughly, taking an increasing net of projections, it converges to the supremum strongly, hence \(\sigma \)-topology, and the \(\sigma \)-continuity finishes the proof. </p>
+<div class="theorem_thmwrapper theorem-style-plain" id="lem: sigma_cont_of_normal (Sak 1.7.4)">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
     </span>
-    <span class="definition_thmlabel">9</span>
+    <span class="theorem_thmlabel">6</span>
     <div class="thm_header_extras">
 
-    
-    ✓
         </div>
     <div class="thm_header_hidden_extras">
 
-    <a class="icon proof" href="sect0005.html#def:CStarAlgebra">#</a>
+    <a class="icon proof" href="sect0005.html#lem: sigma_cont_of_normal (Sak 1.7.4)">#</a>
     
     
     
         </div>
   </div>
-  <div class="definition_thmcontent">
-  <p> A Banach \(*\)–algebra \(\mathcal{A}\) is called a \(C^{*}\)–algebra if it satisfies \(\| x^{*}x\| =\| x\| ^2\) for \(x\in \mathcal{A}\). </p>
+  <div class="theorem_thmcontent">
+  <p> Every uniformly bounded, increasing directed set converges to its least upper bound in the \(\sigma \)–topology. Further, if \(x=\sup _{\alpha }x_\alpha \) then \(a^{*}xa=\sup _{\alpha }a^{*}xa\). </p>
 
   </div>
 </div>
-<div class="definition_thmwrapper theorem-style-definition" id="def:WStarAlgebra">
-  <div class="definition_thmheading">
-    <span class="definition_thmcaption">
-    Definition
+<div class="proof_wrapper" id="a0000000013">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
     </span>
-    <span class="definition_thmlabel">10</span>
-    <div class="thm_header_extras">
-
-    
-    ✓
-        </div>
-    <div class="thm_header_hidden_extras">
-
-    <a class="icon proof" href="sect0005.html#def:WStarAlgebra">#</a>
-    
-    
-    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
-</button>
-        <div class="modal-container">
-      <div class="modal-content">
-        <header>
-          <h1>Uses</h1>
-          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
-</button>
-        </header>
-        
-        <ul class="uses">
-          
-          <li><a href="sect0005.html#def:CStarAlgebra">Definition 9</a></li>
-          
-        </ul>
-    
-      </div>
-    </div>
-
-    
-    
-        </div>
+    <span class="expand-proof">▶</span>
   </div>
-  <div class="definition_thmcontent">
-  <p>  A \(C^{*}\)–algebra \(\mathcal{M}\) is called a \(W^{*}\)–algebra if it is a dual space as a Banach Space (i.e., if there exists a Banach space \(\mathcal{M}_{*}\) such that \((\mathcal{M}_{*})^{*}=\mathcal{M}\), where \((\mathcal{M}_{*})^{*}\) is the dual Banach space of \(\mathcal{M_{*}}\)). We call such a Banach Space \(\mathcal{M_{*}}\) the predual of \(\mathcal{M}\). </p>
-
+  <div class="proof_content">
+  
   </div>
 </div>
 
@@ -139,9 +109,11 @@
 
   <svg  id="showmore-plus" class="icon icon-eye-plus showmore"><use xlink:href="symbol-defs.svg#icon-eye-plus"></use></svg>
 
-  <a href="sect0004.html" title="Sakai’s Book"><svg  class="icon icon-arrow-left "><use xlink:href="symbol-defs.svg#icon-arrow-left"></use></svg>
+  <a href="sect0004.html" title="Normality and Ultraweak Continuity for Positive Functionals"><svg  class="icon icon-arrow-left "><use xlink:href="symbol-defs.svg#icon-arrow-left"></use></svg>
 </a>
-  <a href="sect0004.html" title="Sakai’s Book"><svg  class="icon icon-arrow-up "><use xlink:href="symbol-defs.svg#icon-arrow-up"></use></svg>
+  <a href="sect0004.html" title="Normality and Ultraweak Continuity for Positive Functionals"><svg  class="icon icon-arrow-up "><use xlink:href="symbol-defs.svg#icon-arrow-up"></use></svg>
+</a>
+  <a href="sect0006.html" title="Normal Implies Ultraweakly Continuous"><svg  class="icon icon-arrow-right "><use xlink:href="symbol-defs.svg#icon-arrow-right"></use></svg>
 </a>
 </nav>
 
