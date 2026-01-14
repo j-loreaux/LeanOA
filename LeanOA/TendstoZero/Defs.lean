@@ -11,9 +11,10 @@ variable [RCLike 𝕜] [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace �
 open Filter
 
 variable (E) in
--- could use `ClosedSubmodule`, but it's missing API right now.
--- also, we should just make this an `AddSubgroup`, then there is no `𝕜` parameter.
--- and maybe we want this to be a subgroup of `preLp`?
+-- maybe we want this to be a subgroup of `preLp`?
+/-- The additive subgroup of `lp E ∞` consisting of those sequences whose norms converge
+to zero. This has the notation `c₀ E` in the scope `tendstoZero`. In the special case
+where `E := fun _ : ι → 𝕜`, the notation `c₀(ι, 𝕜)` is available. -/
 def tendstoZero : AddSubgroup (lp E ∞) where
   carrier := {x | Tendsto (‖x ·‖) cofinite (𝓝 0)}
   add_mem' {x y} hx hy := tendsto_const_nhds.squeeze
@@ -21,7 +22,9 @@ def tendstoZero : AddSubgroup (lp E ∞) where
   zero_mem' := by simpa using tendsto_const_nhds
   neg_mem' := by simp
 
+@[inherit_doc]
 scoped [tendstoZero] notation "c₀" => tendstoZero
+@[inherit_doc]
 scoped [tendstoZero] notation "c₀(" ι ", " 𝕜 ")" => tendstoZero (fun _ : ι ↦ 𝕜)
 
 open scoped tendstoZero
@@ -128,6 +131,7 @@ lemma single_mem (i : ι) (c : E i) :
     lp.single ∞ i c ∈ c₀ E :=
   lp.range_addMonoidHomOfLE_top_le_tendstoZero E ENNReal.zero_lt_top ⟨lp.single 0 i c, by ext; simp⟩
 
+/-- `lp.single` as an element of `c₀ E`. -/
 def single (i : ι) (c : E i) : c₀ E :=
   ⟨lp.single ∞ i c, single_mem i c⟩
 

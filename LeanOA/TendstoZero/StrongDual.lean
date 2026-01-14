@@ -22,10 +22,13 @@ lemma lp.norm_scalarDualPairing {p q : ℝ≥0∞} [Fact (1 ≤ p)] [Fact (1 ≤
 namespace tendstoZero
 
 variable (ι 𝕜) in
+/-- The natural continuous linear map from `ℓ¹(ι, 𝕜)` into the (strong) dual of `c₀(ι, 𝕜)`
+given by `fun x y ↦ ∑' i, (y i) * (x i)`. the order of the parameter is reversed because we
+implement this via the `lp.scalarDualPairing` of `ℓ¹` with `ℓ^∞`, where we compose with the
+inclusion of `c₀(ι, 𝕜)` into `ℓ^∞(ι, 𝕜)`. -/
 noncomputable def lpOneToStrongDual :
     ℓ¹(ι, 𝕜) →L[𝕜] StrongDual 𝕜 c₀(ι, 𝕜) :=
-  .flip <| lp.scalarDualPairing ι 𝕜 ∞ 1 ∘L
-    (subtypeₗᵢ 𝕜 (fun _ : ι ↦ 𝕜)).toContinuousLinearMap
+  .flip <| lp.scalarDualPairing ι 𝕜 ∞ 1 ∘L (subtypeₗᵢ 𝕜 _).toContinuousLinearMap
 
 lemma lpOneToStrongDual_apply_apply
     (x : ℓ¹(ι, 𝕜)) (y : c₀(ι, 𝕜)) :
@@ -81,6 +84,8 @@ lemma strongDual_eval_single_memℓp_one [DecidableEq ι]
   memℓp_gen' <| by simpa only [toReal_one, Real.rpow_one]
     using sum_strongDual_eval_single_le_norm φ
 
+/-- The map from the (strong) dual of `c₀(ι, 𝕜)` to `ℓ¹(ι, 𝕜)` given by
+`fun φ i ↦ φ (single i 1)`. This is the inverse of `tendstoZero.lpOneToStrongDual` -/
 @[simps]
 noncomputable def strongDualTolpOne [DecidableEq ι]
     (φ : StrongDual 𝕜 c₀(ι, 𝕜)) : ℓ¹(ι, 𝕜) :=
@@ -101,6 +106,9 @@ lemma norm_strongDualTolpOne_apply [DecidableEq ι]
 -- straightforward. However, I don't think we have this helper theorem yet, and in any case,
 -- the proof below is not too bad.
 variable (ι 𝕜) in
+/-- The (inverse) maps `tendstoZero.lpOneToStrongDual` and `tendstoZero.strongDualTolpOne`
+bundled into a linear equivalence. This is only a stepping stone to construct the linear
+isometry equivalence between these spaces. -/
 @[simps!]
 noncomputable def lpOneToStrongDualLinearEquiv [DecidableEq ι] :
     ℓ¹(ι, 𝕜) ≃ₗ[𝕜] StrongDual 𝕜 c₀(ι, 𝕜) :=
@@ -120,6 +128,9 @@ noncomputable def lpOneToStrongDualLinearEquiv [DecidableEq ι] :
       exact φ.hasSum (hasSum_single x) |>.tsum_eq }
 
 variable (ι 𝕜) in
+/-- The linear isometry equivalence between `ℓ¹(ι, 𝕜)` and the (strong) dual of `c₀(ι, 𝕜)`.
+In the forward direction, this is given by `fun x y ↦ ∑' i, (y i) * (x i)`, and in the
+backward direction this is given by `fun φ i ↦ φ (single i 1)`. -/
 @[simps!]
 noncomputable def lpOneToStrongDualₗᵢ [DecidableEq ι] :
     ℓ¹(ι, 𝕜) ≃ₗᵢ[𝕜] StrongDual 𝕜 c₀(ι, 𝕜) :=

@@ -2,7 +2,7 @@ name: Build project
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - '**/*.lean'
       - '**/blueprint.yml'
@@ -14,7 +14,7 @@ on:
       - 'lake-manifest.json'
   pull_request:
     branches:
-      - main
+      - master
     paths:
       - '**/*.lean'
       - '**/blueprint.yml'
@@ -50,7 +50,7 @@ jobs:
       - name: Don't 'import Mathlib', use precise imports
         if: always()
         run: |
-          ! (find FLT -name "*.lean" -type f -print0 | xargs -0 grep -E -n '^import Mathlib$')
+          ! (find LeanOA -name "*.lean" -type f -print0 | xargs -0 grep -E -n '^import Mathlib$')
 
   build_project:
     runs-on: ubuntu-latest
@@ -87,4 +87,4 @@ jobs:
         uses: leanprover-community/docgen-action@cc833d262c7b8f179ac444cd20fde412b24b8beb # 2026-01-08
         with:
           blueprint: true
-          homepage: docs
+          homepage: home_page
