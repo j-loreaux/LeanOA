@@ -78,8 +78,10 @@ a selfadjoint element $a\in A$ is a projection if and only if the spectrum of $a
   Conversely, if $qp=pq=q$, one easily checks that $p-q$ is a projection and so its spectrum is contained in $\{0,1\}$ and it is positive.
 \end{proof}
 
-
-
+\begin{corollary}
+  \label{cor: proj_sub_of_subproj}
+  For all $p,q \in \mathcal{A}$ projections such that $q\le p$, $p-q$ is a projection.
+\end{corollary}
 
 \section{Normality and Ultraweak Continuity for Positive Functionals}
 
@@ -106,14 +108,6 @@ and the $\sigma$-continuity finishes the proof.
 \end{proof}
 
 \subsection{Normal Implies Ultraweakly Continuous}
-
-\begin{lemma}
-  \label{lem: proj_sub_of_subproj}
-  For all $p,q\in \mathcal{P}(M)$ such that $q\le p$, $p-q\in \mathcal{P}(M)$.
-\end{lemma}
-
-\begin{proof}
-\end{proof}
 
 \begin{lemma}
   \label{lem: proj_of_sup_proj}
@@ -151,7 +145,7 @@ functional $\psi$ on $M$ such that $\psi(a)\ne 0$.
 
 \begin{lemma}
   \label{lem: msr_th_lemma}
-  \uses{lem: sigma_cont_of_normal (Sak 1.7.4),lem: proj_of_sup_proj,lem: proj_sub_of_subproj}
+  \uses{lem: sigma_cont_of_normal (Sak 1.7.4),lem: proj_of_sup_proj,cor: proj_sub_of_subproj}
 For all positive linear functionals $\varphi,\psi$ with
 $\varphi$ normal and $\psi$ $\sigma(M,M_{*})$--continuous and every nonzero $p\in \mathcal{P}(M)$
 such that $\varphi(p)<\psi(p)$, there exists a nonzero $p_1 \in \mathcal{P}(M)$ such that $p_1\le p$ and for all nonzero
@@ -166,7 +160,7 @@ $q\in \mathcal{P}(M)$ with $q\le p_1$, we have $\varphi(q)<\psi(q)$.
   and by Lemma \ref{lem: proj_of_sup_proj} we know this supremum is a subprojection of $p_1$. Since $\varphi$
   is positive and normal, and $\psi$ is positive and $\sigma$--continuous, we have $\varphi(\sup q_{\alpha})\ge \psi(\sup q_{\alpha})$.
   Therefore, by Zorn's Lemma, there is a maximal $q_{0}\le p$ such that $\varphi(q_0)\ge \psi(q_0)$. We claim $q_{0}=p$. If not, 
-  $p-q_0$ is a nonzero subprojection of $p$ by Lemma \ref{lem: proj_sub_of_subproj}, and there exists a nonzero projection $q_{1}\le p-q_{0}$
+  $p-q_0$ is a nonzero subprojection of $p$ by Lemma \ref{cor: proj_sub_of_subproj}, and there exists a nonzero projection $q_{1}\le p-q_{0}$
   such that $\varphi(q_{1})\ge \psi(q_{1})$. But then $q_{0}$ is a proper subprojection of $q_0+q_1$ and by linearity and positivity 
   $\varphi(q_0+q_1)\ge \psi(q_0+q_1)$ contradicting the maximality of $q_0$. Thus $p=q_0$ and so $\varphi(p) \ge \psi(p)$, contradicting 
   the hypothesis $\varphi(p)<\psi(p)$.  
@@ -206,7 +200,7 @@ of Theorem \ref{thm: sigma_cts_of_normal}.
 
 \begin{lemma}
   \label{lem: zorn_base}
-  \uses{lem: proj_sub_of_subproj,lem: selfadjoint_le_norm,lem: sigma_cont_of_normal (Sak 1.7.4),lem: proj_of_sup_proj}
+  \uses{cor: proj_sub_of_subproj,lem: selfadjoint_le_norm,lem: sigma_cont_of_normal (Sak 1.7.4),lem: proj_of_sup_proj}
   Let $\varphi$ be a normal positive linear functional on $M$ and consider the predicate $P:\mathcal{P}(M)\to \text{Prop}$ defined, for $p\in \mathcal{P}(M)$, by 
   ``$M\ni x \mapsto \varphi(xp)$ is $\sigma(M,M_{*})$--continuous''. If $(p_{\alpha})$ is a chain of projections in $M$ such that $P(p_{\alpha})$ is true for each $\alpha$,
   then $P(\sup(p_{\alpha}))$ is true. Hence by Zorn's Lemma there is a maximal $p_0\in \mathcal{P}(M)$ such that $P(p_0)$ is true.  
@@ -215,7 +209,7 @@ of Theorem \ref{thm: sigma_cts_of_normal}.
 \begin{proof}
   Let $x$ be on the unit sphere and let $p$ be the supremum of the $p_{\alpha}$. By Theorem \ref{lem: sigma_cont_of_normal (Sak 1.7.4)} and Lemma \ref{lem: proj_of_sup_proj} 
   we know $p_{\alpha}$ converges in $\sigma$--topology to $p$, and $p$ is a projection. 
-  By Lemma \ref{lem: proj_sub_of_subproj} we know $p-p_\alpha$ is a projection. By the $C^{*}$--property
+  By Lemma \ref{cor: proj_sub_of_subproj} we know $p-p_\alpha$ is a projection. By the $C^{*}$--property
   of the norm ($\|x^{*}x\|=\|x\|^{2}$), Lemma \ref{lem: selfadjoint_le_norm} and the positivity of $\varphi$ we have $\varphi(x^{*}x)\le \varphi(1)$.
   Now these facts together with Cauchy-Schwartz and the monotonicity of square roots, 
   \begin{align}
