@@ -22,6 +22,8 @@ This is written $a\ge 0$. If $a,b \in \mathcal{A}$ are selfadjoint then $b \le a
 
 \begin{lemma}
   \label{lem:pos_iff_star_mul_self_Sak_1_4_4} (Sak 1.4.4)
+  \lean{CStarAlgebra.nonneg_TFAE,StarOrderedRing.nonneg_TFAE}
+  \mathlibok
   Let $h \in \mathcal{A}$. TFAE:
   \begin{enumerate}
   \item $h \ge 0$;
@@ -30,15 +32,19 @@ This is written $a\ge 0$. If $a,b \in \mathcal{A}$ are selfadjoint then $b \le a
 \end{lemma}
 
 \begin{proof}
+  \leanok
 \end{proof}
 
 \begin{corollary}
   \label{lem:star_conj_pos}
+  \lean{star_left_conjugate_nonneg}
+  \mathlibok
   \uses{lem:pos_iff_star_mul_self_Sak_1_4_4}
   If $h,a \in \mathcal{A}$ with $h\ge 0$ then $a^{*}ha\ge 0$
 \end{corollary}
 
 \begin{proof}
+  \leanok
   By Lemma \ref{lem:pos_iff_star_mul_self_Sak_1_4_4}, $a^{*}ha=a^{*}x^{*}xa=(xa)^{*}(xa)\ge 0$.
 \end{proof}
 
@@ -62,16 +68,20 @@ a selfadjoint element $a\in A$ is a projection if and only if the spectrum of $a
 
 \begin{lemma}
   \label{lem:proj_le_one}
+  \lean{IsStarProjection.le_one}
+  \mathlibok
   \uses{lem:selfadjoint_le_norm}
   For all projections $p\in \mathcal{A}$, p \le 1.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   We can get this by Sakai 1.2.3. and Lemma \ref{lem:selfadjoint_le_norm} We should include that result here.
 \end{proof}
 
 \begin{lemma}
   \label{lem:proj_sub_pos_iff_comm_eq_self}
+  \lean{IsStarProjection.sub_iff_mul_eq_left,IsStarProjection.sub_iff_mul_eq_right}
   \uses{lem:star_conj_pos, lem:proj_le_one}
   Let $\mathcal{A}$ be a $C^{*}$--algebra and $p,q \in \mathcal{A}$ be projections. Then $p-q\ge 0$ iff $qp = pq = q$.
 \end{lemma}
