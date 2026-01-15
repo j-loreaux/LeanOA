@@ -1,6 +1,7 @@
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 
-lemma CStarAlgebra.prod_nonneg_of_commute {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+lemma CStarAlgebra.prod_nonneg_of_commute
+    {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     {l : List A} (hl_nonneg : ∀ x ∈ l, 0 ≤ x) (hl_comm : ∀ x ∈ l, ∀ y ∈ l, Commute x y) :
     0 ≤ l.prod := by
   induction l with

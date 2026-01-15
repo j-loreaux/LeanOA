@@ -79,19 +79,11 @@ jobs:
       - name: Build and lint project
         uses: leanprover/lean-action@v1
         with:
-          path: |
-            .lake/build/doc/Init
-            .lake/build/doc/Lake
-            .lake/build/doc/Lean
-            .lake/build/doc/Std
-            .lake/build/doc/Mathlib
-            .lake/build/doc/declarations
-            .lake/build/doc/find
-            .lake/build/doc/*.*
-            !.lake/build/doc/declarations/declaration-data-LeanOA*
-          key: MathlibDoc-${{ hashFiles('lake-manifest.json') }}
-          restore-keys: MathlibDoc-
+          build: true
+          lint: true
+          mk_all-check: true
 
+<<<<<<< HEAD
       - name: Build project API documentation
         run: ~/.elan/bin/lake -R -Kenv=dev build LeanOA:docs
       
@@ -168,3 +160,10 @@ jobs:
       - name: Make sure the API documentation cache works
         run: mv home_page/docs .lake/build/doc
      
+=======
+      - name: Compile blueprint and documentation
+        uses: leanprover-community/docgen-action@cc833d262c7b8f179ac444cd20fde412b24b8beb # 2026-01-08
+        with:
+          blueprint: true
+          homepage: home_page
+>>>>>>> upstream/master
