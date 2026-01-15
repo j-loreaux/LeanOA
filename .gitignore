@@ -1,4 +1,8 @@
 /build
 /lake-packages/*
 .lake/*
+blueprint/src/web.paux
+blueprint/print/
+blueprint/web/
+.venv/
 Ignore/
