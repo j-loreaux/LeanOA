@@ -1,38 +1,83 @@
-name: Compile blueprint
-
+name: Build project
 on:
   push:
     branches:
-      - master # Trigger on pushes to the default branch
-  workflow_dispatch:        # Allow manual triggering of the workflow from the GitHub Actions interface
+      - master
+    paths:
+      - '**/*.lean'
+      - '**/blueprint.yml'
+      - 'blueprint/**'
+      - 'docs/**'
+      - 'scripts/**'
+      - 'lean-toolchain'
+      - 'lakefile.toml'
+      - 'lake-manifest.json'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '**/*.lean'
+      - '**/blueprint.yml'
+      - 'blueprint/**'
+      - 'docs/**'
+      - 'scripts/**'
+      - 'lean-toolchain'
+      - 'lakefile.toml'
+      - 'lake-manifest.json'
+  workflow_dispatch: # Allow manual triggering of the workflow from the GitHub Actions interface
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# We do not cancel CI on main so as to keep all commits green (cancelling CI on a commit makes it
+# red).
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages and modify PR labels
 permissions:
-  contents: read  # Read access to repository contents
-  pages: write    # Write access to GitHub Pages
-  id-token: write # Write access to ID tokens
+  contents: read          # Read access to repository contents
+  pages: write            # Write access to GitHub Pages
+  id-token: write         # Write access to ID tokens
+  issues: write           # Write access to issues
+  pull-requests: write    # Write access to pull requests
 
 jobs:
+  style_lint:
+    name: Lint style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0 # Fetch all history for all branches and tags
+
+      - name: Don't 'import Mathlib', use precise imports
+        if: always()
+        run: |
+          ! (find LeanOA -name "*.lean" -type f -print0 | xargs -0 grep -E -n '^import Mathlib$')
+
   build_project:
     runs-on: ubuntu-latest
     name: Build project
     steps:
+      - name: Cleanup to free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: false
+          haskell: false
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0 # Fetch all history for all branches and tags
 
-      - name: Install elan
-        run: curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y
-
-      - name: Get Mathlib cache
-        run: ~/.elan/bin/lake exe cache get || true
-
-      - name: Build project
-        run: ~/.elan/bin/lake build LeanOA
-
-      - name: Cache mathlib API docs
-        uses: actions/cache@v4
+      - name: Build and lint project
+        uses: leanprover/lean-action@v1
         with:
           path: |
             .lake/build/doc/Init
