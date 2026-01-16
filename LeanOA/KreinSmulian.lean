@@ -116,19 +116,75 @@ lemma separation_aux (hA : KreinSmulianProperty A)
   rw [separationSeq_apply_fst_snd_eq_iUnion, polar]
   exact LinearMap.polar_iUnion₂ _ |>.symm
 
-open scoped tendstoZero in
+open Filter tendstoZero in
+/-- Constructor for a term of `c₀ E` which doesn't force the user to pass through `lp E ∞`. -/
+def _root_.tendstoZero.mk {ι : Type*} {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
+    (f : (i : ι) → E i) (h : Tendsto (fun i ↦ ‖f i‖) cofinite (𝓝 0)) :
+    c₀ E :=
+  ⟨⟨f, memℓp_infty h.bddAbove_range_of_cofinite⟩, h⟩
+
+open Filter tendstoZero in
+lemma _root_.tendstoZero.coe_mk {ι : Type*} {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
+    (f : (i : ι) → E i) (h : Tendsto (fun i ↦ ‖f i‖) cofinite (𝓝 0)) :
+    ⇑(mk f h : lp E ∞) = f :=
+  rfl
+
+-- this was unnecessary, but maybe we should keep it
+open Uniformity in
+theorem _root_.Metric.uniformity_basis_dist_le_inv_nat_succ {α : Type*} [PseudoMetricSpace α] :
+    (𝓤 α).HasBasis (fun _ => True) fun n : ℕ => { p : α × α | dist p.1 p.2 ≤ 1 / (↑n + 1) } :=
+  Metric.mk_uniformity_basis_le (fun n _ => div_pos zero_lt_one <| Nat.cast_add_one_pos n)
+    fun _ε ε0 => (exists_nat_one_div_lt ε0).imp fun _n hn => ⟨trivial, le_of_lt hn⟩
+
+-- this was unnecessary, but maybe we should keep it
+theorem _root_.Metric.nhds_basis_closedBall_inv_nat_succ {α : Type*} [PseudoMetricSpace α] {x : α} :
+    (𝓝 x).HasBasis (fun _ => True) fun n : ℕ => closedBall x (1 / (↑n + 1)) :=
+  nhds_basis_uniformity uniformity_basis_dist_le_inv_nat_succ
+
+open scoped tendstoZero lp Set.Notation ComplexOrder in
 -- Lemma 12.3, a separation lemma
-lemma separation (hA : KreinSmulianProperty A)
+lemma separation (hA : KreinSmulianProperty A) (h_conv : Convex 𝕜 A)
     (hA' : A ∩ (WeakDual.toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) 1) = ∅) :
     ∃ x : E, ∀ f ∈ A, RCLike.re (f x) ≥ 1 := by
   obtain ⟨F, hF₁, hF₂, hF₃⟩ := by simpa [forall_and] using separation_aux A hA hA'
   let S := ⋃ n, F n
   have hS : S.Countable := countable_iUnion fun n ↦ (hF₁ n).countable
-  let T : WeakDual 𝕜 E → c₀(S, 𝕜) := by
-    intro φ
-    refine ⟨⟨fun s ↦ φ s, ?_⟩, ?_⟩
-    · sorry
-    · sorry
+  let T : WeakDual 𝕜 E → c₀(S, 𝕜) := fun φ ↦ tendstoZero.mk (φ ·) <| by
+    sorry
+    --rw [Metric.nhds_basis_closedBall.tendsto_right_iff]
+    --intro ε hε
+    --obtain (rfl | hφ) := eq_or_ne φ 0
+    --· exact .of_forall fun _ ↦ by simpa [Pi.zero_apply, WeakDual, WeakBilin] using hε.le
+    --rw [ne_eq, ← map_eq_zero_iff _ WeakDual.toStrongDual.injective, ← ne_eq, ← norm_pos_iff] at hφ
+    --obtain ⟨n, hn⟩ := exists_nat_one_div_lt (div_pos hε hφ)
+    --have hFn : (⋃ k ∈ (Finset.range (n + 1) : Set ℕ), F k).Finite :=
+      --Finset.range (n + 1) |>.finite_toSet.biUnion fun k _ ↦ (hF₁ k)
+    --have : S ↓∩ (⋃ k ∈ ↑(Finset.range (n + 1)), F k) |>.Finite :=
+      --hFn.preimage Subtype.val_injective.injOn
+    --filter_upwards [this.compl_mem_cofinite] with s hs
+    --simp at hs
+    --obtain ⟨k, hk⟩ := by simpa [-Subtype.coe_prop, S, mem_iUnion] using s.2
+    --have hkn : (k : ℝ) ≥ n + 1 := by norm_cast; grind
+    --have hk_pos : 0 < (k : ℝ) := lt_of_lt_of_le (by positivity) hkn
+    --have := by simpa using
+      --closedBall_subset_closedBall (ε₂ := 1 / (n + 1)) (by field_simp; assumption) <| hF₂ k hk
+    --simp only [mem_closedBall, dist_zero_right, norm_norm, ge_iff_le]
+    --calc ‖φ s‖
+      --_ = ‖toStrongDual φ s‖ := rfl
+      --_ ≤ ‖toStrongDual φ‖ * ‖(s : E)‖ := (toStrongDual φ).le_opNorm ..
+      --_ ≤ ‖toStrongDual φ‖ * (ε / ‖toStrongDual φ‖) := by
+        --gcongr
+        --exact this.trans <| by simpa using hn.le
+      --_ = ε := by field
+  let Tₗ : WeakDual 𝕜 E →ₗ[𝕜] c₀(S, 𝕜) :=
+    { toFun := T
+      map_add' _ _ := rfl
+      map_smul' _ _ := rfl }
+  have hT (φ : WeakDual 𝕜 E) (hx : φ ∈ A) : 1 < ‖T φ‖ := by sorry
+  replace hA := h_conv.linear_image Tₗ
+  have hTA : Disjoint (ball 0 1) (Tₗ '' A) := by sorry
+  --need to convert to convex over `ℝ` first.
+  --obtain ⟨f, u, hfu1, hfuA⟩ := RCLike.geometric_hahn_banach_open (convex_ball 0 1) isOpen_ball hA hTA
   sorry
 
 lemma _root_.krein_smulian (hA : KreinSmulianProperty A) : IsClosed A := by
