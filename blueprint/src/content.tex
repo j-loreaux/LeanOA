@@ -21,42 +21,33 @@ This is written $a\ge 0$. If $a,b \in \mathcal{A}$ are selfadjoint then $b \le a
 (TO DO: adapt this to Jireh's fully general ordering on all elements without mentioning the selfadjoint ones.)
 
 \begin{lemma}
-  \label{lem:pos_iff_star_mul_self_Sak_1_4_4} (Sak 1.4.4)
-  \lean{CStarAlgebra.nonneg_TFAE,StarOrderedRing.nonneg_iff}
+  \label{lem: pos_iff_star_mul_self (Sak 1.4.4)}
   Let $h \in \mathcal{A}$. TFAE:
   \begin{enumerate}
-  \item $h \ge 0$;
+  \item h \ge 0;
   \item There exists $x\in \mathcal{A}$ such that $h=x^{*}x$.
   \end{enumerate}
 \end{lemma}
 
 \begin{proof}
-  \leanok
 \end{proof}
 
 \begin{corollary}
-  \label{lem:star_conj_pos}
-  \lean{star_left_conjugate_nonneg}
-  \mathlibok
-  \uses{lem:pos_iff_star_mul_self_Sak_1_4_4}
+  \label{lem: star_conj_pos}
+  \uses{lem: pos_iff_star_mul_self (Sak 1.4.4)}
   If $h,a \in \mathcal{A}$ with $h\ge 0$ then $a^{*}ha\ge 0$
 \end{corollary}
 
 \begin{proof}
-  \leanok
-  By Lemma \ref{lem:pos_iff_star_mul_self_Sak_1_4_4}, $a^{*}ha=a^{*}x^{*}xa=(xa)^{*}(xa)\ge 0$.
+  By Lemma \ref{lem: pos_iff_star_mul_self (Sak 1.4.4)}, $a^{*}ha=a^{*}x^{*}xa=(xa)^{*}(xa)\ge 0$.
 \end{proof}
 
 \begin{lemma}
-  \label{lem:selfadjoint_le_norm}
-  \lean{IsSelfAdjoint.le_algebraMap_norm_self}
-  \leanok
-  \mathlibok
+  \label{lem: selfadjoint_le_norm}
   If $x\in \mathcal{A}$ is selfadjoint then $\|x\|1-x \ge 0$.
 \end{lemma}
 
 \begin{proof}
-\leanok
 \end{proof}
 
 \section{Projection Lemmas}
@@ -66,36 +57,32 @@ Recall that an element $p$ in a $C^{*}$--algebra is a projection if $p^2=p^{*}=p
 a selfadjoint element $a\in A$ is a projection if and only if the spectrum of $a$ is contained in $\{0,1\}$.
 
 \begin{lemma}
-  \label{lem:proj_le_one}
-  \lean{IsStarProjection.le_one}
-  \mathlibok
-  \uses{lem:selfadjoint_le_norm}
+  \label{lem: proj_le_one}
+  \uses{lem: selfadjoint_le_norm}
   For all projections $p\in \mathcal{A}$, p \le 1.
 \end{lemma}
 
 \begin{proof}
-  \leanok
-  We can get this by Sakai 1.2.3. and Lemma \ref{lem:selfadjoint_le_norm} We should include that result here.
+  We can get this by Sakai 1.2.3. and Lemma \ref{lem: selfadjoint_le_norm} We should include that result here.
 \end{proof}
 
 \begin{lemma}
-  \label{lem:proj_sub_pos_iff_comm_eq_self}
-  \lean{IsStarProjection.sub_iff_mul_eq_left,IsStarProjection.sub_iff_mul_eq_right}
-  \uses{lem:star_conj_pos, lem:proj_le_one}
+  \label{lem: proj_sub_pos_iff_comm_eq_self}
+  \uses{lem: star_conj_pos, lem: proj_le_one}
   Let $\mathcal{A}$ be a $C^{*}$--algebra and $p,q \in \mathcal{A}$ be projections. Then $p-q\ge 0$ iff $qp = pq = q$.
 \end{lemma}
 
 \begin{proof}
-  By Lemma \ref{lem:star_conj_pos}, if $p-q \ge 0$ then $q(p-q)q=qpq-q^3=qpq-q \ge 0$. By Lemma \ref{lem:proj_le_one}, we have $p\le 1$ and 
-  employing Lemma \ref{lem:star_conj_pos} we obtain $qpq\le q1q=q$. Since $qpq\ge q$ and $qpq\le q$ we have $qpq=q$, which implies that $q(p-q)q=0$.
+  By Lemma \ref{lem: star_conj_pos}, if $p-q \ge 0$ then $q(p-q)q=qpq-q^3=qpq-q \ge 0$. By Lemma \ref{lem: proj_le_one}, we have $p\le 1$ and 
+  employing Lemma \ref{lem: star_conj_pos} we obtain $qpq\le q1q=q$. Since $qpq\ge q$ and $qpq\le q$ we have $qpq=q$, which implies that $q(p-q)q=0$.
   By the $C^{*}$-property of the norm, we have $\|(p-q)^{1/2}q\|^2=\|q(p-q)q\|=0$ and so $(p-q)^{1/2}q=0$ and therefore $(p-q)q=(p-q)^{1/2}(p-q)^{1/2}q=0$.
   It follows that $pq=q$, and taking adjoints, $qp=q$.
   Conversely, if $qp=pq=q$, one easily checks that $p-q$ is a projection and so its spectrum is contained in $\{0,1\}$ and it is positive.
 \end{proof}
 
 \begin{corollary}
-  \label{cor:proj_sub_of_subproj}
-  \uses{lem:proj_sub_pos_iff_comm_eq_self}
+  \label{cor: proj_sub_of_subproj}
+  \uses{lem: proj_sub_pos_iff_comm_eq_self}
   For all $p,q \in \mathcal{A}$ projections such that $q\le p$, $p-q$ is a projection.
 \end{corollary}
 
@@ -116,7 +103,7 @@ This is 1.7.4 in Sakai. Roughly, taking an increasing net of projections, it con
 and the $\sigma$-continuity finishes the proof.
 
 \begin{theorem}
-  \label{lem:sigma_cont_of_normal_Sak_1_7_4}
+  \label{lem: sigma_cont_of_normal (Sak 1.7.4)}
   Every uniformly bounded, increasing directed set converges
   to its least upper bound in the $\sigma$--topology. Further, if
   $x=\sup_{\alpha}x_\alpha$ then $a^{*}xa=\sup_{\alpha}a^{*}xa$.
@@ -128,7 +115,7 @@ and the $\sigma$-continuity finishes the proof.
 \subsection{Normal Implies Ultraweakly Continuous}
 
 \begin{lemma}
-  \label{lem:proj_of_sup_proj}
+  \label{lem: proj_of_sup_proj}
   For every increasing bounded net $(p_{\alpha})$ of projections in $M$, the supremum $p$
   is a projection in $M$
 \end{lemma}
@@ -141,7 +128,7 @@ induces an order on the set $\{p\in \mathcal{P}(M)|P(p)\}$. In what follows ther
 we also denote this induced order by ``$\le$''.
 
 \begin{lemma}
-  \label{lem:uw_pos_sep_pts} (Sak 1.7.2)
+  \label{lem: uw_pos_sep_pts}
 For every nonzero element $a\in M$, there is a $\sigma(M,M_{*})$--continuous positive linear
 functional $\psi$ on $M$ such that $\psi(a)\ne 0$.
 \end{lemma}
@@ -150,20 +137,20 @@ functional $\psi$ on $M$ such that $\psi(a)\ne 0$.
 \end{proof}
 
 \begin{lemma}
-  \label{lem:exists_uw_ge_normal}
+  \label{lem: exists_uw_ge_normal}
   For every positive normal linear functional $\varphi$ and nonzero $p\in \mathcal{P}(M)$
   there exists a positive $\sigma(M,M_{*})$--continuous linear functional $\psi$ such that $\varphi(p)<\psi(p)$.
 \end{lemma}
 
 \begin{proof}
-  By Lemma \ref{lem:uw_pos_sep_pts} there is a $\sigma(M,M_{*})$--continuous positive linear
+  By Lemma \ref{lem: uw_pos_sep_pts} there is a $\sigma(M,M_{*})$--continuous positive linear
   functional $\psi_0$ on $M$ such that $\psi_0(p)\ne 0$. Rescale this functional by a positive constant to obtain
   $\psi$ such that $\varphi(p)<\psi(p)$.
 \end{proof}
 
 \begin{lemma}
-  \label{lem:msr_th_lemma}
-  \uses{lem:sigma_cont_of_normal_Sak_1_7_4,lem:proj_of_sup_proj,cor:proj_sub_of_subproj}
+  \label{lem: msr_th_lemma}
+  \uses{lem: sigma_cont_of_normal (Sak 1.7.4),lem: proj_of_sup_proj,cor: proj_sub_of_subproj}
 For all positive linear functionals $\varphi,\psi$ with
 $\varphi$ normal and $\psi$ $\sigma(M,M_{*})$--continuous and every nonzero $p\in \mathcal{P}(M)$
 such that $\varphi(p)<\psi(p)$, there exists a nonzero $p_1 \in \mathcal{P}(M)$ such that $p_1\le p$ and for all nonzero
@@ -174,11 +161,11 @@ $q\in \mathcal{P}(M)$ with $q\le p_1$, we have $\varphi(q)<\psi(q)$.
   We proceed by contradiction. Suppose the conclusion does not hold. Then, for every nonzero subprojection
   $p_1$ of $p$ there is a nonzero subprojection $q\le p_1$ such that $\varphi(q)\ge \psi(q)$. In particular,
   (letting $p_1=q$) there is a $q\le p$ such that $\varphi(q)\ge \psi(q)$. If $(q_\alpha)$ is a chain
-  of such nonzero projections, $q_{\alpha}\to \sup q_{\alpha}$ in the $\sigma$--topology by Theorem \ref{lem:sigma_cont_of_normal_Sak_1_7_4}, 
-  and by Lemma \ref{lem:proj_of_sup_proj} we know this supremum is a subprojection of $p_1$. Since $\varphi$
+  of such nonzero projections, $q_{\alpha}\to \sup q_{\alpha}$ in the $\sigma$--topology by Theorem \ref{lem: sigma_cont_of_normal (Sak 1.7.4)}, 
+  and by Lemma \ref{lem: proj_of_sup_proj} we know this supremum is a subprojection of $p_1$. Since $\varphi$
   is positive and normal, and $\psi$ is positive and $\sigma$--continuous, we have $\varphi(\sup q_{\alpha})\ge \psi(\sup q_{\alpha})$.
   Therefore, by Zorn's Lemma, there is a maximal $q_{0}\le p$ such that $\varphi(q_0)\ge \psi(q_0)$. We claim $q_{0}=p$. If not, 
-  $p-q_0$ is a nonzero subprojection of $p$ by Corollary \ref{cor:proj_sub_of_subproj}, and there exists a nonzero projection $q_{1}\le p-q_{0}$
+  $p-q_0$ is a nonzero subprojection of $p$ by Corollary \ref{cor: proj_sub_of_subproj}, and there exists a nonzero projection $q_{1}\le p-q_{0}$
   such that $\varphi(q_{1})\ge \psi(q_{1})$. But then $q_{0}$ is a proper subprojection of $q_0+q_1$ and by linearity and positivity 
   $\varphi(q_0+q_1)\ge \psi(q_0+q_1)$ contradicting the maximality of $q_0$. Thus $p=q_0$ and so $\varphi(p) \ge \psi(p)$, contradicting 
   the hypothesis $\varphi(p)<\psi(p)$.  
@@ -187,7 +174,7 @@ $q\in \mathcal{P}(M)$ with $q\le p_1$, we have $\varphi(q)<\psi(q)$.
 Recall that a compact Hausdorff space is \textbf{Stonean} if the closure of every open set is open.
 
 \begin{lemma}
-  \label{lem:fin_lin_approx_of_stonean_Sak_1_3_1} (Sak  1.3.1)
+  \label{lem: fin_lin_approx_of_stonean (Sak  1.3.1)}
   Let $K$ be a Stonean space. Then every element $a$ in $C(K)$ can be uniformly approximated by 
   finite linear combinations of projections in $C(K)$. If $a\ge 0$ then the coefficients of the approximating 
   linear combinations may be chosen nonnegative.
@@ -197,7 +184,7 @@ Recall that a compact Hausdorff space is \textbf{Stonean} if the closure of ever
 \end{proof}
 
 \begin{lemma}
-  \label{lem:cut_down_of_wstar} 
+  \label{lem: cut_down_of_wstar} 
   If $p\in M$ is a projection, $pMp$ is also a $W^{*}$ algebra with identity $p$.
 \end{lemma}
 
@@ -205,7 +192,7 @@ Recall that a compact Hausdorff space is \textbf{Stonean} if the closure of ever
 \end{proof}
 
 \begin{lemma}
-  \label{lem:spec_masa_wstar_stonean_Sak_1_7_5} (Sak 1.7.5)
+  \label{lem: spec_masa_wstar_stonean (Sak 1.7.5)}
   If $C$ is any maximal commutative $C^*$--subalgebra of the $W^{*}$--algebra $M$, its
   spectrum space (maximal ideal space) is Stonean.
 \end{lemma}
@@ -217,18 +204,18 @@ Note that the following likely contains the most crucial use of the normality of
 of Theorem \ref{thm: sigma_cts_of_normal}.
 
 \begin{lemma}
-  \label{lem:zorn_base}
-  \uses{cor:proj_sub_of_subproj,lem:selfadjoint_le_norm,lem:sigma_cont_of_normal_Sak_1_7_4,lem:proj_of_sup_proj}
+  \label{lem: zorn_base}
+  \uses{cor: proj_sub_of_subproj,lem: selfadjoint_le_norm,lem: sigma_cont_of_normal (Sak 1.7.4),lem: proj_of_sup_proj}
   Let $\varphi$ be a normal positive linear functional on $M$ and consider the predicate $P:\mathcal{P}(M)\to \text{Prop}$ defined, for $p\in \mathcal{P}(M)$, by 
   ``$M\ni x \mapsto \varphi(xp)$ is $\sigma(M,M_{*})$--continuous''. If $(p_{\alpha})$ is a chain of projections in $M$ such that $P(p_{\alpha})$ is true for each $\alpha$,
   then $P(\sup(p_{\alpha}))$ is true. Hence by Zorn's Lemma there is a maximal $p_0\in \mathcal{P}(M)$ such that $P(p_0)$ is true.  
 \end{lemma}
 
 \begin{proof}
-  Let $x$ be on the unit sphere and let $p$ be the supremum of the $p_{\alpha}$. By Theorem \ref{lem:sigma_cont_of_normal_Sak_1_7_4} and Lemma \ref{lem:proj_of_sup_proj} 
+  Let $x$ be on the unit sphere and let $p$ be the supremum of the $p_{\alpha}$. By Theorem \ref{lem: sigma_cont_of_normal (Sak 1.7.4)} and Lemma \ref{lem: proj_of_sup_proj} 
   we know $p_{\alpha}$ converges in $\sigma$--topology to $p$, and $p$ is a projection. 
-  By Corollary \ref{cor:proj_sub_of_subproj} we know $p-p_\alpha$ is a projection. By the $C^{*}$--property
-  of the norm ($\|x^{*}x\|=\|x\|^{2}$), Lemma \ref{lem:selfadjoint_le_norm} and the positivity of $\varphi$ we have $\varphi(x^{*}x)\le \varphi(1)$.
+  By Corollary \ref{cor: proj_sub_of_subproj} we know $p-p_\alpha$ is a projection. By the $C^{*}$--property
+  of the norm ($\|x^{*}x\|=\|x\|^{2}$), Lemma \ref{lem: selfadjoint_le_norm} and the positivity of $\varphi$ we have $\varphi(x^{*}x)\le \varphi(1)$.
   Now these facts together with Cauchy-Schwartz and the monotonicity of square roots, 
   \begin{align}
     |\varphi(x(p-p_{\alpha}))|&\le \varphi(x^{*}x)^{1/2}\varphi(p-p_{\alpha})^{1/2}\\ \nonumber
@@ -241,7 +228,7 @@ of Theorem \ref{thm: sigma_cts_of_normal}.
 \end{proof}
 
 \begin{lemma}
-  \label{lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10} (Sak 1.8.10)
+  \label{lem: bdd_sigma_cts_iff_bdd_s_cts (Sak 1.8.10)}
   A linear functional $\rho$ on $M$ is $\sigma$ continuous on the unit sphere (hence $\sigma$--continuous) if and only if it is $s$--continuous on the
   unit sphere (hence $s$--continuous).
 \end{lemma}
@@ -250,7 +237,7 @@ of Theorem \ref{thm: sigma_cts_of_normal}.
 \end{proof}
 
 \begin{lemma}
-  \label{lem:wstar_of_masa}
+  \label{lem: wstar_of_masa}
   A maximal abelian $*$--subalgebra of a $W^{*}$--algebra $M$ is also a $W^{*}$--algebra.
 \end{lemma}
 
@@ -258,28 +245,28 @@ of Theorem \ref{thm: sigma_cts_of_normal}.
 \end{proof}
 
 \begin{theorem}
-  \label{thm:sigma_cts_of_normal}
-  \uses{lem:zorn_base,lem:exists_uw_ge_normal,lem:msr_th_lemma,lem:cut_down_of_wstar,lem:spec_masa_wstar_stonean_Sak_1_7_5,lem:fin_lin_approx_of_stonean_Sak_1_3_1,lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10,lem:wstar_of_masa}
+  \label{thm: sigma_cts_of_normal}
+  \uses{lem: zorn_base, lem: exists_uw_ge_normal, lem: msr_th_lemma, lem: cut_down_of_wstar, lem: spec_masa_wstar_stonean (Sak 1.7.5), lem: fin_lin_approx_of_stonean (Sak  1.3.1), lem: bdd_sigma_cts_iff_bdd_s_cts (Sak 1.8.10), lem: wstar_of_masa}
   Every positive normal linear functional $\varphi$ on $M$ is $\sigma(M,M_{*})$--continuous.
 \end{theorem}
 
 \begin{proof}
-  The claim is obvious for the zero functional. Let $\varphi$ be a nonzero positive normal linear functional. By Lemma \ref{lem:zorn_base} we have
+  The claim is obvious for the zero functional. Let $\varphi$ be a nonzero positive normal linear functional. By Lemma \ref{lem: zorn_base} we have
   a maximal $p_0\in \mathcal{P}(M)$ such that $M\ni x \mapsto \varphi(xp_0)$ is $\sigma(M,M_{*})$--continuous. Assume for the purposes of finding
-  a contradiction that $p_0\ne 1$. By Lemma \ref{lem:exists_uw_ge_normal}
-  there is a $\sigma(M,M_{*})$--continuous positive functional $\psi$ on $M$ such that $\varphi(1-p_0)<\psi(1-p_0)$. By Lemma \ref{lem:msr_th_lemma}
+  a contradiction that $p_0\ne 1$. By Lemma \ref{lem: exists_uw_ge_normal}
+  there is a $\sigma(M,M_{*})$--continuous positive functional $\psi$ on $M$ such that $\varphi(1-p_0)<\psi(1-p_0)$. By Lemma \ref{lem: msr_th_lemma}
   there is a nonzero subprojection $p\le 1-p_0$ in $M$ such that $\varphi(q)< \psi(q)$ for every nonzero $q\le p$ in $M$. Let $x\in pMp$ be on the unit sphere. 
   Then $x^{*}x$ is positive and hence normal, so the $C^{*}$--subalgebra of $pMp$ generated by $x^{*}x$ and $p$ is commutative, and is hence contained in a maximal abelian
-  $*$--subalgebra $A$ of $pMp$. Now $A$ is a $W^{*}$--subalgebra of $pMp$ by Lemma \ref{lem:wstar_of_masa} and hence is a maximal commutative $C^{*}$--subalgebra of $pMp$. Via the Gelfand Transform, 
-  $A$ is star isomorphic to $C(K)$, where $K$ is Stonean by Lemmas \ref{lem:cut_down_of_wstar} and \ref{lem:spec_masa_wstar_stonean_Sak_1_7_5}. 
-  By Lemma \ref{lem:fin_lin_approx_of_stonean_Sak_1_3_1} it follows that $\varphi(a)\le \psi(a)$ for every $a\ge 0$ in $A$, which holds a fortiori for $a\ge 0$ in $C^{*}(x^{*}x,p)$. 
+  $*$--subalgebra $A$ of $pMp$. Now $A$ is a $W^{*}$--subalgebra of $pMp$ by Lemma \ref{lem: wstar_of_masa} and hence is a maximal commutative $C^{*}$--subalgebra of $pMp$. Via the Gelfand Transform, 
+  $A$ is star isomorphic to $C(K)$, where $K$ is Stonean by Lemmas \ref{lem: cut_down_of_wstar} and \ref{lem: spec_masa_wstar_stonean (Sak 1.7.5)}. 
+  By Lemma \ref{lem: fin_lin_approx_of_stonean (Sak  1.3.1)} it follows that $\varphi(a)\le \psi(a)$ for every $a\ge 0$ in $A$, which holds a fortiori for $a\ge 0$ in $C^{*}(x^{*}x,p)$. 
   In particular, $\varphi(px^{*}xp)\le \psi(px^{*}xp)$. Therefore,
   \begin{align}
     |\varphi(x(p_0+p))|&\le |\varphi(xp_0)|+|\varphi(xp)|\\ \nonumber
     &\le |\varphi(xp_0)|+\varphi(1)^{1/2}\varphi(px^{*}xp)^{1/2}\\ \nonumber
     &\le |\varphi(xp_0)|+\varphi(1)^{1/2}\psi(px^{*}xp)^{1/2}.
   \end{align}
-  Since $x\mapsto \varphi(xp_0)$ is $\sigma$--continuous, it is $s$-continuous by Lemma \ref{lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10}. The seminorm
+  Since $x\mapsto \varphi(xp_0)$ is $\sigma$--continuous, it is $s$-continuous by Lemma \ref{lem: bdd_sigma_cts_iff_bdd_s_cts (Sak 1.8.10)}. The seminorm
   $x \mapsto \psi(px^{*}xp)^{1/2}$ is a defining seminorm for the $s$--topology on $M$. It follows that $x\mapsto \varphi(x(p_0+p))$ is $s$-continuous
   and therefore $\sigma$--continuous. This contradicts the maximality of $p_0$, and therefore $p_0=1$ and the result follows. 
 \end{proof}
