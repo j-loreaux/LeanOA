@@ -259,7 +259,9 @@ lemma _root_.Memℓp.summable_of_one {ι : Type*} {E : Type*}
 open tendstoZero
 -- Lemma 12.3, a separation lemma
 open scoped lp Set.Notation ComplexOrder in
+set_option linter.style.setOption false in
 set_option maxHeartbeats 400000 in
+-- because we need it
 lemma separation [CompleteSpace E] (hA : KreinSmulianProperty A) (h_conv : Convex 𝕜 A)
     (hA' : A ∩ (toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) 1) = ∅) :
     ∃ r > 0, ∃ x : E, ∀ f ∈ A, r ≤ RCLike.re (f x) := by
@@ -320,6 +322,42 @@ lemma separation [CompleteSpace E] (hA : KreinSmulianProperty A) (h_conv : Conve
   · exact (lp.memℓp x').holder 1 (lp.memℓp (x : ℓ^∞(ι, E)))
       (fun _ ↦ ContinuousLinearMap.lsmul 𝕜 𝕜)
       (fun _ ↦ ContinuousLinearMap.opNorm_lsmul_le) |>.summable_of_one
+
+lemma KreinSmulianProperty.isClosed_inter_closedBall
+    (hA : KreinSmulianProperty A) (x : WeakDual 𝕜 E) (r : ℝ) :
+    IsClosed (A ∩ toStrongDual ⁻¹' closedBall (toStrongDual x) r) := by
+  have := Metric.closedBall_subset_closedBall' (ε₂ := r + dist (toStrongDual x) 0) le_rfl
+  rw [← inter_eq_right.mpr this, preimage_inter, ← inter_assoc]
+  exact hA _ |>.inter <| isClosed_closedBall ..
+
+open Pointwise in
+lemma KreinSmulianProperty.translate (hA : KreinSmulianProperty A) (x : WeakDual 𝕜 E) :
+    KreinSmulianProperty (x +ᵥ A) := by
+  intro r
+  convert hA.isClosed_inter_closedBall _ (-x) r |>.vadd x using 1
+  ext φ
+  simp [vadd_set_inter, mem_vadd_set]
+  aesop (add simp [dist_eq_norm, add_comm])
+
+open Pointwise in
+lemma KreinSmulianProperty.dilate (hA : KreinSmulianProperty A) (c : 𝕜) :
+    KreinSmulianProperty (c • A) := by
+  by_cases hc : c = 0
+  · obtain (rfl | hA') := A.eq_empty_or_nonempty
+    · simpa
+    · simp [KreinSmulianProperty, hc, zero_smul_set, hA', ← Set.singleton_zero]
+      sorry
+  · intro r
+    have := hA (r / ‖c‖) |>.smul₀ c
+    simp only [smul_set_inter₀ hc, ← IsUnit.mk0 _ hc |>.preimage_smul_set] at this
+    simpa only [ne_eq, hc, not_false_eq_true, smul_closedBall', smul_zero, norm_eq_zero,
+      mul_div_cancel₀]
+
+
+lemma KreinSmulianProperty.isClosed_toStrongDual (hA : KreinSmulianProperty A) (r : ℝ) :
+    IsClosed (toStrongDual '' A) := by
+
+  sorry
 
 lemma _root_.krein_smulian (hA : KreinSmulianProperty A) : IsClosed A := by
   sorry
