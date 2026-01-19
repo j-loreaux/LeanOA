@@ -184,16 +184,30 @@ $q\in \mathcal{P}(M)$ with $q\le p_1$, we have $\varphi(q)<\psi(q)$.
   the hypothesis $\varphi(p)<\psi(p)$.  
 \end{proof}
 
-Recall that a compact Hausdorff space is \textbf{Stonean} if the closure of every open set is open.
+Recall that a compact Hausdorff space is \textbf{Stonean} if the closure of every open set is open. We note that Lemma
+\ref{lem:fin_lin_approx_of_stonean_Sak_1_3_1} is only part of Sakai 1.3.1, since that is all
+we need for the proof of Theorem \ref{thm:sigma_cts_of_normal}. If $K$ is a topological space in which singletons are closed,
+and $p$ is a projection in $C(K)$, the spectrup of $p$ is its range and is contained in $\{0,1\}$.
+Furthermore, $p^{-1}\{0\}=K\backslash p^{-1}\{1\}$, and so both of these sets are clopen, and identify connected components of $K$.
+If $K$ is Stonean, there are many such connected components:
 
 \begin{lemma}
   \label{lem:fin_lin_approx_of_stonean_Sak_1_3_1} (Sak  1.3.1)
-  Let $K$ be a Stonean space. Then every element $a$ in $C(K)$ can be uniformly approximated by 
-  finite linear combinations of projections in $C(K)$. If $a\ge 0$ then the coefficients of the approximating 
-  linear combinations may be chosen nonnegative.
+  Let $K$ be a Stonean space. Then every positive self-adjoint element $a$ in $C(K)$ can be uniformly approximated by 
+  finite linear combinations of projections in $C(K)$ having nonnegative coefficients. 
 \end{lemma}
 
 \begin{proof}
+Since $a$ is self-adjoint, its spectrum is its range in $\mathbb{R}_{\ge 0}$, and is therefore contained in $[0, \|a\|]$,
+where $\|a\|=\sup_{t\in K}|a(t)|$. Let $\varepsilon >0$ and choose real numbers
+$0<\lambda_1<\lambda_2<\ldots<\lambda_n < \|a\|+1$ so that $|\lambda_{i+1}-\lambda_{i}|<\varepsilon$.
+Now let $G_1= \overline{\{t\in K | a(t)<\lambda_1\}}$ and $G_i=\overline{\{t\in K
+\backslash\bigcup_{j=1}^{i-1}G_{i}|a(t)<\lambda_i\} for $i>1$. These are pairwise disjoint,
+and $\chi_{G_{i}}$ are each continuous projections. Furthermore, for all $t\in K$,
+\begin{align}
+    |a(t)-\sum_{i=1}^{n}\lambda_i\chi_{G_{i}}(t)|<\varepsilon
+\end{align}
+and therefore $\|a-\sum_{i=1}^{n}\lambda_i\chi_{G_{i}}\|<\varepsilon$.
 \end{proof}
 
 \begin{lemma}
