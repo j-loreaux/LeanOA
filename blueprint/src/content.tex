@@ -210,6 +210,51 @@ and $\chi_{G_{i}}$ are each continuous projections. Furthermore, for all $t\in K
 and therefore $\|a-\sum_{i=1}^{n}\lambda_i\chi_{G_{i}}\|<\varepsilon$.
 \end{proof}
 
+In Sakai, the pointwise order on $C(K)$ in Proposition \ref{prop: stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2}
+isn't specified beforehand in the book. Following $C^{*}$--algebra theory, $a\ge 0$ in $C(K)$
+iff the range of $a$ is contained in $\mathbb{R}_{\ge 0}, and $b\le a$ iff $b-a \ge 0$. The spectrum 
+of a function in $C(K)$ is just it's range. So $b\le a$ iff $b(t)\le a(t)$ for all $t\in K$. A net
+ $(f_{\alpha})$ in $C(K)$ is \textit{bounded} if there is a positive constant that bounds the norms of all $f_{\alpha}$.
+A net is said to be \textit{increasing} if $\alpha \le \beta$ implies $f_{\alpha}\le f_{\beta}$ for all $\alpha,\beta$
+in the associated directed set. We ought to note, here, that Sakai opts not to use net language
+(although he sort of does when introducing subscripts) since his directed set is identical to his net
+in Proposition \ref{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2}. Recall that 
+the \textbf{support} of $f\in C(K)$ is $\overline\{x\in K | f(x)\ne 0\}$.
+
+\begin{lemma}
+    \label{lem:cts_fns_ge_zero_le_one_directed}
+    Let $K$ be a compact Hausdorff space, with $U\subseteq K$ open, then the set of $f\in C(K)$ supported on $U$ such that
+    $0 \le f \le 1$ is a directed set with respect to the order on $C(K)$.
+\end{lemma}
+
+\begin{proof}
+    The usual order is a partial order, and given $f,g\in C(K)$ we have $f\vee g \in C(K)$, where $f\vee g(t)=\max{f(t),g(t)}$. 
+    This function is also supported on $U$.
+\end{proof}
+
+\begin{proposition}
+    \label{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2} (Sakai 1.3.2)
+    \uses{lem:cts_fns_ge_zero_le_one_directed,lem:selfadjoint_le_norm}
+    Let $K$ be a compact Hausdorff space. Suppose every bounded increasing net
+    of real valued, non-negative functions in $C(K)$ has a least upper bound in $C(K)$.
+    Then $K$ is Stonean. 
+\end{proposition}
+
+\begin{proof}
+    Suppose for the sake of a contradiction that $K$ isn't Stonean, i.e. that there exists an
+    open set $U$ whose closure isn't open, i.e. that $\overline{U}^{c}$ isn't closed.
+    Consider the set of $f$ in $C(K)$ with support contained in $U$ and such that $0\le f\le 1$. 
+    By Lemma \ref{lem:selfadjoint_le_norm} and \Lemma \ref{lem:cts_fns_ge_zero_le_one_directed}, 
+    this is a bounded, increasing net with respect to the order on $C(K)$. 
+    For any point $t\in U$, by Urysohn's Lemma (compact Hausdorff Spaces are regular) there
+    exists a continuous function $g\in C(K)$ such that $g(t)=1$ and $g$ is zero on $U^{c}$. 
+    It follows that if $f_s$ is the least upper bound of the above net, then $1=g(t)\le f_s(t)$, 
+    and therefore (since we can play this game for any $t\in U$) it must be that $f_s(t)=1$ for any $t\in U$. 
+    By continuity, $f_s(t)=1$ for all $t\in\overline{U}$. Now, since $\overline{U}^{c}\subset U^{c}$, 
+    $f_c$ is identically zero on $U^{c}$. Since $\overline{U}^{c}$ is not closed, it must have a limit point
+    $p\in \overline{U}$, and by continuity $f_c(p)=0$ But $f_c(p)=1$ by the above, which is a contradiction.
+\end{proof}
+
 \begin{lemma}
   \label{lem:cut_down_of_wstar} 
   If $p\in M$ is a projection, $pMp$ is also a $W^{*}$ algebra with identity $p$.
