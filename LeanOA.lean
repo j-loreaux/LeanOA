@@ -10,3 +10,4 @@ import LeanOA.Notation
 import LeanOA.TendstoZero.Defs
 import LeanOA.TendstoZero.StrongDual
 import LeanOA.Ultraweak.Basic
+import LeanOA.VonNeumannAlgebra.Projection
