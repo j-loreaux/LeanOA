@@ -147,8 +147,10 @@ of elements of $T$. Let $P$ and $M^{s}$ denote the set of positive elements and 
   By Lemmas \ref{lem:pos_cvx_cone} and \ref{lem:pos_sa_sigma_closed}, $P$ is a $\sigma$--closed convex cone in 
   the real locally convex space $M^{s}$. By the Hahn-Banach Separation Theorem, there is a $\sigma$--continuous real linear functional $g$
   on $M^{s}$ such that $\inf_{h\in P}g(h)>g(a)$. Since $P$ is a cone, if $g(h)<0$ then we could scale $h$ by a positive constant so $g(ch)\le g(a)$, which
-  is nonsense. Therefore $g(h)\ge 0$ for all $h\ge 0$ (i.e. $g\in T$), and the infimum above must be zero (which can again by seen by scaling). It follows that
-  $0>g(a)$.
+  is nonsense. Therefore $g(h)\ge 0$ for all $h\ge 0$, and the infimum above must be zero (which can again by seen by scaling). It follows that
+  $0>g(a)$. To appropriately extend $g$ to a functional on $M$, define $\varphi(a + ib)=g(a)+ig(b)$ for any $a,b \in M^{s}$. This $\varphi$ is a (complex) linear 
+  functional on $M$, and the $*$--operation is $\sigma$--continuous because $M^{s}$ is $\sigma$--closed (by Lemma \ref{lem:pos_sa_sigma_closed}).
+  It follows that $\varphi$ is a $\sigma$--continuous positive linear functional on $M$ such that $\varphi(a)=g(a)<0$.
 \end{proof}
 
 \begin{lemma}
