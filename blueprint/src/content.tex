@@ -99,7 +99,68 @@ a selfadjoint element $a\in A$ is a projection if and only if the spectrum of $a
   For all $p,q \in \mathcal{A}$ projections such that $q\le p$, $p-q$ is a projection.
 \end{corollary}
 
-\section{Positive Linear Functionals}
+\section{Positive Linear Functionals and States}
+
+Will continue to chase results backwards in Sakai. Note that the norm on a $C^{*}$--algebra
+is uniquely determined (we will include the needed results for this above and remove this
+comment once we have). The following proposition characterizes it in terms of the states on 
+$\mathcal{A}$, also establishing that states separate the elements of $\mathcal{A}$. Let
+$\mathcal{S}$ denote the set of states on the appropriate $C^{*}$--algebra in the sequel.
+
+\begin{proposition}
+  \label{prop:norm_as_state_sup}
+  Let $h$ be a self-adjoint element in a $C^{*}$--algebra $\mathcal{A}$.
+  then $\|h\|=\sup_{\varphi\in \mathcal{S}}|\varphi(h)|$.
+\end{proposition}
+
+\begin{proof}
+\end{proof}
+
+Now let $M$ be a $W^{*}$--algebra and let $T$ denote the set of all $\sigma$--continuous positive
+linear functionals on $M$, and $E$ the linear space of all finite linear combinations
+of elements of $T$. Let $P$ and $M^{s}$ denote the set of positive elements and set of self-adjoint elements of $M$, respectively.
+
+\begin{lemma}
+  \label{lem:pos_cvx_cone}
+  $P$ is a convex cone in $M$.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:pos_sa_sigma_closed}
+  $P$ and $M^{s}$ are $\sigma$--closed.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2} (Sak 1.7.2)
+  \uses{lem:pos_cvx_cone,lem:pos_sa_sigma_closed}
+  For any self-adjoint element $a\notin P$, there exists $\varphi\in T$
+  such that $\varphi(a)<0$.
+\end{lemma}
+
+\begin{proof}
+  By Lemmas \ref{lem:pos_cvx_cone} and \ref{lem:pos_sa_sigma_closed}, $P$ is a $\sigma$--closed convex cone in 
+  the real locally convex space $M^{s}$. By the Hahn-Banach Separation Theorem, there is a $\sigma$--continuous real linear functional $g$
+  on $M^{s}$ such that $\inf_{h\in P}g(h)>g(a)$. Since $P$ is a cone, if $g(h)<0$ then we could scale $h$ by a positive constant so $g(ch)\le g(a)$, which
+  is nonsense. Therefore $g(h)\ge 0$ for all $h\ge 0$ (i.e. $g\in T$), and the infimum above must be zero (which can again by seen by scaling). It follows that
+  $0>g(a)$.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:uw_pos_sep_pts}
+  \uses{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2}
+If $a\in M$, and $\psi(a)=0$ for every $\psi\in T$, then $a=0$.
+\end{lemma}
+
+\begin{proof}
+  Given nonzero $a\in P$ in $M$, since $P$ is a cone, $-a \notin P$. By Lemma \ref{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2}, there is
+  a $\varphi\in T$ such that $\varphi(-a)<0$, hence $\varphi(a)>0$. The desired statement follows by contraposition.
+\end{proof}
 
 \section{Stonean Spaces and Maximal Commutative Subalgebras}
 
@@ -194,17 +255,46 @@ is \textbf{positive} if $\varphi(x)\ge 0$ whenever $x\ge 0$.
 
 \subsection{Ultraweakly Continuous Implies Normal} 
 
-This is 1.7.4 in Sakai. Roughly, taking an increasing net of projections, it converges to the supremum strongly, hence $\sigma$-topology,
-and the $\sigma$-continuity finishes the proof.
+In what follows, let $T$ denote the set of all $\sigma$--continuous positive
+linear functionals on $M$, and $E$ the linear space of all finite linear combinations
+of elements of $T$. Let $P$ denote the set of positive elements of $M$.
+
+\begin{lemma}
+  \label{lem:homeo_of_cts_bij_cpt_haus}
+  \lean{isHomeomorph_iff_continuous_bijective}
+  \mathlibok
+  Every continuous bijection from a compact space to a Hausdorff space is a 
+  homeomorphism.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Omitted. In Mathlib.
+\end{proof}
+
+\begin{theorem}
+  \label{thm:Banach_Alaoglu}
+  \lean{WeakDual.isCompact_closedBall}
+  \mathlibok
+  (Banach-Alaoglu) The closed unit ball of the dual space of a normed vector space is compact in the
+  weak-$*$ topology.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Omitted. In Mathlib.
+\end{proof}
 
 \begin{theorem}
   \label{lem:sigma_cont_of_normal_Sak_1_7_4}
+  \uses{thm:Banach_Alaoglu,lem:homeo_of_cts_bij_cpt_haus,lem:uw_pos_sep_pts}
   Every uniformly bounded, increasing directed set converges
   to its least upper bound in the $\sigma$--topology. Further, if
   $x=\sup_{\alpha}x_\alpha$ then $a^{*}xa=\sup_{\alpha}a^{*}xa$.
 \end{theorem}
 
 \begin{proof}
+
 \end{proof}
 
 \subsection{Normal Implies Ultraweakly Continuous}
@@ -223,16 +313,8 @@ induces an order on the set $\{p\in \mathcal{P}(M)|P(p)\}$. In what follows ther
 we also denote this induced order by ``$\le$''.
 
 \begin{lemma}
-  \label{lem:uw_pos_sep_pts} (Sak 1.7.2)
-For every nonzero element $a\in M$, there is a $\sigma(M,M_{*})$--continuous positive linear
-functional $\psi$ on $M$ such that $\psi(a)\ne 0$.
-\end{lemma}
-
-\begin{proof}
-\end{proof}
-
-\begin{lemma}
   \label{lem:exists_uw_ge_normal}
+  \uses{lem:uw_pos_sep_pts}
   For every positive normal linear functional $\varphi$ and nonzero $p\in \mathcal{P}(M)$
   there exists a positive $\sigma(M,M_{*})$--continuous linear functional $\psi$ such that $\varphi(p)<\psi(p)$.
 \end{lemma}
