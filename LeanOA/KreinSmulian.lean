@@ -1,5 +1,7 @@
-import Mathlib
 import LeanOA.TendstoZero.StrongDual
+import Mathlib.Analysis.InnerProductSpace.Basic
+import Mathlib.Analysis.LocallyConvex.Separation
+import Mathlib.Analysis.Normed.Module.WeakDual
 
 
 -- We follow the proof in Conway's "A Course in Functional Analysis", Theorem 12.1
@@ -18,10 +20,9 @@ variable {𝕜 E F : Type*} [NormedCommRing 𝕜] [AddCommMonoid E] [AddCommMono
 variable [Module 𝕜 E] [Module 𝕜 F]
 variable (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
 
-@[simp]
 theorem LinearMap.polar_iUnion₂ {ι} {κ : ι → Sort*} {s : (i : ι) → κ i → Set E} :
-    B.polar (⋃ i, ⋃ j, s i j) = ⋂ i, ⋂ j,  B.polar (s i j) :=
-  B.polar_gc.l_iSup₂
+    B.polar (⋃ i, ⋃ j, s i j) = ⋂ i, ⋂ j,  B.polar (s i j) := by
+  simp
 
 end Polar
 
@@ -29,6 +30,8 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜
 
 namespace KreinSmulian
 
+/-- An abbreviation for the hypothesis of the Krein-Smulian theorem: the intersection of `A`
+with every closed ball centered at the origin is closed. -/
 public abbrev KreinSmulianProperty (A : Set (WeakDual 𝕜 E)) : Prop :=
   ∀ r, IsClosed (A ∩ (toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) r))
 
@@ -141,7 +144,7 @@ theorem _root_.Metric.nhds_basis_closedBall_inv_nat_succ {α : Type*} [PseudoMet
     (𝓝 x).HasBasis (fun _ => True) fun n : ℕ => closedBall x (1 / (↑n + 1)) :=
   nhds_basis_uniformity uniformity_basis_dist_le_inv_nat_succ
 
-def _root_.lp.norm_mono {ι : Type*} {E F : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
+lemma _root_.lp.norm_mono {ι : Type*} {E F : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
     [∀ i, NormedAddCommGroup (F i)] {p : ℝ≥0∞} (hp : p ≠ 0)
     {x : lp E p} {y : lp F p} (h : ∀ i, ‖x i‖ ≤ ‖y i‖) :
     ‖x‖ ≤ ‖y‖ := by
@@ -202,6 +205,8 @@ lemma _root_.lp.mapCLM_mem_tendstoZero {ι : Type*} {E F : ι → Type*}
     fun i ↦ (T i).le_of_opNorm_le (hTK i) _
 
 open tendstoZero in
+/-- A uniformly bounded family of continuous linear maps, as a continuous linear map
+on the `c₀` space. -/
 @[simps!]
 noncomputable def _root_.tendstoZero.mapCLM {ι : Type*} {E F : ι → Type*}
     [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedAddCommGroup (F i)]
