@@ -33,3 +33,14 @@ theorem Subgroup.topologicalClosure_mono {G : Type*} [TopologicalSpace G] [Group
     [IsTopologicalGroup G] {s t : Subgroup G} (h : s ≤ t) :
     s.topologicalClosure ≤ t.topologicalClosure :=
   _root_.closure_mono h
+
+open Uniformity in
+theorem Metric.uniformity_basis_dist_le_inv_nat_succ {α : Type*} [PseudoMetricSpace α] :
+    (𝓤 α).HasBasis (fun _ => True) fun n : ℕ => { p : α × α | dist p.1 p.2 ≤ 1 / (↑n + 1) } :=
+  Metric.mk_uniformity_basis_le (fun n _ => div_pos zero_lt_one <| Nat.cast_add_one_pos n)
+    fun _ε ε0 => (exists_nat_one_div_lt ε0).imp fun _n hn => ⟨trivial, le_of_lt hn⟩
+
+open Topology in
+theorem Metric.nhds_basis_closedBall_inv_nat_succ {α : Type*} [PseudoMetricSpace α] {x : α} :
+    (𝓝 x).HasBasis (fun _ => True) fun n : ℕ => closedBall x (1 / (↑n + 1)) :=
+  nhds_basis_uniformity uniformity_basis_dist_le_inv_nat_succ
