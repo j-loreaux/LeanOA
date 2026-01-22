@@ -2,14 +2,21 @@ import LeanOA.TendstoZero.StrongDual
 import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.LocallyConvex.Separation
 import Mathlib.Analysis.Normed.Module.WeakDual
+import Mathlib.Analysis.Convex.NNReal
 
+/-! # Krein-Smulian theorem
 
--- We follow the proof in Conway's "A Course in Functional Analysis", Theorem 12.1
+This file establishes the Krein-Smulian theorem. If `A : Set (WeakDual 𝕜 E)` is
+convex and its intersection with arbitrrarily large closed balls is closed, then
+`A` is itself closed. As a corollary if the intersection of
+`A : Submodule ℝ≥0 (WeakDual 𝕜 E)` with the closed unit ball is closed, then `A` is
+itself closed.
 
--- Lemma 12.2
+We follow the proof in Conway's "A Course in Functional Analysis", Theorem 12.1
+-/
 
-open scoped ENNReal NNReal Topology
-open Metric Set WeakDual
+open scoped ENNReal NNReal Topology Pointwise Set.Notation tendstoZero lp ComplexOrder
+open Metric Set WeakDual Filter
 
 -- we should deprecate `convex_RCLike_iff_convex_real` eventually to be lowercase
 alias ⟨Convex.of_rclike, Convex.to_rclike⟩ := convex_RCLike_iff_convex_real
@@ -51,14 +58,19 @@ namespace KreinSmulian
 
 /-- An abbreviation for the hypothesis of the Krein-Smulian theorem: the intersection of `A`
 with every closed ball centered at the origin is closed. -/
-public abbrev KreinSmulianProperty (A : Set (WeakDual 𝕜 E)) : Prop :=
+abbrev KreinSmulianProperty (A : Set (WeakDual 𝕜 E)) : Prop :=
   ∀ r, IsClosed (A ∩ (toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) r))
 
 variable (A : Set (WeakDual 𝕜 E))
 
-open scoped Pointwise in
 -- Auxiliary result contained in the proof of Lemma 12.3
-lemma separation_induction_step_aux {s t : ℝ} (hs : 0 < s) (ht : s < t)
+/-- This is in some sense the key lemma used to prove the Krein-Smulian theorem. Suppse that the
+intersection of `A : Set (WeakDual 𝕜 E)` with some closed ball of radius `t` is closed and that
+for some set `F : Set E`, the intersection of `A` with a closed ball of radius `s` (`< t`) is
+disjoint from the polar of `F`. Then we may adjoin a finite set `G` to `F`, with
+`G ⊆ closedBall 0 s⁻¹` so that the polar of `F ∪ G` is disjoint from `A` intersected with the
+larger ball of radius `t`. -/
+lemma separationSeq_induction_step_aux {s t : ℝ} (hs : 0 < s) (ht : s < t)
     (hA : IsClosed (A ∩ (toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) t)))
     (F : Set E) (hF : A ∩ (toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) s) ∩ polar 𝕜 F = ∅) :
     ∃ G : Set E, G.Finite ∧ G ⊆ closedBall (0 : E) s⁻¹ ∧
@@ -89,7 +101,7 @@ lemma separation_induction_step_aux {s t : ℝ} (hs : 0 < s) (ht : s < t)
 /-- Suppose `A : Set (WeakDual 𝕜 E)` satisfies the `KreinSmulianProperty` and it's polar
 does not intersect the unit ball. This is a sequence `F` of pairs of finite sets defined
 recursively by: `F 0 := ({0}, {0})`, `(F (n + 1)).2 := (F n).2 ∪ (F (n + 1)).1` and
-`(F (n + 1)).1` is the result of applying `krein_smulian_separation_induction_step_aux`
+`(F (n + 1)).1` is the result of applying `separationSeq_induction_step_aux`
 to `(F n).2`. -/
 noncomputable def separationSeq (hA : KreinSmulianProperty A)
     (hA' : A ∩ (toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) 1) = ∅) :
@@ -98,7 +110,7 @@ noncomputable def separationSeq (hA : KreinSmulianProperty A)
       (A ∩ toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) (n + 1)) ∩ polar 𝕜 F.2 = ∅
   | 0 => ⟨⟨{0}, {0}⟩, by simpa [polar]⟩
   | n + 1 => by
-    letI ind := separation_induction_step_aux A (s := n + 1) (t := n + 2) (by positivity)
+    letI ind := separationSeq_induction_step_aux A (s := n + 1) (t := n + 2) (by positivity)
       (by simp) (hA (n + 2)) (separationSeq hA hA' n).fst.2 (separationSeq hA hA' n).snd.2.2.2
     letI F₁ := ind.choose
     letI F₂ := (separationSeq hA hA' n).fst.2 ∪ F₁
@@ -123,8 +135,7 @@ lemma separationSeq_apply_fst_snd_eq_iUnion (hA : KreinSmulianProperty A)
     rw [Finset.range_add_one, Finset.set_biUnion_insert, union_comm, ← ih]
     rfl
 
-open scoped Pointwise in
--- Auxiliary result contained in the proof of Lemma 12.3
+/-- Extracts `separationSeq` out into an existential statement for easier use. -/
 lemma separation_aux (hA : KreinSmulianProperty A)
     (hA' : A ∩ (toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) 1) = ∅) :
     ∃ F : ℕ → Set E, ∀ n, (F n).Finite ∧
@@ -137,7 +148,8 @@ lemma separation_aux (hA : KreinSmulianProperty A)
   rw [separationSeq_apply_fst_snd_eq_iUnion, polar]
   exact LinearMap.polar_iUnion₂ _ |>.symm
 
-open Filter tendstoZero Set.Notation in
+/-- The sequence obtained in `separation_aux` tends to zero along the cofinite filter
+(on the subtype domain). -/
 lemma separation_aux_tendsto
     (F : ℕ → Set E) (hF₁ : ∀ (x : ℕ), (F x).Finite)
     (hF₂ : ∀ (x : ℕ), F x ⊆ closedBall 0 (↑x)⁻¹) :
@@ -156,7 +168,6 @@ lemma separation_aux_tendsto
   have hm_pos : 0 < (m : ℝ) := lt_of_lt_of_le (by positivity) hmn
   simpa using closedBall_subset_closedBall (by field_simp; assumption) <| hF₂ m hxm
 
-open tendstoZero
 -- Lemma 12.3, a separation lemma
 open scoped lp Set.Notation ComplexOrder in
 set_option linter.style.setOption false in
@@ -167,9 +178,9 @@ lemma separation [CompleteSpace E] (hA : KreinSmulianProperty A) (h_conv : Conve
     ∃ r > 0, ∃ x : E, ∀ f ∈ A, r ≤ RCLike.re (f x) := by
   obtain ⟨F, hF₁, hF₂, hF₃⟩ := by simpa [forall_and] using separation_aux A hA hA'
   let ι := ⋃ n, F n
-  let x : c₀(ι, E) := mk Subtype.val <| separation_aux_tendsto F hF₁ hF₂
+  let x : c₀(ι, E) := tendstoZero.mk Subtype.val <| separation_aux_tendsto F hF₁ hF₂
   let T : WeakDual 𝕜 E →ₗ[𝕜] c₀(ι, 𝕜) :=
-    { toFun φ := mapCLM (fun _ ↦ toStrongDual φ) (norm_nonneg _) (fun _ ↦ le_rfl) x
+    { toFun φ := tendstoZero.mapCLM (fun _ ↦ toStrongDual φ) (norm_nonneg _) (fun _ ↦ le_rfl) x
       map_add' _ _ := rfl
       map_smul' _ _ := rfl }
   have hTA : Disjoint (ball 0 1) (T '' A) := by
@@ -225,7 +236,6 @@ lemma KreinSmulianProperty.isClosed_inter_closedBall
   rw [← inter_eq_right.mpr this, preimage_inter, ← inter_assoc]
   exact hA _ |>.inter <| isClosed_closedBall ..
 
-open Pointwise in
 lemma KreinSmulianProperty.translate (hA : KreinSmulianProperty A) (x : WeakDual 𝕜 E) :
     KreinSmulianProperty (x +ᵥ A) := by
   intro r
@@ -234,7 +244,6 @@ lemma KreinSmulianProperty.translate (hA : KreinSmulianProperty A) (x : WeakDual
   simp [vadd_set_inter, mem_vadd_set]
   aesop (add simp [dist_eq_norm, add_comm])
 
-open Pointwise in
 lemma KreinSmulianProperty.dilate (hA : KreinSmulianProperty A) (c : 𝕜) :
     KreinSmulianProperty (c • A) := by
   by_cases hc : c = 0
@@ -261,11 +270,26 @@ lemma KreinSmulianProperty.isClosed_toStrongDual (hA : KreinSmulianProperty A) :
   replace hA := hA.isClosed_inter_closedBall _ (φ₀.toWeakDual) r
   exact ⟨_, hA.mem_of_tendsto hφ (.of_forall hφ_mem) |>.1, by simp⟩
 
+lemma KreinSmulianProperty.of_frequently
+    (hA : ∃ᶠ r in atTop, IsClosed (A ∩ (toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) r))) :
+    KreinSmulianProperty A := by
+  intro r
+  obtain ⟨s, hrs ,hs⟩ := hA.forall_exists_of_atTop r
+  convert inter_assoc .. ▸ hs.inter (isClosed_closedBall 0 r) using 2
+  exact Eq.symm <| inter_eq_right.mpr <| preimage_mono <| closedBall_subset_closedBall hrs
+
 attribute [fun_prop] WeakDual.eval_continuous
 
-open scoped ComplexOrder in
-lemma _root_.krein_smulian [CompleteSpace E] (hA : KreinSmulianProperty A)
+end KreinSmulian
+
+open KreinSmulian
+
+/-- The **Krein-Smulian theorem**. If `A : Set (WeakDual 𝕜 E)` is convex and its intersection with
+arbitrarily large closed balls is closed, then `A` is itself closed (in the weak⋆ topology). -/
+theorem krein_smulian [CompleteSpace E] (A : Set (WeakDual 𝕜 E))
+    (hA : ∃ᶠ r in atTop, IsClosed (A ∩ (toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) r)))
     (hA_conv : Convex 𝕜 A) : IsClosed A := by
+  replace hA : KreinSmulianProperty A := .of_frequently _ hA
   apply isClosed_of_closure_subset fun φ₀ hφ₀ ↦ ?_
   contrapose hφ₀
   have hφ₀' : toStrongDual φ₀ ∉ toStrongDual '' A := by rintro ⟨φ, hφ, rfl⟩; exact hφ₀ hφ
@@ -294,4 +318,20 @@ lemma _root_.krein_smulian [CompleteSpace E] (hA : KreinSmulianProperty A)
   simp only [map_zero] at this
   exact lt_irrefl _ <| hs.trans_le this
 
-end KreinSmulian
+/-- The **Krein-Smulian theorem**. If `A : Submodule 𝕜 (WeakDual 𝕜 E)` and if
+the intersection of `A` with the closed unit ball is closed, then `A` is itself
+closed (in the weak⋆ topology). -/
+lemma krein_smulian_of_submodule [CompleteSpace E] (A : Submodule ℝ≥0 (WeakDual 𝕜 E))
+    (hA : IsClosed ((A : Set (WeakDual 𝕜 E)) ∩ (toStrongDual ⁻¹' closedBall 0 1))) :
+    IsClosed (A : Set (WeakDual 𝕜 E)) := by
+  refine krein_smulian (A : Set (WeakDual 𝕜 E)) (Filter.Eventually.frequently ?_)
+    (.to_rclike <| NNReal.convex_iff.mp A.convex)
+  filter_upwards [Filter.Ioi_mem_atTop 0] with r (hr : 0 < r)
+  lift r to ℝ≥0 using hr.le
+  lift r to ℝ≥0ˣ using IsUnit.mk0 _ (mod_cast hr.ne')
+  have := hA.smul r
+  rw [smul_set_inter] at this
+  convert this using 2 <;> ext
+  · simp [mem_smul_set_iff_inv_smul_mem]
+  · simp [mem_smul_set_iff_inv_smul_mem₀, Units.smul_def,
+      NNReal.smul_def, norm_smul, inv_mul_le_one₀ hr]
