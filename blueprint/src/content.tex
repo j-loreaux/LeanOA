@@ -23,6 +23,7 @@ This is written $a\ge 0$. If $a,b \in \mathcal{A}$ are selfadjoint then $b \le a
 \begin{lemma}
   \label{lem:pos_iff_star_mul_self_Sak_1_4_4} (Sak 1.4.4)
   \lean{CStarAlgebra.nonneg_TFAE,StarOrderedRing.nonneg_iff}
+  \leanok
   Let $h \in \mathcal{A}$. TFAE:
   \begin{enumerate}
   \item $h \ge 0$;
@@ -97,9 +98,16 @@ a selfadjoint element $a\in A$ is a projection if and only if the spectrum of $a
 
 \begin{corollary}
   \label{cor:proj_sub_of_subproj}
+  \lean{IsStarProjection.sub_tfae}
+  \leanok
   \uses{lem:proj_sub_pos_iff_comm_eq_self}
   For all $p,q \in \mathcal{A}$ projections such that $q\le p$, $p-q$ is a projection.
 \end{corollary}
+
+\begin{proof}
+  \leanok
+  Omitted.
+\end{proof}
 
 \section{Positive Linear Functionals}
 
