@@ -13,6 +13,36 @@ dependencies explicitly into the results that use them below.
 
 Maybe collect things into Basic CStar section and Basic WStar section?
 
+\begin{lemma}
+    \label{lem:sigma_closed_star_subalg_wstar} (Sakai 1.1.4)
+  A self-adjoint, $\sigma$--closed $*$--subalgebra $N$ of a $W^{*}$--algebra $M$ is also a $W^{*}$--algebra, since $(M_{*}/N^{0})^{*}=N$, where
+  $N^{0}$ is the polar (annihilator) of $N$ in $M_{*}$, i.e. the set of $\varphi\in M_{*}$ such that $\varphi(x)=0$ for all $x\in N$.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:cut_down_sigma_closed_cts} (Sakai 1.7.6)
+  Let $p$ be any projection in $M$. Then the subalgebra $pMp$ is $\sigma$--closed and the mapping $x\mapsto pxp$ is $\sigma$--continuous.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:cut_down_of_wstar} 
+  \uses{lem:cut_down_sigma_closed_cts,lem:sigma_closed_star_subalg_wstar}
+  If $p\in M$ is a projection, $pMp$ is also a $W^{*}$algebra with identity $p$.
+\end{lemma}
+
+\begin{proof}
+  It is clear that $eMe$ is an algebra, since any sum or product of elements preserves the pre and post multiplication by $e$.
+  It is also clear that $e$ is the multiplicative identity of this algebra. The product reversing property of $*$ and the fact that
+  $e$ is a self-adjoint projection implies that $eMe$ is a $*$--algebra. By Lemma \ref{lem:sigma_closed_star_subalg_wstar}, if this 
+  $*$--subalgebra is $\sigma$--closed, then it is a $W^{*}$--subalgebra of $M$. But this is the result of \ref{lem:cut_down_sigma_closed_cts}.
+\end{proof}
+
 \section{Order Lemmas}
 
 Let $\mathcal{A}$ be a unital $C^{*}$--algebra in this section. We collect lemmas for the ordering of elements in $\mathcal{A}$. 
@@ -104,12 +134,70 @@ a selfadjoint element $a\in A$ is a projection if and only if the spectrum of $a
   For all $p,q \in \mathcal{A}$ projections such that $q\le p$, $p-q$ is a projection.
 \end{corollary}
 
+\section{Positive Linear Functionals and States}
+
+Will continue to chase results backwards in Sakai. Note that the norm on a $C^{*}$--algebra
+is uniquely determined (we will include the needed results for this above and remove this
+comment once we have). The following proposition characterizes it in terms of the states on 
+$\mathcal{A}$, also establishing that states separate the elements of $\mathcal{A}$. Let
+$\mathcal{S}$ denote the set of states on the appropriate $C^{*}$--algebra in the sequel.
+
+\begin{proposition}
+  \label{prop:norm_as_state_sup}
+  Let $h$ be a self-adjoint element in a $C^{*}$--algebra $\mathcal{A}$.
+  then $\|h\|=\sup_{\varphi\in \mathcal{S}}|\varphi(h)|$.
+\end{proposition}
+
 \begin{proof}
-  \leanok
-  Omitted.
 \end{proof}
 
-\section{Positive Linear Functionals}
+Now let $M$ be a $W^{*}$--algebra and let $T$ denote the set of all $\sigma$--continuous positive
+linear functionals on $M$, and $E$ the linear space of all finite linear combinations
+of elements of $T$. Let $P$ and $M^{s}$ denote the set of positive elements and set of self-adjoint elements of $M$, respectively.
+
+\begin{lemma}
+  \label{lem:pos_cvx_cone}
+  $P$ is a convex cone in $M$.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:pos_sa_sigma_closed}
+  $P$ and $M^{s}$ are $\sigma$--closed.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2} (Sak 1.7.2)
+  \uses{lem:pos_cvx_cone,lem:pos_sa_sigma_closed}
+  For any self-adjoint element $a\notin P$, there exists $\varphi\in T$
+  such that $\varphi(a)<0$.
+\end{lemma}
+
+\begin{proof}
+  By Lemmas \ref{lem:pos_cvx_cone} and \ref{lem:pos_sa_sigma_closed}, $P$ is a $\sigma$--closed convex cone in 
+  the real locally convex space $M^{s}$. By the Hahn-Banach Separation Theorem, there is a $\sigma$--continuous real linear functional $g$
+  on $M^{s}$ such that $\inf_{h\in P}g(h)>g(a)$. Since $P$ is a cone, if $g(h)<0$ then we could scale $h$ by a positive constant so $g(ch)\le g(a)$, which
+  is nonsense. Therefore $g(h)\ge 0$ for all $h\ge 0$, and the infimum above must be zero (which can again by seen by scaling). It follows that
+  $0>g(a)$. To appropriately extend $g$ to a functional on $M$, define $\varphi(a + ib)=g(a)+ig(b)$ for any $a,b \in M^{s}$. This $\varphi$ is a (complex) linear 
+  functional on $M$, and the $*$--operation is $\sigma$--continuous because $M^{s}$ is $\sigma$--closed (by Lemma \ref{lem:pos_sa_sigma_closed}).
+  It follows that $\varphi$ is a $\sigma$--continuous positive linear functional on $M$ such that $\varphi(a)=g(a)<0$.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:uw_pos_sep_pts}
+  \uses{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2}
+If $a\in M$, and $\psi(a)=0$ for every $\psi\in T$, then $a=0$.
+\end{lemma}
+
+\begin{proof}
+  Given nonzero $a\in P$ in $M$, since $P$ is a cone, $-a \notin P$. By Lemma \ref{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2}, there is
+  a $\varphi\in T$ such that $\varphi(-a)<0$, hence $\varphi(a)>0$. The desired statement follows by contraposition.
+\end{proof}
 
 \section{Stonean Spaces and Maximal Commutative Subalgebras}
 
@@ -153,7 +241,7 @@ the \textbf{support} of $f\in C(K)$ is $\overline{\{x\in K | f(x)\ne 0\}}$.
 \begin{lemma}
     \label{lem:cts_fns_ge_zero_le_one_directed}
     Let $K$ be a compact Hausdorff space, with $U\subseteq K$ open, then the set of $f\in C(K)$ supported on $U$ such that
-    $0 \le f \le 1$ is a directed set with respect to the order on $C(K)$.
+    $0 \le f \le 1$ is a directed set w.r.t. the order on $C(K)$.
 \end{lemma}
 
 \begin{proof}
@@ -186,11 +274,16 @@ the \textbf{support} of $f\in C(K)$ is $\overline{\{x\in K | f(x)\ne 0\}}$.
 
 \begin{lemma}
   \label{lem:spec_masa_wstar_stonean_Sak_1_7_5} (Sak 1.7.5)
+  \uses{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2}
   If $C$ is any maximal commutative $C^*$--subalgebra of the $W^{*}$--algebra $M$, its
   spectrum space (maximal ideal space) is Stonean.
 \end{lemma}
 
 \begin{proof}
+  Suppose $(a_{\lambda})$ is a uniformly bounded, increasing net of positive elements in $C$ with supremum $a$. 
+  Given any unitary $u\in C$, we have $u^{*}\sup_{\lambda}a_{\lambda} u=\sup_{\lambda}u^{*}a_{\lambda}u$ and since every
+  element in $C$ is a linear combination of unitary elements from $C$, we have that $sup_{\lambda}a_{\lambda}\in C$. The result
+  follows from Proposition \ref{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2} after applying the Gelfand transform.
 \end{proof}
 
 \section{Normality and Ultraweak Continuity for Positive Functionals}
@@ -204,11 +297,39 @@ is \textbf{positive} if $\varphi(x)\ge 0$ whenever $x\ge 0$.
 
 \subsection{Ultraweakly Continuous Implies Normal} 
 
-This is 1.7.4 in Sakai. Roughly, taking an increasing net of projections, it converges to the supremum strongly, hence $\sigma$-topology,
-and the $\sigma$-continuity finishes the proof.
+In what follows, let $T$ denote the set of all $\sigma$--continuous positive
+linear functionals on $M$, and $E$ the linear space of all finite linear combinations
+of elements of $T$. Let $P$ denote the set of positive elements of $M$.
+
+\begin{lemma}
+  \label{lem:homeo_of_cts_bij_cpt_haus}
+  \lean{isHomeomorph_iff_continuous_bijective}
+  \mathlibok
+  Every continuous bijection from a compact space to a Hausdorff space is a 
+  homeomorphism.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Omitted. In Mathlib.
+\end{proof}
+
+\begin{theorem}
+  \label{thm:Banach_Alaoglu}
+  \lean{WeakDual.isCompact_closedBall}
+  \mathlibok
+  (Banach-Alaoglu) The closed unit ball of the dual space of a normed vector space is compact in the
+  weak-$*$ topology.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Omitted. In Mathlib.
+\end{proof}
 
 \begin{theorem}
   \label{lem:sigma_cont_of_normal_Sak_1_7_4}
+  \uses{thm:Banach_Alaoglu,lem:homeo_of_cts_bij_cpt_haus,lem:uw_pos_sep_pts}
   Every uniformly bounded, increasing directed set converges
   to its least upper bound in the $\sigma$--topology. Further, if
   $x=\sup_{\alpha}x_\alpha$ then $a^{*}xa=\sup_{\alpha}a^{*}xa$.
@@ -233,16 +354,8 @@ induces an order on the set $\{p\in \mathcal{P}(M)|P(p)\}$. In what follows ther
 we also denote this induced order by ``$\le$''.
 
 \begin{lemma}
-  \label{lem:uw_pos_sep_pts} (Sak 1.7.2)
-For every nonzero element $a\in M$, there is a $\sigma(M,M_{*})$--continuous positive linear
-functional $\psi$ on $M$ such that $\psi(a)\ne 0$.
-\end{lemma}
-
-\begin{proof}
-\end{proof}
-
-\begin{lemma}
   \label{lem:exists_uw_ge_normal}
+  \uses{lem:uw_pos_sep_pts}
   For every positive normal linear functional $\varphi$ and nonzero $p\in \mathcal{P}(M)$
   there exists a positive $\sigma(M,M_{*})$--continuous linear functional $\psi$ such that $\varphi(p)<\psi(p)$.
 \end{lemma}
@@ -276,14 +389,6 @@ $q\in \mathcal{P}(M)$ with $q\le p_1$, we have $\varphi(q)<\psi(q)$.
   the hypothesis $\varphi(p)<\psi(p)$.  
 \end{proof}
 
-\begin{lemma}
-  \label{lem:cut_down_of_wstar} 
-  If $p\in M$ is a projection, $pMp$ is also a $W^{*}$ algebra with identity $p$.
-\end{lemma}
-
-\begin{proof}
-\end{proof}
-
 Note that the following likely contains the most crucial use of the normality of $\varphi$ for the later proof 
 of Theorem \ref{thm:sigma_cts_of_normal}.
 
@@ -313,7 +418,7 @@ of Theorem \ref{thm:sigma_cts_of_normal}.
 
 \begin{lemma}
   \label{lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10} (Sak 1.8.10)
-  A linear functional $\rho$ on $M$ is $\sigma$ continuous on the unit sphere (hence $\sigma$--continuous) if and only if it is $s$--continuous on the
+  A linear functional $\rho$ on $M$ is $\sigma$--continuous on the unit sphere (hence $\sigma$--continuous) if and only if it is $s$--continuous on the
   unit sphere (hence $s$--continuous).
 \end{lemma}
 
