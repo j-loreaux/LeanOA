@@ -345,21 +345,58 @@ lemma KreinSmulianProperty.dilate (hA : KreinSmulianProperty A) (c : 𝕜) :
   by_cases hc : c = 0
   · obtain (rfl | hA') := A.eq_empty_or_nonempty
     · simpa
-    · simp [KreinSmulianProperty, hc, zero_smul_set, hA', ← Set.singleton_zero]
-      sorry
+    · simpa [KreinSmulianProperty, hc, zero_smul_set, hA', ← Set.singleton_zero]
+        using fun r ↦ isClosed_singleton.inter <| isClosed_closedBall 0 r
   · intro r
     have := hA (r / ‖c‖) |>.smul₀ c
     simp only [smul_set_inter₀ hc, ← IsUnit.mk0 _ hc |>.preimage_smul_set] at this
     simpa only [ne_eq, hc, not_false_eq_true, smul_closedBall', smul_zero, norm_eq_zero,
       mul_div_cancel₀]
 
-
-lemma KreinSmulianProperty.isClosed_toStrongDual (hA : KreinSmulianProperty A) (r : ℝ) :
+lemma KreinSmulianProperty.isClosed_toStrongDual (hA : KreinSmulianProperty A) :
     IsClosed (toStrongDual '' A) := by
+  simp_rw [isClosed_iff_frequently, Filter.frequently_iff_seq_forall]
+  rintro φ₀ ⟨φ, hφ, hφ_mem⟩
+  obtain ⟨r, hr⟩ := Metric.isBounded_range_of_tendsto φ hφ |>.subset_closedBall φ₀
+  replace hφ := by simpa only [Function.comp_def] using
+    NormedSpace.Dual.toWeakDual_continuous.tendsto φ₀ |>.comp hφ
+  replace hφ_mem (n : ℕ) : (φ n).toWeakDual ∈ A ∩ toStrongDual ⁻¹' closedBall φ₀ r := by
+    rw [toStrongDual.image_eq_preimage_symm] at hφ_mem
+    exact ⟨hφ_mem n, by simpa using hr ⟨n, rfl⟩⟩
+  replace hA := hA.isClosed_inter_closedBall _ (φ₀.toWeakDual) r
+  exact ⟨_, hA.mem_of_tendsto hφ (.of_forall hφ_mem) |>.1, by simp⟩
 
-  sorry
+attribute [fun_prop] WeakDual.eval_continuous
 
-lemma _root_.krein_smulian (hA : KreinSmulianProperty A) : IsClosed A := by
-  sorry
+open scoped ComplexOrder in
+lemma _root_.krein_smulian [CompleteSpace E] (hA : KreinSmulianProperty A)
+    (hA_conv : Convex 𝕜 A) : IsClosed A := by
+  apply isClosed_of_closure_subset fun φ₀ hφ₀ ↦ ?_
+  contrapose hφ₀
+  have hφ₀' : toStrongDual φ₀ ∉ toStrongDual '' A := by rintro ⟨φ, hφ, rfl⟩; exact hφ₀ hφ
+  obtain ⟨r, hr, hrA⟩ := nhds_basis_closedBall.mem_iff.mp <|
+    hA.isClosed_toStrongDual.compl_mem_nhds hφ₀'
+  rw [← disjoint_compl_right_iff_subset, compl_compl, Set.disjoint_image_right] at hrA
+  replace hA := hA.translate _ (-φ₀) |>.dilate _ (r⁻¹ : 𝕜)
+  replace hA_conv := hA_conv.vadd (-φ₀) |>.smul (r⁻¹ : 𝕜)
+  have ⟨s, hs, x, hx⟩ := separation _ hA hA_conv <| by
+    rw [← disjoint_iff_inter_eq_empty, disjoint_comm]
+    rw [← compl_compl (toStrongDual ⁻¹' _), disjoint_compl_left_iff_subset] at hrA ⊢
+    rintro z ⟨y, ⟨x, hxA, rfl⟩, rfl⟩
+    simpa [add_comm, ← sub_eq_add_neg, norm_smul, one_lt_inv_mul₀,
+      abs_of_pos, hr, dist_eq_norm] using hrA hxA
+  simp only [mem_smul_set, mem_vadd_set, vadd_eq_add, exists_exists_and_eq_and, smul_add, smul_neg,
+    forall_exists_index, and_imp, forall_apply_eq_imp_iff₂] at hx
+  intro hφ_mem
+  have := closure_minimal hx (t := {a | s ≤ RCLike.re ((-((r : 𝕜)⁻¹ • φ₀) + (r : 𝕜)⁻¹ • a) x)}) (by
+    apply isClosed_le (by fun_prop)
+    change Continuous
+      fun b : WeakDual 𝕜 E ↦ RCLike.re (-((r : 𝕜)⁻¹ • φ₀ x)  + (r : 𝕜)⁻¹ • b x)
+    fun_prop)
+  replace this := this hφ_mem
+  simp only [mem_setOf_eq, neg_add_cancel] at this
+  change s ≤ RCLike.re 0 at this -- grrrr...
+  simp only [map_zero] at this
+  exact lt_irrefl _ <| hs.trans_le this
 
 end KreinSmulian
