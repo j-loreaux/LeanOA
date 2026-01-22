@@ -7,7 +7,11 @@ import LeanOA.ForMathlib.Misc
 open scoped ENNReal NNReal Topology
 
 variable {ι 𝕜 : Type*} {E : ι → Type*}
-variable [RCLike 𝕜] [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)]
+
+section NormedRing
+
+variable [NormedRing 𝕜] [∀ i, NormedAddCommGroup (E i)]
+  [∀ i, Module 𝕜 (E i)] [∀ i, IsBoundedSMul 𝕜 (E i)]
 
 open Filter
 
@@ -34,13 +38,19 @@ lemma mem_tendstoZero_iff (x : lp E ∞) :
     x ∈ c₀ E ↔ Tendsto (‖x ·‖) cofinite (𝓝 0) :=
   Iff.rfl
 
-lemma lp.lipschitzWith_one_eval (p : ℝ≥0∞) [Fact (1 ≤ p)] (i : ι) :
-    LipschitzWith 1 (fun x : lp E p ↦ x i) :=
-  .mk_one fun x y ↦ by
-    simp_rw [dist_eq_norm, ← Pi.sub_apply, ← lp.coeFn_sub]
-    exact lp.norm_apply_le_norm (zero_lt_one.trans_le Fact.out).ne' ..
-
 namespace tendstoZero
+
+/-- Constructor for a term of `c₀ E` which doesn't force the user to pass through `lp E ∞`. -/
+def mk {ι : Type*} {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
+    (f : (i : ι) → E i) (h : Tendsto (fun i ↦ ‖f i‖) cofinite (𝓝 0)) :
+    c₀ E :=
+  ⟨⟨f, memℓp_infty h.bddAbove_range_of_cofinite⟩, h⟩
+
+@[simp]
+lemma coe_mk {ι : Type*} {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
+    (f : (i : ι) → E i) (h : Tendsto (fun i ↦ ‖f i‖) cofinite (𝓝 0)) :
+    ⇑(mk f h : lp E ∞) = f :=
+  rfl
 
 instance isClosed : IsClosed (c₀ E : Set (lp E ∞)) := by
   simp only [tendstoZero, AddSubgroup.coe_set_mk, AddSubmonoid.coe_set_mk,
@@ -56,7 +66,8 @@ instance isClosed : IsClosed (c₀ E : Set (lp E ∞)) := by
   simpa using lp.isometry_single i |>.lipschitz.comp <| lp.lipschitzWith_one_eval ∞ i
 
 instance : SMul 𝕜 (c₀ E) where
-  smul k x := ⟨k • x, by simpa [mem_tendstoZero_iff, norm_smul] using x.2.const_mul _⟩
+  smul k x := ⟨k • x, squeeze_zero (fun _ ↦ by positivity)
+    (fun i ↦ norm_smul_le k ((x : lp E ∞) i)) <| by simpa using Tendsto.const_mul ‖k‖ x.2⟩
 
 @[simp]
 lemma coe_smul (k : 𝕜) (x : c₀ E) : ↑(k • x) = k • (x : lp E ∞) := rfl
@@ -64,8 +75,26 @@ lemma coe_smul (k : 𝕜) (x : c₀ E) : ↑(k • x) = k • (x : lp E ∞) := 
 instance : Module 𝕜 (c₀ E) := fast_instance%
   Subtype.val_injective.module 𝕜 (c₀ E).subtype fun _ _ ↦ rfl
 
-instance : NormedSpace 𝕜 (c₀ E) where
-  norm_smul_le _ _ := norm_smul_le _ (_ : lp E ∞)
+instance : IsBoundedSMul 𝕜 (c₀ E) := .of_norm_smul_le (fun _ _ ↦ norm_smul_le _ (_ : lp E ∞))
+
+instance {ι 𝕜 : Type*} {E : ι → Type*} [NormedField 𝕜] [∀ i, NormedAddCommGroup (E i)]
+    [∀ i, NormedSpace 𝕜 (E i)] : NormedSpace 𝕜 (c₀ E) where
+  norm_smul_le := norm_smul_le
+
+section MoreScalars
+
+variable {𝕜' : Type*} [NormedRing 𝕜'] [∀ i, Module 𝕜' (E i)] [∀ i, IsBoundedSMul 𝕜' (E i)]
+
+instance [∀ i, SMulCommClass 𝕜' 𝕜 (E i)] : SMulCommClass 𝕜' 𝕜 (c₀ E) :=
+  ⟨fun _ _ _ => Subtype.ext <| smul_comm _ _ _⟩
+
+instance [SMul 𝕜' 𝕜] [∀ i, IsScalarTower 𝕜' 𝕜 (E i)] : IsScalarTower 𝕜' 𝕜 (c₀ E) :=
+  ⟨fun _ _ _ => Subtype.ext <| smul_assoc _ _ _⟩
+
+instance [∀ i, Module 𝕜ᵐᵒᵖ (E i)] [∀ i, IsCentralScalar 𝕜 (E i)] : IsCentralScalar 𝕜 (c₀ E) :=
+  ⟨fun _ _ => Subtype.ext <| op_smul_eq_smul _ _⟩
+
+end MoreScalars
 
 variable (𝕜 E) in
 /-- The embedding of `c₀ E` into `lp E ∞` as a linear isometry. -/
@@ -83,6 +112,12 @@ def toSubmodule : Submodule 𝕜 (lp E ∞) :=
 
 @[simp]
 lemma toAddSubgroup_toSubmodule : (toSubmodule 𝕜 E).toAddSubgroup = c₀ E := rfl
+
+variable (𝕜 E) in
+/-- The linear isometry equivalence between `c₀ E` and itself, viewed as a
+submodule of `lp E ∞` (as opposed to only an `AddSubgroup`). -/
+noncomputable def toSubmoduleLinearIsometryEquiv : toSubmodule 𝕜 E ≃ₗᵢ[𝕜] c₀ E :=
+  LinearIsometryEquiv.refl ..
 
 end tendstoZero
 
@@ -180,3 +215,36 @@ lemma hasSum_single (x : c₀ E) :
   · simpa using Set.notMem_subset hs hi
 
 end tendstoZero
+
+end NormedRing
+
+section NontriviallyNormedField
+
+open scoped tendstoZero
+
+variable {F : ι → Type*}
+variable [NontriviallyNormedField 𝕜]
+    [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedAddCommGroup (F i)]
+    [∀ i, NormedSpace 𝕜 (E i)] [∀ i, NormedSpace 𝕜 (F i)]
+
+/-- `c₀ E` is invariant under `lp.mapCLM`. -/
+lemma lp.mapCLM_mem_tendstoZero (T : ∀ i, E i →L[𝕜] F i)
+    {K : ℝ} (hK : 0 ≤ K) (hTK : ∀ i, ‖T i‖ ≤ K) (x : lp E ∞) (hx : x ∈ c₀ E) :
+    lp.mapCLM ∞ T hK hTK x ∈ c₀ F :=
+  tendsto_const_nhds.squeeze (mul_zero K ▸ hx.const_mul K) (fun _ ↦ by simp)
+    fun i ↦ (T i).le_of_opNorm_le (hTK i) _
+
+/-- A uniformly bounded family of continuous linear maps, as a continuous linear map
+on the `c₀` space. -/
+@[simps!]
+noncomputable def tendstoZero.mapCLM (T : ∀ i, E i →L[𝕜] F i)
+    {K : ℝ} (hK : 0 ≤ K) (hTK : ∀ i, ‖T i‖ ≤ K) :
+    c₀ E →L[𝕜] c₀ F :=
+  letI e₁ := tendstoZero.subtypeₗᵢ 𝕜 E |>.toContinuousLinearMap
+  letI e₂ := lp.mapCLM ∞ T hK hTK
+  letI e₃ := toSubmoduleLinearIsometryEquiv 𝕜 F
+    |>.symm.toContinuousLinearEquiv.toContinuousLinearMap
+  e₃ ∘L ((e₂ ∘L e₁).codRestrict (tendstoZero.toSubmodule 𝕜 F)
+    fun x ↦ lp.mapCLM_mem_tendstoZero T hK hTK x.1 x.2)
+
+end NontriviallyNormedField

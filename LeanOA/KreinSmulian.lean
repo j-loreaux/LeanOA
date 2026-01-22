@@ -26,6 +26,25 @@ theorem LinearMap.polar_iUnion₂ {ι} {κ : ι → Sort*} {s : (i : ι) → κ 
 
 end Polar
 
+
+section StrongDual
+
+/-- If `f : StrongDual 𝕜 E` is a continuous linear functional such that the real
+part of `f x` is bounded by `r` for all `x` in the unit ball, then `‖f‖ ≤ r`. -/
+lemma StrongDual.norm_le_of_forall_mem_ball_re_le
+    {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+    (f : StrongDual 𝕜 E) (r : ℝ) (hf : ∀ x ∈ ball 0 1, RCLike.re (f x) ≤ r) :
+    ‖f‖ ≤ r := by
+  refine f.sSup_unit_ball_eq_norm ▸ csSup_le (nonempty_ball.mpr zero_lt_one |>.image _) ?_
+  rintro - ⟨x, hx, rfl⟩
+  by_cases! hfx : f x = 0
+  · simpa [hfx] using hf 0 (by simp)
+  · simpa [hfx] using
+      hf ((‖f x‖ : 𝕜) • (f x)⁻¹ • x) (by simpa [norm_smul, hfx] using hx)
+
+end StrongDual
+
+
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
 namespace KreinSmulian
@@ -118,108 +137,6 @@ lemma separation_aux (hA : KreinSmulianProperty A)
   rw [separationSeq_apply_fst_snd_eq_iUnion, polar]
   exact LinearMap.polar_iUnion₂ _ |>.symm
 
-open Filter tendstoZero in
-/-- Constructor for a term of `c₀ E` which doesn't force the user to pass through `lp E ∞`. -/
-def _root_.tendstoZero.mk {ι : Type*} {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
-    (f : (i : ι) → E i) (h : Tendsto (fun i ↦ ‖f i‖) cofinite (𝓝 0)) :
-    c₀ E :=
-  ⟨⟨f, memℓp_infty h.bddAbove_range_of_cofinite⟩, h⟩
-
-open Filter tendstoZero in
-@[simp]
-lemma _root_.tendstoZero.coe_mk {ι : Type*} {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
-    (f : (i : ι) → E i) (h : Tendsto (fun i ↦ ‖f i‖) cofinite (𝓝 0)) :
-    ⇑(mk f h : lp E ∞) = f :=
-  rfl
-
--- this was unnecessary, but maybe we should keep it
-open Uniformity in
-theorem _root_.Metric.uniformity_basis_dist_le_inv_nat_succ {α : Type*} [PseudoMetricSpace α] :
-    (𝓤 α).HasBasis (fun _ => True) fun n : ℕ => { p : α × α | dist p.1 p.2 ≤ 1 / (↑n + 1) } :=
-  Metric.mk_uniformity_basis_le (fun n _ => div_pos zero_lt_one <| Nat.cast_add_one_pos n)
-    fun _ε ε0 => (exists_nat_one_div_lt ε0).imp fun _n hn => ⟨trivial, le_of_lt hn⟩
-
--- this was unnecessary, but maybe we should keep it
-theorem _root_.Metric.nhds_basis_closedBall_inv_nat_succ {α : Type*} [PseudoMetricSpace α] {x : α} :
-    (𝓝 x).HasBasis (fun _ => True) fun n : ℕ => closedBall x (1 / (↑n + 1)) :=
-  nhds_basis_uniformity uniformity_basis_dist_le_inv_nat_succ
-
-lemma _root_.lp.norm_mono {ι : Type*} {E F : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
-    [∀ i, NormedAddCommGroup (F i)] {p : ℝ≥0∞} (hp : p ≠ 0)
-    {x : lp E p} {y : lp F p} (h : ∀ i, ‖x i‖ ≤ ‖y i‖) :
-    ‖x‖ ≤ ‖y‖ := by
-  obtain (rfl | rfl | hp) := p.trichotomy
-  · simp at hp
-  · exact lp.norm_le_of_forall_le (by positivity)
-      fun i ↦(h i).trans <|lp.norm_apply_le_norm hp y i
-  · exact lp.norm_le_of_forall_sum_le hp (lp.norm_nonneg' _) fun s ↦ calc
-      ∑ i ∈ s, ‖x i‖ ^ p.toReal
-      _ ≤ ∑ i ∈ s, ‖y i‖ ^ p.toReal := by gcongr with i _; exact h i
-      _ ≤ ‖y‖ ^ p.toReal := lp.sum_rpow_le_norm_rpow hp y s
-
-/-- A uniformly bounded family of continuous linear maps, as a continuous linear map
-on the `lp` space. -/
-@[simps!]
-def _root_.lp.mapCLM {ι : Type*} {E F : ι → Type*}
-    [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedAddCommGroup (F i)]
-    [∀ i, NormedSpace 𝕜 (E i)] [∀ i, NormedSpace 𝕜 (F i)] (p : ℝ≥0∞) [Fact (1 ≤ p)]
-    (T : ∀ i, E i →L[𝕜] F i) {K : ℝ} (hK : 0 ≤ K) (hTK : ∀ i, ‖T i‖ ≤ K) :
-    lp E p →L[𝕜] lp F p :=
-  haveI key (i : ι) (x : E i) : ‖T i x‖ ≤ ‖(K : 𝕜) • x‖ := by
-    simpa only [norm_smul, RCLike.norm_ofReal, abs_of_nonneg hK]
-      using (T i).le_of_opNorm_le (hTK i) _
-  LinearMap.mkContinuous
-    { toFun x := ⟨fun i ↦ T i (x i), lp.memℓp x |>.const_smul (K : 𝕜) |>.mono fun _ ↦ key ..⟩
-      map_add' _ _ := by ext; simp
-      map_smul' _ _ := by ext; simp }
-    K
-    fun x ↦ by
-      trans ‖(K : 𝕜) • x‖
-      · have : p ≠ 0 := by have := Fact.out (p := 1 ≤ p); exact ne_of_gt (zero_lt_one.trans_le this)
-        exact lp.norm_mono this fun i ↦ by simpa using key i (x i)
-      · simp [norm_smul, abs_of_nonneg hK]
-
-lemma _root_.lp.norm_mapCLM_le {ι : Type*} {E F : ι → Type*}
-    [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedAddCommGroup (F i)]
-    [∀ i, NormedSpace 𝕜 (E i)] [∀ i, NormedSpace 𝕜 (F i)] (p : ℝ≥0∞) [Fact (1 ≤ p)]
-    (T : ∀ i, E i →L[𝕜] F i) {K : ℝ} (hK : 0 ≤ K) (hTK : ∀ i, ‖T i‖ ≤ K) :
-    ‖lp.mapCLM p T hK hTK‖ ≤ K :=
-  LinearMap.mkContinuous_norm_le _ hK _
-
-variable (𝕜) in
-open tendstoZero in
-/-- The linear isometry equivalence between `c₀ E` and itself, viewed as a
-submodule of `lp E ∞` (as opposed to only an `AddSubgroup`). -/
-noncomputable def _root_.tendstoZero.toSubmoduleLinearIsometryEquiv {ι : Type*} (E : ι → Type*)
-    [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)] :
-    toSubmodule 𝕜 E ≃ₗᵢ[𝕜] c₀ E :=
-  LinearIsometryEquiv.refl ..
-
-open tendstoZero in
-lemma _root_.lp.mapCLM_mem_tendstoZero {ι : Type*} {E F : ι → Type*}
-    [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedAddCommGroup (F i)]
-    [∀ i, NormedSpace 𝕜 (E i)] [∀ i, NormedSpace 𝕜 (F i)] (T : ∀ i, E i →L[𝕜] F i)
-    {K : ℝ} (hK : 0 ≤ K) (hTK : ∀ i, ‖T i‖ ≤ K) (x : lp E ∞) (hx : x ∈ c₀ E) :
-    lp.mapCLM ∞ T hK hTK x ∈ c₀ F :=
-  tendsto_const_nhds.squeeze (mul_zero K ▸ hx.const_mul K) (fun _ ↦ by simp)
-    fun i ↦ (T i).le_of_opNorm_le (hTK i) _
-
-open tendstoZero in
-/-- A uniformly bounded family of continuous linear maps, as a continuous linear map
-on the `c₀` space. -/
-@[simps!]
-noncomputable def _root_.tendstoZero.mapCLM {ι : Type*} {E F : ι → Type*}
-    [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedAddCommGroup (F i)]
-    [∀ i, NormedSpace 𝕜 (E i)] [∀ i, NormedSpace 𝕜 (F i)]
-    (T : ∀ i, E i →L[𝕜] F i) {K : ℝ} (hK : 0 ≤ K) (hTK : ∀ i, ‖T i‖ ≤ K) :
-    c₀ E →L[𝕜] c₀ F :=
-  letI e₁ := tendstoZero.subtypeₗᵢ 𝕜 E |>.toContinuousLinearMap
-  letI e₂ := lp.mapCLM ∞ T hK hTK
-  letI e₃ := toSubmoduleLinearIsometryEquiv 𝕜 F
-    |>.symm.toContinuousLinearEquiv.toContinuousLinearMap
-  e₃ ∘L ((e₂ ∘L e₁).codRestrict (tendstoZero.toSubmodule 𝕜 F)
-    fun x ↦ lp.mapCLM_mem_tendstoZero T hK hTK x.1 x.2)
-
 open Filter tendstoZero Set.Notation in
 lemma separation_aux_tendsto
     (F : ℕ → Set E) (hF₁ : ∀ (x : ℕ), (F x).Finite)
@@ -238,28 +155,6 @@ lemma separation_aux_tendsto
   have hmn : (n + 1 : ℝ) ≤ m := by norm_cast; grind
   have hm_pos : 0 < (m : ℝ) := lt_of_lt_of_le (by positivity) hmn
   simpa using closedBall_subset_closedBall (by field_simp; assumption) <| hF₂ m hxm
-
-open tendstoZero
-lemma _root_.tendstsoZero.coe_smul {ι : Type*} {E : ι → Type*}
-    [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)] (a : 𝕜) (x : c₀ E) :
-    ↑(a • x) = (a • x : lp E ∞) := by
-  simp only [tendstoZero.coe_smul]
-
-lemma _root_.StrongDual.norm_le_of_forall_mem_ball_re_le
-    {E : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E]
-    (f : StrongDual 𝕜 E) (r : ℝ) (hf : ∀ x ∈ ball 0 1, RCLike.re (f x) ≤ r) :
-    ‖f‖ ≤ r := by
-  refine f.sSup_unit_ball_eq_norm ▸ csSup_le (nonempty_ball.mpr zero_lt_one |>.image _) ?_
-  rintro - ⟨x, hx, rfl⟩
-  by_cases! hfx : f x = 0
-  · simpa [hfx] using hf 0 (by simp)
-  · simpa [hfx] using
-      hf ((‖f x‖ : 𝕜) • (f x)⁻¹ • x) (by simpa [norm_smul, hfx] using hx)
-
-lemma _root_.Memℓp.summable_of_one {ι : Type*} {E : Type*}
-    [NormedAddCommGroup E] [CompleteSpace E] {x : ι → E}
-    (hx : Memℓp x 1) : Summable x :=
-  .of_norm <| by simpa using hx.summable
 
 open tendstoZero
 -- Lemma 12.3, a separation lemma
@@ -293,11 +188,6 @@ lemma separation [CompleteSpace E] (hA : KreinSmulianProperty A) (h_conv : Conve
     rw [mem_compl_iff, Metric.mem_ball, dist_eq_norm, not_lt, sub_zero]
     apply hφi.le.trans
     exact lp.norm_apply_le_norm (by simp) (T φ : ℓ^∞(ι, 𝕜)) ⟨i, mem_iUnion.mpr ⟨k, hi⟩⟩
-  have : IsScalarTower ℝ 𝕜 c₀(ι, 𝕜) := by
-    refine ⟨fun x y z ↦ ?_⟩
-    ext
-    rw [tendstoZero.coe_smul] -- not sure why this is necessary, probably abusing defeq
-    simp
   replace hA := h_conv.linear_image T |>.of_rclike
   obtain ⟨f, u, hfu1, hfuA⟩ :=
     RCLike.geometric_hahn_banach_open (𝕜 := 𝕜) (convex_ball 0 1) isOpen_ball hA hTA

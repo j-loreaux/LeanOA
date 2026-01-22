@@ -10,7 +10,7 @@ open scoped lp ENNReal
 
 section NonDependent
 
-variable {ι 𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+variable {ι 𝕜 E : Type*} [NormedRing 𝕜] [NormedAddCommGroup E] [Module 𝕜 E] [IsBoundedSMul 𝕜 E]
 
 lemma lp.norm_tsum_le (f : ℓ¹(ι, E)) :
     ‖∑' i, f i‖ ≤ ‖f‖ := calc
@@ -34,7 +34,9 @@ noncomputable def lp.tsumCLM : ℓ¹(ι, E) →L[𝕜] E :=
         exact Summable.tsum_const_smul _ (.of_norm (by simpa using f.2.summable))  }
     1 (fun f ↦ by simpa using lp.norm_tsum_le f)
 
-lemma lp.norm_tsumCLM : ‖lp.tsumCLM ι 𝕜 E‖ ≤ 1 :=
+lemma lp.norm_tsumCLM {ι 𝕜 E : Type*} [NontriviallyNormedField 𝕜]
+    [NormedAddCommGroup E] [NormedSpace 𝕜 E] [CompleteSpace E] :
+    ‖lp.tsumCLM ι 𝕜 E‖ ≤ 1 :=
   LinearMap.mkContinuous_norm_le _ zero_le_one _
 
 end NonDependent
@@ -42,9 +44,11 @@ end NonDependent
 
 section Dependent
 
-variable {ι 𝕜 : Type*} {E F : ι → Type*} [RCLike 𝕜]
-variable [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)]
-  [∀ i, NormedAddCommGroup (F i)] [∀ i, NormedSpace 𝕜 (F i)]
+section NormedRing
+
+variable {ι 𝕜 : Type*} {E F : ι → Type*} [NormedRing 𝕜]
+variable [∀ i, NormedAddCommGroup (E i)] [∀ i, Module 𝕜 (E i)] [∀ i, IsBoundedSMul 𝕜 (E i)]
+  [∀ i, NormedAddCommGroup (F i)] [∀ i, Module 𝕜 (F i)] [∀ i, IsBoundedSMul 𝕜 (F i)]
 variable {p q r : ℝ≥0∞}
 
 theorem memℓp_norm_iff {f : (i : ι) → E i} :
@@ -79,6 +83,41 @@ theorem memℓp_gen_iff'' {f : (i : ι) → E i} (hp : 0 < p.toReal) :
     Memℓp f p ↔ ∃ C, 0 ≤ C ∧ ∀ (s : Finset ι), ∑ i ∈ s, ‖f i‖ ^ p.toReal ≤ C := by
   refine ⟨fun hf ↦ ?_, fun ⟨C, _, hC⟩ ↦ memℓp_gen' hC⟩
   exact ⟨_, tsum_nonneg fun i ↦ (by positivity), memℓp_gen_iff' hp |>.mp hf⟩
+
+lemma Memℓp.summable_of_one {ι : Type*} {E : Type*}
+    [NormedAddCommGroup E] [CompleteSpace E] {x : ι → E}
+    (hx : Memℓp x 1) : Summable x :=
+  .of_norm <| by simpa using hx.summable
+
+/-- The sequence of norms of a term of `lp E p` as a term of `ℓ^p(ι, ℝ)`. -/
+@[simps]
+def lp.toNorm {p : ℝ≥0∞} (x : lp E p) : ℓ^p(ι, ℝ) :=
+  ⟨fun i ↦ ‖x i‖, lp.memℓp x |>.norm⟩
+
+lemma lp.norm_toNorm {p : ℝ≥0∞} {x : lp E p} :
+    ‖lp.toNorm x‖ = ‖x‖ := by
+  obtain (rfl | rfl | hp) := p.trichotomy
+  · simp [lp.norm_eq_card_dsupport]
+  · simp [lp.norm_eq_ciSup]
+  · simp [lp.norm_eq_tsum_rpow hp]
+
+lemma lp.norm_mono {p : ℝ≥0∞} (hp : p ≠ 0)
+    {x : lp E p} {y : lp F p} (h : ∀ i, ‖x i‖ ≤ ‖y i‖) :
+    ‖x‖ ≤ ‖y‖ := by
+  obtain (rfl | rfl | hp) := p.trichotomy
+  · simp at hp
+  · exact lp.norm_le_of_forall_le (by positivity)
+      fun i ↦(h i).trans <|lp.norm_apply_le_norm hp y i
+  · exact lp.norm_le_of_forall_sum_le hp (lp.norm_nonneg' _) fun s ↦ calc
+      ∑ i ∈ s, ‖x i‖ ^ p.toReal
+      _ ≤ ∑ i ∈ s, ‖y i‖ ^ p.toReal := by gcongr with i _; exact h i
+      _ ≤ ‖y‖ ^ p.toReal := lp.sum_rpow_le_norm_rpow hp y s
+
+lemma lp.lipschitzWith_one_eval (p : ℝ≥0∞) [Fact (1 ≤ p)] (i : ι) :
+    LipschitzWith 1 (fun x : lp E p ↦ x i) :=
+  .mk_one fun x y ↦ by
+    simp_rw [dist_eq_norm, ← Pi.sub_apply, ← lp.coeFn_sub]
+    exact lp.norm_apply_le_norm (zero_lt_one.trans_le Fact.out).ne' ..
 
 -- note, probably we should make a bare function version of this too, or just call this one `ofLE`.
 variable (E) in
@@ -151,5 +190,42 @@ noncomputable def lp.zeroBasis : Module.Basis ι 𝕜 ℓ^0(ι, 𝕜) where
 lemma lp.zeroBasis_apply [DecidableEq ι] (i : ι) :
     lp.zeroBasis i = lp.single 0 i (1 : 𝕜) := by
   ext; simp [zeroBasis, Finsupp.single_apply, Pi.single, Function.update, eq_comm]
+
+end NormedRing
+
+section NontriviallyNormedField
+
+variable {ι 𝕜 : Type*} {E F : ι → Type*} [NontriviallyNormedField 𝕜]
+variable [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)]
+  [∀ i, NormedAddCommGroup (F i)] [∀ i, NormedSpace 𝕜 (F i)]
+variable {p q r : ℝ≥0∞}
+
+/-- A uniformly bounded family of continuous linear maps, as a continuous linear map
+on the `lp` space. -/
+@[simps!]
+def lp.mapCLM (p : ℝ≥0∞) [Fact (1 ≤ p)]
+    (T : ∀ i, E i →L[𝕜] F i) {K : ℝ} (hK : 0 ≤ K) (hTK : ∀ i, ‖T i‖ ≤ K) :
+    lp E p →L[𝕜] lp F p :=
+  haveI key (i : ι) (x : E i) : ‖T i x‖ ≤ K * ‖x‖ := by
+    simpa only [norm_smul, RCLike.norm_ofReal, abs_of_nonneg hK]
+      using (T i).le_of_opNorm_le (hTK i) _
+  LinearMap.mkContinuous
+    { toFun x := ⟨fun i ↦ T i (x i), lp.memℓp x |>.norm.const_mul K |>.mono
+        (fun _ ↦ by simpa [abs_of_nonneg hK] using key ..) |>.of_norm⟩
+      map_add' _ _ := by ext; simp
+      map_smul' _ _ := by ext; simp }
+    K
+    fun x ↦ by
+      rw [← lp.norm_toNorm]
+      conv_rhs => rw [← lp.norm_toNorm, ← abs_of_nonneg hK, ← Real.norm_eq_abs, ← norm_smul]
+      apply lp.norm_mono (zero_lt_one.trans_le Fact.out).ne' fun i ↦ ?_
+      simpa [abs_of_nonneg hK] using key ..
+
+lemma lp.norm_mapCLM_le (p : ℝ≥0∞) [Fact (1 ≤ p)]
+    (T : ∀ i, E i →L[𝕜] F i) {K : ℝ} (hK : 0 ≤ K) (hTK : ∀ i, ‖T i‖ ≤ K) :
+    ‖lp.mapCLM p T hK hTK‖ ≤ K :=
+  LinearMap.mkContinuous_norm_le _ hK _
+
+end NontriviallyNormedField
 
 end Dependent
