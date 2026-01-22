@@ -13,6 +13,36 @@ dependencies explicitly into the results that use them below.
 
 Maybe collect things into Basic CStar section and Basic WStar section?
 
+\begin{lemma}
+    \label{lem:sigma_closed_star_subalg_wstar} (Sakai 1.1.4)
+  A self-adjoint, $\sigma$--closed $*$--subalgebra $N$ of a $W^{*}$--algebra $M$ is also a $W^{*}$--algebra, since $(M_{*}/N^{0})^{*}=N$, where
+  $N^{0}$ is the polar (annihilator) of $N$ in $M_{*}$, i.e. the set of $\varphi\in M_{*}$ such that $\varphi(x)=0$ for all $x\in N$.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:cut_down_sigma_closed_cts} (Sakai 1.7.6)
+  Let $p$ be any projection in $M$. Then the subalgebra $pMp$ is $\sigma$--closed and the mapping $x\mapsto pxp$ is $\sigma$--continuous.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:cut_down_of_wstar} 
+  \uses{lem:cut_down_sigma_closed_cts,lem:sigma_closed_star_subalg_wstar}
+  If $p\in M$ is a projection, $pMp$ is also a $W^{*}$algebra with identity $p$.
+\end{lemma}
+
+\begin{proof}
+  It is clear that $eMe$ is an algebra, since any sum or product of elements preserves the pre and post multiplication by $e$.
+  It is also clear that $e$ is the multiplicative identity of this algebra. The product reversing property of $*$ and the fact that
+  $e$ is a self-adjoint projection implies that $eMe$ is a $*$--algebra. By Lemma \ref{lem:sigma_closed_star_subalg_wstar}, if this 
+  $*$--subalgebra is $\sigma$--closed, then it is a $W^{*}$--subalgebra of $M$. But this is the result of \ref{lem:cut_down_sigma_closed_cts}.
+\end{proof}
+
 \section{Order Lemmas}
 
 Let $\mathcal{A}$ be a unital $C^{*}$--algebra in this section. We collect lemmas for the ordering of elements in $\mathcal{A}$. 
@@ -206,7 +236,7 @@ the \textbf{support} of $f\in C(K)$ is $\overline{\{x\in K | f(x)\ne 0\}}$.
 \begin{lemma}
     \label{lem:cts_fns_ge_zero_le_one_directed}
     Let $K$ be a compact Hausdorff space, with $U\subseteq K$ open, then the set of $f\in C(K)$ supported on $U$ such that
-    $0 \le f \le 1$ is a directed set with respect to the order on $C(K)$.
+    $0 \le f \le 1$ is a directed set w.r.t. the order on $C(K)$.
 \end{lemma}
 
 \begin{proof}
@@ -239,11 +269,16 @@ the \textbf{support} of $f\in C(K)$ is $\overline{\{x\in K | f(x)\ne 0\}}$.
 
 \begin{lemma}
   \label{lem:spec_masa_wstar_stonean_Sak_1_7_5} (Sak 1.7.5)
+  \uses{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2}
   If $C$ is any maximal commutative $C^*$--subalgebra of the $W^{*}$--algebra $M$, its
   spectrum space (maximal ideal space) is Stonean.
 \end{lemma}
 
 \begin{proof}
+  Suppose $(a_{\lambda})$ is a uniformly bounded, increasing net of positive elements in $C$ with supremum $a$. 
+  Given any unitary $u\in C$, we have $u^{*}\sup_{\lambda}a_{\lambda} u=\sup_{\lambda}u^{*}a_{\lambda}u$ and since every
+  element in $C$ is a linear combination of unitary elements from $C$, we have that $sup_{\lambda}a_{\lambda}\in C$. The result
+  follows from Proposition \ref{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2} after applying the Gelfand transform.
 \end{proof}
 
 \section{Normality and Ultraweak Continuity for Positive Functionals}
@@ -349,36 +384,6 @@ $q\in \mathcal{P}(M)$ with $q\le p_1$, we have $\varphi(q)<\psi(q)$.
   the hypothesis $\varphi(p)<\psi(p)$.  
 \end{proof}
 
-\begin{lemma}
-    \label{lem:sigma_closed_star_subalg_wstar} (Sakai 1.1.4)
-  A self-adjoint, $\sigma$--closed $*$--subalgebra $N$ of a $W^{*}$--algebra $M$ is also a $W^{*}$--algebra, since $(M_{*}/N^{0})^{*}=N$, where
-  $N^{0}$ is the polar (annihilator) of $N$ in $M_{*}$, i.e. the set of $\varphi\in M_{*}$ such that $\varphi(x)=0$ for all $x\in N$.
-\end{lemma}
-
-\begin{proof}
-\end{proof}
-
-\begin{lemma}
-  \label{lem:cut_down_sigma_closed_cts} (Sakai 1.7.6)
-  Let $p$ be any projection in $M$. Then the subalgebra $pMp$ is $\sigma$--closed and the mapping $x\mapsto pxp$ is $\sigma$--continuous.
-\end{lemma}
-
-\begin{proof}
-\end{proof}
-
-\begin{lemma}
-  \label{lem:cut_down_of_wstar} 
-  \uses{lem:cut_down_sigma_closed_cts,lem:sigma_closed_star_subalg_wstar}
-  If $p\in M$ is a projection, $pMp$ is also a $W^{*}$ algebra with identity $p$.
-\end{lemma}
-
-\begin{proof}
-  It is clear that $eMe$ is an algebra, since any sum or product of elements preserves the pre and post multiplication by $e$.
-  It is also clear that $e$ is the multiplicative identity of this algebra. The product reversing property of $*$ and the fact that
-  $e$ is a self-adjoint projection implies that $eMe$ is a $*$--algebra. By Lemma \ref{lem:sigma_closed_star_subalg_wstar}, if this 
-  $*$--subalgebra is $\sigma$--closed, then it is a $W^{*}$--subalgebra of $M$. But this is the result of \ref{lem:cut_down_sigma_closed_cts}.
-\end{proof}
-
 Note that the following likely contains the most crucial use of the normality of $\varphi$ for the later proof 
 of Theorem \ref{thm:sigma_cts_of_normal}.
 
@@ -408,7 +413,7 @@ of Theorem \ref{thm:sigma_cts_of_normal}.
 
 \begin{lemma}
   \label{lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10} (Sak 1.8.10)
-  A linear functional $\rho$ on $M$ is $\sigma$ continuous on the unit sphere (hence $\sigma$--continuous) if and only if it is $s$--continuous on the
+  A linear functional $\rho$ on $M$ is $\sigma$--continuous on the unit sphere (hence $\sigma$--continuous) if and only if it is $s$--continuous on the
   unit sphere (hence $s$--continuous).
 \end{lemma}
 
