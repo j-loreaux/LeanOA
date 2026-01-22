@@ -23,6 +23,7 @@ This is written $a\ge 0$. If $a,b \in \mathcal{A}$ are selfadjoint then $b \le a
 \begin{lemma}
   \label{lem:pos_iff_star_mul_self_Sak_1_4_4} (Sak 1.4.4)
   \lean{CStarAlgebra.nonneg_TFAE,StarOrderedRing.nonneg_iff}
+  \leanok
   Let $h \in \mathcal{A}$. TFAE:
   \begin{enumerate}
   \item $h \ge 0$;
@@ -80,12 +81,14 @@ a selfadjoint element $a\in A$ is a projection if and only if the spectrum of $a
 
 \begin{lemma}
   \label{lem:proj_sub_pos_iff_comm_eq_self}
-  \lean{IsStarProjection.sub_iff_mul_eq_left,IsStarProjection.sub_iff_mul_eq_right}
+  \lean{IsStarProjection.sub_tfae}
+  \leanok
   \uses{lem:star_conj_pos, lem:proj_le_one}
   Let $\mathcal{A}$ be a $C^{*}$--algebra and $p,q \in \mathcal{A}$ be projections. Then $p-q\ge 0$ iff $qp = pq = q$.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   By Lemma \ref{lem:star_conj_pos}, if $p-q \ge 0$ then $q(p-q)q=qpq-q^3=qpq-q \ge 0$. By Lemma \ref{lem:proj_le_one}, we have $p\le 1$ and 
   employing Lemma \ref{lem:star_conj_pos} we obtain $qpq\le q1q=q$. Since $qpq\ge q$ and $qpq\le q$ we have $qpq=q$, which implies that $q(p-q)q=0$.
   By the $C^{*}$-property of the norm, we have $\|(p-q)^{1/2}q\|^2=\|q(p-q)q\|=0$ and so $(p-q)^{1/2}q=0$ and therefore $(p-q)q=(p-q)^{1/2}(p-q)^{1/2}q=0$.
@@ -95,9 +98,16 @@ a selfadjoint element $a\in A$ is a projection if and only if the spectrum of $a
 
 \begin{corollary}
   \label{cor:proj_sub_of_subproj}
+  \lean{IsStarProjection.sub_tfae}
+  \leanok
   \uses{lem:proj_sub_pos_iff_comm_eq_self}
   For all $p,q \in \mathcal{A}$ projections such that $q\le p$, $p-q$ is a projection.
 \end{corollary}
+
+\begin{proof}
+  \leanok
+  Omitted.
+\end{proof}
 
 \section{Positive Linear Functionals}
 
