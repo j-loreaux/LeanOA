@@ -12,3 +12,4 @@ import LeanOA.StarProjection
 import LeanOA.TendstoZero.Defs
 import LeanOA.TendstoZero.StrongDual
 import LeanOA.Ultraweak.Basic
+import LeanOA.VonNeumannAlgebra.Projection
