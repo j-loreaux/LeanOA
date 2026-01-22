@@ -1,4 +1,5 @@
 import Mathlib.Analysis.Normed.Lp.lpSpace
+import Mathlib.Topology.MetricSpace.UniformConvergence
 import LeanOA.Lp.lpSpace
 import LeanOA.ForMathlib.Misc
 
@@ -33,10 +34,26 @@ lemma mem_tendstoZero_iff (x : lp E ∞) :
     x ∈ c₀ E ↔ Tendsto (‖x ·‖) cofinite (𝓝 0) :=
   Iff.rfl
 
+lemma lp.lipschitzWith_one_eval (p : ℝ≥0∞) [Fact (1 ≤ p)] (i : ι) :
+    LipschitzWith 1 (fun x : lp E p ↦ x i) :=
+  .mk_one fun x y ↦ by
+    simp_rw [dist_eq_norm, ← Pi.sub_apply, ← lp.coeFn_sub]
+    exact lp.norm_apply_le_norm (zero_lt_one.trans_le Fact.out).ne' ..
+
 namespace tendstoZero
 
---set_option maxHeartbeats 500000 in
-instance isClosed : IsClosed (c₀ E : Set (lp E ∞)) := by sorry
+instance isClosed : IsClosed (c₀ E : Set (lp E ∞)) := by
+  simp only [tendstoZero, AddSubgroup.coe_set_mk, AddSubmonoid.coe_set_mk,
+    AddSubsemigroup.coe_set_mk]
+  classical
+  have (x : lp E ∞) : Tendsto (fun i ↦ ‖x i‖) cofinite (𝓝 0) ↔
+      Tendsto (fun i ↦ (lp.single (E := E) ∞ i) (x i)) cofinite (𝓝 0) := by
+    conv_rhs => rw [tendsto_zero_iff_norm_tendsto_zero]
+    simp
+  simp_rw [this]
+  refine LipschitzWith.uniformEquicontinuous _ 1 (fun i ↦ ?_)
+    |>.equicontinuous.isClosed_setOf_tendsto continuous_const
+  simpa using lp.isometry_single i |>.lipschitz.comp <| lp.lipschitzWith_one_eval ∞ i
 
 instance : SMul 𝕜 (c₀ E) where
   smul k x := ⟨k • x, by simpa [mem_tendstoZero_iff, norm_smul] using x.2.const_mul _⟩
