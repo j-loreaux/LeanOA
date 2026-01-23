@@ -1,0 +1,36 @@
+\section{WStarAlgebras and their Topologies}
+
+In this section we define the topologies and need to prove that $W^{*}$--algebras are closed with respect to these. Must also put these
+dependencies explicitly into the results that use them below. 
+
+Maybe collect things into Basic CStar section and Basic WStar section?
+
+\begin{lemma}
+    \label{lem:sigma_closed_star_subalg_wstar} (Sakai 1.1.4)
+  A self-adjoint, $\sigma$--closed $*$--subalgebra $N$ of a $W^{*}$--algebra $M$ is also a $W^{*}$--algebra, since $(M_{*}/N^{0})^{*}=N$, where
+  $N^{0}$ is the polar (annihilator) of $N$ in $M_{*}$, i.e. the set of $\varphi\in M_{*}$ such that $\varphi(x)=0$ for all $x\in N$.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:cut_down_sigma_closed_cts} (Sakai 1.7.6)
+  Let $p$ be any projection in $M$. Then the subalgebra $pMp$ is $\sigma$--closed and the mapping $x\mapsto pxp$ is $\sigma$--continuous.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:cut_down_of_wstar} 
+  \uses{lem:cut_down_sigma_closed_cts,lem:sigma_closed_star_subalg_wstar}
+  If $p\in M$ is a projection, $pMp$ is also a $W^{*}$algebra with identity $p$.
+\end{lemma}
+
+\begin{proof}
+  It is clear that $eMe$ is an algebra, since any sum or product of elements preserves the pre and post multiplication by $e$.
+  It is also clear that $e$ is the multiplicative identity of this algebra. The product reversing property of $*$ and the fact that
+  $e$ is a self-adjoint projection implies that $eMe$ is a $*$--algebra. By Lemma \ref{lem:sigma_closed_star_subalg_wstar}, if this 
+  $*$--subalgebra is $\sigma$--closed, then it is a $W^{*}$--subalgebra of $M$. But this is the result of \ref{lem:cut_down_sigma_closed_cts}.
+\end{proof}

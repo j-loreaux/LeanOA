@@ -1,0 +1,46 @@
+\section{Order Lemmas}
+
+Let $\mathcal{A}$ be a unital $C^{*}$--algebra in this section. We collect lemmas for the ordering of elements in $\mathcal{A}$. 
+Recall that a selfadjoint element $a \in \mathcal{A}$ is said to be \textbf{positive} if its spectrum is contained in $\mathbb{R}_{\ge 0}$. 
+This is written $a\ge 0$. If $a,b \in \mathcal{A}$ are selfadjoint then $b \le a$ if $b-a \ge 0$.
+(TO DO: adapt this to Jireh's fully general ordering on all elements without mentioning the selfadjoint ones.)
+
+\begin{lemma}
+  \label{lem:pos_iff_star_mul_self_Sak_1_4_4} (Sak 1.4.4)
+  \lean{CStarAlgebra.nonneg_TFAE,StarOrderedRing.nonneg_iff}
+  \leanok
+  Let $h \in \mathcal{A}$. TFAE:
+  \begin{enumerate}
+  \item $h \ge 0$;
+  \item There exists $x\in \mathcal{A}$ such that $h=x^{*}x$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  \leanok
+\end{proof}
+
+\begin{corollary}
+  \label{lem:star_conj_pos}
+  \lean{star_left_conjugate_nonneg}
+  \mathlibok
+  \uses{lem:pos_iff_star_mul_self_Sak_1_4_4}
+  If $h,a \in \mathcal{A}$ with $h\ge 0$ then $a^{*}ha\ge 0$
+\end{corollary}
+
+\begin{proof}
+  \leanok
+  By Lemma \ref{lem:pos_iff_star_mul_self_Sak_1_4_4}, $a^{*}ha=a^{*}x^{*}xa=(xa)^{*}(xa)\ge 0$.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:selfadjoint_le_norm}
+  \lean{IsSelfAdjoint.le_algebraMap_norm_self}
+  \leanok
+  \mathlibok
+  If $x\in \mathcal{A}$ is selfadjoint then $\|x\|1-x \ge 0$.
+\end{lemma}
+
+\begin{proof}
+\leanok
+\end{proof}

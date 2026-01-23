@@ -1,0 +1,86 @@
+\section{Stonean Spaces and Maximal Commutative Subalgebras}
+
+Recall that a compact Hausdorff space is \textbf{Stonean} if the closure of every open set is open. We note that Lemma
+\ref{lem:fin_lin_approx_of_stonean_Sak_1_3_1} is only part of Sakai 1.3.1, since that is all
+we need for the proof of Theorem \ref{thm:sigma_cts_of_normal}. If $K$ is a topological space in which singletons are closed,
+and $p$ is a projection in $C(K)$, the spectrup of $p$ is its range and is contained in $\{0,1\}$.
+Furthermore, $p^{-1}\{0\}=K\backslash p^{-1}\{1\}$, and so both of these sets are clopen, and identify connected components of $K$.
+If $K$ is Stonean, there are many such connected components:
+
+\begin{lemma}
+  \label{lem:fin_lin_approx_of_stonean_Sak_1_3_1} (Sak  1.3.1)
+  Let $K$ be a Stonean space. Then every positive self-adjoint element $a$ in $C(K)$ can be uniformly approximated by 
+  finite linear combinations of projections in $C(K)$ having nonnegative coefficients. 
+\end{lemma}
+
+\begin{proof}
+Since $a$ is self-adjoint, its spectrum is its range in $\mathbb{R}_{\ge 0}$, and is therefore contained in $[0, \|a\|]$,
+where $\|a\|=\sup_{t\in K}|a(t)|$. Let $\varepsilon >0$ and choose real numbers
+$0<\lambda_1<\lambda_2<\ldots<\lambda_n < \|a\|+1$ so that $|\lambda_{i+1}-\lambda_{i}|<\varepsilon$.
+Now let $G_1= \overline{\{t\in K | a(t)<\lambda_1\}}$ and $G_i=\overline{\{t\in K
+\backslash\bigcup_{j=1}^{i-1}G_{i}|a(t)<\lambda_i\}}$ for $i>1$. These are pairwise disjoint,
+and $\chi_{G_{i}}$ are each continuous projections. Furthermore, for all $t\in K$,
+\begin{align}
+    |a(t)-\sum_{i=1}^{n}\lambda_i\chi_{G_{i}}(t)|<\varepsilon
+\end{align}
+and therefore $\|a-\sum_{i=1}^{n}\lambda_i\chi_{G_{i}}\|<\varepsilon$.
+\end{proof}
+
+In Sakai, the pointwise order on $C(K)$ in Proposition \ref{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2}
+isn't specified beforehand in the book. Following $C^{*}$--algebra theory, $a\ge 0$ in $C(K)$
+iff the range of $a$ is contained in $\mathbb{R}_{\ge 0}$, and $b\le a$ iff $b-a \ge 0$. The spectrum 
+of a function in $C(K)$ is just its range. So $b\le a$ iff $b(t)\le a(t)$ for all $t\in K$. A net
+ $(f_{\alpha})$ in $C(K)$ is \textbf{bounded} if there is a positive constant that bounds the norms of all $f_{\alpha}$.
+A net is said to be \textbf{increasing} if $\alpha \le \beta$ implies $f_{\alpha}\le f_{\beta}$ for all $\alpha,\beta$
+in the associated directed set. We ought to note, here, that Sakai opts not to use net language
+(although he sort of does when introducing subscripts) since his directed set is identical to his net
+in Proposition \ref{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2}. Recall that 
+the \textbf{support} of $f\in C(K)$ is $\overline{\{x\in K | f(x)\ne 0\}}$.
+
+\begin{lemma}
+    \label{lem:cts_fns_ge_zero_le_one_directed}
+    Let $K$ be a compact Hausdorff space, with $U\subseteq K$ open, then the set of $f\in C(K)$ supported on $U$ such that
+    $0 \le f \le 1$ is a directed set w.r.t. the order on $C(K)$.
+\end{lemma}
+
+\begin{proof}
+    The usual order is a partial order, and given $f,g\in C(K)$ supported on $U$ we have $f\vee g \in C(K)$, 
+    supported on $U$, where $f\vee g(t)=\max\{f(t),g(t)\}$.
+\end{proof}
+
+\begin{proposition}
+    \label{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2} (Sakai 1.3.2)
+    \uses{lem:cts_fns_ge_zero_le_one_directed,lem:selfadjoint_le_norm}
+    Let $K$ be a compact Hausdorff space. Suppose every bounded increasing net
+    of real valued, non-negative functions in $C(K)$ has a least upper bound in $C(K)$.
+    Then $K$ is Stonean. 
+\end{proposition}
+
+\begin{proof}
+    Suppose for the sake of a contradiction that $K$ isn't Stonean, i.e. that there exists an
+    open set $U$ whose closure isn't open, i.e. that $\overline{U}^{c}$ isn't closed.
+    Consider the set of $f$ in $C(K)$ with support contained in $U$ and such that $0\le f\le 1$. 
+    By Lemma \ref{lem:selfadjoint_le_norm} and Lemma \ref{lem:cts_fns_ge_zero_le_one_directed}, 
+    this is a bounded, increasing net with respect to the order on $C(K)$. 
+    For any point $t\in U$, by Urysohn's Lemma (compact Hausdorff Spaces are regular) there
+    exists a continuous function $g\in C(K)$ such that $g(t)=1$ and $g$ is zero on $U^{c}$. 
+    It follows that if $f_s$ is the least upper bound of the above net, then $1=g(t)\le f_s(t)$, 
+    and therefore (since we can play this game for any $t\in U$) it must be that $f_s(t)=1$ for any $t\in U$. 
+    By continuity, $f_s(t)=1$ for all $t\in\overline{U}$. Now, since $\overline{U}^{c}\subset U^{c}$, 
+    $f_c$ is identically zero on $U^{c}$. Since $\overline{U}^{c}$ is not closed, it must have a limit point
+    $p\in \overline{U}$, and by continuity $f_c(p)=0$ But $f_c(p)=1$ by the above, which is a contradiction.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:spec_masa_wstar_stonean_Sak_1_7_5} (Sak 1.7.5)
+  \uses{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2}
+  If $C$ is any maximal commutative $C^*$--subalgebra of the $W^{*}$--algebra $M$, its
+  spectrum space (maximal ideal space) is Stonean.
+\end{lemma}
+
+\begin{proof}
+  Suppose $(a_{\lambda})$ is a uniformly bounded, increasing net of positive elements in $C$ with supremum $a$. 
+  Given any unitary $u\in C$, we have $u^{*}\sup_{\lambda}a_{\lambda} u=\sup_{\lambda}u^{*}a_{\lambda}u$ and since every
+  element in $C$ is a linear combination of unitary elements from $C$, we have that $sup_{\lambda}a_{\lambda}\in C$. The result
+  follows from Proposition \ref{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2} after applying the Gelfand transform.
+\end{proof}

@@ -1,0 +1,43 @@
+\section{Projection Lemmas}
+
+Let $\mathcal{A}$ be a unital $C^{*}$--algebra in this section. In this section we collect relevant results about (selfadjoint) projections in $\mathcal{A}$. 
+Recall that an element $p$ in a $C^{*}$--algebra is a projection if $p^2=p^{*}=p$. By the Spectral Mapping Theorem (or using the full Gelfand Duality),
+a selfadjoint element $a\in A$ is a projection if and only if the spectrum of $a$ is contained in $\{0,1\}$.
+
+\begin{lemma}
+  \label{lem:proj_le_one}
+  \lean{IsStarProjection.le_one}
+  \mathlibok
+  \uses{lem:selfadjoint_le_norm}
+  For all projections $p\in \mathcal{A}$, $p \le 1$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  We can get this by Sakai 1.2.3. and Lemma \ref{lem:selfadjoint_le_norm} We should include that result here.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:proj_sub_pos_iff_comm_eq_self}
+  \lean{IsStarProjection.sub_tfae}
+  \leanok
+  \uses{lem:star_conj_pos, lem:proj_le_one}
+  Let $\mathcal{A}$ be a $C^{*}$--algebra and $p,q \in \mathcal{A}$ be projections. Then $p-q\ge 0$ iff $qp = pq = q$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  By Lemma \ref{lem:star_conj_pos}, if $p-q \ge 0$ then $q(p-q)q=qpq-q^3=qpq-q \ge 0$. By Lemma \ref{lem:proj_le_one}, we have $p\le 1$ and 
+  employing Lemma \ref{lem:star_conj_pos} we obtain $qpq\le q1q=q$. Since $qpq\ge q$ and $qpq\le q$ we have $qpq=q$, which implies that $q(p-q)q=0$.
+  By the $C^{*}$-property of the norm, we have $\|(p-q)^{1/2}q\|^2=\|q(p-q)q\|=0$ and so $(p-q)^{1/2}q=0$ and therefore $(p-q)q=(p-q)^{1/2}(p-q)^{1/2}q=0$.
+  It follows that $pq=q$, and taking adjoints, $qp=q$.
+  Conversely, if $qp=pq=q$, one easily checks that $p-q$ is a projection and so its spectrum is contained in $\{0,1\}$ and it is positive.
+\end{proof}
+
+\begin{corollary}
+  \label{cor:proj_sub_of_subproj}
+  \lean{IsStarProjection.sub_tfae}
+  \leanok
+  \uses{lem:proj_sub_pos_iff_comm_eq_self}
+  For all $p,q \in \mathcal{A}$ projections such that $q\le p$, $p-q$ is a projection.
+\end{corollary}
