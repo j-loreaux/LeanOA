@@ -40,14 +40,53 @@ of elements of $T$. Let $P$ denote the set of positive elements of $M$.
 \end{proof}
 
 \begin{theorem}
-  \label{lem:sigma_cont_of_normal_Sak_1_7_4}
+  \label{lem:sigma_cont_of_normal_Sak_1_7_4} (Sak 1.7.4)
   \uses{thm:Banach_Alaoglu,lem:homeo_of_cts_bij_cpt_haus,lem:uw_pos_sep_pts}
-  Every uniformly bounded, increasing directed set converges
+  Every uniformly bounded, increasing net in $M^{s}$ converges
   to its least upper bound in the $\sigma$--topology. Further, if
-  $x=\sup_{\alpha}x_\alpha$ then $a^{*}xa=\sup_{\alpha}a^{*}xa$.
+  $x=\sup_{\lambda}x_{\lambda}$ then $a^{*}xa=\sup_{\lambda}a^{*}x_{\lambda}a$.
 \end{theorem}
 
 \begin{proof}
+  Letting $T$ denote the set of $\sigma$--continuous positive functionals on $M$ and $E$ its linear span, by
+  Lemma \ref{lem:uw_pos_sep_pts}, the subspace $E$ separates the points of $M$ and so the $\sigma(M,E)$
+  is Hausdorff. By the Banach-Alaoglu Theorem (\ref{thm:Banach_Alaoglu}) the closed unit ball $B$ of $M$ is
+  compact in the $\sigma(M,M_{*})$--topology. Since $\sigma(M,E)$ is weaker than $\sigma(M,M_{*})$, the identity
+  map on $B$ is $\sigma(M,M_{*})-\sigma(M,E)$--continuous, and therefore a homeomorphism, 
+  by Lemma \ref{lem:homeo_of_cts_bij_cpt_haus}. So, to prove that a uniformly bounded net $(x_{t})$ is $\sigma$--
+  Cauchy, it's enough to check that for all $\varepsilon>0$ and $\varphi\in T$ that there is a $\Lambda$ such that
+  $\varphi(x_{\lambda}-x_{\mu})\le \varepsilon$ for $\lambda,\mu$ with $\lambda \ge \Lambda$ and $\mu \ge \Lambda$.
+  
+  If $(x_{\lambda})$ is a uniformly bounded increasing net in $M^{s}$, and $\varphi\in T$, then $(\varphi(x_{\lambda}))$ is
+  a uniformly bounded increasing net of real numbers and therefore is Cauchy. By the above paragraph, $(x_{\lambda})$ is
+  $\sigma$--Cauchy and by the $\sigma$--compactness of $B$ and the fact that $(x_{\lambda})$ is increasing there exists $x\in B$
+  so that $x_{\lambda} \to x$ in the $\sigma$--topology. Since for any $\varphi\in T$ and any $\lambda$ we have 
+  $0 \le \varphi(x-x_{\lambda})$, by Lemma \ref{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2} we have $0\le x - x_{\lambda}$.
+  Therefore $\sup(x_{\lambda})\le x$. For a given $\varphi\in T$ and $\varepsilon = \varphi(x-\sup(x_{\lambda}))$ one find 
+  $x_{\lambda}$ so that $\varphi(x-x_{\lambda})<\varphi (x - \sup(x_{\lambda}))$, which is a contradiction, therefore $x=\sup(x_{\lambda})$.
+
+  By Lemma \ref{lem:star_conj_pos} and the fact that $(u^{-1})^{*}=(u^{*})^{-1}$, then $u^{*}x_{\lambda}u\le u^{*}xu$
+  is equivalent to $x_{\lambda}\le x$ and so $\sup(u^{*}x_{\lambda}u)=u^{*}\sup(x_{\lambda})u=u^{*}xu$ if $u\in M$ is invertible.
+
+  If $a\in M$ is not invertible, one can shift the spectrum horizontally to avoid zero, i.e. there is a $c>0$ so that $c1+a$ is invertible. Indeed
+  observe that $a-t1=(a+c1)-(t+c)1$ and therefore $t\in \sigma(a)\iff t+c \in \sigma(a+c1)$. In particular if we let $t=-c$ here we find that
+  $0\in \sigma(a)+c \iff 0 \in \sigma(a+c1)$.
+  By the invertible case above, 
+  \begin{align}
+    c^2\varphi(x_{\lambda})+c\varphi(a^{*}x_{\lambda}+x_{\lambda}a)+\varphi(a^{*}x_{\lambda}a)&=\varphi((c1+a)^{*}x_{\lambda}(c1+a))\\\nonumber
+    &\to \varphi((c1+a)^{*}x(c1+a))
+  \end{align}
+  for all $\varphi\in T$. 
+  It suffices to show that $\varphi(a^{*}x_{\lambda}+x_{\lambda}a)\to \varphi(a^{*}x+xa)$ for all $\varphi\in T$, 
+  because then $\varphi(a^{*}x_{\lambda}a)\to \varphi(a^{*}xa)$ by the above. We can use Cauchy-Schwartz for this as follows. If $\alpha\le \beta$,
+  we have $x_{\beta}-x_{\alpha}\ge 0$, so
+  \begin{align}
+    |\varphi(a^{*}(x_{\beta}-x_{\alpha}))|&=|\varphi(a^{*}(x_{\beta}-x_{\alpha})^{1/2}(x_{\beta}-x_{\alpha})^{1/2})|\\\nonumber
+                                          &\le \varphi(a^{*}(x_{\beta}-x_{\alpha})a)^{1/2}\varphi((x_{\beta}-x_{\alpha}))^{1/2}
+  \end{align}
+  and by the positivity of $\varphi$ we have $|\varphi(a^{*}(x_{\beta}-x_{\alpha}))|=|\varphi((x_{\beta}-x_{\alpha})a)|$.
+
+
 \end{proof}
 
 \subsection{Normal Implies Ultraweakly Continuous}
@@ -102,7 +141,7 @@ $q\in \mathcal{P}(M)$ with $q\le p_1$, we have $\varphi(q)<\psi(q)$.
 \end{proof}
 
 Note that the following likely contains the most crucial use of the normality of $\varphi$ for the later proof 
-of Theorem \ref{thm:sigma_cts_of_normal}.
+of Theorem \ref{thm:sigma_cts_of_normal_Sak_1_13_2}.
 
 \begin{lemma}
   \label{lem:zorn_base}
@@ -137,16 +176,8 @@ of Theorem \ref{thm:sigma_cts_of_normal}.
 \begin{proof}
 \end{proof}
 
-\begin{lemma}
-  \label{lem:wstar_of_masa}
-  A maximal abelian $*$--subalgebra of a $W^{*}$--algebra $M$ is also a $W^{*}$--algebra.
-\end{lemma}
-
-\begin{proof}
-\end{proof}
-
 \begin{theorem}
-  \label{thm:sigma_cts_of_normal}
+  \label{thm:sigma_cts_of_normal_Sak_1_13_2} (Sak 1.13.2)
   \uses{lem:zorn_base,lem:exists_uw_ge_normal,lem:msr_th_lemma,lem:cut_down_of_wstar,lem:spec_masa_wstar_stonean_Sak_1_7_5,lem:fin_lin_approx_of_stonean_Sak_1_3_1,lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10,lem:wstar_of_masa}
   Every positive normal linear functional $\varphi$ on $M$ is $\sigma(M,M_{*})$--continuous.
 \end{theorem}
