@@ -79,14 +79,14 @@ of elements of $T$. Let $P$ denote the set of positive elements of $M$.
   for all $\varphi\in T$. 
   It suffices to show that $\varphi(a^{*}x_{\lambda}+x_{\lambda}a)\to \varphi(a^{*}x+xa)$ for all $\varphi\in T$, 
   because then $\varphi(a^{*}x_{\lambda}a)\to \varphi(a^{*}xa)$ by the above. We can use Cauchy-Schwartz for this as follows. If $\alpha\le \beta$,
-  we have $x_{\beta}-x_{\alpha}\ge 0$, so
+  we have $x_{\beta}-x_{\alpha}\ge 0$, and since the net $(x_{\lambda})$ is uniformly bounded there exists $M>0$ such that
   \begin{align}
     |\varphi(a^{*}(x_{\beta}-x_{\alpha}))|&=|\varphi(a^{*}(x_{\beta}-x_{\alpha})^{1/2}(x_{\beta}-x_{\alpha})^{1/2})|\\\nonumber
-                                          &\le \varphi(a^{*}(x_{\beta}-x_{\alpha})a)^{1/2}\varphi((x_{\beta}-x_{\alpha}))^{1/2}
+                                          &\le \varphi(a^{*}(x_{\beta}-x_{\alpha})a)^{1/2}\varphi((x_{\beta}-x_{\alpha}))^{1/2}\\\nonumber
+                                          &\le (2M\varphi(a^{*}a)^{1/2}\varphi((x_{\beta}-x_{\alpha}))^{1/2}
   \end{align}
   and by the positivity of $\varphi$ we have $|\varphi(a^{*}(x_{\beta}-x_{\alpha}))|=|\varphi((x_{\beta}-x_{\alpha})a)|$.
-
-
+  It follows that $\varphi(a^{*}x_{\lambda}+x_{\lambda}a)\to \varphi(a^{*}x+xa)$, and the proof is finished.
 \end{proof}
 
 \subsection{Normal Implies Ultraweakly Continuous}
