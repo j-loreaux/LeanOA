@@ -196,12 +196,18 @@ lemma toUltraweak_intCast (n : ℤ) :
     toUltraweak ℂ P (n : M) = (n : σ(M, P)) := rfl
 
 @[simp]
-lemma ofUltraweak_algebraMap (a : ℂ) :
-    ofUltraweak (algebraMap ℂ σ(M, P) a) = algebraMap ℂ M a := rfl
+lemma ofUltraweak_algebraMap {R : Type*} [CommSemiring R] [Algebra R ℂ] [Algebra R σ(M, P)]
+    [IsScalarTower R ℂ σ(M, P)] [Algebra R M] [IsScalarTower R ℂ M] (a : R) :
+    ofUltraweak (algebraMap R σ(M, P) a) = algebraMap R M a := by
+  rw [IsScalarTower.algebraMap_apply R ℂ, IsScalarTower.algebraMap_apply R ℂ M]
+  rfl
 
 @[simp]
-lemma toUltraweak_algebraMap (a : ℂ) :
-    toUltraweak ℂ P (algebraMap ℂ M a) = algebraMap ℂ σ(M, P) a := rfl
+lemma toUltraweak_algebraMap {R : Type*} [CommSemiring R] [Algebra R ℂ] [Algebra R σ(M, P)]
+    [IsScalarTower R ℂ σ(M, P)] [Algebra R M] [IsScalarTower R ℂ M] (a : R) :
+    toUltraweak ℂ P (algebraMap R M a) = algebraMap R σ(M, P) a := by
+  rw [IsScalarTower.algebraMap_apply R ℂ, IsScalarTower.algebraMap_apply R ℂ σ(M, P)]
+  rfl
 
 variable (M P) in
 /-- The canonical algebra equivalence between `σ(M, P)` and `M`. -/
@@ -226,6 +232,14 @@ scoped instance [PartialOrder M] : PartialOrder σ(M, P) :=
   inferInstanceAs (PartialOrder M)
 scoped instance [PartialOrder M] [StarOrderedRing M] : StarOrderedRing σ(M, P) :=
   inferInstanceAs (StarOrderedRing M)
+
+@[simp]
+lemma ofUltraweak_star (x : σ(M, P)) :
+    ofUltraweak (star x) = star (ofUltraweak x) := rfl
+
+@[simp]
+lemma toUltraweak_star (x : M) :
+    toUltraweak ℂ P (star x) = star (toUltraweak ℂ P x) := rfl
 
 variable (M P) in
 /-- The canonical ⋆-algebra equivalence between `σ(M, P)` and `M`. -/

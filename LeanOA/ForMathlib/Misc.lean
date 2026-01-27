@@ -44,3 +44,26 @@ open Topology in
 theorem Metric.nhds_basis_closedBall_inv_nat_succ {α : Type*} [PseudoMetricSpace α] {x : α} :
     (𝓝 x).HasBasis (fun _ => True) fun n : ℕ => closedBall x (1 / (↑n + 1)) :=
   nhds_basis_uniformity uniformity_basis_dist_le_inv_nat_succ
+
+@[simp]
+theorem ker_imaginaryPart {E : Type*} [AddCommGroup E]
+    [Module ℂ E] [StarAddMonoid E] [StarModule ℂ E] :
+    imaginaryPart.ker = selfAdjoint.submodule ℝ E := by
+  ext x
+  simp [selfAdjoint.submodule, selfAdjoint.mem_iff, imaginaryPart, Subtype.ext_iff]
+  grind
+
+open ComplexStarModule in
+@[simp]
+lemma imaginaryPart_eq_zero_iff {A : Type*} [AddCommGroup A] [Module ℂ A]
+    [StarAddMonoid A] [StarModule ℂ A] {x : A} :
+    ℑ x = 0 ↔ IsSelfAdjoint x := by
+  simpa [-ker_imaginaryPart] using SetLike.ext_iff.mp ker_imaginaryPart x
+
+-- I think this instance is not terribly crazy.
+instance {𝕜 A : Type*} [RCLike 𝕜] [Norm A] [MulAction 𝕜 A] [SMul ℤ A]
+    [IsScalarTower ℤ 𝕜 A] [NormSMulClass 𝕜 A] :
+    NormSMulClass ℤ A where
+  norm_smul z a := by
+    rw [← smul_one_smul 𝕜]
+    simp only [norm_smul, norm_one, mul_one]
