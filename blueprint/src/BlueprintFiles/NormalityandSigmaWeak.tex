@@ -41,7 +41,7 @@ of elements of $T$. Let $P$ denote the set of positive elements of $M$.
 
 \begin{theorem}
   \label{lem:sigma_cont_of_normal_Sak_1_7_4} (Sak 1.7.4)
-  \uses{thm:Banach_Alaoglu,lem:homeo_of_cts_bij_cpt_haus,lem:uw_pos_sep_pts,lem:selfadjoint_le_norm}
+  \uses{thm:Banach_Alaoglu,lem:homeo_of_cts_bij_cpt_haus,lem:uw_pos_sep_pts,lem:selfadjoint_le_norm,def:sigma_top}
   Every uniformly bounded, increasing net in $M^{s}$ converges
   to its least upper bound in the $\sigma$--topology. Further, if
   $x=\sup_{\lambda}x_{\lambda}$ then $a^{*}xa=\sup_{\lambda}a^{*}x_{\lambda}a$.
@@ -93,6 +93,7 @@ of elements of $T$. Let $P$ denote the set of positive elements of $M$.
 
 \begin{lemma}
   \label{lem:proj_of_sup_proj}
+  \uses{lem:sigma_cont_of_normal_Sak_1_7_4}
   For every increasing bounded net $(p_{\alpha})$ of projections in $M$, the supremum $p$
   is a projection in $M$
 \end{lemma}
@@ -145,7 +146,7 @@ of Theorem \ref{thm:sigma_cts_of_normal_Sak_1_13_2}.
 
 \begin{lemma}
   \label{lem:zorn_base}
-  \uses{cor:proj_sub_of_subproj,lem:selfadjoint_le_norm,lem:sigma_cont_of_normal_Sak_1_7_4,lem:proj_of_sup_proj}
+  \uses{cor:proj_sub_of_subproj,lem:selfadjoint_le_norm,lem:sigma_cont_of_normal_Sak_1_7_4,lem:proj_of_sup_proj,def:sigma_top}
   Let $\varphi$ be a normal positive linear functional on $M$ and consider the predicate $P:\mathcal{P}(M)\to \text{Prop}$ defined, for $p\in \mathcal{P}(M)$, by 
   ``$M\ni x \mapsto \varphi(xp)$ is $\sigma(M,M_{*})$--continuous''. If $(p_{\alpha})$ is a chain of projections in $M$ such that $P(p_{\alpha})$ is true for each $\alpha$,
   then $P(\sup(p_{\alpha}))$ is true. Hence by Zorn's Lemma there is a maximal $p_0\in \mathcal{P}(M)$ such that $P(p_0)$ is true.  
@@ -169,6 +170,7 @@ of Theorem \ref{thm:sigma_cts_of_normal_Sak_1_13_2}.
 
 \begin{lemma}
   \label{lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10} (Sak 1.8.10)
+  \uses{def:sigma_top}
   A linear functional $\rho$ on $M$ is $\sigma$--continuous on the unit sphere (hence $\sigma$--continuous) if and only if it is $s$--continuous on the
   unit sphere (hence $s$--continuous).
 \end{lemma}
@@ -178,6 +180,7 @@ of Theorem \ref{thm:sigma_cts_of_normal_Sak_1_13_2}.
 
 \begin{theorem}
   \label{thm:sigma_cts_of_normal_Sak_1_13_2} (Sak 1.13.2)
+  \uses{def:sigma_top}
   \uses{lem:zorn_base,lem:exists_uw_ge_normal,lem:msr_th_lemma,lem:cut_down_of_wstar,lem:spec_masa_wstar_stonean_Sak_1_7_5,lem:fin_lin_approx_of_stonean_Sak_1_3_1,lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10,lem:wstar_of_masa}
   Every positive normal linear functional $\varphi$ on $M$ is $\sigma(M,M_{*})$--continuous.
 \end{theorem}

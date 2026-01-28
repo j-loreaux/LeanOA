@@ -2,8 +2,49 @@
 
 In this section we collect basic definitions and results about $W^{*}$--algebras. 
 
+An associative algebra $\mathcal{A}$ over the complex numbers is called a \textbf{normed algebra}
+  if there is a map assigning for every $x\in \mathcal{A}$ a real number $\|x\|$, and this map satisfies:
+  \begin{enumerate}
+  \item $\|x\|\ge 0$ and $\|x\|=0 \iff x=0$;
+  \item $\|x+y\|\le \|x\|+\|y\|$;
+  \item $\|\lambda x\|= |\lambda|\|x\|$;
+  \item $\|xy\|\le \|x\|\|y\|$.
+  \end{enumerate} 
+  If $\mathcal{A}$ is also complete with respect to the norm, it is called a \textbf{Banach algebra}. 
+  A mapping $*: \mathcal{A}\to \mathcal{A}$ is called an \textbf{involution} if it satisfies:
+  \begin{enumerate}
+  \item $(x^{*})^{*}=x$;
+  \item $(x+y)^{*}=x^{*}+y^{*}$;
+  \item $(xy)^{*}=y^{*}x^{*}$;
+  \item $(\lambda x)^{*}=\overline{\lambda}x^{*}$.
+  \end{enumerate}
+  where $\lambda$ above is a complex number.
+
+\begin{definition}
+  \label{def:cstar_def}
+  A Banach algebra $\mathcal{A}$ with an involution is a $\mathbf{C^{*}}$\textbf{--algebra} if the relation 
+  $\|x^{*}x\|=\|x\|^{2}$ holds for every $x\in \mathcal{A}$.
+\end{definition}
+
+\begin{definition}
+  \label{def:wstar_def}
+  \uses{def:cstar_def}
+  A $C^{*}$--algebra $M$ is called a $\mathbf{W^{*}}$\textbf{--algebra} if it is a dual Banach space, i.e. if there exists a Banach space
+  $M_{*}$ so that $(M_{*})^{*}$ is isometrically isomorphic to $M$. We call $M_{*}$ a \textbf{predual} of $M$. 
+\end{definition}
+
+\begin{definition}
+  \label{def:sigma_top}
+  \uses{def:wstar_def}
+  The weak-$*$ topology $\sigma(M,M_{*})$ on a $W^{*}$--algebra $M$ is called the $\sigma$--topology.
+\end{definition}
+
+It is indeed premature to fix a notation like $M_{*}$ in the above, but the aim of this project is to prove that any two 
+preduals of $M$ are isomorphic as Banach spaces, so we take the liberty with Sakai to ``fix a reference predual'' at the outset.
+
 \begin{lemma}
     \label{lem:sigma_closed_star_subalg_wstar} (Sakai 1.1.4)
+    \uses{def:wstar_def,def:sigma_top}
   A self-adjoint, $\sigma$--closed $*$--subalgebra $N$ of a $W^{*}$--algebra $M$ is also a $W^{*}$--algebra, since $(M_{*}/N^{0})^{*}=N$, where
   $N^{0}$ is the polar (annihilator) of $N$ in $M_{*}$, i.e. the set of $\varphi\in M_{*}$ such that $\varphi(x)=0$ for all $x\in N$.
 \end{lemma}
@@ -13,6 +54,7 @@ In this section we collect basic definitions and results about $W^{*}$--algebras
 
 \begin{lemma}
   \label{lem:cut_down_sigma_closed_cts} (Sakai 1.7.6)
+  \uses{def:sigma_top}
   Let $p$ be any projection in $M$. Then the subalgebra $pMp$ is $\sigma$--closed and the mapping $x\mapsto pxp$ is $\sigma$--continuous.
 \end{lemma}
 
@@ -21,6 +63,7 @@ In this section we collect basic definitions and results about $W^{*}$--algebras
 
 \begin{lemma}
   \label{lem:cut_down_of_wstar} 
+  \uses{def:sigma_top}
   \uses{lem:cut_down_sigma_closed_cts,lem:sigma_closed_star_subalg_wstar}
   If $p\in M$ is a projection, $pMp$ is also a $W^{*}$--algebra with identity $p$.
 \end{lemma}
@@ -34,6 +77,7 @@ In this section we collect basic definitions and results about $W^{*}$--algebras
 
 \begin{lemma}
   \label{lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7} (Sak 1.7.7)
+  \uses{def:sigma_top}
   If $p$ is any projection of $M$, then the mappings $x\mapsto px$ and
   $x\mapsto xp$ are $\sigma$--continuous.
 \end{lemma}
@@ -43,6 +87,7 @@ In this section we collect basic definitions and results about $W^{*}$--algebras
 
 \begin{lemma}
   \label{lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8} (Sak 1.7.8)
+  \uses{def:sigma_top}
   The mappings $x\mapsto x^{*},ax$, and $xa$ are $\sigma$--continuous for
   $x,a \in M$.
 \end{lemma}
@@ -52,7 +97,7 @@ In this section we collect basic definitions and results about $W^{*}$--algebras
 
 \begin{corollary}
   \label{cor:sig_clos_of_cstar_is_wstar_Sak_1_7_9} (Sak 1.7.9)
-  \uses{lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7,lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8}
+  \uses{lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7,lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8,def:sigma_top}
   Let $H$ be a subset of $M$ and $\mathcal{A}$ be the $C^{*}$--subalgebra of $M$ generated
   by $H$, and let $\overline{\mathcal{A}}$ be the $\sigma(M,M_{*})$--closure of $\mathcal{A}$. Then
   $\overline{\mathcal{A}}$ is a $W^{*}$--subalgebra of $M$. $\overline{\mathcal{A}}$ is called a $W^{*}$--subalgebra
