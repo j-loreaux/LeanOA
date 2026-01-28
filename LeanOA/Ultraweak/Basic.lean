@@ -137,6 +137,44 @@ def Ultraweak.weakDualCLE : σ(M, P)_𝕜 ≃L[𝕜] WeakDual 𝕜 P where
   continuous_toFun := WeakDual.continuous_of_continuous_eval <| WeakBilin.eval_continuous _
   continuous_invFun := continuous_of_continuous_eval <| by simpa using WeakDual.eval_continuous
 
+-- the notation is still somewhat broken. Maybe we need `σ_𝕜(M, P)`.
+instance : T2Space (σ(M, P)_𝕜) := (weakDualCLE 𝕜 M P).symm.toHomeomorph.t2Space
+instance [Nontrivial M] : Nontrivial (σ(M, P)_𝕜) := linearEquiv 𝕜 M P |>.nontrivial
+instance [Subsingleton M] : Subsingleton (σ(M, P)_𝕜) := linearEquiv 𝕜 M P |>.subsingleton
+
+open WeakDual
+
+variable (𝕜 P)
+
+lemma ofUltraweak_preimage (s : Set M) :
+    ofUltraweak ⁻¹' s =
+      weakDualCLE 𝕜 M P ⁻¹' (WeakDual.toStrongDual ⁻¹' (Predual.equivDual.symm ⁻¹' s)) := by
+  ext; simp [weakDualCLE]
+
+lemma ofUltraweak_preimage_ball (x : M) (r : ℝ) :
+    ofUltraweak ⁻¹' (Metric.ball x r) =
+      weakDualCLE 𝕜 M P ⁻¹' (WeakDual.toStrongDual ⁻¹' (Metric.ball (Predual.equivDual x) r)) := by
+  convert ofUltraweak_preimage ..
+  simp
+
+lemma ofUltraweak_preimage_closedBall (x : M) (r : ℝ) :
+    ofUltraweak ⁻¹' (Metric.closedBall x r) =
+      weakDualCLE 𝕜 M P ⁻¹'
+        (WeakDual.toStrongDual ⁻¹'
+          (Metric.closedBall (Predual.equivDual x) r)) := by
+  convert ofUltraweak_preimage ..
+  simp
+
+lemma isCompact_closedBall (x : M) (r : ℝ) :
+    IsCompact (ofUltraweak ⁻¹' (Metric.closedBall x r) : Set (σ(M, P)_𝕜)) := by
+  rw [ofUltraweak_preimage_closedBall]
+  exact (weakDualCLE 𝕜 M P).toHomeomorph.isCompact_preimage.mpr <|
+    WeakDual.isCompact_closedBall ..
+
+lemma isClosed_closedBall (x : M) (r : ℝ) :
+    IsClosed (ofUltraweak ⁻¹' (Metric.closedBall x r) : Set (σ(M, P)_𝕜)) :=
+  isCompact_closedBall 𝕜 P x r |>.isClosed
+
 end Linear
 
 namespace Ultraweak
@@ -227,6 +265,8 @@ lemma toLinearEquiv_algEquiv : (algEquiv M P).toLinearEquiv = linearEquiv .. := 
 
 /-- The star ring structure on `σ(M, P)` it inherits from `M`. -/
 scoped instance : StarRing σ(M, P) := inferInstanceAs (StarRing M)
+scoped instance : StarModule ℂ σ(M, P) := inferInstanceAs (StarModule ℂ M)
+
 /-- The partial order on `σ(M, P)` it inherits from `M`. -/
 scoped instance [PartialOrder M] : PartialOrder σ(M, P) :=
   inferInstanceAs (PartialOrder M)
@@ -247,3 +287,19 @@ variable (M P) in
 noncomputable def starAlgEquiv : σ(M, P) ≃⋆ₐ[ℂ] M := .ofAlgEquiv (algEquiv M P) fun _ ↦ rfl
 
 end Ultraweak
+
+variable [CStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
+
+open scoped Ultraweak
+
+lemma isSelfAdjoint_ofUltraweak {x : σ(M, P)} :
+    IsSelfAdjoint (ofUltraweak x) ↔ IsSelfAdjoint x := by
+  simp [isSelfAdjoint_iff, ← Ultraweak.ofUltraweak_star]
+
+alias ⟨IsSelfAdjoint.of_ofUltraweak, IsSelfAdjoint.ofUltraweak⟩ := isSelfAdjoint_ofUltraweak
+
+lemma isSelfAdjoint_toUltraweak {x : M} :
+    IsSelfAdjoint (toUltraweak ℂ P x) ↔ IsSelfAdjoint x := by
+  simp [isSelfAdjoint_iff, ← Ultraweak.toUltraweak_star]
+
+alias ⟨IsSelfAdjoint.of_toUltraweak, IsSelfAdjoint.toUltraweak⟩ := isSelfAdjoint_toUltraweak

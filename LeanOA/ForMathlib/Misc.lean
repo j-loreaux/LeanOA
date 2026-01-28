@@ -1,23 +1,13 @@
 import Mathlib.Analysis.Normed.Module.Normalize
 import Mathlib.Analysis.Normed.Algebra.Spectrum
 import Mathlib.Analysis.Normed.Operator.NormedSpace
+import Mathlib.Topology.Algebra.Module.FiniteDimension
 
 -- `Analysis.Normed.Module.Basic`
 @[simp]
 lemma norm_smul_norm_inv_smul {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] (x : E) :
     ‖x‖ • ‖x‖⁻¹ • x = x :=
   NormedSpace.norm_smul_normalize x
-
-open Complex in
-lemma spectrum_subset_slitPlane_of_norm_lt_one {A : Type*} [NormedRing A]
-    [NormedAlgebra ℂ A] [NormOneClass A] [CompleteSpace A]
-    {u : A} (hu : ‖u - 1‖ < 1) :
-    spectrum ℂ u ⊆ slitPlane := by
-  have := spectrum.subset_closedBall_norm (𝕜 := ℂ) (u - 1) |>.trans <|
-    Metric.closedBall_subset_ball hu
-  rw [← map_one (algebraMap ℂ A), ← spectrum.sub_singleton_eq, Set.sub_singleton] at this
-  exact fun x hx ↦ add_sub_cancel 1 x ▸
-    Complex.mem_slitPlane_of_norm_lt_one (by simpa using this ⟨x, hx, rfl⟩)
 
 lemma ContinuousLinearMap.norm_postcomp_le {𝕜₁ 𝕜₂ 𝕜₃ : Type*} [NontriviallyNormedField 𝕜₁]
     [NontriviallyNormedField 𝕜₂] [NontriviallyNormedField 𝕜₃] {σ : 𝕜₁ →+* 𝕜₂} {τ : 𝕜₂ →+* 𝕜₃}
@@ -67,3 +57,86 @@ instance {𝕜 A : Type*} [RCLike 𝕜] [Norm A] [MulAction 𝕜 A] [SMul ℤ A]
   norm_smul z a := by
     rw [← smul_one_smul 𝕜]
     simp only [norm_smul, norm_one, mul_one]
+
+open scoped ComplexStarModule in
+open Complex in
+/-- An element in a non-unital star `ℂ`-algebra is normal if and only if its real and imaginary
+parts commute. -/
+lemma isStarNormal_iff_commute_realPart_imaginaryPart
+    {A : Type*} [NonUnitalRing A] [StarRing A]
+    [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A] [StarModule ℂ A]
+    {x : A} : IsStarNormal x ↔ Commute (realPart x : A) (imaginaryPart x : A) := by
+  conv_lhs => rw [isStarNormal_iff, ← realPart_add_I_smul_imaginaryPart x]
+  rw [commute_iff_eq]
+  simp only [star_add, selfAdjoint.star_val_eq, star_smul, RCLike.star_def, Complex.conj_I,
+    neg_smul, ← sub_eq_add_neg, mul_add, sub_mul, smul_mul_assoc, mul_smul_comm, smul_sub,
+    smul_smul, Complex.I_mul_I, one_smul, sub_neg_eq_add, mul_sub, add_mul, smul_add]
+  rw [sub_eq_add_neg, add_assoc, add_sub_assoc, add_left_cancel_iff, ← sub_add,
+    ← add_assoc, add_right_cancel_iff, ← sub_eq_zero]
+  noncomm_ring
+  rw [add_comm, neg_smul, ← sub_eq_add_neg, sub_eq_zero]
+  refine ⟨fun h ↦ ?_, fun h ↦ congr(2 • I • $h)⟩
+  have := congr(I • (2⁻¹ : ℂ) • $h)
+  rw [← smul_one_smul ℂ (2 : ℤ) (I • (ℑ x * ℜ x : A)), ← smul_one_smul ℂ (2 : ℤ)] at this
+  simpa
+
+open NNReal in
+/-- The collection of nonnegative elements as an `ℝ≥0`-submodule. -/
+def Nonneg.nnrealSubmodule (α : Type*) [AddCommGroup α] [PartialOrder α] [Module ℝ α]
+    [IsOrderedAddMonoid α] [IsStrictOrderedModule ℝ α] :
+    Submodule ℝ≥0 α where
+  carrier := {x | 0 ≤ x}
+  zero_mem' := le_rfl
+  add_mem' := add_nonneg
+  smul_mem' r _ h := smul_nonneg r.2 h
+
+/-! ## Unnecessary
+
+These lemmas are not currently necessary for anything in LeanOA.
+-/
+
+lemma IsClosed.setOf_isSelfAdjoint {R : Type*} [Star R]
+    [TopologicalSpace R] [ContinuousStar R] [T2Space R] :
+    IsClosed {x : R | IsSelfAdjoint x} :=
+  isClosed_eq continuous_star continuous_id
+
+/-- A linear map with closed kernel of finite index is continuous. -/
+lemma LinearMap.continuous_of_isClosed_ker_of_finiteDimensional
+    {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
+    [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
+    [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E]
+    [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F]
+    [IsTopologicalAddGroup F] [ContinuousSMul 𝕜 F]
+    [CompleteSpace 𝕜]
+    (f : E →ₗ[𝕜] F) (hf : IsClosed (f.ker : Set E))
+    (hf_findim : FiniteDimensional 𝕜 (E ⧸ f.ker)) :
+    Continuous f :=
+  have h : Continuous (Quotient.mk _ : E → E ⧸ f.ker) := { isOpen_preimage := fun _ a ↦ a }
+  f.ker.liftQ f le_rfl |>.continuous_of_finiteDimensional.comp h
+
+instance ContinuousSMul.smulMemClass (S M α : Type*) [Monoid M] [MulAction M α]
+    [TopologicalSpace M] [TopologicalSpace α] [ContinuousSMul M α] [SetLike S α]
+    [SMulMemClass S M α] (s : S) : ContinuousSMul M s where
+  continuous_smul := by fun_prop
+
+instance ContinuousSMul.complexToReal {E : Type*} [AddCommGroup E] [Module ℂ E] [TopologicalSpace E]
+    [ContinuousSMul ℂ E] : ContinuousSMul ℝ E :=
+  IsScalarTower.continuousSMul ℂ
+
+instance selfAdjoint.instContinuousSMul {R A : Type*} [Star R] [TrivialStar R]
+    [AddGroup A] [StarAddMonoid A] [SMul R A] [StarModule R A] [TopologicalSpace R]
+    [TopologicalSpace A] [ContinuousSMul R A] : ContinuousSMul R (selfAdjoint A) where
+  continuous_smul := by
+    rw [continuous_induced_rng]
+    fun_prop
+
+open Complex in
+lemma spectrum_subset_slitPlane_of_norm_lt_one {A : Type*} [NormedRing A]
+    [NormedAlgebra ℂ A] [NormOneClass A] [CompleteSpace A]
+    {u : A} (hu : ‖u - 1‖ < 1) :
+    spectrum ℂ u ⊆ slitPlane := by
+  have := spectrum.subset_closedBall_norm (𝕜 := ℂ) (u - 1) |>.trans <|
+    Metric.closedBall_subset_ball hu
+  rw [← map_one (algebraMap ℂ A), ← spectrum.sub_singleton_eq, Set.sub_singleton] at this
+  exact fun x hx ↦ add_sub_cancel 1 x ▸
+    Complex.mem_slitPlane_of_norm_lt_one (by simpa using this ⟨x, hx, rfl⟩)
