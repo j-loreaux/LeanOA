@@ -46,17 +46,26 @@ The next results are specific to $W^{*}$--algebras.
 
 \begin{proposition}
   \label{prop:one_sided_ideals_in_wstar_proj_Sak_1_10_1} (Sakai 1.10.1)
+  \uses{lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8,cor:sig_clos_of_cstar_is_wstar_Sak_1_7_9,lem:proj_sub_pos_iff_comm_eq_self,lem:wstar_unital}
   Let $\mathcal{L}$ (resp. $\mathcal{R}$) be a left (resp. right) $\sigma(M,M_{*})$--closed ideal of a $W^{*}$--algebra $M$.
   Then there exists a unique projection $p$ (resp. $q$) in $M$ so that $\mathcal{L}=Mp$ (resp. $\mathcal{R}=qM$). 
 \end{proposition}
 
 \begin{proof}
+  Suppose $\mathcal{L}$ is a $\sigma$--closed left ideal. By Lemma \ref{lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8}, $\mathcal{L^{*}}$ is
+  also $\sigma$--closed and $\mathcal{N}=\mathcal{L}\cap \mathcal{L}^{*}$ is a $\sigma$--closed $*$--subalgebra of $M$, and therefore by 
+  Corollary \ref{cor:sig_clos_of_cstar_is_wstar_Sak_1_7_9} is a $W^{*}$--subalgebra of $M$. Let $p$ be the identity of $\mathcal{N}$, which
+  exists by Corollary \ref{lem:wstar_unital}. Since $\mathcal{L}$ is a left ideal, $xp\in \mathcal{L}$ for any $x\in M$, thus $Mp\subseteq \mathcal{L}$ conversely, $xp=x$for any
+  $x\in \mathcal{L}$, since $p$ is the identity of $\mathcal{N}$, thus $\mathcal{L}\subseteq Mp$. 
+  If $p_1$ is another projection in $M$ such that $\mathcal{L}=Mp_1$ then $Mp=Mp_{1}$ and $p_1=xp$ for some $x\in M$. By the selfadjointness
+  of $p_1$ we have $p_1=px^{*}xp$ and therefore $p_1p=pp_1=p_1$ and therefore $p_1\le p$ by Lemma \ref{lem:proj_sub_pos_iff_comm_eq_self}.
+  We get $p\le p_1$ using the same argument. The claim for right ideals follows mutatis mutandis.
 \end{proof}
 
 
 \begin{proposition}
   \label{prop:proj_compl_lat_wstar_Sak_1_10_2} (Sakai 1.10.2)
-  \uses{prop:one_sided_ideals_in_wstar_proj_Sak_1_10_1}
+  \uses{prop:one_sided_ideals_in_wstar_proj_Sak_1_10_1,lem:proj_sub_pos_iff_comm_eq_self}
   Let $M$ be a $W^{*}$--algebra. Its set $M^{p}$ of projections is a complete lattice with respect to $\le$.
 \end{proposition}
 

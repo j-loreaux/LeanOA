@@ -83,20 +83,13 @@ of elements of $T$. Let $P$ denote the set of positive elements of $M$.
   \begin{align}
     |\varphi(a^{*}(x_{\beta}-x_{\alpha}))|&=|\varphi(a^{*}(x_{\beta}-x_{\alpha})^{1/2}(x_{\beta}-x_{\alpha})^{1/2})|\\\nonumber
                                           &\le \varphi(a^{*}(x_{\beta}-x_{\alpha})a)^{1/2}\varphi((x_{\beta}-x_{\alpha}))^{1/2}\\\nonumber
-                                          &\le (2M\varphi(a^{*}a)^{1/2}\varphi((x_{\beta}-x_{\alpha}))^{1/2}
+                                          &\le 2M\varphi(a^{*}a)^{1/2}\varphi((x_{\beta}-x_{\alpha}))^{1/2}
   \end{align}
   and by the positivity of $\varphi$ we have $|\varphi(a^{*}(x_{\beta}-x_{\alpha}))|=|\varphi((x_{\beta}-x_{\alpha})a)|$.
   It follows that $\varphi(a^{*}x_{\lambda}+x_{\lambda}a)\to \varphi(a^{*}x+xa)$, and the proof is finished.
 \end{proof}
 
 \subsection{Normal Implies Ultraweakly Continuous}
-
-\begin{lemma}
-  \label{lem:proj_of_sup_proj}
-  \uses{lem:sigma_cont_of_normal_Sak_1_7_4}
-  For every increasing bounded net $(p_{\alpha})$ of projections in $M$, the supremum $p$
-  is a projection in $M$
-\end{lemma}
 
 \begin{proof}
 \end{proof}
@@ -120,7 +113,7 @@ we also denote this induced order by ``$\le$''.
 
 \begin{lemma}
   \label{lem:msr_th_lemma}
-  \uses{lem:sigma_cont_of_normal_Sak_1_7_4,lem:proj_of_sup_proj,cor:proj_sub_of_subproj}
+  \uses{lem:sigma_cont_of_normal_Sak_1_7_4,prop:proj_compl_lat_wstar_Sak_1_10_2,cor:proj_sub_of_subproj}
 For all positive linear functionals $\varphi,\psi$ with
 $\varphi$ normal and $\psi$ $\sigma(M,M_{*})$--continuous and every nonzero $p\in \mathcal{P}(M)$
 such that $\varphi(p)<\psi(p)$, there exists a nonzero $p_1 \in \mathcal{P}(M)$ such that $p_1\le p$ and for all nonzero
@@ -132,7 +125,7 @@ $q\in \mathcal{P}(M)$ with $q\le p_1$, we have $\varphi(q)<\psi(q)$.
   $p_1$ of $p$ there is a nonzero subprojection $q\le p_1$ such that $\varphi(q)\ge \psi(q)$. In particular,
   (letting $p_1=q$) there is a $q\le p$ such that $\varphi(q)\ge \psi(q)$. If $(q_\alpha)$ is a chain
   of such nonzero projections, $q_{\alpha}\to \sup q_{\alpha}$ in the $\sigma$--topology by Theorem \ref{lem:sigma_cont_of_normal_Sak_1_7_4}, 
-  and by Lemma \ref{lem:proj_of_sup_proj} we know this supremum is a subprojection of $p_1$. Since $\varphi$
+  and by Lemma \ref{prop:proj_compl_lat_wstar_Sak_1_10_2} we know this supremum is a subprojection of $p_1$. Since $\varphi$
   is positive and normal, and $\psi$ is positive and $\sigma$--continuous, we have $\varphi(\sup q_{\alpha})\ge \psi(\sup q_{\alpha})$.
   Therefore, by Zorn's Lemma, there is a maximal $q_{0}\le p$ such that $\varphi(q_0)\ge \psi(q_0)$. We claim $q_{0}=p$. If not, 
   $p-q_0$ is a nonzero subprojection of $p$ by Corollary \ref{cor:proj_sub_of_subproj}, and there exists a nonzero projection $q_{1}\le p-q_{0}$
@@ -146,14 +139,14 @@ of Theorem \ref{thm:sigma_cts_of_normal_Sak_1_13_2}.
 
 \begin{lemma}
   \label{lem:zorn_base}
-  \uses{cor:proj_sub_of_subproj,lem:selfadjoint_le_norm,lem:sigma_cont_of_normal_Sak_1_7_4,lem:proj_of_sup_proj,def:sigma_top}
+  \uses{cor:proj_sub_of_subproj,lem:selfadjoint_le_norm,lem:sigma_cont_of_normal_Sak_1_7_4,prop:proj_compl_lat_wstar_Sak_1_10_2,def:sigma_top}
   Let $\varphi$ be a normal positive linear functional on $M$ and consider the predicate $P:\mathcal{P}(M)\to \text{Prop}$ defined, for $p\in \mathcal{P}(M)$, by 
   ``$M\ni x \mapsto \varphi(xp)$ is $\sigma(M,M_{*})$--continuous''. If $(p_{\alpha})$ is a chain of projections in $M$ such that $P(p_{\alpha})$ is true for each $\alpha$,
   then $P(\sup(p_{\alpha}))$ is true. Hence by Zorn's Lemma there is a maximal $p_0\in \mathcal{P}(M)$ such that $P(p_0)$ is true.  
 \end{lemma}
 
 \begin{proof}
-  Let $x$ be on the unit sphere and let $p$ be the supremum of the $p_{\alpha}$. By Theorem \ref{lem:sigma_cont_of_normal_Sak_1_7_4} and Lemma \ref{lem:proj_of_sup_proj} 
+  Let $x$ be on the unit sphere and let $p$ be the supremum of the $p_{\alpha}$. By Theorem \ref{lem:sigma_cont_of_normal_Sak_1_7_4} and Lemma \ref{prop:proj_compl_lat_wstar_Sak_1_10_2} 
   we know $p_{\alpha}$ converges in $\sigma$--topology to $p$, and $p$ is a projection. 
   By Corollary \ref{cor:proj_sub_of_subproj} we know $p-p_\alpha$ is a projection. By the $C^{*}$--property
   of the norm ($\|x^{*}x\|=\|x\|^{2}$), Lemma \ref{lem:selfadjoint_le_norm} and the positivity of $\varphi$ we have $\varphi(x^{*}x)\le \varphi(1)$.

@@ -26,6 +26,14 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
   $\|x^{*}x\|=\|x\|^{2}$ holds for every $x\in \mathcal{A}$.
 \end{definition}
 
+\begin{theorem}
+  \label{thm:cstar_unital_iff_extreme_Sak_1_6_1} (Sakai 1.6.1)
+  A $C^{*}$--algebra is unital if and only if its closed unit ball has an extreme point.
+\end{theorem}
+
+\begin{proof}
+\end{proof}
+
 \begin{definition}
   \label{def:wstar_def}
   \uses{def:cstar_def}
@@ -33,14 +41,14 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
   $M_{*}$ so that $(M_{*})^{*}$ is isometrically isomorphic to $M$. We call $M_{*}$ a \textbf{predual} of $M$. 
 \end{definition}
 
+Note: It is premature to fix a notation like $M_{*}$ in the above, but the aim of this project is to prove that any two 
+preduals of $M$ are isomorphic as Banach spaces, so we take the liberty with Sakai to ``fix a reference predual'' at the outset.
+
 \begin{definition}
   \label{def:sigma_top}
   \uses{def:wstar_def}
   The weak-$*$ topology $\sigma(M,M_{*})$ on a $W^{*}$--algebra $M$ is called the $\sigma$--topology.
 \end{definition}
-
-It is indeed premature to fix a notation like $M_{*}$ in the above, but the aim of this project is to prove that any two 
-preduals of $M$ are isomorphic as Banach spaces, so we take the liberty with Sakai to ``fix a reference predual'' at the outset.
 
 \begin{lemma}
     \label{lem:sigma_closed_star_subalg_wstar} (Sakai 1.1.4)
@@ -50,6 +58,17 @@ preduals of $M$ are isomorphic as Banach spaces, so we take the liberty with Sak
 \end{lemma}
 
 \begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:wstar_unital}
+  \uses{thm:cstar_unital_iff_extreme_Sak_1_6_1}
+  Every $W^{*}$--algebra is unital.
+\end{lemma}
+
+\begin{proof}
+  The norm unit ball of $M=(M_{*})^{*}$ is closed in the $\sigma$--topology, is convex, and so has an extreme point by the Krein-Milman Theorem.
+  By Theorem \ref{thm:cstar_unital_iff_extreme_Sak_1_6_1}, the result follows.
 \end{proof}
 
 \begin{lemma}
