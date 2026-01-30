@@ -1,4 +1,4 @@
-\section{Normality and Ultraweak Continuity for Positive Functionals}
+\chapter{Normality and Ultraweak Continuity for Positive Functionals}
 
 In what follows, let $M$ be a (nonzero) $W^{*}$--algebra. Let $\mathcal{P}(M)$
 denote the projection lattice of $M$. Let $\varphi$ be a positive linear functional $\varphi$ on $M$.
@@ -7,7 +7,7 @@ we have $\varphi(p_{\alpha})\to \varphi(p)$. In this section we show that this p
 $\sigma(M, M_{*})$--continuity. We say that a linear functional $\varphi$ on $M$
 is \textbf{positive} if $\varphi(x)\ge 0$ whenever $x\ge 0$.
 
-\subsection{Ultraweakly Continuous Implies Normal} 
+\section{Ultraweakly Continuous Implies Normal} 
 
 In what follows, let $T$ denote the set of all $\sigma$--continuous positive
 linear functionals on $M$, and $E$ the linear space of all finite linear combinations
@@ -41,7 +41,7 @@ of elements of $T$. Let $P$ denote the set of positive elements of $M$.
 
 \begin{theorem}
   \label{lem:sigma_cont_of_normal_Sak_1_7_4} (Sak 1.7.4)
-  \uses{thm:Banach_Alaoglu,lem:homeo_of_cts_bij_cpt_haus,lem:uw_pos_sep_pts,lem:selfadjoint_le_norm,def:sigma_top}
+  \uses{thm:Banach_Alaoglu,lem:homeo_of_cts_bij_cpt_haus,lem:uw_pos_sep_pts,lem:selfadjoint_le_norm,def:sigma_top,thm:comm_cstar_cts_fcns_Sak_1_2_1}
   Every uniformly bounded, increasing net in $M^{s}$ converges
   to its least upper bound in the $\sigma$--topology. Further, if
   $x=\sup_{\lambda}x_{\lambda}$ then $a^{*}xa=\sup_{\lambda}a^{*}x_{\lambda}a$.
@@ -89,7 +89,7 @@ of elements of $T$. Let $P$ denote the set of positive elements of $M$.
   It follows that $\varphi(a^{*}x_{\lambda}+x_{\lambda}a)\to \varphi(a^{*}x+xa)$, and the proof is finished.
 \end{proof}
 
-\subsection{Normal Implies Ultraweakly Continuous}
+\section{Normal Implies Ultraweakly Continuous}
 
 \begin{proof}
 \end{proof}
@@ -173,8 +173,7 @@ of Theorem \ref{thm:sigma_cts_of_normal_Sak_1_13_2}.
 
 \begin{theorem}
   \label{thm:sigma_cts_of_normal_Sak_1_13_2} (Sak 1.13.2)
-  \uses{def:sigma_top}
-  \uses{lem:zorn_base,lem:exists_uw_ge_normal,lem:msr_th_lemma,lem:cut_down_of_wstar,lem:spec_masa_wstar_stonean_Sak_1_7_5,lem:fin_lin_approx_of_stonean_Sak_1_3_1,lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10,lem:wstar_of_masa}
+  \uses{def:sigma_top,cor:sigma_eq_s_on_ball,lem:zorn_base,lem:exists_uw_ge_normal,lem:msr_th_lemma,lem:cut_down_of_wstar,lem:spec_masa_wstar_stonean_Sak_1_7_5,lem:fin_lin_approx_of_stonean_Sak_1_3_1,lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10,lem:wstar_of_masa}
   Every positive normal linear functional $\varphi$ on $M$ is $\sigma(M,M_{*})$--continuous.
 \end{theorem}
 
@@ -196,7 +195,7 @@ of Theorem \ref{thm:sigma_cts_of_normal_Sak_1_13_2}.
   \end{align}
   Since $x\mapsto \varphi(xp_0)$ is $\sigma$--continuous, it is $s$-continuous by Lemma \ref{lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10}. The seminorm
   $x \mapsto \psi(px^{*}xp)^{1/2}$ is a defining seminorm for the $s$--topology on $M$. It follows that $x\mapsto \varphi(x(p_0+p))$ is $s$-continuous
-  and therefore $\sigma$--continuous. This contradicts the maximality of $p_0$, and therefore $p_0=1$ and the result follows. 
+  and therefore $\sigma$--continuous, by Corollary \ref{cor:sigma_eq_s_on_ball}. This contradicts the maximality of $p_0$, and therefore $p_0=1$ and the result follows. 
 \end{proof}
 
 The above result gives us that the $\sigma$-weak continuity of a positive functional is determined entirely by the order structure on $M$,

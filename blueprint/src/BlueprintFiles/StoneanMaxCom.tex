@@ -1,4 +1,4 @@
-\section{Stonean Spaces and Maximal Commutative Subalgebras}
+\chapter{Stonean Spaces and Maximal Commutative Subalgebras}
 
 Recall that a compact Hausdorff space is \textbf{Stonean} if the closure of every open set is open. We note that Lemma
 \ref{lem:fin_lin_approx_of_stonean_Sak_1_3_1} is only part of Sakai 1.3.1, since that is all
@@ -9,6 +9,7 @@ If $K$ is Stonean, there are many such connected components:
 
 \begin{lemma}
   \label{lem:fin_lin_approx_of_stonean_Sak_1_3_1} (Sak  1.3.1)
+  \uses{cor:spec_sa_homeo_spec_cstar}
   Let $K$ be a Stonean space. Then every positive self-adjoint element $a$ in $C(K)$ can be uniformly approximated by 
   finite linear combinations of projections in $C(K)$ having nonnegative coefficients. 
 \end{lemma}
@@ -73,7 +74,7 @@ the \textbf{support} of $f\in C(K)$ is $\overline{\{x\in K | f(x)\ne 0\}}$.
 
 \begin{lemma}
   \label{lem:spec_masa_wstar_stonean_Sak_1_7_5} (Sak 1.7.5)
-  \uses{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2,def:cstar_def}
+  \uses{prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2,def:cstar_def,thm:comm_cstar_cts_fcns_Sak_1_2_1}
   If $C$ is any maximal commutative $C^*$--subalgebra of the $W^{*}$--algebra $M$, its
   spectrum space (maximal ideal space) is Stonean.
 \end{lemma}
