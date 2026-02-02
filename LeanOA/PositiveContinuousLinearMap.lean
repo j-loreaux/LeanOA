@@ -3,8 +3,14 @@ import Mathlib.Topology.Algebra.Module.LinearMap
 import Mathlib.Algebra.Order.Star.Basic
 import Mathlib.Analysis.Complex.Basic
 
+/-- A class to encode that selfadjoint elements may be expressed as the
+difference of nonnegative elements. This is satisfied by types with a
+`NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint` instance.
+
+This allows us to show that `PositiveLinearMap` is a `StarHomClass`. -/
 class SelfAdjointDecompose (R : Type*) [AddGroup R] [Star R]
     [PartialOrder R] where
+  /-- Every selfadjoint element is the difference of nonnegatives elements. -/
   exists_nonneg_sub_nonnpos {a : R} (ha : IsSelfAdjoint a) :
     ∃ (b c : R), 0 ≤ b ∧ 0 ≤ c ∧ a = b - c
 
