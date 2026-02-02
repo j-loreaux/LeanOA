@@ -1,5 +1,57 @@
 import Mathlib.Algebra.Order.Module.PositiveLinearMap
 import Mathlib.Topology.Algebra.Module.LinearMap
+import Mathlib.Algebra.Order.Star.Basic
+import Mathlib.Analysis.Complex.Basic
+
+class SelfAdjointDecompose (R : Type*) [AddGroup R] [Star R]
+    [PartialOrder R] where
+  exists_nonneg_sub_nonnpos {a : R} (ha : IsSelfAdjoint a) :
+    ∃ (b c : R), 0 ≤ b ∧ 0 ≤ c ∧ a = b - c
+
+lemma IsSelfAdjoint.exists_nonneg_sub_nonpos {R : Type*} [AddGroup R] [Star R]
+    [PartialOrder R] [SelfAdjointDecompose R] {a : R} (ha : IsSelfAdjoint a) :
+    ∃ (b c : R), 0 ≤ b ∧ 0 ≤ c ∧ a = b - c :=
+  SelfAdjointDecompose.exists_nonneg_sub_nonnpos ha
+
+namespace PositiveLinearMap
+
+variable {R E₁ E₂ : Type*} [Semiring R]
+    [AddCommGroup E₁] [PartialOrder E₁]
+    [NonUnitalRing E₂] [PartialOrder E₂]
+    [Star E₁] [StarRing E₂] [StarOrderedRing E₂]
+    [Module R E₁] [Module R E₂] [SelfAdjointDecompose E₁]
+
+lemma map_isSelfAdjoint (f : E₁ →ₚ[R] E₂) {a : E₁} (ha : IsSelfAdjoint a) :
+    IsSelfAdjoint (f a) := by
+  obtain ⟨b, c, hb, hc, rfl⟩ := ha.exists_nonneg_sub_nonpos
+  cfc_tac
+
+section StarHomClass
+open ComplexStarModule
+
+variable {A₁ A₂ : Type*} [AddCommGroup A₁] [Module ℂ A₁]
+    [PartialOrder A₁] [StarAddMonoid A₁] [SelfAdjointDecompose A₁]
+    [NonUnitalRing A₂] [Module ℂ A₂]
+    [StarRing A₂] [PartialOrder A₂] [StarOrderedRing A₂]
+    [StarModule ℂ A₁] [StarModule ℂ A₂]
+
+instance : StarHomClass (A₁ →ₚ[ℂ] A₂) A₁ A₂ where
+  map_star φ x := by
+    rw [← realPart_add_I_smul_imaginaryPart x]
+    simp [φ.map_isSelfAdjoint (ℜ x).2, IsSelfAdjoint.star_eq,
+      φ.map_isSelfAdjoint (ℑ x).2]
+
+lemma map_realPart (φ : A₁ →ₚ[ℂ] A₂) (x : A₁) :
+    φ (ℜ x) = ℜ (φ x) := by
+  simp [realPart_apply_coe, map_star]
+
+lemma map_imaginaryPart (φ : A₁ →ₚ[ℂ] A₂) (x : A₁) :
+    φ (ℑ x) = ℑ (φ x) := by
+  simp [imaginaryPart_apply_coe, map_star]
+
+end StarHomClass
+
+end PositiveLinearMap
 
 /-- A `PositiveContinuousLinearMap` is a linear map which is both
 positive and continuous. This comes equipped with the notation
@@ -88,5 +140,28 @@ lemma mk₀_apply (f : E₁ →L[R] E₂) (hf : ∀ x, 0 ≤ x → 0 ≤ f x) (x
     mk₀ f hf x = f x := rfl
 
 end AddGroup
+
+section StarHomClass
+open scoped ComplexStarModule
+
+variable {A₁ A₂ : Type*} [AddCommGroup A₁] [Module ℂ A₁]
+    [PartialOrder A₁] [StarAddMonoid A₁] [SelfAdjointDecompose A₁]
+    [NonUnitalRing A₂] [Module ℂ A₂]
+    [StarRing A₂] [PartialOrder A₂] [StarOrderedRing A₂]
+    [StarModule ℂ A₁] [StarModule ℂ A₂]
+    [TopologicalSpace A₁] [TopologicalSpace A₂]
+
+instance : StarHomClass (A₁ →P[ℂ] A₂) A₁ A₂ where
+  map_star f := map_star f.toPositiveLinearMap
+
+lemma map_realPart (φ : A₁ →P[ℂ] A₂) (x : A₁) :
+    φ (ℜ x) = ℜ (φ x) := by
+  simp [realPart_apply_coe, map_star]
+
+lemma map_imaginaryPart (φ : A₁ →P[ℂ] A₂) (x : A₁) :
+    φ (ℑ x) = ℑ (φ x) := by
+  simp [imaginaryPart_apply_coe, map_star]
+
+end StarHomClass
 
 end PositiveContinuousLinearMap
