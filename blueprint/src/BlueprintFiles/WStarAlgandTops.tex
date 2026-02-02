@@ -81,11 +81,14 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
 
 \begin{lemma}
   \label{lem:one_is_extreme}
+  \lean{CStarAlgebra.one_mem_extremePoints_closedUnitBall}
+  \leanok
   \uses{thm:comm_cstar_cts_fcns_Sak_1_2_1,lem:star_pres_norm_Sak_1_1_6}
   In a unital $C^{*}$--algebra $\mathcal{A}$, the identity $1$ is an extreme point of the closed unit sphere $S$.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Suppose $a,b\in S$ and $1=\frac{a+b}{2}$. Then, since $1=1^{*}$, we have $1=\frac{a^{*}+b^{*}}{2}$ and one checks that $1=\frac{c+d}{2}$,
   where $c=\frac{a+a^{*}}{2}$ and $d=\frac{b+b^{*}}{2}$. Now, $d=2-c$ and so $d$ and $c$ commute and each are self-adjoint (hence normal) 
   and therefore $C^{*}\{1,d,c\}$ is commutative and can be identified with $C(K)$ for a compact Hausdorff space $K$. 
