@@ -1,30 +1,166 @@
-import LeanOA.Ultraweak.Basic
+import LeanOA.Ultraweak.ContinuousStar
 import LeanOA.PositiveContinuousLinearMap
 import Mathlib.Analysis.LocallyConvex.WeakDual
-import Mathlib.Analysis.LocallyConvex.Separation
+import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
+import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 
-instance ContinuousSMul.complexToReal {E : Type*} [AddCommGroup E] [Module ℂ E] [TopologicalSpace E]
-    [ContinuousSMul ℂ E] : ContinuousSMul ℝ E :=
-  IsScalarTower.continuousSMul ℂ
+open scoped Ultraweak ComplexOrder ComplexStarModule
 
-open scoped Ultraweak ComplexOrder
+@[simp]
+theorem Complex.real_le_zero {x : ℝ} : (x : ℂ) ≤ 0 ↔ x ≤ 0 := by
+  simp [← ofReal_zero]
+
+@[simp]
+theorem Complex.real_lt_zero {x : ℝ} : (x : ℂ) < 0 ↔ x < 0 := by
+  simp [← ofReal_zero]
+
+class SelfAdjointDecompose (R : Type*) [AddGroup R] [Star R]
+    [PartialOrder R] where
+  exists_nonneg_sub_nonnpos {a : R} (ha : IsSelfAdjoint a) :
+    ∃ (b c : R), 0 ≤ b ∧ 0 ≤ c ∧ a = b - c
+
+lemma IsSelfAdjoint.exists_nonneg_sub_nonpos {R : Type*} [AddGroup R] [Star R]
+    [PartialOrder R] [SelfAdjointDecompose R] {a : R} (ha : IsSelfAdjoint a) :
+    ∃ (b c : R), 0 ≤ b ∧ 0 ≤ c ∧ a = b - c :=
+  SelfAdjointDecompose.exists_nonneg_sub_nonnpos ha
+
+instance CFC.instSelfAdjointDecompose {A : Type*} [NonUnitalRing A] [Module ℝ A]
+    [SMulCommClass ℝ A A] [IsScalarTower ℝ A A] [StarRing A] [TopologicalSpace A]
+    [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint] [PartialOrder A]
+    [StarOrderedRing A] : SelfAdjointDecompose A where
+  exists_nonneg_sub_nonnpos {a} ha :=
+    ⟨a⁺, a⁻, CFC.posPart_nonneg a, CFC.negPart_nonneg a, (posPart_sub_negPart a ha).symm⟩
+
+namespace PositiveLinearMap
+
+variable {R E₁ E₂ : Type*} [Semiring R]
+    [AddCommGroup E₁] [PartialOrder E₁]
+    [NonUnitalRing E₂] [PartialOrder E₂]
+    [Star E₁] [StarRing E₂] [StarOrderedRing E₂]
+    [Module R E₁] [Module R E₂] [SelfAdjointDecompose E₁]
+
+lemma map_isSelfAdjoint (f : E₁ →ₚ[R] E₂) {a : E₁} (ha : IsSelfAdjoint a) :
+    IsSelfAdjoint (f a) := by
+  obtain ⟨b, c, hb, hc, rfl⟩ := ha.exists_nonneg_sub_nonpos
+  cfc_tac
+
+variable {A₁ A₂ : Type*} [AddCommGroup A₁] [Module ℂ A₁]
+    [PartialOrder A₁] [StarAddMonoid A₁] [SelfAdjointDecompose A₁]
+    [NonUnitalRing A₂] [Module ℂ A₂]
+    [StarRing A₂] [PartialOrder A₂] [StarOrderedRing A₂]
+    [StarModule ℂ A₁] [StarModule ℂ A₂]
+
+instance : StarHomClass (A₁ →ₚ[ℂ] A₂) A₁ A₂ where
+  map_star φ x := by
+    rw [← realPart_add_I_smul_imaginaryPart x]
+    simp [φ.map_isSelfAdjoint (ℜ x).2, IsSelfAdjoint.star_eq,
+      φ.map_isSelfAdjoint (ℑ x).2]
+
+lemma map_realPart (φ : A₁ →ₚ[ℂ] A₂) (x : A₁) :
+    φ (ℜ x) = ℜ (φ x) := by
+  simp [realPart_apply_coe, map_star]
+
+lemma map_imaginaryPart (φ : A₁ →ₚ[ℂ] A₂) (x : A₁) :
+    φ (ℑ x) = ℑ (φ x) := by
+  simp [imaginaryPart_apply_coe, map_star]
+
+end PositiveLinearMap
+
+namespace PositiveContinuousLinearMap
+
+variable {A₁ A₂ : Type*} [AddCommGroup A₁] [Module ℂ A₁]
+    [PartialOrder A₁] [StarAddMonoid A₁] [SelfAdjointDecompose A₁]
+    [NonUnitalRing A₂] [Module ℂ A₂]
+    [StarRing A₂] [PartialOrder A₂] [StarOrderedRing A₂]
+    [StarModule ℂ A₁] [StarModule ℂ A₂]
+    [TopologicalSpace A₁] [TopologicalSpace A₂]
+
+instance : StarHomClass (A₁ →P[ℂ] A₂) A₁ A₂ where
+  map_star f := map_star f.toPositiveLinearMap
+
+lemma map_realPart (φ : A₁ →P[ℂ] A₂) (x : A₁) :
+    φ (ℜ x) = ℜ (φ x) := by
+  simp [realPart_apply_coe, map_star]
+
+lemma map_imaginaryPart (φ : A₁ →P[ℂ] A₂) (x : A₁) :
+    φ (ℑ x) = ℑ (φ x) := by
+  simp [imaginaryPart_apply_coe, map_star]
+
+end PositiveContinuousLinearMap
+
+namespace Ultraweak
 
 variable {M P : Type*} [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M]
 variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P] [CompleteSpace P]
 
--- Sakai 1.7.2
-lemma sakai_1_7_2 (a : σ(M, P)) (ha₁ : IsSelfAdjoint a) (ha₂ : ¬ 0 ≤ a) :
-    ∃ φ : σ(M, P) →P[ℂ] ℂ, φ.toPositiveLinearMap a < 0 := by
-  -- need a funlike instance
+instance : StarHomClass (σ(M, P) →ₚ[ℂ] ℂ) σ(M, P) ℂ :=
+  inferInstanceAs (StarHomClass (M →ₚ[ℂ] ℂ) M ℂ)
+
+open Complex
+/-- If `a : σ(M, P)` is a selfadjoint element which is not nonnegative, then there is some
+positive continuous linear functional which takes a negative value at `a`.
+
+This is Sakai 1.7.2. Our approach is essentially the same, but instead of applying
+Hahn-Banach to the `ℝ`-locally convex space of selfadjoint elements and then extending this
+functional to `ℂ`-linear one defined everywhere, we apply it for `σ(M, P)` and then
+precompose with the real part before extending to a `ℂ`-linear functional. -/
+lemma exists_positiveCLM_apply_lt_zero (a : σ(M, P)) (ha₁ : IsSelfAdjoint a) (ha₂ : ¬ 0 ≤ a) :
+    ∃ φ : σ(M, P) →P[ℂ] ℂ, φ a < 0 := by
+  /- Since the nonnegative elements form a convex set, by the Hahn-Banach theorem,
+  there is a continuous `ℝ`-linear functional `f` which separates them. Moreover,
+  since the positive elements are an `ℝ`-convex cone, `f` must be nonnegative on
+  nonnegative elements, so that `f a < 0`. -/
   have h₁ : Convex ℝ {x : σ(M, P) | 0 ≤ x} := ConvexCone.positive ℝ σ(M, P) |>.convex
-  have h₂ : LocallyConvexSpace ℝ σ(M, P) := inferInstance
-  have h₃ : IsClosed {x : σ(M, P) | 0 ≤ x} := sorry
-  obtain ⟨f, u, hfa, hf⟩ := geometric_hahn_banach_point_closed h₁ h₃ ha₂
+  obtain ⟨f, u, hfa, hf⟩ := geometric_hahn_banach_point_closed h₁ Ultraweak.isClosed_nonneg ha₂
+  have hu : u < 0 := map_zero f ▸ hf 0 le_rfl
   have hf_nonneg (x : σ(M, P)) (hx : 0 ≤ x) : 0 ≤ f x := by
     by_contra! hfx
-    have hu : u < 0 := hf x hx |>.trans hfx
     have : 0 < u * (f x)⁻¹ := mul_pos_of_neg_of_neg hu (inv_neg''.mpr hfx)
     simpa [hfx.ne] using hf _ (smul_nonneg this.le hx)
-  -- next we extend `f` to `ℂ`, then show the nonnegativity is preserved
-  -- and that's our desired map. Piece of cake!
-  sorry
+  replace hfa := hfa.trans hu
+  clear u hu hf
+  /- `g := x ↦ f (ℜ x)` is a continuous `ℝ`-linear functional, and we may extend
+  it to a continuous `𝕜`-linear functional `φ := x ↦ f (ℜ x) + I • f (ℑ x)`. -/
+  let g : StrongDual ℝ σ(M, P) := (2⁻¹ : ℝ) • (f + f ∘L (starL' ℝ (A := σ(M, P))))
+  have hfg (x : σ(M, P)) : g x = f (ℜ x) := by simp [g, realPart_apply_coe]
+  let φ : StrongDual ℂ σ(M, P) := g.extendRCLike
+  have hφ (x : σ(M, P)) : φ x = f (ℜ x) + I • f (ℑ x) := by
+    conv_lhs =>
+      rw [← realPart_add_I_smul_imaginaryPart x, map_add, map_smul]
+      simp [φ, StrongDual.extendRCLike_apply, hfg, ← smul_eq_mul]
+  have hφ_sa {x : σ(M, P)} (hx : IsSelfAdjoint x) : φ x = f x := by
+    simp [hφ, hx.imaginaryPart, hx.coe_realPart]
+  /- Since `f` is nonnegative and coincides with `φ` on selfadjoint elements,
+  `φ` is the desired positive continuous linear map. -/
+  use .mk₀ φ fun x hx ↦ by simpa [hφ_sa hx.isSelfAdjoint] using hf_nonneg x hx
+  simpa [hφ_sa, ha₁]
+
+instance : SelfAdjointDecompose σ(M, P) where
+  exists_nonneg_sub_nonnpos {a} ha := by
+    have ⟨_, _, _, _, key⟩ := ha.ofUltraweak.exists_nonneg_sub_nonpos
+    replace key := by simpa using congr(toUltraweak ℂ P $key)
+    exact ⟨_, _, by simpa, by simpa, key⟩
+
+lemma eq_zero_of_forall_positiveCLM (a : σ(M, P))
+    (ha : ∀ φ : σ(M, P) →P[ℂ] ℂ, φ a = 0) :
+    a = 0 := by
+  suffices ∀ {a}, IsSelfAdjoint a → (∀ φ : σ(M, P) →P[ℂ] ℂ, φ a = 0) → a = 0 by
+    have ⟨h₁, h₂⟩ := And.intro (this (ℜ a).2 (fun φ ↦ ?_)) (this (ℑ a).2 (fun φ ↦ ?_))
+    · simpa [realPart_add_I_smul_imaginaryPart] using congr($h₁ + I • $h₂)
+    · simp [φ.map_realPart, ha]
+    · simp [φ.map_imaginaryPart, ha]
+  intro a ha h
+  have h₁ := by simpa using mt <| exists_positiveCLM_apply_lt_zero _ ha
+  have h₂ := by simpa using mt <| exists_positiveCLM_apply_lt_zero _ ha.neg
+  refine le_antisymm (h₂ ?_) (h₁ ?_)
+  all_goals simp [h]
+
+lemma ext_positiveCLM {a b : σ(M, P)} (h : ∀ φ : σ(M, P) →P[ℂ] ℂ, φ a = φ b) :
+    a = b :=
+  sub_eq_zero.mp <| eq_zero_of_forall_positiveCLM _ fun φ ↦ by simp [h]
+
+lemma ext_positiveCLM_iff {a b : σ(M, P)} :
+    a = b ↔ ∀ φ : σ(M, P) →P[ℂ] ℂ, φ a = φ b :=
+  ⟨by congr!, ext_positiveCLM⟩
+
+end Ultraweak
