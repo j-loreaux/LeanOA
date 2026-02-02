@@ -58,7 +58,7 @@ lemma MemStandard.of_memℓp {x : Π i, E i} (hx : Memℓp (‖x ·‖) 2) :
   Summable.of_norm <| by simpa [← norm_sq_eq, memℓp_gen_iff] using hx
 
 lemma MemStandard.zero : MemStandard A (0 : Π i, E i) := by
-  simpa [MemStandard] using summable_zero
+  simp [MemStandard]
 
 lemma MemStandard.neg {x : Π i, E i} (hx : MemStandard A x) :
     MemStandard A (-x) := by
