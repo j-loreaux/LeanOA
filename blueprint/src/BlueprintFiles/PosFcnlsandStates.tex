@@ -1,0 +1,66 @@
+\chapter{Positive Linear Functionals and States}
+
+%Will continue to chase results backwards in Sakai. Note that the norm on a $C^{*}$--algebra
+%is uniquely determined (we will include the needed results for this above and remove this
+%comment once we have). The following proposition characterizes it in terms of the states on 
+%$\mathcal{A}$, also establishing that states separate the elements of $\mathcal{A}$. Let
+%$\mathcal{S}$ denote the set of states on the appropriate $C^{*}$--algebra in the sequel.
+
+%\begin{proposition}
+%  \label{prop:norm_as_state_sup}
+%  Let $h$ be a self-adjoint element in a $C^{*}$--algebra $\mathcal{A}$.
+%  then $\|h\|=\sup_{\varphi\in \mathcal{S}}|\varphi(h)|$.
+%\end{proposition}
+
+%\begin{proof}
+%\end{proof}
+
+Let $M$ be a $W^{*}$--algebra and let $T$ denote the set of all $\sigma$--continuous positive
+linear functionals on $M$, and $E$ the linear space of all finite linear combinations
+of elements of $T$. Let $P$ and $M^{s}$ denote the set of positive elements and set of self-adjoint elements of $M$, respectively.
+
+\begin{lemma}
+  \label{lem:pos_cvx_cone}
+  $P$ is a convex cone in $M$.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:pos_sa_sigma_closed_Sak_1_7_1} (Sak 1.7.1)
+  \uses{def:sigma_top}
+  $P$ and $M^{s}$ are $\sigma$--closed.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2} (Sak 1.7.2)
+  \uses{def:sigma_top}
+  \uses{lem:pos_cvx_cone,lem:pos_sa_sigma_closed_Sak_1_7_1}
+  For any self-adjoint element $a\notin P$, there exists $\varphi\in T$
+  such that $\varphi(a)<0$.
+\end{lemma}
+
+\begin{proof}
+  By Lemmas \ref{lem:pos_cvx_cone} and \ref{lem:pos_sa_sigma_closed_Sak_1_7_1}, $P$ is a $\sigma$--closed convex cone in 
+  the real locally convex space $M^{s}$. By the Hahn-Banach Separation Theorem, there is a $\sigma$--continuous real linear functional $g$
+  on $M^{s}$ such that $\inf_{h\in P}g(h)>g(a)$. Since $P$ is a cone, if $g(h)<0$ then we could scale $h$ by a positive constant so $g(ch)\le g(a)$, which
+  is nonsense. Therefore $g(h)\ge 0$ for all $h\ge 0$, and the infimum above must be zero (which can again by seen by scaling). It follows that
+  $0>g(a)$. To appropriately extend $g$ to a functional on $M$, define $\varphi(a + ib)=g(a)+ig(b)$ for any $a,b \in M^{s}$. This $\varphi$ is a (complex) linear 
+  functional on $M$, and the $*$--operation is $\sigma$--continuous because $M^{s}$ is $\sigma$--closed (by Lemma \ref{lem:pos_sa_sigma_closed_Sak_1_7_1}).
+  It follows that $\varphi$ is a $\sigma$--continuous positive linear functional on $M$ such that $\varphi(a)=g(a)<0$.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:uw_pos_sep_pts}
+  \uses{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2,def:sigma_top}
+If $a\in M$, and $\psi(a)=0$ for every $\psi\in T$, then $a=0$.
+\end{lemma}
+
+\begin{proof}
+  Given nonzero $a\in P$ in $M$, since $P$ is a cone, $-a \notin P$. By Lemma \ref{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2}, there is
+  a $\varphi\in T$ such that $\varphi(-a)<0$, hence $\varphi(a)>0$. The desired statement follows by contraposition.
+\end{proof}
