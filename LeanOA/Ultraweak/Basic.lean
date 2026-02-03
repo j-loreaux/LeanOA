@@ -63,15 +63,13 @@ lemma ofUltraweak_add (x y : σ(M, P)_𝕜) :
 lemma toUltraweak_add (x y : M) :
     toUltraweak 𝕜 P (x + y) = toUltraweak 𝕜 P x + toUltraweak 𝕜 P y := rfl
 
--- probably we should generalize the `𝕜` here to a more general `SMul` so it will handle
--- `ℕ` and `ℤ` too.
 @[simp]
-lemma ofUltraweak_smul (a : 𝕜) (x : σ(M, P)_𝕜) : ofUltraweak (a • x) = a • ofUltraweak x := rfl
+lemma ofUltraweak_smul {R : Type*} [CommSemiring R] [Module R M]
+    (a : R) (x : σ(M, P)_𝕜) : ofUltraweak (a • x) = a • ofUltraweak x := rfl
 
--- probably we should generalize the `𝕜` here to a more general `SMul` so it will handle
--- `ℕ` and `ℤ` too.
 @[simp]
-lemma toUltraweak_smul (a : 𝕜) (x : M) : toUltraweak 𝕜 P (a • x) = a • toUltraweak 𝕜 P x := rfl
+lemma toUltraweak_smul {R : Type*} [CommSemiring R] [Module R M]
+    (a : R) (x : M) : toUltraweak 𝕜 P (a • x) = a • toUltraweak 𝕜 P x := rfl
 
 @[simp]
 lemma ofUltraweak_zero : ofUltraweak (0 : σ(M, P)_𝕜) = (0 : M) := rfl
@@ -165,13 +163,13 @@ lemma ofUltraweak_preimage_closedBall (x : M) (r : ℝ) :
   convert ofUltraweak_preimage ..
   simp
 
-lemma isCompact_closedBall (x : M) (r : ℝ) :
+lemma Ultraweak.isCompact_closedBall (x : M) (r : ℝ) :
     IsCompact (ofUltraweak ⁻¹' (Metric.closedBall x r) : Set (σ(M, P)_𝕜)) := by
   rw [ofUltraweak_preimage_closedBall]
   exact (weakDualCLE 𝕜 M P).toHomeomorph.isCompact_preimage.mpr <|
     WeakDual.isCompact_closedBall ..
 
-lemma isClosed_closedBall (x : M) (r : ℝ) :
+lemma Ultraweak.isClosed_closedBall (x : M) (r : ℝ) :
     IsClosed (ofUltraweak ⁻¹' (Metric.closedBall x r) : Set (σ(M, P)_𝕜)) :=
   isCompact_closedBall 𝕜 P x r |>.isClosed
 
@@ -188,6 +186,8 @@ namespace Ultraweak
 -- `def` which produces a `Predual` instance from a `WStarAlgebra` instance. This will allow us
 -- to work with the ultraweak topology in a proof without needing to carry around a predual.
 variable [CStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
+
+open scoped ComplexStarModule
 
 -- We don't want these intances to pollute `WeakBilin`, so we scope them to `Ultraweak`.
 /-- The ring structure on `σ(M, P)` it inherits from `M`. -/
@@ -281,6 +281,42 @@ lemma ofUltraweak_star (x : σ(M, P)) :
 lemma toUltraweak_star (x : M) :
     toUltraweak ℂ P (star x) = star (toUltraweak ℂ P x) := rfl
 
+@[simp]
+lemma ofUltraweak_realPart (a : σ(M, P)) :
+    ofUltraweak (ℜ a : σ(M, P)) = ℜ (ofUltraweak a) := rfl
+
+@[simp]
+lemma toUltraweak_realPart (a : M) :
+    toUltraweak ℂ P (ℜ a : M) = ℜ (toUltraweak ℂ P a) := rfl
+
+@[simp]
+lemma ofUltraweak_imaginaryPart (a : σ(M, P)) :
+    ofUltraweak (ℑ a : σ(M, P)) = ℑ (ofUltraweak a) := rfl
+
+@[simp]
+lemma toUltraweak_imaginaryPart (a : M) :
+    toUltraweak ℂ P (ℑ a : M) = ℑ (toUltraweak ℂ P a) := rfl
+
+@[simp]
+lemma ofUltraweak_nonneg [PartialOrder M] {x : σ(M, P)} :
+    0 ≤ ofUltraweak x ↔ 0 ≤ x :=
+  Iff.rfl
+
+@[simp]
+lemma toUltraweak_nonneg [PartialOrder M] {x : M} :
+    0 ≤ toUltraweak ℂ P x ↔ 0 ≤ x :=
+  Iff.rfl
+
+@[simp]
+lemma ofUltraweak_le [PartialOrder M] {x y : σ(M, P)} :
+    ofUltraweak x ≤ ofUltraweak y ↔ x ≤ y :=
+  Iff.rfl
+
+@[simp]
+lemma toUltraweak_le [PartialOrder M] {x y : M} :
+    toUltraweak ℂ P x ≤ toUltraweak ℂ P y ↔ x ≤ y :=
+  Iff.rfl
+
 variable (M P) in
 /-- The canonical ⋆-algebra equivalence between `σ(M, P)` and `M`. -/
 @[simps!]
@@ -292,12 +328,14 @@ variable [CStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual �
 
 open scoped Ultraweak
 
+@[simp]
 lemma isSelfAdjoint_ofUltraweak {x : σ(M, P)} :
     IsSelfAdjoint (ofUltraweak x) ↔ IsSelfAdjoint x := by
   simp [isSelfAdjoint_iff, ← Ultraweak.ofUltraweak_star]
 
 alias ⟨IsSelfAdjoint.of_ofUltraweak, IsSelfAdjoint.ofUltraweak⟩ := isSelfAdjoint_ofUltraweak
 
+@[simp]
 lemma isSelfAdjoint_toUltraweak {x : M} :
     IsSelfAdjoint (toUltraweak ℂ P x) ↔ IsSelfAdjoint x := by
   simp [isSelfAdjoint_iff, ← Ultraweak.toUltraweak_star]
