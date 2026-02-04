@@ -72,7 +72,8 @@ notation:25 E " →P[" R:25 "] " F:0 => PositiveContinuousLinearMap R E F
 
 /-- The `ContinuousLinearMap` underlying a `PositiveContinuousLinearMap`. -/
 add_decl_doc PositiveContinuousLinearMap.toContinuousLinearMap
-
+/-- The `PositiveLinearMap` underlying a `PositiveContinuousLinearMap`. -/
+add_decl_doc PositiveContinuousLinearMap.toPositiveLinearMap
 namespace PositiveContinuousLinearMap
 
 section General

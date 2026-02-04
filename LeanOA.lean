@@ -15,5 +15,7 @@ import LeanOA.TendstoZero.Defs
 import LeanOA.TendstoZero.StrongDual
 import LeanOA.Ultraweak.Basic
 import LeanOA.Ultraweak.ContinuousStar
+import LeanOA.Ultraweak.LUB
 import LeanOA.Ultraweak.OrderClosed
 import LeanOA.Ultraweak.SeparatingDual
+import LeanOA.WeakDual.UniformSpace
