@@ -1,4 +1,5 @@
 import LeanOA.TendstoZero.StrongDual
+import LeanOA.ForMathlib.Analysis.RCLike.Extend
 import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.LocallyConvex.Separation
 import Mathlib.Analysis.Normed.Module.WeakDual
@@ -284,9 +285,11 @@ end KreinSmulian
 
 open KreinSmulian
 
+variable [CompleteSpace E]
+
 /-- The **Krein-Smulian theorem**. If `A : Set (WeakDual 𝕜 E)` is convex and its intersection with
 arbitrarily large closed balls is closed, then `A` is itself closed (in the weak⋆ topology). -/
-theorem krein_smulian [CompleteSpace E] (A : Set (WeakDual 𝕜 E))
+theorem krein_smulian (A : Set (WeakDual 𝕜 E))
     (hA : ∃ᶠ r in atTop, IsClosed (A ∩ (toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) r)))
     (hA_conv : Convex 𝕜 A) : IsClosed A := by
   replace hA : KreinSmulianProperty A := .of_frequently _ hA
@@ -321,7 +324,7 @@ theorem krein_smulian [CompleteSpace E] (A : Set (WeakDual 𝕜 E))
 /-- The **Krein-Smulian theorem**. If `A : Submodule 𝕜 (WeakDual 𝕜 E)` and if
 the intersection of `A` with the closed unit ball is closed, then `A` is itself
 closed (in the weak⋆ topology). -/
-lemma krein_smulian_of_submodule [CompleteSpace E] (A : Submodule ℝ≥0 (WeakDual 𝕜 E))
+lemma krein_smulian_of_submodule (A : Submodule ℝ≥0 (WeakDual 𝕜 E))
     (hA : IsClosed ((A : Set (WeakDual 𝕜 E)) ∩ (toStrongDual ⁻¹' closedBall 0 1))) :
     IsClosed (A : Set (WeakDual 𝕜 E)) := by
   refine krein_smulian (A : Set (WeakDual 𝕜 E)) (Filter.Eventually.frequently ?_)
@@ -335,3 +338,28 @@ lemma krein_smulian_of_submodule [CompleteSpace E] (A : Submodule ℝ≥0 (WeakD
   · simp [mem_smul_set_iff_inv_smul_mem]
   · simp [mem_smul_set_iff_inv_smul_mem₀, Units.smul_def,
       NNReal.smul_def, norm_smul, inv_mul_le_one₀ hr]
+
+/-- A linear map from the weak dual of a Banach space to itself is continuous if
+it is continuous on the closed unit ball. -/
+lemma continuous_of_continuousOn (f : WeakDual 𝕜 E →ₗ[𝕜] WeakDual 𝕜 E)
+    (hf : ContinuousOn f (toStrongDual ⁻¹' Metric.closedBall 0 1)) : Continuous f := by
+  refine continuous_of_continuous_eval fun x ↦ ?_
+  let xf : Module.Dual 𝕜 (WeakDual 𝕜 E) :=
+    WeakBilin.eval _ x |>.toLinearMap |>.comp f
+  refine xf.continuous_of_isClosed_ker <| krein_smulian_of_submodule (xf.ker.restrictScalars ℝ≥0) ?_
+  rw [Set.inter_comm]
+  exact eval_continuous x |>.comp_continuousOn hf |>.preimage_isClosed_of_isClosed
+    (isClosed_closedBall 0 1) isClosed_singleton
+
+/-- A *real* linear man from the weak dual of a Banach space to itself is continuous
+if it is continuous on the closed unit ball. -/
+lemma continuous_of_continuousOn_of_real (f : WeakDual 𝕜 E →ₗ[ℝ] WeakDual 𝕜 E)
+    (hf : ContinuousOn f (toStrongDual ⁻¹' Metric.closedBall 0 1)) : Continuous f := by
+  refine WeakBilin.continuous_of_continuous_eval_re _ fun x ↦ ?_
+  let xf : Module.Dual ℝ (WeakDual 𝕜 E) :=
+    Module.Dual.extendRCLikeₗ.symm.toLinearMap
+      (WeakBilin.eval (topDualPairing 𝕜 E) x |>.toLinearMap) |>.comp f
+  refine xf.continuous_of_isClosed_ker <| krein_smulian_of_submodule (xf.ker.restrictScalars ℝ≥0) ?_
+  rw [Set.inter_comm]
+  refine RCLike.continuous_re.comp_continuousOn (eval_continuous x |>.comp_continuousOn hf)
+    |>.preimage_isClosed_of_isClosed (isClosed_closedBall 0 1) isClosed_singleton

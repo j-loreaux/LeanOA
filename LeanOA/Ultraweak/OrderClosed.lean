@@ -5,22 +5,30 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 open scoped NNReal Ultraweak ComplexStarModule Topology
 open Filter Complex
 
-variable {M P : Type*} [CStarAlgebra M]
-variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P] [CompleteSpace P]
+section KreinSmulian
 
+variable {𝕜 M P : Type*} [RCLike 𝕜] [NormedAddCommGroup M] [NormedSpace 𝕜 M]
+variable [NormedAddCommGroup P] [NormedSpace 𝕜 P] [Predual 𝕜 M P] [CompleteSpace P]
+
+variable [Module ℝ≥0 M] [IsScalarTower ℝ≥0 𝕜 M]
 /-- The Krein-Smulian theorem transferred from `WeakDual ℂ P` to `σ(M, P)`. This could
 generalize trivially from `ℂ` to `RCLike 𝕜`. -/
-protected lemma Ultraweak.krein_smulian_of_submodule (S : Submodule ℝ≥0 σ(M, P))
-    (hS : IsClosed ((S : Set σ(M, P)) ∩ ofUltraweak ⁻¹' (Metric.closedBall (0 : M) 1))) :
-    IsClosed (S : Set σ(M, P)) := by
-  have := (weakDualCLE ℂ M P).preimage_symm_preimage (S : Set σ(M, P))
+protected lemma Ultraweak.krein_smulian_of_submodule (S : Submodule ℝ≥0 (σ(M, P)_𝕜))
+    (hS : IsClosed ((S : Set (σ(M, P)_𝕜)) ∩ ofUltraweak ⁻¹' (Metric.closedBall (0 : M) 1))) :
+    IsClosed (S : Set (σ(M, P)_𝕜)) := by
+  have := (weakDualCLE 𝕜 M P).preimage_symm_preimage (S : Set (σ(M, P)_𝕜))
   rw [← this] at hS ⊢
   rw [ofUltraweak_preimage_closedBall, ← Set.preimage_inter] at hS
-  apply (weakDualCLE ℂ M P).toHomeomorph.isClosed_preimage.mp at hS
+  apply (weakDualCLE 𝕜 M P).toHomeomorph.isClosed_preimage.mp at hS
   refine .preimage (map_continuous _) ?_
   simp only [map_zero] at hS
   exact krein_smulian_of_submodule
-    (S.comap ((weakDualCLE ℂ M P).symm.restrictScalars ℝ≥0 |>.toLinearMap)) hS
+    (S.comap ((weakDualCLE 𝕜 M P).symm.restrictScalars ℝ≥0 |>.toLinearMap)) hS
+
+end KreinSmulian
+
+variable {M P : Type*} [CStarAlgebra M]
+variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P] [CompleteSpace P]
 
 lemma tendsto_sqrt_one_add_sq_sub_self_atTop :
     Tendsto (fun x : ℝ ↦ √(1 + x ^ 2) - x) atTop (𝓝 0) := by
