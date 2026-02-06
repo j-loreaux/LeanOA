@@ -34,20 +34,40 @@ theorem abstract_alg_squash {ε : ℝ≥0} (a : A) (ha : 0 ≤ a) (f : ℝ≥0 �
   · intro x hx
     exact abstract_squash2 (id x) f hf hfl
 
+theorem abstract_param_squash (a : A) (ε : ℝ≥0) (ha : 0 ≤ a) (f : ℝ≥0 → ℝ≥0 → ℝ≥0)
+   (hfc : ∀ ε, Continuous (f ε)) (hf0 : ∀ ε, f ε 0 = 0) (hf : ∀ ε, Set.EqOn (f ε) 1 (Set.Ici ε))
+     (hfl : ∀ ε, ∀ x ≤ ε, f ε x ≤ 1) : ‖a - a * cfcₙ (f ε) a‖₊ ≤ ε :=
+  abstract_alg_squash a ha (f ε) (hfc ε) (hf0 ε) (hf ε) (hfl ε)
+
+open Filter Set Function
+
+open scoped Topology
+
+theorem abstract_convergence (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → ℝ≥0 → ℝ≥0)
+   (hfc : ∀ ε > 0, Continuous (f ε)) (hf0 : ∀ ε > 0, f ε 0 = 0)
+     (hf : ∀ ε > 0, Set.EqOn (f ε) 1 (Set.Ici ε))
+     (hfl : ∀ ε > 0, ∀ x ≤ ε, f ε x ≤ 1) :
+       Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ (f ε) a‖₊) (𝓝[>] 0) (𝓝 0) := by
+  refine (nhdsGT_basis 0).tendsto_iff (Metric.nhds_basis_closedBall) |>.mpr fun ε hε ↦ ?_
+  lift ε to ℝ≥0 using hε.le
+  exact ⟨⟨ε, hε.le⟩, hε, fun δ hδ ↦ by
+    simpa using abstract_alg_squash a ha (f δ) (hfc δ hδ.1)
+      (hf0 δ hδ.1) (hf δ hδ.1) (hfl δ  hδ.1) |>.trans hδ.2.le⟩
+
 noncomputable def linearRamp (ε x : ℝ≥0) := min 1 (1 / ε * x)
 
 @[simp]
-lemma linearRamp_apply (ε : ℝ≥0) : linearRamp ε = min 1 (1 / ε * ·) := by rfl
+lemma linearRamp_apply (ε : ℝ≥0) : linearRamp ε = min 1 (1 / ε * ·) := rfl
 
 theorem linearRamp_squash {ε : ℝ≥0} (hε : 0 < ε) (a : A) (ha : 0 ≤ a) :
   ‖a - a * cfcₙ (linearRamp ε) a‖₊ ≤ ε :=
      abstract_alg_squash a ha (linearRamp ε)
        (by rw [linearRamp_apply]; fun_prop)
-       (by simp [linearRamp])
+       (by simp)
        (by dsimp only [Set.Ici, Set.EqOn, Set.mem_setOf_eq, Pi.one_apply]
            simp only [linearRamp, one_div, inf_eq_left]
            exact fun _ hx ↦ (one_le_inv_mul₀ hε).mpr hx)
-       (by simp [linearRamp])
+       (by simp)
 
 theorem linearRampSq_squash {ε : ℝ≥0} (hε : 0 < ε) (a : A) (ha : 0 ≤ a) :
   ‖a - a * cfcₙ ((· ^ 2) ∘ (linearRamp ε)) a‖₊ ≤ ε :=
@@ -61,3 +81,32 @@ theorem linearRampSq_squash {ε : ℝ≥0} (hε : 0 < ε) (a : A) (ha : 0 ≤ a)
     (by intro x hx
         simp only [linearRamp_apply, one_div, Function.comp_apply, Pi.inf_apply, Pi.one_apply]
         exact (sq_le_one_iff₀ <| zero_le (min 1 (ε⁻¹ * x))).mpr <| min_le_left 1 (ε⁻¹ * x))
+
+theorem linearRamp_converge (a : A) (ha : 0 ≤ a) :
+    Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ (linearRamp ε) a‖₊) (𝓝[>] 0) (𝓝 0) :=
+  abstract_convergence a ha linearRamp
+      (by intro ε
+          rw [linearRamp_apply]
+          fun_prop)
+       (by simp)
+       (by dsimp only [Set.Ici, Set.EqOn, Set.mem_setOf_eq, Pi.one_apply]
+           simp only [linearRamp, one_div, inf_eq_left]
+           intro ε
+           exact fun h _ ↦ (one_le_inv_mul₀ h).mpr)
+       (by simp [linearRamp])
+
+theorem linearRampSq_converge (a : A) (ha : 0 ≤ a) :
+    Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ ((· ^ 2) ∘ (linearRamp ε)) a‖₊) (𝓝[>] 0) (𝓝 0) :=
+  abstract_convergence a ha (fun ε ↦ (· ^ 2) ∘ (linearRamp ε))
+    (by intro ε hε
+        simp only [linearRamp_apply, one_div]
+        fun_prop)
+    (by simp)
+    (by dsimp only [Set.Ici, Set.EqOn, Set.mem_setOf_eq, Pi.one_apply, linearRamp]
+        simp only [linearRamp_apply, one_div, Function.comp_apply, Pi.inf_apply, Pi.one_apply,
+          pow_eq_one_iff, inf_eq_left, OfNat.ofNat_ne_zero, or_false]
+        intro ε
+        exact fun h _ ↦ (one_le_inv_mul₀ h).mpr)
+    (by intro x hx ε hε
+        simp only [linearRamp_apply, one_div, Function.comp_apply, Pi.inf_apply, Pi.one_apply]
+        exact (sq_le_one_iff₀ <| zero_le (min 1 (x⁻¹ * ε))).mpr <| min_le_left 1 (x⁻¹ * ε))
