@@ -100,6 +100,47 @@ open ComplexOrder in
 theorem Complex.real_lt_zero {x : ℝ} : (x : ℂ) < 0 ↔ x < 0 := by
   simp [← ofReal_zero]
 
+section UniformEquiv
+
+namespace Continuous
+
+variable {X Y : Type*} [UniformSpace X] [UniformSpace Y]
+  [CompactSpace X] [T2Space Y] (f : X ≃ Y) (hf : Continuous f)
+
+/-- A continuous bijection from a compact space to a Hausdorff space is in fact a uniform
+equivalence whenever the domain and codomain are equipped with a uniform structure. -/
+def uniformOfEquivCompactToT2 : X ≃ᵤ Y where
+  toEquiv := f
+  uniformContinuous_toFun := CompactSpace.uniformContinuous_of_continuous hf
+  uniformContinuous_invFun :=
+    let h : X ≃ₜ Y := hf.homeoOfEquivCompactToT2
+    let _ : CompactSpace Y := h.compactSpace
+    CompactSpace.uniformContinuous_of_continuous (map_continuous h.symm)
+
+@[simp]
+lemma uniformOfEquivCompactToT2_apply (x : X) :
+    hf.uniformOfEquivCompactToT2 f x = f x :=
+  rfl
+
+@[simp]
+lemma uniformOfEquivCompactToT2_symm_apply (y : Y) :
+    hf.uniformOfEquivCompactToT2.symm y = f.symm y :=
+  rfl
+
+@[simp]
+lemma toHomeomorph_uniformOfEquivCompactToT2 :
+    hf.uniformOfEquivCompactToT2.toHomeomorph = hf.homeoOfEquivCompactToT2 :=
+  rfl
+
+@[simp]
+lemma toEquiv_uniformOfEquivCompactToT2 :
+    hf.uniformOfEquivCompactToT2.toEquiv = f :=
+  rfl
+
+end Continuous
+
+end UniformEquiv
+
 /-! ## Unnecessary
 
 These lemmas are not currently necessary for anything in LeanOA.
