@@ -67,7 +67,6 @@ theorem linearRampSq_converge (a : A) (ha : 0 ≤ a) :
     (fun _ _ _ _ ↦ by simpa [linearRamp] using
       (sq_le_one_iff₀ <| zero_le (min 1 (_⁻¹ * _))).mpr <| min_le_left 1 (_⁻¹ * _))
 
-
 /- The following should be in Mathlib. -/
 
 lemma nhdsGT_basis_Ioc {α : Type*} [TopologicalSpace α] [LinearOrder α] [OrderTopology α]
