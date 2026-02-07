@@ -21,23 +21,31 @@ of elements of $T$. Let $P$ and $M^{s}$ denote the set of positive elements and 
 
 \begin{lemma}
   \label{lem:pos_cvx_cone}
+  \lean{ConvexCone.positive}
+  \mathlibok
   $P$ is a convex cone in $M$.
 \end{lemma}
 
 \begin{proof}
+  \leanok
 \end{proof}
 
 \begin{lemma}
   \label{lem:pos_sa_sigma_closed_Sak_1_7_1} (Sak 1.7.1)
+  \lean{Ultraweak.isClosed_setOf_isSelfAdjoint,Ultraweak.isClosed_nonneg}
+  \leanok
   \uses{def:sigma_top}
   $P$ and $M^{s}$ are $\sigma$--closed.
 \end{lemma}
 
 \begin{proof}
+  \leanok
 \end{proof}
 
 \begin{lemma}
   \label{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2} (Sak 1.7.2)
+  \lean{Ultraweak.exists_positiveCLM_apply_lt_zero}
+  \leanok
   \uses{def:sigma_top}
   \uses{lem:pos_cvx_cone,lem:pos_sa_sigma_closed_Sak_1_7_1}
   For any self-adjoint element $a\notin P$, there exists $\varphi\in T$
@@ -45,6 +53,7 @@ of elements of $T$. Let $P$ and $M^{s}$ denote the set of positive elements and 
 \end{lemma}
 
 \begin{proof}
+  \leanok
   By Lemmas \ref{lem:pos_cvx_cone} and \ref{lem:pos_sa_sigma_closed_Sak_1_7_1}, $P$ is a $\sigma$--closed convex cone in 
   the real locally convex space $M^{s}$. By the Hahn-Banach Separation Theorem, there is a $\sigma$--continuous real linear functional $g$
   on $M^{s}$ such that $\inf_{h\in P}g(h)>g(a)$. Since $P$ is a cone, if $g(h)<0$ then we could scale $h$ by a positive constant so $g(ch)\le g(a)$, which
@@ -56,11 +65,14 @@ of elements of $T$. Let $P$ and $M^{s}$ denote the set of positive elements and 
 
 \begin{lemma}
   \label{lem:uw_pos_sep_pts}
+  \lean{Ultraweak.ext_positiveCLM}
+  \leanok
   \uses{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2,def:sigma_top}
 If $a\in M$, and $\psi(a)=0$ for every $\psi\in T$, then $a=0$.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Given nonzero $a\in P$ in $M$, since $P$ is a cone, $-a \notin P$. By Lemma \ref{lem:non_pos_elem_neg_for_some_state_Sak_1_7_2}, there is
   a $\varphi\in T$ such that $\varphi(-a)<0$, hence $\varphi(a)>0$. The desired statement follows by contraposition.
 \end{proof}

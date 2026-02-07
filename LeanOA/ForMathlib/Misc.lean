@@ -90,6 +90,16 @@ def Nonneg.nnrealSubmodule (α : Type*) [AddCommGroup α] [PartialOrder α] [Mod
   add_mem' := add_nonneg
   smul_mem' r _ h := smul_nonneg r.2 h
 
+open ComplexOrder in
+@[simp]
+theorem Complex.real_le_zero {x : ℝ} : (x : ℂ) ≤ 0 ↔ x ≤ 0 := by
+  simp [← ofReal_zero]
+
+open ComplexOrder in
+@[simp]
+theorem Complex.real_lt_zero {x : ℝ} : (x : ℂ) < 0 ↔ x < 0 := by
+  simp [← ofReal_zero]
+
 /-! ## Unnecessary
 
 These lemmas are not currently necessary for anything in LeanOA.
