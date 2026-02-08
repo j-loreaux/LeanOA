@@ -1,5 +1,6 @@
 import LeanOA.ForMathlib.Algebra.Star.StarProjection
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+import Mathlib.Topology.ExtremallyDisconnected
 
 namespace ContinuousMap
 variable {X : Type*} [TopologicalSpace X]
@@ -20,8 +21,6 @@ noncomputable abbrev single [DiscreteTopology X] (i : X) : C(X, ℝ) :=
 
 end ContinuousMap
 
-variable {A : Type*} [CStarAlgebra A]
-
 /-- A C⋆-algebra is **FS** if the set of self-adjoint elements has a dense subset of
 elements with finite spectrum. -/
 class CStarAlgebra.FiniteSpectrum (𝕜 A : Type*) [RCLike 𝕜] [TopologicalSpace A] [Ring A]
@@ -31,6 +30,9 @@ class CStarAlgebra.FiniteSpectrum (𝕜 A : Type*) [RCLike 𝕜] [TopologicalSpa
 instance {𝕜 A : Type*} [RCLike 𝕜] [TopologicalSpace A] [Ring A] [Algebra 𝕜 A] [StarRing A]
     [Subsingleton A] : CStarAlgebra.FiniteSpectrum 𝕜 A where
   fs := by nontriviality A; exfalso; exact false_of_nontrivial_of_subsingleton A
+
+variable {A : Type*} [TopologicalSpace A] [Ring A] [StarRing A] [Algebra ℝ A]
+  [ContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
 
 /-- A self-adjoint element with finite spectrum in a C⋆-algebra is in the span of
 star projections. -/
@@ -45,8 +47,9 @@ lemma IsSelfAdjoint.mem_span_isStarProjection_of_finite_spectrum {x : A}
 
 /-- In a FS C⋆-algebra, the topological closure of the span of star
 projections is exactly the submodule of the self-adjoint elements. -/
-theorem CStarAlgebra.FiniteSpectrum.topologicalClosure_span_isStarProjection
-    [h : CStarAlgebra.FiniteSpectrum ℝ A] :
+@[simp] theorem CStarAlgebra.FiniteSpectrum.topologicalClosure_span_isStarProjection
+    [ContinuousConstSMul ℝ A] [ContinuousAdd A] [StarModule ℝ A] [T2Space A]
+    [ContinuousStar A] [h : CStarAlgebra.FiniteSpectrum ℝ A] :
     (Submodule.span ℝ {x : A | IsStarProjection x}).topologicalClosure =
       selfAdjoint.submodule ℝ A := by
   refine le_antisymm (fun x hx ↦ closure_minimal (fun x hx ↦ ?_) ?_ hx) fun x hx ↦ ?_
