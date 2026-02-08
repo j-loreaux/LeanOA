@@ -1,3 +1,4 @@
+import Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.Normed.Module.Normalize
 import Mathlib.Analysis.Normed.Algebra.Spectrum
 import Mathlib.Analysis.Normed.Operator.NormedSpace
@@ -164,6 +165,35 @@ lemma toEquiv_uniformOfEquivCompactToT2 :
   rfl
 
 end Continuous
+
+section normedSpaceClosedUnitBall
+variable {𝕜 H : Type*} [RCLike 𝕜] [NormedAddCommGroup H] [NormedSpace 𝕜 H]
+
+open ComplexOrder Set Metric
+
+theorem ne_zero_iff_nontrivial_of_mem_extremePoints_closedUnitBall {x : H}
+    (hx : x ∈ extremePoints 𝕜 (closedBall (0 : H) 1)) : x ≠ 0 ↔ Nontrivial H := by
+  refine ⟨fun h ↦ ⟨⟨x, 0, h⟩⟩, fun h h0 ↦ ?_⟩
+  obtain ⟨y, hy⟩ := exists_ne (0 : H)
+  set z := (1 / ‖y‖ : 𝕜) • y
+  have hz : z ∈ closedBall (0 : H) 1 ∧ ‖z‖ = 1 := by simp [norm_smul, norm_ne_zero_iff.mpr hy, z]
+  simp only [mem_extremePoints, mem_closedBall, h0, dist_self, zero_le_one, dist_zero_right,
+    true_and] at hx
+  specialize hx z hz.2.le (-z) (norm_neg z ▸ hz.2.le) ⟨1/2, ⟨(1/2), ?_, ?_, ?_, ?_⟩⟩
+    <;> simp_all [-one_div]
+
+theorem norm_eq_one_of_mem_extremePoints_closedUnitBall [Nontrivial H] {x : H}
+    (hx : x ∈ extremePoints 𝕜 (closedBall (0 : H) 1)) : ‖x‖ = 1 := by
+  obtain h := ne_zero_iff_nontrivial_of_mem_extremePoints_closedUnitBall hx |>.mpr ‹Nontrivial H›
+  simp only [mem_extremePoints, mem_closedBall, dist_zero_right] at hx
+  rcases hx with ⟨h1, hx⟩
+  by_contra!
+  specialize @hx ((1 / ‖x‖ : 𝕜) • x) (by simp [norm_smul, norm_ne_zero_iff.mpr h]) 0 (by simp)
+    (⟨‖x‖, 1 - ‖x‖, by simp_all, ?_, by simp [smul_smul, norm_ne_zero_iff.mpr h]⟩)
+  · rw [← RCLike.ofReal_one (K := 𝕜), lt_sub_iff_add_lt, zero_add, RCLike.ofReal_lt_ofReal]; grind
+  grind
+
+end normedSpaceClosedUnitBall
 
 end UniformEquiv
 
