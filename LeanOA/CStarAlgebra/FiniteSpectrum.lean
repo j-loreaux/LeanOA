@@ -17,7 +17,7 @@ noncomputable abbrev ContinuousMap.single {X : Type*} [TopologicalSpace X] [Disc
   simp [isStarProjection_iff, Pi.single_apply, IsIdempotentElem, ContinuousMap.ext_iff,
     IsSelfAdjoint]
 
-lemma ContinuousMap.mem_span_isStarProjection_of_finite {X : Type*} [TopologicalSpace X]
+@[simp] lemma ContinuousMap.mem_span_isStarProjection_of_finite {X : Type*} [TopologicalSpace X]
     [T1Space X] [Finite X] (f : C(X, ℝ)) :
     f ∈ Submodule.span ℝ {p : C(X, ℝ) | IsStarProjection p} := by
   have := Fintype.ofFinite X
@@ -38,7 +38,11 @@ star projections. -/
 lemma IsSelfAdjoint.mem_span_isStarProjection_of_finite_spectrum {x : A}
     (hx : IsSelfAdjoint x) (h : (spectrum ℝ x).Finite) :
     x ∈ Submodule.span ℝ {p : A | IsStarProjection p} := by
-  sorry
+  have : Finite (spectrum ℝ x) := Set.finite_coe_iff.mpr h
+  convert (ContinuousMap.id ℝ).restrict (spectrum ℝ x) |>.mem_span_isStarProjection_of_finite
+  refine ⟨fun _ ↦ by simp_all, fun h' ↦ Submodule.mem_span.mpr fun p hp ↦ ?_⟩
+  have := Submodule.mem_span.mp h' (.comap (cfcHom hx).toLinearMap p)
+  simp_all [Set.subset_def, IsStarProjection.map, cfcHom_id]
 
 /-- In a FS C⋆-algebra, the topological closure of the span of star projections is exactly
 the submodule of the self adjoint elements. -/
