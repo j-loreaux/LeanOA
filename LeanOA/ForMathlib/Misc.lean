@@ -100,6 +100,32 @@ open ComplexOrder in
 theorem Complex.real_lt_zero {x : ℝ} : (x : ℂ) < 0 ↔ x < 0 := by
   simp [← ofReal_zero]
 
+@[to_dual directedOn_iff_isCodirectedOrder]
+lemma directedOn_iff_isDirectedOrder {α : Type*} [LE α] {s : Set α} :
+    DirectedOn (· ≤ ·) s ↔ IsDirectedOrder s := by
+  rw [directedOn_iff_directed]
+  exact ⟨fun h ↦ ⟨h⟩, fun ⟨h⟩ ↦ h⟩
+
+lemma DirectedOn.inter {α : Type*} {r : α → α → Prop} {s : Set α}
+    [IsTrans α r] (hs : DirectedOn r s) (x₀ : α) :
+    DirectedOn r (s ∩ {x | r x₀ x}) := by
+  rintro y ⟨hy, y₁⟩ z ⟨hz, h₂⟩
+  obtain ⟨w, hw, hyw, hzw⟩ := hs y hy z hz
+  exact ⟨w, ⟨hw, trans y₁ hyw⟩ , ⟨hyw, hzw⟩⟩
+
+open Filter in
+-- `Cauchy.map` should be protected.
+lemma _root_.Cauchy.map_of_le {α β : Type*} [UniformSpace α] [UniformSpace β]
+    {l : Filter α} {f : α → β} (hl : Cauchy l) {s : Set α}
+    (hf : UniformContinuousOn f s) (hls : l ≤ 𝓟 s) :
+    Cauchy (map f l) := by
+  rw [uniformContinuousOn_iff_restrict] at hf
+  have hl' : Cauchy (comap (Subtype.val : s → α) l) := by
+    apply hl.comap' ?_ (comap_coe_neBot_of_le_principal (h := hl.1) hls)
+    exact le_def.mpr fun x a ↦ a
+  simpa [Set.restrict_def, ← Function.comp_def, ← map_map,
+    subtype_coe_map_comap, inf_eq_left.mpr hls] using hl'.map hf
+
 section UniformEquiv
 
 namespace Continuous

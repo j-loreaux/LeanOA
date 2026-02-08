@@ -1,258 +1,9 @@
 import LeanOA.Ultraweak.SeparatingDual
 import LeanOA.WeakDual.UniformSpace
 import LeanOA.ComplexOrder
-import Mathlib.Algebra.Group.PNatPowAssoc
+import LeanOA.StarOrderedRing
+import LeanOA.CFC
 
-namespace PositiveLinearMap
-
-variable {R E₁ E₂ : Type*} [Semiring R]
-    [AddCommMonoid E₁] [PartialOrder E₁]
-    [AddCommMonoid E₂] [PartialOrder E₂]
-    [Module R E₁] [Module R E₂]
-
-@[simp]
-lemma coe_toLinearMap (f : E₁ →ₚ[R] E₂) : (f.toLinearMap : E₁ → E₂) = f :=
-  rfl
-
-lemma toLinearMap_injective : Function.Injective (toLinearMap : (E₁ →ₚ[R] E₂) → (E₁ →ₗ[R] E₂)) :=
-  fun _ _ h ↦ by ext x; congrm($h x)
-
-instance : Zero (E₁ →ₚ[R] E₂) where
-  zero := .mk (0 : E₁ →ₗ[R] E₂) fun _ ↦ by simp
-
-@[simp]
-lemma toLinearMap_zero : (0 : E₁ →ₚ[R] E₂).toLinearMap = 0 :=
-  rfl
-
-@[simp]
-lemma zero_apply (x : E₁) : (0 : E₁ →ₚ[R] E₂) x = 0 :=
-  rfl
-
-variable [IsOrderedAddMonoid E₂]
-
-instance : Add (E₁ →ₚ[R] E₂) where
-  add f g := .mk (f.toLinearMap + g.toLinearMap) fun _ _ h ↦
-    add_le_add (OrderHomClass.mono f h) (OrderHomClass.mono g h)
-
-@[simp]
-lemma toLinearMap_add (f g : E₁ →ₚ[R] E₂) :
-    (f + g).toLinearMap = f.toLinearMap + g.toLinearMap := by
-  rfl
-
-@[simp]
-lemma add_apply (f g : E₁ →ₚ[R] E₂) (x : E₁) :
-    (f + g) x = f x + g x := by
-  rfl
-
-instance : SMul ℕ (E₁ →ₚ[R] E₂) where
-  smul n f := .mk (n • f.toLinearMap) fun x y h ↦ by
-    induction n with
-    | zero => simp
-    | succ n ih => simpa [add_nsmul] using add_le_add ih (OrderHomClass.mono f h)
-
-@[simp]
-lemma toLinearMap_nsmul (f : E₁ →ₚ[R] E₂) (n : ℕ) :
-    (n • f).toLinearMap = n • f.toLinearMap :=
-  rfl
-
-@[simp]
-lemma nsmul_apply (f : E₁ →ₚ[R] E₂) (n : ℕ) (x : E₁) :
-    (n • f) x = n • (f x) :=
-  rfl
-
-instance : AddCommMonoid (E₁ →ₚ[R] E₂) :=
-  toLinearMap_injective.addCommMonoid _ toLinearMap_zero toLinearMap_add
-    toLinearMap_nsmul
-
-end PositiveLinearMap
-
-namespace ContinuousPositiveLinearMap
-
-variable {R E₁ E₂ : Type*} [Semiring R]
-    [AddCommMonoid E₁] [PartialOrder E₁]
-    [AddCommMonoid E₂] [PartialOrder E₂]
-    [Module R E₁] [Module R E₂]
-    [TopologicalSpace E₁] [TopologicalSpace E₂]
-
-@[simp]
-lemma coe_toPositiveLinearMap (f : E₁ →P[R] E₂) :
-    (f.toPositiveLinearMap : E₁ → E₂) = f :=
-  rfl
-
-@[simp]
-lemma coe_toContinuousLinearMap (f : E₁ →P[R] E₂) :
-    (f.toContinuousLinearMap : E₁ → E₂) = f :=
-  rfl
-
-lemma toPositiveLinearMap_injective :
-    Function.Injective (fun f ↦ f.toPositiveLinearMap : (E₁ →P[R] E₂) → (E₁ →ₚ[R] E₂)) :=
-  fun _ _ h ↦ by ext x; congrm($h x)
-
-lemma toContinuousLinearMap_injective :
-    Function.Injective (fun f ↦ f.toContinuousLinearMap : (E₁ →P[R] E₂) → (E₁ →L[R] E₂)) :=
-  fun _ _ h ↦ by ext x; congrm($h x)
-
-instance : Zero (E₁ →P[R] E₂) where
-  zero := .mk (0 : E₁ →ₚ[R] E₂) <| by fun_prop
-
-@[simp]
-lemma toPositiveLinearMap_zero : (0 : E₁ →P[R] E₂).toPositiveLinearMap = 0 :=
-  rfl
-
-@[simp]
-lemma toContinuousLinearMap_zero : (0 : E₁ →P[R] E₂).toContinuousLinearMap = 0 :=
-  rfl
-
-@[simp]
-lemma zero_apply (x : E₁) : (0 : E₁ →P[R] E₂) x = 0 :=
-  rfl
-
-variable [IsOrderedAddMonoid E₂] [ContinuousAdd E₂]
-
-instance : Add (E₁ →P[R] E₂) where
-  add f g := .mk (f.toPositiveLinearMap + g.toPositiveLinearMap) <|
-    show Continuous (fun x ↦ f x + g x) by fun_prop
-
-@[simp]
-lemma toPositiveLinearMap_add (f g : E₁ →P[R] E₂) :
-    (f + g).toPositiveLinearMap = f.toPositiveLinearMap + g.toPositiveLinearMap := by
-  rfl
-
-@[simp]
-lemma toContinuousLinearMap_add (f g : E₁ →P[R] E₂) :
-    (f + g).toContinuousLinearMap = f.toContinuousLinearMap + g.toContinuousLinearMap := by
-  rfl
-
-@[simp]
-lemma add_apply (f g : E₁ →P[R] E₂) (x : E₁) :
-    (f + g) x = f x + g x := by
-  rfl
-
-instance : SMul ℕ (E₁ →P[R] E₂) where
-  smul n f := .mk (n • f.toPositiveLinearMap) <|
-    show Continuous (fun x ↦ n • f x) by fun_prop
-
-@[simp]
-lemma toPositiveLinearMap_nsmul (f : E₁ →P[R] E₂) (n : ℕ) :
-    (n • f).toPositiveLinearMap = n • f.toPositiveLinearMap :=
-  rfl
-
-@[simp]
-lemma toContinuousLinearMap_nsmul (f : E₁ →P[R] E₂) (n : ℕ) :
-    (n • f).toContinuousLinearMap = n • f.toContinuousLinearMap :=
-  rfl
-
-@[simp]
-lemma nsmul_apply (f : E₁ →P[R] E₂) (n : ℕ) (x : E₁) :
-    (n • f) x = n • (f x) :=
-  rfl
-
-instance : AddCommMonoid (E₁ →P[R] E₂) :=
-  toPositiveLinearMap_injective.addCommMonoid _ toPositiveLinearMap_zero toPositiveLinearMap_add
-    toPositiveLinearMap_nsmul
-
-end ContinuousPositiveLinearMap
-
-
-section CFC
-
-lemma CFC.mul_self_eq_zero_iff {R A : Type*} {p : A → Prop} [Semifield R] [Nontrivial R]
-    [StarRing R] [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A]
-    [StarRing A] [TopologicalSpace A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
-    [NonUnitalContinuousFunctionalCalculus R A p] (a : A) (ha : p a := by cfc_tac) :
-    a * a = 0 ↔ a = 0 := by
-  refine ⟨fun h ↦ ?_, by rintro rfl; simp⟩
-  refine CFC.eq_zero_of_quasispectrum_eq_zero (R := R) a fun r hr ↦ ?_
-  rw [← cfcₙ_id' R a, ← cfcₙ_mul .., ← cfcₙ_zero (R := R) a, cfcₙ_eq_cfcₙ_iff_eqOn] at h
-  simpa using h hr
-
-lemma CFC.pow_eq_zero_iff {R A : Type} {p : A → Prop} [Semifield R] [StarRing R]
-    [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [Ring A] [StarRing A]
-    [TopologicalSpace A] [Algebra R A] [ContinuousFunctionalCalculus R A p]
-    (a : A) (n : ℕ) (hn : n ≠ 0) (hp : p a := by cfc_tac) :
-    a ^ n = 0 ↔ a = 0 := by
-  refine ⟨fun h ↦ ?_, by rintro rfl; simp [hn]⟩
-  refine CFC.eq_zero_of_spectrum_subset_zero (R := R) a fun r hr ↦ ?_
-  rw [← cfc_id' R a, ← cfc_pow .., ← cfc_zero (R := R) a, cfc_eq_cfc_iff_eqOn] at h
-  simpa [hn] using h hr
-
-open NonUnitalIsometricContinuousFunctionalCalculus in
-lemma CFC.norm_mul_self {𝕜 A : Type*} {p : A → Prop} [RCLike 𝕜] [NonUnitalNormedRing A]
-    [StarRing A] [NormedSpace 𝕜 A] [IsScalarTower 𝕜 A A] [SMulCommClass 𝕜 A A]
-    [NonUnitalIsometricContinuousFunctionalCalculus 𝕜 A p] (a : A) (ha : p a := by cfc_tac) :
-    ‖a * a‖ = ‖a‖ ^ 2 := by
-  apply le_antisymm (by simpa [sq] using norm_mul_le ..)
-  have ⟨⟨x, hx, hx'⟩, h₂⟩ := isGreatest_norm_quasispectrum (𝕜 := 𝕜) a ha
-  rw [← hx', ← norm_pow, sq, ← cfcₙ_id' 𝕜 a, ← cfcₙ_mul ..]
-  exact norm_apply_le_norm_cfcₙ (fun x ↦ x * x) a hx
-
---- this is stupid. Can we please just have `Pow A ℕ+` for semigroups?
-open NonUnitalIsometricContinuousFunctionalCalculus in
-lemma CFC.norm_mul_mul_self {𝕜 A : Type*} {p : A → Prop} [RCLike 𝕜] [NonUnitalNormedRing A]
-    [StarRing A] [NormedSpace 𝕜 A] [IsScalarTower 𝕜 A A] [SMulCommClass 𝕜 A A]
-    [NonUnitalIsometricContinuousFunctionalCalculus 𝕜 A p] (a : A) (ha : p a := by cfc_tac) :
-    ‖a * a * a‖ = ‖a‖ ^ 3 := by
-  apply le_antisymm (by simpa [pow_succ] using norm_mul₃_le ..)
-  have ⟨⟨x, hx, hx'⟩, h₂⟩ := isGreatest_norm_quasispectrum (𝕜 := 𝕜) a ha
-  rw [← hx', ← norm_pow, ← cfcₙ_id' 𝕜 a, ← cfcₙ_mul .., ← cfcₙ_mul ..]
-  simpa only [pow_succ, pow_zero, one_mul] using norm_apply_le_norm_cfcₙ (fun x ↦ x * x * x) a hx
-
-open IsometricContinuousFunctionalCalculus in
-protected lemma CFC.norm_pow {𝕜 A : Type*} {p : A → Prop} [RCLike 𝕜] [NormedRing A]
-    [StarRing A] [NormedAlgebra 𝕜 A] [IsometricContinuousFunctionalCalculus 𝕜 A p]
-    (a : A) (n : ℕ) (hn : n ≠ 0) (ha : p a := by cfc_tac) :
-    ‖a ^ n‖ = ‖a‖ ^ n := by
-  obtain (h | h) := subsingleton_or_nontrivial A
-  · simp [h.elim a 0, hn]
-  apply le_antisymm (by simpa using norm_pow_le' _ (Nat.zero_lt_of_ne_zero hn))
-  have ⟨⟨x, hx, hx'⟩, h₂⟩ := isGreatest_norm_spectrum (𝕜 := 𝕜) a ha
-  simp only at hx'
-  rw [← hx', ← norm_pow, ← cfc_id' 𝕜 a, ← cfc_pow ..]
-  exact norm_apply_le_norm_cfc (· ^ n) a hx
-
-lemma IsSelfAdjoint.iff_of_le {R : Type*} [NonUnitalRing R] [StarRing R]
-    [PartialOrder R] [StarOrderedRing R] {a b : R} (hab : a ≤ b) :
-    IsSelfAdjoint a ↔ IsSelfAdjoint b := by
-  replace hab := (sub_nonneg.mpr hab).isSelfAdjoint
-  exact ⟨fun ha ↦ by simpa using hab.add ha, fun hb ↦ by simpa using (hab.sub hb).neg⟩
-
-alias ⟨IsSelfAdjoint.of_ge, IsSelfAdjoint.of_le⟩ := IsSelfAdjoint.iff_of_le
-
-theorem CStarAlgebra.norm_posPart_mono {A : Type*} [NonUnitalCStarAlgebra A]
-    [PartialOrder A] [StarOrderedRing A] {a b : A} (hab : a ≤ b)
-    (ha : IsSelfAdjoint a := by cfc_tac) : ‖a⁺‖ ≤ ‖b⁺‖ := by
-  have hb : IsSelfAdjoint b := ha.of_ge hab
-  replace h : a ≤ b⁺ := hab.trans CFC.le_posPart
-  have key := IsSelfAdjoint.conjugate_le_conjugate h (CFC.posPart_nonneg a).isSelfAdjoint
-  nth_rw 2 [← CFC.posPart_sub_negPart a] at key
-  simp only [mul_sub, CFC.posPart_mul_negPart, sub_zero] at key
-  obtain (ha' | ha') := eq_zero_or_norm_pos (a⁺)
-  · simp [ha']
-  suffices ‖a⁺‖ ^ 3 ≤ ‖a⁺‖ * ‖b⁺‖ * ‖a⁺‖ by simpa [pow_succ, ha']
-  calc
-    ‖a⁺‖ ^ 3 = ‖a⁺ * a⁺ * a⁺‖ := by rw [CFC.norm_mul_mul_self (𝕜 := ℝ) a⁺]
-    _ ≤ ‖a⁺ * b⁺ * a⁺‖ := CStarAlgebra.norm_le_norm_of_nonneg_of_le (by cfc_tac) key
-    _ ≤ ‖a⁺‖ * ‖b⁺‖ * ‖a⁺‖ := norm_mul₃_le ..
-
-theorem CStarAlgebra.norm_posPart_anti {A : Type*} [NonUnitalCStarAlgebra A]
-    [PartialOrder A] [StarOrderedRing A] {a b : A} (hab : a ≤ b)
-    (ha : IsSelfAdjoint a := by cfc_tac) : ‖b⁻‖ ≤ ‖a⁻‖ := by
-  have hb : IsSelfAdjoint b := by simpa using (sub_nonneg.mpr hab).isSelfAdjoint.add ha
-  rw [← neg_neg a, ← neg_le] at hab
-  simpa using CStarAlgebra.norm_posPart_mono hab hb.neg
-
-theorem IsSelfAdjoint.norm_le_max_of_le_of_le {A : Type*} [NonUnitalCStarAlgebra A]
-    [PartialOrder A] [StarOrderedRing A] {a b c : A} (ha : IsSelfAdjoint a := by cfc_tac)
-    (hab : a ≤ b) (hbc : b ≤ c) :
-    ‖b‖ ≤ max ‖a‖ ‖c‖ := by
-  have hb := ha.of_ge hab
-  calc
-    ‖b‖ = max ‖b⁻‖ ‖b⁺‖ := by simpa [max_comm] using hb.norm_eq_max_norm_posPart_negPart b
-    _ ≤ max ‖a⁻‖ ‖c⁺‖ := max_le_max (CStarAlgebra.norm_posPart_anti hab ha)
-      (CStarAlgebra.norm_posPart_mono hbc hb)
-    _ ≤ max ‖a‖ ‖c‖ := max_le_max (by simp) (by simp)
-
-end CFC
 
 variable {M P : Type*} [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M]
 variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P] [CompleteSpace P]
@@ -312,7 +63,6 @@ private lemma cauchy_weakE_iff_forall_posCLM {l : Filter (WeakE M P)} :
     simpa using (ihφ.prod ihψ).mono (tendsto_map.prodMk tendsto_map) |>.map uniformContinuous_add
   | smul a φ hφ ihφ => simpa using ihφ.map <| uniformContinuous_const_smul a
 
-
 -- ugh, `WeakBilin` has some nasty defeq abuse.
 -- we should get this out of tactic mode as a proof.
 private noncomputable def weakEUniformEquiv (r : ℝ) :
@@ -330,24 +80,6 @@ private noncomputable def weakEUniformEquiv (r : ℝ) :
   refine WeakBilin.continuous_of_continuous_eval _ fun ⟨φ, hφ⟩ ↦ ?_
   exact (map_continuous φ).comp continuous_subtype_val
 
-open Filter in
-lemma _root_.Cauchy.map_of_le {α β : Type*} [UniformSpace α] [UniformSpace β]
-    {l : Filter α} {f : α → β} (hl : Cauchy l) {s : Set α}
-    (hf : UniformContinuousOn f s) (hls : l ≤ 𝓟 s) :
-    Cauchy (map f l) := by
-  rw [uniformContinuousOn_iff_restrict] at hf
-  have hl' : Cauchy (comap (Subtype.val : s → α) l) := by
-    apply hl.comap' ?_ (comap_coe_neBot_of_le_principal (h := hl.1) hls)
-    exact le_def.mpr fun x a ↦ a
-  simpa [Set.restrict_def, ← Function.comp_def, ← map_map,
-    subtype_coe_map_comap, inf_eq_left.mpr hls] using hl'.map hf
-
-private lemma uniformContinuousOn_weakEEquiv_symm_comp_ofUltraweak (r : ℝ) :
-    UniformContinuousOn ((weakEEquiv M P).symm ∘ ofUltraweak (𝕜 := ℂ) (P := P))
-      (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r) := by
-  rw [uniformContinuousOn_iff_restrict]
-  exact uniformContinuous_subtype_val.comp (weakEUniformEquiv M P r).uniformContinuous
-
 private lemma uniformContinuousOn_toUltraweak_comp_weakEEquiv (r : ℝ) :
     UniformContinuousOn (toUltraweak ℂ P ∘ weakEEquiv M P)
       (weakEEquiv M P ⁻¹' Metric.closedBall (0 : M) r) := by
@@ -360,16 +92,12 @@ private lemma mapsTo_weakEEquiv_symm_comp_ofUltraweak_preimage_closedBall (r : �
       (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r)) :=
   fun x hx ↦ (weakEUniformEquiv M P r ⟨x, hx⟩).2
 
-private lemma mapsTo_toUltraweak_comp_weakEEquiv_preimage_closedBall (r : ℝ) :
-    Set.MapsTo (toUltraweak ℂ P ∘ weakEEquiv M P)
-      (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r))
-      (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r) :=
-  fun x hx ↦ ((weakEUniformEquiv M P r).symm ⟨x, hx⟩).2
-
 open Filter in
+/-- A bounded filter `l` in `σ(M, P)` is cauchy if and only if `map φ l` is cauchy in `ℂ`
+for every positive continuous linear functional `φ`. -/
 lemma cauchy_of_forall_posCLM_cauchy_map {l : Filter σ(M, P)} {r : ℝ}
     (hlr : l ≤ 𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r))
-    (hl : ∀ φ : σ(M, P) →P[ℂ] ℂ, Cauchy (Filter.map φ l)) :
+    (hl : ∀ φ : σ(M, P) →P[ℂ] ℂ, Cauchy (map φ l)) :
     Cauchy l := by
   have key : Cauchy (map ((weakEEquiv M P).symm ∘ ofUltraweak) l) := by
     rw [cauchy_weakE_iff_forall_posCLM]
@@ -383,48 +111,8 @@ lemma cauchy_of_forall_posCLM_cauchy_map {l : Filter σ(M, P)} {r : ℝ}
 
 open scoped ComplexStarModule
 
-lemma ComplexStarModule.ext_realPart_imaginaryPart {M : Type*}
-    [AddCommGroup M] [StarAddMonoid M] [Module ℂ M] [StarModule ℂ M] {x y : M}
-    (h₁ : ℜ x = ℜ y) (h₂ : ℑ x = ℑ y) :
-    x = y := by
-  rw [← realPart_add_I_smul_imaginaryPart x, ← realPart_add_I_smul_imaginaryPart y, h₁, h₂]
-
-lemma ComplexStarModule.ext_iff_realPart_imaginaryPart {M : Type*}
-    [AddCommGroup M] [StarAddMonoid M] [Module ℂ M] [StarModule ℂ M] {x y : M} :
-    x = y ↔ ℜ x = ℜ y ∧ ℑ x = ℑ y :=
-  ⟨by grind, fun h ↦ ext_realPart_imaginaryPart h.1 h.2⟩
-
-lemma StarOrderedRing.nonneg_iff_realPart_imaginaryPart {A : Type*}
-    [NonUnitalRing A] [StarRing A] [PartialOrder A] [StarOrderedRing A]
-    [Module ℂ A] [StarModule ℂ A] {a : A} :
-    0 ≤ a ↔ 0 ≤ ℜ a ∧ ℑ a = 0 := by
-  constructor
-  · refine fun h ↦ ⟨?_, h.isSelfAdjoint.imaginaryPart⟩
-    have := h.isSelfAdjoint.coe_realPart ▸ h
-    simpa
-  · intro h
-    rw [← realPart_add_I_smul_imaginaryPart a, h.2]
-    simpa using h.1
-
-lemma StarOrderedRing.le_iff_realPart_imaginaryPart {A : Type*}
-    [NonUnitalRing A] [StarRing A] [PartialOrder A] [StarOrderedRing A]
-    [Module ℂ A] [StarModule ℂ A] {a b : A} :
-    a ≤ b ↔ ℜ a ≤ ℜ b ∧ ℑ a = ℑ b := by
-  simpa [sub_eq_zero, eq_comm (a := ℑ a)] using
-    nonneg_iff_realPart_imaginaryPart (a := b - a)
-
-lemma StarOrderedRing.imaginaryPart_eq_of_le {A : Type*}
-    [NonUnitalRing A] [StarRing A] [PartialOrder A] [StarOrderedRing A]
-    [Module ℂ A] [StarModule ℂ A] {a b : A} (hab : a ≤ b) :
-    ℑ a = ℑ b :=
-  le_iff_realPart_imaginaryPart.mp hab |>.2
-
-lemma StarOrderedRing.realPart_mono {A : Type*}
-    [NonUnitalRing A] [StarRing A] [PartialOrder A] [StarOrderedRing A]
-    [Module ℂ A] [StarModule ℂ A] {a b : A} (hab : a ≤ b) :
-    ℜ a ≤ ℜ b :=
-  le_iff_realPart_imaginaryPart.mp hab |>.1
-
+/-- A set in a non-unital C⋆-algebra which is bounded above and below is
+bounded in norm. -/
 lemma isBounded_of_bddAbove_of_bddBelow {A : Type*}
     [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     {s : Set A} (hbd : BddAbove s) (hbd' : BddBelow s) :
@@ -439,32 +127,26 @@ lemma isBounded_of_bddAbove_of_bddBelow {A : Type*}
   intro x hx
   have : IsSelfAdjoint (x - x₀) := by
     simp only [← imaginaryPart_eq_zero_iff, map_sub, sub_eq_zero]
-    rw [StarOrderedRing.imaginaryPart_eq_of_le (hb hx),
-      StarOrderedRing.imaginaryPart_eq_of_le (hb hx₀)]
+    rw [imaginaryPart_eq_of_le (hb hx),
+      imaginaryPart_eq_of_le (hb hx₀)]
   simp only [Metric.mem_closedBall, dist_eq_norm]
   rw [← this.coe_realPart]
   simp only [map_sub, AddSubgroupClass.coe_norm, AddSubgroupClass.coe_sub]
   apply IsSelfAdjoint.norm_le_max_of_le_of_le (by cfc_tac)
-  all_goals simpa using StarOrderedRing.realPart_mono (by aesop)
-
-lemma _root_.DirectedOn.inter {α : Type*} {r : α → α → Prop} {s : Set α}
-    [IsTrans α r] (hs : DirectedOn r s) (x₀ : α) :
-    DirectedOn r (s ∩ {x | r x₀ x}) := by
-  rintro y ⟨hy, y₁⟩ z ⟨hz, h₂⟩
-  obtain ⟨w, hw, hyw, hzw⟩ := hs y hy z hz
-  exact ⟨w, ⟨hw, trans y₁ hyw⟩ , ⟨hyw, hzw⟩⟩
-
-variable {M P} in
-omit [CompleteSpace P] [StarOrderedRing M] in
-lemma monotone_ofUltraweak : Monotone (ofUltraweak : σ(M, P) → M) := fun _ _ ↦ id
-variable {M P} in
-omit [CompleteSpace P] [StarOrderedRing M] in
-lemma monotone_toUltraweak : Monotone (toUltraweak ℂ P : M → σ(M, P)) := fun _ _ ↦ id
+  all_goals simpa using realPart_mono (by aesop)
 
 open Filter Topology Set in
+/-- An increasing net of elements which is bounded above in `σ(M, P)` converges
+to its least upper bound.
+
+I'll note that this uses that `σ(M, P)` is an `OrderClosedTopology` to conclude
+the element to which is converges is indeed the least upper bound. -/
 lemma DirectedOn.exists_isLUB (s : Set σ(M, P)) (hs : DirectedOn (· ≤ ·) s)
     (hnon : s.Nonempty) (hbd : BddAbove s) :
     ∃ x : σ(M, P), IsLUB s x ∧ Tendsto (Subtype.val : s → σ(M, P)) atTop (𝓝 x) := by
+  /- Since `s` is nonempty, we may take the intersection with `Ici x₀` for some
+  `x₀ ∈ s`. This set is still directed, but now it is also bounded above and below.
+  Hence it is norm bounded. -/
   let ⟨x₀, hx₀⟩ := hnon
   have hbd' : BddAbove (ofUltraweak '' (s ∩ Ici x₀)) :=
     monotone_ofUltraweak.map_bddAbove hbd.inter_of_left
@@ -473,6 +155,7 @@ lemma DirectedOn.exists_isLUB (s : Set σ(M, P)) (hs : DirectedOn (· ≤ ·) s)
     rintro - ⟨x, hx, rfl⟩
     aesop
   obtain ⟨r, hr⟩ := isBounded_of_bddAbove_of_bddBelow hbd' hbd'' |>.subset_closedBall 0
+  /- The net `s` of elements is eventually bounded. -/
   have h_map_le : map (Subtype.val : s → σ(M, P)) atTop ≤
       𝓟 (ofUltraweak ⁻¹' Metric.closedBall 0 r) := by
     simp only [le_principal_iff, mem_map]
@@ -481,18 +164,29 @@ lemma DirectedOn.exists_isLUB (s : Set σ(M, P)) (hs : DirectedOn (· ≤ ·) s)
     simp only [mem_Ici, Subtype.mk_le_mk, mem_preimage, Metric.mem_closedBall,
       dist_zero_right] at hxx₀ ⊢
     simpa using hr ⟨_, ⟨hx, hxx₀⟩, rfl⟩
+  /- The subtype `↥s` is directed and nonempty. -/
   have : IsDirectedOrder s := ⟨hs.directed_val⟩
   have : Nonempty s := hnon.to_subtype
+  /- To see that the net `s` is cauchy in `σ(M, P)` it suffices to check that for
+  any continuous positive linear functional `φ`, applying `φ` to `s` is also cauchy.
+  However, since this is a net in `ℂ` which is bounded above, it in fact converges,
+  and is therefore cauchy. -/
   have h_cauchy : Cauchy (map ((↑) : s → σ(M, P)) atTop) := by
     apply cauchy_of_forall_posCLM_cauchy_map M P h_map_le fun φ ↦ ?_
     have hφ := OrderHomClass.mono φ
     exact Tendsto.cauchy_map <| tendsto_atTop_ciSup' (hφ.comp (Subtype.mono_coe s)) <| by
       simpa [← Function.comp_def, Set.range_comp]
         using (OrderHomClass.mono φ |>.map_bddAbove hbd)
+  /- Since the closed ball is compact (and therefore complete) and this cauchy net is
+  eventually within it, it converges to some element `x`. -/
   obtain ⟨x, -, hx⟩ := isCompact_closedBall ℂ P (0 : M) r |>.isComplete _ h_cauchy h_map_le
   refine ⟨x, ?_, hx⟩
+  /- Since the net is increasing, and the topology on `σ(M, P)` is order closed, the
+  limit is the least upper bound. -/
   simpa [setOf] using isLUB_of_tendsto_atTop' (β := s) (Subtype.mono_coe s) hx
 
+/-- `σ(M, P)` is a conditionally complete partial order. Since this is only dependent upon the
+order, not the topology, the same is true of `M`. -/
 noncomputable instance : ConditionallyCompletePartialOrderSup σ(M, P) where
   sSup s :=
     open Classical in
@@ -504,20 +198,23 @@ noncomputable instance : ConditionallyCompletePartialOrderSup σ(M, P) where
     exact (DirectedOn.exists_isLUB M P s h_dir h_non hbdd).choose_spec.1
 
 attribute [push] Filter.not_neBot
+attribute [push ←] Filter.neBot_iff
 
 open Filter in
+/-- An increasing net of elements which is bounded above in `σ(M, P)` converges
+to its least upper bound. -/
 instance : SupConvergenceClass σ(M, P) where
   tendsto_coe_atTop_isLUB a s hsa := by
-    by_cases! h : (atTop : Filter s).NeBot
-    · rw [atTop_neBot_iff] at h
-      obtain ⟨h₁, h₂⟩ := h
-      replace h₁ : s.Nonempty := Set.nonempty_coe_sort.mp h₁
-      replace h₂ : DirectedOn (· ≤ ·) s := by
-        rw [directedOn_iff_directed]
-        obtain ⟨h₂⟩ := h₂
-        exact h₂
-      obtain ⟨u, hu₁, hu₂⟩ := DirectedOn.exists_isLUB M P s h₂ h₁ ⟨_, hsa.1⟩
-      exact hsa.unique hu₁ ▸ hu₂
+    by_cases! h : (atTop : Filter s) = ⊥
     · simp [h]
+    rw [atTop_neBot_iff] at h
+    obtain ⟨h₁, h₂⟩ := h
+    replace h₁ : s.Nonempty := Set.nonempty_coe_sort.mp h₁
+    replace h₂ : DirectedOn (· ≤ ·) s := by
+      rw [directedOn_iff_directed]
+      obtain ⟨h₂⟩ := h₂
+      exact h₂
+    obtain ⟨u, hu₁, hu₂⟩ := DirectedOn.exists_isLUB M P s h₂ h₁ ⟨_, hsa.1⟩
+    exact hsa.unique hu₁ ▸ hu₂
 
 end Ultraweak

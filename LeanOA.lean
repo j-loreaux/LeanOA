@@ -1,3 +1,4 @@
+import LeanOA.CFC
 import LeanOA.CStarModule.Standard
 import LeanOA.ComplexOrder
 import LeanOA.ConditionallyCompletePartialOrder
@@ -12,6 +13,8 @@ import LeanOA.Lp.Holder
 import LeanOA.Lp.lpSpace
 import LeanOA.Notation
 import LeanOA.PositiveContinuousLinearMap
+import LeanOA.PositiveLinearMap
+import LeanOA.StarOrderedRing
 import LeanOA.StarProjection
 import LeanOA.TendstoZero.Defs
 import LeanOA.TendstoZero.StrongDual
