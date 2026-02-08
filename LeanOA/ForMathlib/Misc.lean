@@ -100,6 +100,73 @@ open ComplexOrder in
 theorem Complex.real_lt_zero {x : ℝ} : (x : ℂ) < 0 ↔ x < 0 := by
   simp [← ofReal_zero]
 
+@[to_dual directedOn_iff_isCodirectedOrder]
+lemma directedOn_iff_isDirectedOrder {α : Type*} [LE α] {s : Set α} :
+    DirectedOn (· ≤ ·) s ↔ IsDirectedOrder s := by
+  rw [directedOn_iff_directed]
+  exact ⟨fun h ↦ ⟨h⟩, fun ⟨h⟩ ↦ h⟩
+
+lemma DirectedOn.inter {α : Type*} {r : α → α → Prop} {s : Set α}
+    [IsTrans α r] (hs : DirectedOn r s) (x₀ : α) :
+    DirectedOn r (s ∩ {x | r x₀ x}) := by
+  rintro y ⟨hy, y₁⟩ z ⟨hz, h₂⟩
+  obtain ⟨w, hw, hyw, hzw⟩ := hs y hy z hz
+  exact ⟨w, ⟨hw, trans y₁ hyw⟩ , ⟨hyw, hzw⟩⟩
+
+open Filter in
+-- `Cauchy.map` should be protected.
+lemma _root_.Cauchy.map_of_le {α β : Type*} [UniformSpace α] [UniformSpace β]
+    {l : Filter α} {f : α → β} (hl : Cauchy l) {s : Set α}
+    (hf : UniformContinuousOn f s) (hls : l ≤ 𝓟 s) :
+    Cauchy (map f l) := by
+  rw [uniformContinuousOn_iff_restrict] at hf
+  have hl' : Cauchy (comap (Subtype.val : s → α) l) := by
+    apply hl.comap' ?_ (comap_coe_neBot_of_le_principal (h := hl.1) hls)
+    exact le_def.mpr fun x a ↦ a
+  simpa [Set.restrict_def, ← Function.comp_def, ← map_map,
+    subtype_coe_map_comap, inf_eq_left.mpr hls] using hl'.map hf
+
+section UniformEquiv
+
+namespace Continuous
+
+variable {X Y : Type*} [UniformSpace X] [UniformSpace Y]
+  [CompactSpace X] [T2Space Y] (f : X ≃ Y) (hf : Continuous f)
+
+/-- A continuous bijection from a compact space to a Hausdorff space is in fact a uniform
+equivalence whenever the domain and codomain are equipped with a uniform structure. -/
+def uniformOfEquivCompactToT2 : X ≃ᵤ Y where
+  toEquiv := f
+  uniformContinuous_toFun := CompactSpace.uniformContinuous_of_continuous hf
+  uniformContinuous_invFun :=
+    let h : X ≃ₜ Y := hf.homeoOfEquivCompactToT2
+    let _ : CompactSpace Y := h.compactSpace
+    CompactSpace.uniformContinuous_of_continuous (map_continuous h.symm)
+
+@[simp]
+lemma uniformOfEquivCompactToT2_apply (x : X) :
+    hf.uniformOfEquivCompactToT2 f x = f x :=
+  rfl
+
+@[simp]
+lemma uniformOfEquivCompactToT2_symm_apply (y : Y) :
+    hf.uniformOfEquivCompactToT2.symm y = f.symm y :=
+  rfl
+
+@[simp]
+lemma toHomeomorph_uniformOfEquivCompactToT2 :
+    hf.uniformOfEquivCompactToT2.toHomeomorph = hf.homeoOfEquivCompactToT2 :=
+  rfl
+
+@[simp]
+lemma toEquiv_uniformOfEquivCompactToT2 :
+    hf.uniformOfEquivCompactToT2.toEquiv = f :=
+  rfl
+
+end Continuous
+
+end UniformEquiv
+
 /-! ## Unnecessary
 
 These lemmas are not currently necessary for anything in LeanOA.

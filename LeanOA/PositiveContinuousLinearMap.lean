@@ -1,7 +1,7 @@
-import Mathlib.Algebra.Order.Module.PositiveLinearMap
 import Mathlib.Topology.Algebra.Module.LinearMap
 import Mathlib.Algebra.Order.Star.Basic
 import Mathlib.Analysis.Complex.Basic
+import LeanOA.PositiveLinearMap
 
 /-- A class to encode that selfadjoint elements may be expressed as the
 difference of nonnegative elements. This is satisfied by types with a
@@ -72,7 +72,8 @@ notation:25 E " →P[" R:25 "] " F:0 => PositiveContinuousLinearMap R E F
 
 /-- The `ContinuousLinearMap` underlying a `PositiveContinuousLinearMap`. -/
 add_decl_doc PositiveContinuousLinearMap.toContinuousLinearMap
-
+/-- The `PositiveLinearMap` underlying a `PositiveContinuousLinearMap`. -/
+add_decl_doc PositiveContinuousLinearMap.toPositiveLinearMap
 namespace PositiveContinuousLinearMap
 
 section General
@@ -125,6 +126,84 @@ def ofClass (f : F) : E₁ →P[R] E₂ where
 lemma coe_ofClass (f : F) : ⇑(ofClass f) = f := rfl
 
 end ofClass
+
+
+@[simp]
+lemma coe_toPositiveLinearMap (f : E₁ →P[R] E₂) :
+    (f.toPositiveLinearMap : E₁ → E₂) = f :=
+  rfl
+
+@[simp]
+lemma coe_toContinuousLinearMap (f : E₁ →P[R] E₂) :
+    (f.toContinuousLinearMap : E₁ → E₂) = f :=
+  rfl
+
+lemma toPositiveLinearMap_injective :
+    Function.Injective (fun f ↦ f.toPositiveLinearMap : (E₁ →P[R] E₂) → (E₁ →ₚ[R] E₂)) :=
+  fun _ _ h ↦ by ext x; congrm($h x)
+
+lemma toContinuousLinearMap_injective :
+    Function.Injective (fun f ↦ f.toContinuousLinearMap : (E₁ →P[R] E₂) → (E₁ →L[R] E₂)) :=
+  fun _ _ h ↦ by ext x; congrm($h x)
+
+instance : Zero (E₁ →P[R] E₂) where
+  zero := .mk (0 : E₁ →ₚ[R] E₂) <| by fun_prop
+
+@[simp]
+lemma toPositiveLinearMap_zero : (0 : E₁ →P[R] E₂).toPositiveLinearMap = 0 :=
+  rfl
+
+@[simp]
+lemma toContinuousLinearMap_zero : (0 : E₁ →P[R] E₂).toContinuousLinearMap = 0 :=
+  rfl
+
+@[simp]
+lemma zero_apply (x : E₁) : (0 : E₁ →P[R] E₂) x = 0 :=
+  rfl
+
+variable [IsOrderedAddMonoid E₂] [ContinuousAdd E₂]
+
+instance : Add (E₁ →P[R] E₂) where
+  add f g := .mk (f.toPositiveLinearMap + g.toPositiveLinearMap) <|
+    show Continuous (fun x ↦ f x + g x) by fun_prop
+
+@[simp]
+lemma toPositiveLinearMap_add (f g : E₁ →P[R] E₂) :
+    (f + g).toPositiveLinearMap = f.toPositiveLinearMap + g.toPositiveLinearMap := by
+  rfl
+
+@[simp]
+lemma toContinuousLinearMap_add (f g : E₁ →P[R] E₂) :
+    (f + g).toContinuousLinearMap = f.toContinuousLinearMap + g.toContinuousLinearMap := by
+  rfl
+
+@[simp]
+lemma add_apply (f g : E₁ →P[R] E₂) (x : E₁) :
+    (f + g) x = f x + g x := by
+  rfl
+
+instance : SMul ℕ (E₁ →P[R] E₂) where
+  smul n f := .mk (n • f.toPositiveLinearMap) <|
+    show Continuous (fun x ↦ n • f x) by fun_prop
+
+@[simp]
+lemma toPositiveLinearMap_nsmul (f : E₁ →P[R] E₂) (n : ℕ) :
+    (n • f).toPositiveLinearMap = n • f.toPositiveLinearMap :=
+  rfl
+
+@[simp]
+lemma toContinuousLinearMap_nsmul (f : E₁ →P[R] E₂) (n : ℕ) :
+    (n • f).toContinuousLinearMap = n • f.toContinuousLinearMap :=
+  rfl
+
+@[simp]
+lemma nsmul_apply (f : E₁ →P[R] E₂) (n : ℕ) (x : E₁) :
+    (n • f) x = n • (f x) :=
+  rfl
+
+instance : AddCommMonoid (E₁ →P[R] E₂) :=
+  toPositiveLinearMap_injective.addCommMonoid _ toPositiveLinearMap_zero toPositiveLinearMap_add
+    toPositiveLinearMap_nsmul
 
 end General
 
