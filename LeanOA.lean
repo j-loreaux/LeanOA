@@ -4,6 +4,7 @@ import LeanOA.CStarAlgebra.FiniteSpectrum
 import LeanOA.CStarModule.Standard
 import LeanOA.ComplexOrder
 import LeanOA.ConditionallyCompletePartialOrder
+import LeanOA.ForMathlib.Algebra.Star.StarProjection
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.Module.Defs
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.MulNonneg
