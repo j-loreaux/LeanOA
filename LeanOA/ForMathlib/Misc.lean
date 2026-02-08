@@ -171,16 +171,22 @@ variable {𝕜 H : Type*} [RCLike 𝕜] [NormedAddCommGroup H] [NormedSpace 𝕜
 
 open ComplexOrder Set Metric
 
-theorem ne_zero_iff_nontrivial_of_mem_extremePoints_closedUnitBall {x : H}
-    (hx : x ∈ extremePoints 𝕜 (closedBall (0 : H) 1)) : x ≠ 0 ↔ Nontrivial H := by
-  refine ⟨fun h ↦ ⟨⟨x, 0, h⟩⟩, fun h h0 ↦ ?_⟩
+theorem subsingleton_of_zero_mem_extremePoints_closedUnitBall
+    (h : 0 ∈ extremePoints 𝕜 (closedBall (0 : H) 1)) : Subsingleton H := by
+  by_contra!
   obtain ⟨y, hy⟩ := exists_ne (0 : H)
   set z := (1 / ‖y‖ : 𝕜) • y
   have hz : z ∈ closedBall (0 : H) 1 ∧ ‖z‖ = 1 := by simp [norm_smul, norm_ne_zero_iff.mpr hy, z]
-  simp only [mem_extremePoints, mem_closedBall, h0, dist_self, zero_le_one, dist_zero_right,
-    true_and] at hx
-  specialize hx z hz.2.le (-z) (norm_neg z ▸ hz.2.le) ⟨1/2, ⟨(1/2), ?_, ?_, ?_, ?_⟩⟩
+  simp only [mem_extremePoints, mem_closedBall, dist_self, zero_le_one, dist_zero_right,
+    true_and] at h
+  specialize h z hz.2.le (-z) (norm_neg z ▸ hz.2.le) ⟨1/2, ⟨(1/2), ?_, ?_, ?_, ?_⟩⟩
     <;> simp_all [-one_div]
+
+theorem ne_zero_iff_nontrivial_of_mem_extremePoints_closedUnitBall {x : H}
+    (hx : x ∈ extremePoints 𝕜 (closedBall (0 : H) 1)) : x ≠ 0 ↔ Nontrivial H := by
+  refine ⟨fun h ↦ ⟨⟨x, 0, h⟩⟩, fun h h0 ↦ ?_⟩
+  have := subsingleton_of_zero_mem_extremePoints_closedUnitBall (h0 ▸ hx)
+  exact false_of_nontrivial_of_subsingleton H
 
 theorem norm_eq_one_of_mem_extremePoints_closedUnitBall [Nontrivial H] {x : H}
     (hx : x ∈ extremePoints 𝕜 (closedBall (0 : H) 1)) : ‖x‖ = 1 := by
