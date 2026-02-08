@@ -3,6 +3,7 @@ import LeanOA.CStarAlgebra.Extreme
 import LeanOA.CStarModule.Standard
 import LeanOA.ComplexOrder
 import LeanOA.ConditionallyCompletePartialOrder
+import LeanOA.FiniteSpectrum
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.Module.Defs
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.MulNonneg
