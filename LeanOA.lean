@@ -1,9 +1,9 @@
 import LeanOA.CFC
 import LeanOA.CStarAlgebra.Extreme
+import LeanOA.CStarAlgebra.FiniteSpectrum
 import LeanOA.CStarModule.Standard
 import LeanOA.ComplexOrder
 import LeanOA.ConditionallyCompletePartialOrder
-import LeanOA.FiniteSpectrum
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.Module.Defs
 import LeanOA.ForMathlib.Analysis.CStarAlgebra.MulNonneg
