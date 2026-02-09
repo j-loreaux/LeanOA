@@ -3,22 +3,25 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import Mathlib.Topology.ContinuousMap.LocallyConstant
 import Mathlib.Topology.ExtremallyDisconnected
 
-variable {A : Type*} [TopologicalSpace A]
+variable {A Y : Type*} [TopologicalSpace A] [TopologicalSpace Y]
 
 namespace ContinuousMap
 
 -- move to `Mathlib.Topology.MetricSpace.Pseudo.Defs`?
-/-- `Pi.single` as a continuous map `C(X, ℝ)`. -/
-noncomputable abbrev single [DiscreteTopology A] (i : A) : C(A, ℝ) :=
-  open Classical in .mk (Pi.single i 1)
+/-- `Pi.single` as a continuous map `C(X, Y)`. -/
+noncomputable abbrev single [DiscreteTopology A] [Zero Y] (i : A) (x : Y) : C(A, Y) :=
+  open Classical in .mk (Pi.single i x)
 
-@[simp] theorem isStarProjection_single [DiscreteTopology A] (i : A) :
-    IsStarProjection (single i) := by constructor <;> ext <;> simp [Pi.single_apply]
+@[simp] theorem isStarProjection_single [DiscreteTopology A] [Semiring Y]
+    [IsTopologicalSemiring Y] [StarAddMonoid Y] [ContinuousStar Y] (i : A) (x : Y)
+    (hx : IsStarProjection x) : IsStarProjection (single i x) where
+  isIdempotentElem := by ext; simp_all [Pi.single_apply, hx.isIdempotentElem.eq]
+  isSelfAdjoint := by ext; aesop (add simp [Pi.single_apply, hx.isSelfAdjoint.star_eq])
 
 @[simp] lemma mem_span_isStarProjection_of_finite [T1Space A] [Finite A]
     (f : C(A, ℝ)) : f ∈ Submodule.span ℝ {p : C(A, ℝ) | IsStarProjection p} := by
   have := Fintype.ofFinite A
-  rw [show f = ∑ i, f i • single i by ext; simp [Finset.sum_pi_single, ← Pi.single_smul]]
+  rw [show f = ∑ i, f i • single i 1 by ext; simp [Finset.sum_pi_single, ← Pi.single_smul]]
   exact Submodule.sum_mem _ fun i _ ↦ Submodule.smul_mem _ _ <| by simp [Submodule.mem_span_of_mem]
 
 end ContinuousMap
@@ -35,8 +38,8 @@ instance [Ring A] [Algebra ℝ A] [StarRing A] [Subsingleton A] : CStarAlgebra.F
 section totallySeparatedSpace
 variable [TotallySeparatedSpace A]
 
-theorem LocallyConstant.separatesPoints_subalgbraMap_toContinuousMapAlgHom_top (R) [CommSemiring R]
-    {Y} [TopologicalSpace Y] [Nontrivial Y] [Semiring Y] [Algebra R Y] [IsTopologicalSemiring Y] :
+theorem LocallyConstant.separatesPoints_subalgbraMap_toContinuousMapAlgHom_top (R : Type*)
+    [CommSemiring R] [Nontrivial Y] [Semiring Y] [Algebra R Y] [IsTopologicalSemiring Y] :
     (Subalgebra.map (toContinuousMapAlgHom R : _ →ₐ[R] C(A, Y)) ⊤).SeparatesPoints := by
   intro x y hxy
   obtain ⟨U, hU, hxU, hyU : y ∉ U⟩ := exists_isClopen_of_totally_separated hxy
