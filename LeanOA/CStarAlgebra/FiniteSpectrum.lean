@@ -8,19 +8,24 @@ variable {A Y : Type*} [TopologicalSpace A] [TopologicalSpace Y]
 namespace ContinuousMap
 
 -- move to `Mathlib.Topology.MetricSpace.Pseudo.Defs`?
-/-- `Pi.single` as a continuous map `C(X, Y)`. -/
-noncomputable abbrev single [DiscreteTopology A] [Zero Y] (i : A) (x : Y) : C(A, Y) :=
-  open Classical in .mk (Pi.single i x)
+/-- `Pi.single` as a continuous map `C(A, Y)`. -/
+noncomputable abbrev single [DiscreteTopology A] [DecidableEq A] [Zero Y] (i : A) (x : Y) :
+    C(A, Y) := .mk (Pi.single i x)
 
-@[simp] theorem isStarProjection_single [DiscreteTopology A] [NonUnitalNonAssocSemiring Y]
-    [IsTopologicalSemiring Y] [StarAddMonoid Y] [ContinuousStar Y] (i : A) (x : Y)
-    (hx : IsStarProjection x) : IsStarProjection (single i x) where
+@[simp] lemma single_apply [DiscreteTopology A] [DecidableEq A] [Zero Y] (i : A) (x : Y) (j : A) :
+    single i x j = (Pi.single i x : A → Y) j := rfl
+
+-- move to `Mathlib.Topology.ContinuousMap.Star`
+@[simp] theorem isStarProjection_single [DiscreteTopology A] [DecidableEq A]
+    [NonUnitalNonAssocSemiring Y] [IsTopologicalSemiring Y] [StarAddMonoid Y] [ContinuousStar Y]
+    (i : A) (x : Y) (hx : IsStarProjection x) : IsStarProjection (single i x) where
   isIdempotentElem := by ext; simp_all [Pi.single_apply, hx.isIdempotentElem.eq]
   isSelfAdjoint := by ext; aesop (add simp [Pi.single_apply, hx.isSelfAdjoint.star_eq])
 
 @[simp] lemma mem_span_isStarProjection_of_finite [DiscreteTopology A] [Finite A]
     (f : C(A, ℝ)) : f ∈ Submodule.span ℝ {p : C(A, ℝ) | IsStarProjection p} := by
   have := Fintype.ofFinite A
+  classical
   rw [show f = ∑ i, f i • single i 1 by ext; simp [Finset.sum_pi_single, ← Pi.single_smul]]
   exact Submodule.sum_mem _ fun i _ ↦ Submodule.smul_mem _ _ <| by simp [Submodule.mem_span_of_mem]
 
