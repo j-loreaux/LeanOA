@@ -71,7 +71,7 @@ open ContinuousMap LocallyConstant in
 instance [CompactSpace X] : CStarAlgebra.FiniteSpectrum ℝ C(X, ℝ) where
   fs x hx := by
     have : .range toContinuousMap ⊆ {x : C(X, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} :=
-      fun _ ⟨f, hf⟩ ↦ by  simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
+      fun _ ⟨f, hf⟩ ↦ by simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
     apply closure_mono this
     simpa using Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
       (separatesPoints_subalgbraMap_toContinuousMapAlgHom_top ℝ)) x
