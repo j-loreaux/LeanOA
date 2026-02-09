@@ -90,7 +90,6 @@ lemma star_mul_self_eq_realPart_sq_add_imaginaryPart_sq {A : Type*} [NonUnitalNo
   simp only
   nth_rw 1 [two_nsmul, star_comm_self' x, add_comm, star_mul_self_add_self_mul_star]
 
-
 lemma mem_unitary_iff_isStarNormal_and_realPart_sq_add_imaginaryPart_sq_eq_one {A : Type*} [Ring A]
     [StarRing A] [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A] [StarModule ℂ A] {x : A} :
     x ∈ unitary A ↔ IsStarNormal x ∧ ℜ x ^ 2 + ℑ x ^ 2 = (1 : A) := by
