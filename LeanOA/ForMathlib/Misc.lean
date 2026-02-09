@@ -90,12 +90,6 @@ lemma star_mul_self_eq_realPart_sq_add_imaginaryPart_sq {A : Type*} [NonUnitalNo
   simp only
   nth_rw 1 [two_nsmul, star_comm_self' x, add_comm, star_mul_self_add_self_mul_star]
 
-/-- Elements in `ℂ`-modules are equal iff their real and imaginary parts are. -/
-theorem ext_iff_realPart_and_imaginaryPart {A : Type*} [AddCommGroup A] [Module ℂ A]
-    [StarAddMonoid A] [StarModule ℂ A] {x y : A} : x = y ↔ ℜ x = ℜ y ∧ ℑ x = ℑ y := by
-  refine ⟨fun h ↦ by simp [h], fun h ↦ ?_⟩
-  conv_lhs => rw [← realPart_add_I_smul_imaginaryPart x, h.1, h.2]
-  simp [realPart_add_I_smul_imaginaryPart]
 
 lemma mem_unitary_iff_isStarNormal_and_realPart_sq_add_imaginaryPart_sq_eq_one {A : Type*} [Ring A]
     [StarRing A] [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A] [StarModule ℂ A] {x : A} :
