@@ -59,14 +59,15 @@ instance {𝕜 A : Type*} [RCLike 𝕜] [Norm A] [MulAction 𝕜 A] [SMul ℤ A]
     rw [← smul_one_smul 𝕜]
     simp only [norm_smul, norm_one, mul_one]
 
-open scoped ComplexStarModule in
+open scoped ComplexStarModule
+
 open Complex in
 /-- An element in a non-unital star `ℂ`-algebra is normal if and only if its real and imaginary
 parts commute. -/
 lemma isStarNormal_iff_commute_realPart_imaginaryPart
-    {A : Type*} [NonUnitalRing A] [StarRing A]
+    {A : Type*} [NonUnitalNonAssocRing A] [StarRing A]
     [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A] [StarModule ℂ A]
-    {x : A} : IsStarNormal x ↔ Commute (realPart x : A) (imaginaryPart x : A) := by
+    {x : A} : IsStarNormal x ↔ Commute (ℜ x : A) (ℑ x : A) := by
   conv_lhs => rw [isStarNormal_iff, ← realPart_add_I_smul_imaginaryPart x]
   rw [commute_iff_eq]
   simp only [star_add, selfAdjoint.star_val_eq, star_smul, RCLike.star_def, Complex.conj_I,
@@ -80,6 +81,25 @@ lemma isStarNormal_iff_commute_realPart_imaginaryPart
   have := congr(I • (2⁻¹ : ℂ) • $h)
   rw [← smul_one_smul ℂ (2 : ℤ) (I • (ℑ x * ℜ x : A)), ← smul_one_smul ℂ (2 : ℤ)] at this
   simpa
+
+lemma star_mul_self_eq_realPart_sq_add_imaginaryPart_sq {A : Type*} [NonUnitalNonAssocRing A]
+    [StarRing A] [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A] [StarModule ℂ A]
+    {x : A} [hx : IsStarNormal x] : star x * x = ℜ x * ℜ x + ℑ x * ℑ x := by
+   -- seriously? we have to do this?
+  have : IsAddTorsionFree A :=  have : Module ℚ A := RestrictScalars.module ℚ ℝ A; .of_module_rat A
+  apply nsmul_right_injective two_ne_zero
+  simp only
+  nth_rw 1 [two_nsmul, star_comm_self' x, add_comm, star_mul_self_add_self_mul_star]
+
+lemma mem_unitary_iff_isStarNormal_and_realPart_sq_add_imaginaryPart_sq_eq_one {A : Type*} [Ring A]
+    [StarRing A] [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A] [StarModule ℂ A] {x : A} :
+    x ∈ unitary A ↔ IsStarNormal x ∧ ℜ x ^ 2 + ℑ x ^ 2 = (1 : A) := by
+  rw [Unitary.mem_iff]
+  refine ⟨fun h ↦ ?_, fun ⟨hx, h⟩ ↦ ?_⟩
+  · have : IsStarNormal x := by simp [isStarNormal_iff, commute_iff_eq, h]
+    rw [star_mul_self_eq_realPart_sq_add_imaginaryPart_sq] at h
+    exact ⟨this, by simp [sq, h]⟩
+  · simp [← hx.star_comm_self.eq, star_mul_self_eq_realPart_sq_add_imaginaryPart_sq, ← sq, h]
 
 open NNReal in
 /-- The collection of nonnegative elements as an `ℝ≥0`-submodule. -/
