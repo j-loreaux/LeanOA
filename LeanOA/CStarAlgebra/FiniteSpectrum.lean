@@ -3,37 +3,57 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import Mathlib.Topology.ContinuousMap.LocallyConstant
 import Mathlib.Topology.ExtremallyDisconnected
 
+variable {A : Type*} [TopologicalSpace A]
+
 namespace ContinuousMap
-variable {X : Type*} [TopologicalSpace X]
 
 -- move to `Mathlib.Topology.MetricSpace.Pseudo.Defs`?
 /-- `Pi.single` as a continuous map `C(X, ℝ)`. -/
-noncomputable abbrev single [DiscreteTopology X] (i : X) : C(X, ℝ) :=
+noncomputable abbrev single [DiscreteTopology A] (i : A) : C(A, ℝ) :=
   open Classical in .mk (Pi.single i 1)
 
-@[simp] theorem isStarProjection_single [DiscreteTopology X] (i : X) :
+@[simp] theorem isStarProjection_single [DiscreteTopology A] (i : A) :
     IsStarProjection (single i) := by constructor <;> ext <;> simp [Pi.single_apply]
 
-@[simp] lemma mem_span_isStarProjection_of_finite [T1Space X] [Finite X]
-    (f : C(X, ℝ)) : f ∈ Submodule.span ℝ {p : C(X, ℝ) | IsStarProjection p} := by
-  have := Fintype.ofFinite X
+@[simp] lemma mem_span_isStarProjection_of_finite [T1Space A] [Finite A]
+    (f : C(A, ℝ)) : f ∈ Submodule.span ℝ {p : C(A, ℝ) | IsStarProjection p} := by
+  have := Fintype.ofFinite A
   rw [show f = ∑ i, f i • single i by ext; simp [Finset.sum_pi_single, ← Pi.single_smul]]
   exact Submodule.sum_mem _ fun i _ ↦ Submodule.smul_mem _ _ <| by simp [Submodule.mem_span_of_mem]
 
 end ContinuousMap
 
+variable (A) in
 /-- A C⋆-algebra is **FS** if the set of self-adjoint elements has a dense subset of
 elements with finite spectrum. -/
-class CStarAlgebra.FiniteSpectrum (A : Type*) [TopologicalSpace A] [Ring A]
-    [Algebra ℝ A] [StarRing A] : Prop where
+class CStarAlgebra.FiniteSpectrum [Ring A] [Algebra ℝ A] [StarRing A] : Prop where
   fs : {x : A | IsSelfAdjoint x} ⊆ closure {x : A | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite}
 
-instance {A : Type*} [TopologicalSpace A] [Ring A] [Algebra ℝ A] [StarRing A] [Subsingleton A] :
-    CStarAlgebra.FiniteSpectrum A where
+instance [Ring A] [Algebra ℝ A] [StarRing A] [Subsingleton A] : CStarAlgebra.FiniteSpectrum A where
   fs := by nontriviality A; exfalso; exact false_of_nontrivial_of_subsingleton A
 
-variable {A : Type*} [TopologicalSpace A] [Ring A] [StarRing A] [Algebra ℝ A]
-  [ContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
+section totallySeparatedSpace
+variable [TotallySeparatedSpace A]
+
+theorem LocallyConstant.separatesPoints_subalgbraMap_toContinuousMapAlgHom_top (R) [CommSemiring R]
+    {Y} [TopologicalSpace Y] [Nontrivial Y] [Semiring Y] [Algebra R Y] [IsTopologicalSemiring Y] :
+    (Subalgebra.map (toContinuousMapAlgHom R : _ →ₐ[R] C(A, Y)) ⊤).SeparatesPoints := by
+  intro x y hxy
+  obtain ⟨U, hU, hxU, hyU : y ∉ U⟩ := exists_isClopen_of_totally_separated hxy
+  exact ⟨charFn Y hU, by simp_all [charFn]⟩
+
+open ContinuousMap LocallyConstant in
+instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, ℝ) where
+  fs x hx := by
+    have : .range toContinuousMap ⊆ {x : C(A, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} :=
+      fun _ ⟨f, hf⟩ ↦ by simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
+    apply closure_mono this
+    simpa using Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
+      (separatesPoints_subalgbraMap_toContinuousMapAlgHom_top ℝ)) x
+
+end totallySeparatedSpace
+
+variable [Ring A] [StarRing A] [Algebra ℝ A] [ContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
 
 /-- A self-adjoint element with finite spectrum in a C⋆-algebra is in the span of
 star projections. -/
@@ -57,21 +77,3 @@ projections is exactly the submodule of the self-adjoint elements. -/
   · refine Submodule.span_induction (fun _ hx ↦ hx.isSelfAdjoint) ?_ ?_ ?_ hx <;> aesop
   · exact isClosed_eq continuous_id'.star continuous_id'
   · exact closure_mono (fun y hy ↦ hy.1.mem_span_isStarProjection_of_finite_spectrum hy.2) (h.fs hx)
-
-variable {X : Type*} [TopologicalSpace X] [TotallySeparatedSpace X]
-
-theorem LocallyConstant.separatesPoints_subalgbraMap_toContinuousMapAlgHom_top (R) [CommSemiring R]
-    {Y} [TopologicalSpace Y] [Nontrivial Y] [Semiring Y] [Algebra R Y] [IsTopologicalSemiring Y] :
-    (Subalgebra.map (toContinuousMapAlgHom R : _ →ₐ[R] C(X, Y)) ⊤).SeparatesPoints := by
-  intro x y hxy
-  obtain ⟨U, hU, hxU, hyU : y ∉ U⟩ := exists_isClopen_of_totally_separated hxy
-  exact ⟨charFn Y hU, by simp_all [charFn]⟩
-
-open ContinuousMap LocallyConstant in
-instance [CompactSpace X] : CStarAlgebra.FiniteSpectrum C(X, ℝ) where
-  fs x hx := by
-    have : .range toContinuousMap ⊆ {x : C(X, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} :=
-      fun _ ⟨f, hf⟩ ↦ by simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
-    apply closure_mono this
-    simpa using Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
-      (separatesPoints_subalgbraMap_toContinuousMapAlgHom_top ℝ)) x
