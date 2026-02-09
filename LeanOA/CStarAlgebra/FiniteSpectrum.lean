@@ -34,11 +34,12 @@ end ContinuousMap
 variable (A) in
 /-- A C⋆-algebra is **FS** if the set of self-adjoint elements has a dense subset of
 elements with finite spectrum. -/
+@[mk_iff]
 class CStarAlgebra.FiniteSpectrum [Ring A] [Algebra ℝ A] [StarRing A] : Prop where
   fs : {x : A | IsSelfAdjoint x} ⊆ closure {x : A | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite}
 
 instance [Ring A] [Algebra ℝ A] [StarRing A] [Subsingleton A] : CStarAlgebra.FiniteSpectrum A where
-  fs := by nontriviality A; exfalso; exact false_of_nontrivial_of_subsingleton A
+  fs := by simp
 
 section totallySeparatedSpace
 variable [TotallySeparatedSpace A]
