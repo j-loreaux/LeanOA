@@ -51,17 +51,6 @@ lemma cfc_im_id {A : Type*} [CStarAlgebra A] {a : A} [IsStarNormal a] :
     simpa
   simp [mul_comm I, re_add_im, cfc_id' .., realPart_add_I_smul_imaginaryPart]
 
-lemma star_mul_self_eq_realPart_sq_add_imaginaryPart_sq
-    {A : Type*} [NonUnitalRing A] [StarRing A]
-    [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A] [StarModule ℂ A]
-    {x : A} [hx : IsStarNormal x] :
-    star x * x = realPart x * realPart x + imaginaryPart x * imaginaryPart x := by
-  -- seriously? we have to do this?
-  have : IsAddTorsionFree A :=  have : Module ℚ A := RestrictScalars.module ℚ ℝ A; .of_module_rat A
-  apply nsmul_right_injective two_ne_zero
-  simp only
-  nth_rw 1 [two_nsmul, star_comm_self' x, add_comm, star_mul_self_add_self_mul_star]
-
 lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] :
     1 ∈ extremePoints ℝ (closedBall (0 : A) 1) := by
   nontriviality A
