@@ -58,17 +58,17 @@ projections is exactly the submodule of the self-adjoint elements. -/
   · exact isClosed_eq continuous_id'.star continuous_id'
   · exact closure_mono (fun y hy ↦ hy.1.mem_span_isStarProjection_of_finite_spectrum hy.2) (h.fs hx)
 
-theorem LocallyConstant.separatesPoints_subalgbraMap_toContinuousMapAlgHom_top (R : Type*)
-    {X Y : Type*} [CommSemiring R] [TopologicalSpace X] [TopologicalSpace Y] [Nontrivial Y]
-    [Semiring Y] [Algebra R Y] [IsTopologicalSemiring Y] [TotallySeparatedSpace X] :
+variable {X : Type*} [TopologicalSpace X] [TotallySeparatedSpace X]
+
+theorem LocallyConstant.separatesPoints_subalgbraMap_toContinuousMapAlgHom_top (R) [CommSemiring R]
+    {Y} [TopologicalSpace Y] [Nontrivial Y] [Semiring Y] [Algebra R Y] [IsTopologicalSemiring Y] :
     (Subalgebra.map (toContinuousMapAlgHom R : _ →ₐ[R] C(X, Y)) ⊤).SeparatesPoints := by
   intro x y hxy
   obtain ⟨U, hU, hxU, hyU : y ∉ U⟩ := exists_isClopen_of_totally_separated hxy
   exact ⟨charFn Y hU, by simp_all [charFn]⟩
 
 open ContinuousMap LocallyConstant in
-instance {X : Type*} [TopologicalSpace X] [CompactSpace X] [TotallySeparatedSpace X] :
-    CStarAlgebra.FiniteSpectrum ℝ C(X, ℝ) where
+instance [CompactSpace X] : CStarAlgebra.FiniteSpectrum ℝ C(X, ℝ) where
   fs x hx := by
     have : .range toContinuousMap ⊆ {x : C(X, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} :=
       fun _ ⟨f, hf⟩ ↦ by  simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
