@@ -24,12 +24,12 @@ end ContinuousMap
 
 /-- A C⋆-algebra is **FS** if the set of self-adjoint elements has a dense subset of
 elements with finite spectrum. -/
-class CStarAlgebra.FiniteSpectrum (𝕜 A : Type*) [RCLike 𝕜] [TopologicalSpace A] [Ring A]
-    [Algebra 𝕜 A] [StarRing A] : Prop where
-  fs : {x : A | IsSelfAdjoint x} ⊆ closure {x : A | IsSelfAdjoint x ∧ (spectrum 𝕜 x).Finite}
+class CStarAlgebra.FiniteSpectrum (A : Type*) [TopologicalSpace A] [Ring A]
+    [Algebra ℝ A] [StarRing A] : Prop where
+  fs : {x : A | IsSelfAdjoint x} ⊆ closure {x : A | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite}
 
-instance {𝕜 A : Type*} [RCLike 𝕜] [TopologicalSpace A] [Ring A] [Algebra 𝕜 A] [StarRing A]
-    [Subsingleton A] : CStarAlgebra.FiniteSpectrum 𝕜 A where
+instance {A : Type*} [TopologicalSpace A] [Ring A] [Algebra ℝ A] [StarRing A] [Subsingleton A] :
+    CStarAlgebra.FiniteSpectrum A where
   fs := by nontriviality A; exfalso; exact false_of_nontrivial_of_subsingleton A
 
 variable {A : Type*} [TopologicalSpace A] [Ring A] [StarRing A] [Algebra ℝ A]
@@ -50,7 +50,7 @@ lemma IsSelfAdjoint.mem_span_isStarProjection_of_finite_spectrum {x : A}
 projections is exactly the submodule of the self-adjoint elements. -/
 @[simp] theorem CStarAlgebra.FiniteSpectrum.topologicalClosure_span_isStarProjection
     [ContinuousConstSMul ℝ A] [ContinuousAdd A] [StarModule ℝ A] [T2Space A]
-    [ContinuousStar A] [h : CStarAlgebra.FiniteSpectrum ℝ A] :
+    [ContinuousStar A] [h : CStarAlgebra.FiniteSpectrum A] :
     (Submodule.span ℝ {x : A | IsStarProjection x}).topologicalClosure =
       selfAdjoint.submodule ℝ A := by
   refine le_antisymm (fun x hx ↦ closure_minimal (fun x hx ↦ ?_) ?_ hx) fun x hx ↦ ?_
@@ -68,7 +68,7 @@ theorem LocallyConstant.separatesPoints_subalgbraMap_toContinuousMapAlgHom_top (
   exact ⟨charFn Y hU, by simp_all [charFn]⟩
 
 open ContinuousMap LocallyConstant in
-instance [CompactSpace X] : CStarAlgebra.FiniteSpectrum ℝ C(X, ℝ) where
+instance [CompactSpace X] : CStarAlgebra.FiniteSpectrum C(X, ℝ) where
   fs x hx := by
     have : .range toContinuousMap ⊆ {x : C(X, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} :=
       fun _ ⟨f, hf⟩ ↦ by simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
