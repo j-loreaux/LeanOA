@@ -90,6 +90,7 @@ lemma star_mul_self_eq_realPart_sq_add_imaginaryPart_sq {A : Type*} [NonUnitalNo
   simp only
   nth_rw 1 [two_nsmul, star_comm_self' x, add_comm, star_mul_self_add_self_mul_star]
 
+/-- Elements in `ℂ`-algebras are equal iff their real and imaginary parts are. -/
 theorem ext_iff_realPart_and_imaginaryPart {A : Type*} [NonUnitalNonAssocRing A] [StarRing A]
     [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A] [StarModule ℂ A] {x y : A} :
     x = y ↔ ℜ x = ℜ y ∧ ℑ x = ℑ y := by
@@ -103,11 +104,9 @@ lemma mem_unitary_iff_isStarNormal_and_realPart_sq_add_imaginaryPart_sq_eq_one {
   rw [Unitary.mem_iff]
   refine ⟨fun h ↦ ?_, fun ⟨hx, h⟩ ↦ ?_⟩
   · have : IsStarNormal x := by simp [isStarNormal_iff, commute_iff_eq, h]
-    refine ⟨this, ?_⟩
     rw [star_mul_self_eq_realPart_sq_add_imaginaryPart_sq] at h
-    simp [sq, h]
-  · simp only [← hx.star_comm_self.eq, and_self]
-    simp [star_mul_self_eq_realPart_sq_add_imaginaryPart_sq, ← sq, h]
+    exact ⟨this, by simp [sq, h]⟩
+  · simp [← hx.star_comm_self.eq, star_mul_self_eq_realPart_sq_add_imaginaryPart_sq, ← sq, h]
 
 open NNReal in
 /-- The collection of nonnegative elements as an `ℝ≥0`-submodule. -/
