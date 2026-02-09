@@ -12,13 +12,13 @@ namespace ContinuousMap
 noncomputable abbrev single [DiscreteTopology A] [Zero Y] (i : A) (x : Y) : C(A, Y) :=
   open Classical in .mk (Pi.single i x)
 
-@[simp] theorem isStarProjection_single [DiscreteTopology A] [Semiring Y]
+@[simp] theorem isStarProjection_single [DiscreteTopology A] [NonUnitalNonAssocSemiring Y]
     [IsTopologicalSemiring Y] [StarAddMonoid Y] [ContinuousStar Y] (i : A) (x : Y)
     (hx : IsStarProjection x) : IsStarProjection (single i x) where
   isIdempotentElem := by ext; simp_all [Pi.single_apply, hx.isIdempotentElem.eq]
   isSelfAdjoint := by ext; aesop (add simp [Pi.single_apply, hx.isSelfAdjoint.star_eq])
 
-@[simp] lemma mem_span_isStarProjection_of_finite [T1Space A] [Finite A]
+@[simp] lemma mem_span_isStarProjection_of_finite [DiscreteTopology A] [Finite A]
     (f : C(A, ℝ)) : f ∈ Submodule.span ℝ {p : C(A, ℝ) | IsStarProjection p} := by
   have := Fintype.ofFinite A
   rw [show f = ∑ i, f i • single i 1 by ext; simp [Finset.sum_pi_single, ← Pi.single_smul]]
@@ -63,11 +63,11 @@ star projections. -/
 lemma IsSelfAdjoint.mem_span_isStarProjection_of_finite_spectrum {x : A}
     (hx : IsSelfAdjoint x) (h : (spectrum ℝ x).Finite) :
     x ∈ Submodule.span ℝ {p : A | IsStarProjection p} := by
+  refine Submodule.mem_span.mpr fun p hp ↦ ?_
   have : Finite (spectrum ℝ x) := Set.finite_coe_iff.mpr h
-  convert (ContinuousMap.id ℝ).restrict (spectrum ℝ x) |>.mem_span_isStarProjection_of_finite
-  refine ⟨fun _ ↦ by simp_all, fun h' ↦ Submodule.mem_span.mpr fun p hp ↦ ?_⟩
-  have := Submodule.mem_span.mp h' (.comap (cfcHom hx).toLinearMap p)
-  simp_all [Set.subset_def, IsStarProjection.map, cfcHom_id]
+  simpa [cfcHom_id] using Submodule.mem_span.mp
+    ((ContinuousMap.id ℝ).restrict (spectrum ℝ x)).mem_span_isStarProjection_of_finite
+    (.comap (cfcHom hx).toLinearMap p) (by simp_all [Set.subset_def, IsStarProjection.map])
 
 /-- In a FS C⋆-algebra, the topological closure of the span of star
 projections is exactly the submodule of the self-adjoint elements. -/
