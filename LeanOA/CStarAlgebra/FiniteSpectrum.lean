@@ -3,33 +3,36 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import Mathlib.Topology.ContinuousMap.LocallyConstant
 import Mathlib.Topology.ExtremallyDisconnected
 
-variable {A Y : Type*} [TopologicalSpace A] [TopologicalSpace Y]
+variable {𝕜 A Y : Type*} [RCLike 𝕜] [TopologicalSpace A] [TopologicalSpace Y]
 
 namespace ContinuousMapZero
 
-/-- `Pi.single` as an element of `C(A, Y)₀`. -/
+/-- A version of `Pi.single` as an element in `C(A, Y)₀` where `single i x 0 = 0`. -/
 noncomputable abbrev single [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A] (i : A)
     (x : Y) : C(A, Y)₀ where
   toFun j := if j = 0 then 0 else (Pi.single i x : A → Y) j
   map_zero' := by simp
 
-@[simp] lemma single_apply [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
+lemma single_def [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
     (i : A) (x : Y) (j : A) :
     single i x j = if j = 0 then 0 else (Pi.single i x : A → Y) j := rfl
 
+@[simp] lemma sigle_apply_of_ne_zero [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
+    (i : A) (x : Y) {j : A} (hj : j ≠ 0) : single i x j = (Pi.single i x : A → Y) j := by simp_all
+
 @[simp] lemma mem_span_isStarProjection_of_finite [DiscreteTopology A] [Finite A] [Zero A]
-    (f : C(A, ℝ)₀) : f ∈ Submodule.span ℝ {p : ContinuousMapZero A ℝ | IsStarProjection p} := by
+    (f : C(A, 𝕜)₀) : f ∈ Submodule.span 𝕜 {p : ContinuousMapZero A 𝕜 | IsStarProjection p} := by
   have := Fintype.ofFinite A
   classical
   rw [show f = ∑ i, f i • single i 1 by aesop (add simp [Pi.single_apply])]
   exact Submodule.sum_mem _ fun i _ ↦ Submodule.smul_mem _ _ <| Submodule.mem_span_of_mem
-    (by aesop (add simp [isStarProjection_iff, IsIdempotentElem, Pi.single_apply]))
+    (by constructor <;> ext <;> simp_all [Pi.single_apply, apply_ite])
 
 end ContinuousMapZero
 
 variable (A) in
-/-- A C⋆-algebra is **FS** if the set of self-adjoint elements has a dense subset of
-elements with finite spectrum. -/
+/-- A C⋆-algebra is **FS (Finite Spectrum)** if the set of self-adjoint elements has a dense subset
+of elements with finite spectrum. -/
 @[mk_iff]
 class CStarAlgebra.FiniteSpectrum [NonUnitalRing A] [Module ℝ A] [Star A] : Prop where
   fs : {x : A | IsSelfAdjoint x} ⊆ closure {x : A | IsSelfAdjoint x ∧ (quasispectrum ℝ x).Finite}
@@ -65,6 +68,10 @@ instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, ℝ) :=
     apply closure_mono this
     simpa using Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
       (separatesPoints_subalgbraMap_toContinuousMapAlgHom_top ℝ)) x
+
+set_option linter.unusedSectionVars false in
+proof_wanted CStarAlgebra.finiteSpectrumContinuousMapComplex [CompactSpace A] :
+    CStarAlgebra.FiniteSpectrum C(A, ℂ)
 
 end totallySeparatedSpace
 
