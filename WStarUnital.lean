@@ -21,7 +21,7 @@ theorem ClusterPt_of_ApproximateUnit :
     le_principal_iff.mpr <| mem_inf_of_right fun ⦃a⦄ a_1 ↦ a_1)
 
 theorem LeftUnital {P : Type*} [NormedAddCommGroup P] [NormedSpace ℂ P]
-    [Predual ℂ M P] (_ : σ(M, P)) :
+    [Predual ℂ M P] :
     ∃ e : σ(M, P), ∀ m, m * e = m := by
   obtain ⟨e, he⟩ : ∃ e, MapClusterPt e (approximateUnit M) (toUltraweak ℂ P) := by
     rcases ClusterPt_of_ApproximateUnit (M := M) (P := P) with ⟨_, hd⟩
@@ -42,7 +42,7 @@ theorem LeftUnital {P : Type*} [NormedAddCommGroup P] [NormedSpace ℂ P]
   exact tendsto_nhds_unique h₁ h₃
 
 theorem RightUnital {P : Type*} [NormedAddCommGroup P] [NormedSpace ℂ P]
-    [Predual ℂ M P] (_ : σ(M, P)) :
+    [Predual ℂ M P] :
     ∃ e : σ(M, P), ∀ m, e * m = m := by
   obtain ⟨e, he⟩ : ∃ e, MapClusterPt e (approximateUnit M) (toUltraweak ℂ P) := by
     rcases ClusterPt_of_ApproximateUnit (M := M) (P := P) with ⟨_, hd⟩
@@ -58,3 +58,13 @@ theorem RightUnital {P : Type*} [NormedAddCommGroup P] [NormedSpace ℂ P]
    simpa [ofUltraweak_inj] using tendsto_iff_forall_eventually_mem.mpr fun _ a ↦ h₂
      (Continuous.tendsto toUltraweak_continuous (ofUltraweak _) <| a)
   exact tendsto_nhds_unique h₁ h₃
+
+#synth Mul σ(M, P)
+#synth NonUnitalRing (M, P)
+lemma left_unit_eq_right_unit (e : σ(M, P)) : (∀ m, m * e = m) → (∀ m, e * m = m) := by
+   intro h m
+   have : e * (m * e) = (e * m) * e := by exact NonUnitalRing.mul_assoc (α := σ(M, P))
+
+#exit
+instance : CStarAlgebra M where
+  one := Classical.choose LeftUnital
