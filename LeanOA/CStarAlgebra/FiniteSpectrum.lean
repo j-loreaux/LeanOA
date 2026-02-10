@@ -3,7 +3,7 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import Mathlib.Topology.ContinuousMap.LocallyConstant
 import Mathlib.Topology.ExtremallyDisconnected
 
-variable {𝕜 A Y : Type*} [RCLike 𝕜] [TopologicalSpace A] [TopologicalSpace Y]
+variable {A Y 𝕜 : Type*} [RCLike 𝕜] [TopologicalSpace A] [TopologicalSpace Y]
 
 namespace ContinuousMapZero
 
