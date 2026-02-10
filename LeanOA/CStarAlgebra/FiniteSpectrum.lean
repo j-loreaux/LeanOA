@@ -32,35 +32,44 @@ end ContinuousMapZero
 
 namespace ContinuousMap
 
+variable (𝕜) in
 /-- Lifting `C(A, ℝ)` to `C(A, ℂ)` using `Complex.ofReal`. -/
-@[simps] def realToComplex (f : C(A, ℝ)) : C(A, ℂ) where toFun x := .ofReal (f x)
+@[simps] def realToRCLike (f : C(A, ℝ)) : C(A, 𝕜) where toFun x := RCLike.ofReal (f x)
 
-@[simp] lemma isSelfAdjoint_realToComplex {f : C(A, ℝ)} : IsSelfAdjoint f.realToComplex := by
+@[simp] lemma isSelfAdjoint_realToRCLike {f : C(A, ℝ)} : IsSelfAdjoint (f.realToRCLike 𝕜) := by
   ext; simp
 
-@[simp] lemma spectrum_realToComplex (f : C(A, ℝ)) : spectrum ℝ f.realToComplex = spectrum ℝ f := by
-  aesop (add simp [spectrum.mem_iff, isUnit_iff_forall_isUnit, Complex.ext_iff])
+@[simp] lemma spectrum_realToRCLike (f : C(A, ℝ)) :
+    spectrum ℝ (f.realToRCLike 𝕜) = spectrum ℝ f := by
+  ext; simp [spectrum.mem_iff, isUnit_iff_forall_isUnit, RCLike.ext_iff (K := 𝕜), Algebra.smul_def]
 
 /-- Mapping `C(A, ℂ)` to `C(A, ℝ)` using `Complex.re`. -/
-@[simps] def complexToReal (f : C(A, ℂ)) : C(A, ℝ) where toFun x := (f x).re
+@[simps] def rclikeToReal (f : C(A, 𝕜)) : C(A, ℝ) where toFun x := RCLike.re (f x)
 
-@[simp] theorem complexToReal_realToComplex (f : C(A, ℝ)) : f.realToComplex.complexToReal = f := rfl
+@[simp] theorem rclikeToReal_realToComplex (f : C(A, ℝ)) :
+    (f.realToRCLike 𝕜).rclikeToReal = f := by ext; simp
 
-theorem IsSelfAdjoint.realToComplex_complexToReal {f : C(A, ℂ)} (hf : IsSelfAdjoint f) :
-    f.complexToReal.realToComplex = f := by
+theorem IsSelfAdjoint.realToRCLike_rclikeToReal {f : C(A, 𝕜)} (hf : IsSelfAdjoint f) :
+    f.rclikeToReal.realToRCLike 𝕜 = f := by
   ext
-  simp only [realToComplex_apply, complexToReal_apply, ← Complex.conj_eq_iff_re]
+  simp only [realToRCLike_apply, rclikeToReal_apply, ← RCLike.conj_eq_iff_re]
   conv_rhs => rw [← hf.star_eq]
   simp
 
+variable (𝕜) in
 open ContinuousMap in
-theorem range_realToComplex_eq_isSelfAdjoint :
-    .range realToComplex = {f : C(A, ℂ) | IsSelfAdjoint f} :=
+theorem range_realToRCLike_eq_isSelfAdjoint :
+    .range (realToRCLike 𝕜) = {f : C(A, 𝕜) | IsSelfAdjoint f} :=
   le_antisymm (fun _ ⟨_, h⟩ ↦ by simp [← h]) fun f hf ↦
-    ⟨f.complexToReal, hf.realToComplex_complexToReal⟩
+    ⟨f.rclikeToReal, hf.realToRCLike_rclikeToReal⟩
 
-@[simp] theorem isometry_realToComplex [CompactSpace A] : Isometry (realToComplex (A := A)) :=
-  .of_dist_eq fun f g ↦ by simp [dist_eq_norm, norm_eq_iSup_norm, ← Complex.ofReal_sub]
+variable (𝕜) in
+@[simp] theorem isometry_realToRCLike [CompactSpace A] : Isometry (realToRCLike 𝕜 (A := A)) := by
+  refine .of_dist_eq fun f g ↦ ?_
+  simp only [dist_eq_norm, norm_eq_iSup_norm, sub_apply, realToRCLike_apply, Real.norm_eq_abs]
+  congr; ext
+  rw [← RCLike.ofReal_sub]
+  simp [-map_sub]
 
 end ContinuousMap
 
@@ -104,11 +113,11 @@ instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, ℝ) :=
       (separatesPoints_subalgbraMap_toContinuousMapAlgHom_top ℝ)) x
 
 open ContinuousMap in
-instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, ℂ) :=
+instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
   CStarAlgebra.finiteSpectrum_iff_spectrum.mpr fun x hx ↦
-    have ⟨y, hy⟩ := range_realToComplex_eq_isSelfAdjoint (A := A) ▸ hx
-    have : realToComplex '' _ ⊆ {x | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} := by aesop
-    closure_mono this <| hy ▸ mem_closure_image isometry_realToComplex.continuous.continuousAt
+    have ⟨y, hy⟩ := range_realToRCLike_eq_isSelfAdjoint 𝕜 (A := A) ▸ hx
+    have : realToRCLike 𝕜 '' _ ⊆ {x | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} := by aesop
+    closure_mono this <| hy ▸ mem_closure_image (isometry_realToRCLike 𝕜).continuous.continuousAt
       (CStarAlgebra.finiteSpectrum_iff_spectrum.mp inferInstance (.all y))
 
 end totallySeparatedSpace
