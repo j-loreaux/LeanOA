@@ -125,6 +125,10 @@ lemma Ultraweak.eval_continuous (p : P) :
     Continuous fun m : σ(M, P)_𝕜 ↦ (Predual.equivDual (𝕜 := 𝕜) (ofUltraweak m)) p :=
   WeakBilin.eval_continuous _ p
 
+lemma toUltraweak_continuous : Continuous <| toUltraweak 𝕜 (M := M) (P := P) :=
+  continuous_of_continuous_eval <| Continuous.eval_const
+    <| LinearIsometryEquiv.continuous Predual.equivDual
+
 variable (𝕜 M P) in
 /-- The canonical continuous linear equivalence between `σ(M, P)_𝕜` and `WeakDual 𝕜 P`. -/
 def Ultraweak.weakDualCLE : σ(M, P)_𝕜 ≃L[𝕜] WeakDual 𝕜 P where
