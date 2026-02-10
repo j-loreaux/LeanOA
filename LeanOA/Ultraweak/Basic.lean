@@ -181,7 +181,43 @@ end Linear
 
 namespace Ultraweak
 
+section Mul
+
+variable [Mul M] [NormedAddCommGroup M] [NormedSpace ℂ M] [NormedAddCommGroup P]
+variable [NormedSpace ℂ P] [Predual ℂ M P]
+
+scoped instance : Mul σ(M, P) := inferInstanceAs (Mul M)
+
+@[simp]
+lemma ofUltraweak_mul (x y : σ(M, P)) :
+    ofUltraweak (x * y) = ofUltraweak x * ofUltraweak y := rfl
+
+@[simp]
+lemma toUltraweak_mul (x y : M) :
+    toUltraweak ℂ P (x * y) = toUltraweak ℂ P x * toUltraweak ℂ P y := rfl
+
+end Mul
+
+section Star
+
+variable [Star M] [NormedAddCommGroup M] [NormedSpace ℂ M] [NormedAddCommGroup P]
+variable [NormedSpace ℂ P] [Predual ℂ M P]
+
+scoped instance : Star σ(M, P) := inferInstanceAs (Star M)
+
+@[simp]
+lemma ofUltraweak_star (x : σ(M, P)) :
+    ofUltraweak (star x) = star (ofUltraweak x) := rfl
+
+@[simp]
+lemma toUltraweak_star (x : M) :
+    toUltraweak ℂ P (star x) = star (toUltraweak ℂ P x) := rfl
+
+end Star
+
 /-! ## Ring, star and order structures -/
+
+section Unital
 
 -- With `CStarAlgebra M` and `Predual 𝕜 M P`, this is effectively a `WStarAlgebra M` where
 -- we have chosen a particular predual. My feeling is that, when a *statement* involves the
@@ -196,6 +232,7 @@ open scoped ComplexStarModule
 -- We don't want these intances to pollute `WeakBilin`, so we scope them to `Ultraweak`.
 /-- The ring structure on `σ(M, P)` it inherits from `M`. -/
 scoped instance : Ring σ(M, P) := inferInstanceAs (Ring M)
+
 /-- The algebra structure on `σ(M, P)` it inherits from `M`. -/
 scoped instance : Algebra ℂ σ(M, P) := inferInstanceAs (Algebra ℂ M)
 
@@ -204,14 +241,6 @@ lemma ofUltraweak_one : ofUltraweak (1 : σ(M, P)) = (1 : M) := rfl
 
 @[simp]
 lemma toUltraweak_one : toUltraweak ℂ P (1 : M) = (1 : σ(M, P)) := rfl
-
-@[simp]
-lemma ofUltraweak_mul (x y : σ(M, P)) :
-    ofUltraweak (x * y) = ofUltraweak x * ofUltraweak y := rfl
-
-@[simp]
-lemma toUltraweak_mul (x y : M) :
-    toUltraweak ℂ P (x * y) = toUltraweak ℂ P x * toUltraweak ℂ P y := rfl
 
 @[simp]
 lemma ofUltraweak_pow (x : σ(M, P)) (n : ℕ) :
@@ -278,14 +307,6 @@ scoped instance [PartialOrder M] [StarOrderedRing M] : StarOrderedRing σ(M, P) 
   inferInstanceAs (StarOrderedRing M)
 
 @[simp]
-lemma ofUltraweak_star (x : σ(M, P)) :
-    ofUltraweak (star x) = star (ofUltraweak x) := rfl
-
-@[simp]
-lemma toUltraweak_star (x : M) :
-    toUltraweak ℂ P (star x) = star (toUltraweak ℂ P x) := rfl
-
-@[simp]
 lemma ofUltraweak_realPart (a : σ(M, P)) :
     ofUltraweak (ℜ a : σ(M, P)) = ℜ (ofUltraweak a) := rfl
 
@@ -343,11 +364,19 @@ variable (M P) in
 @[simps!]
 noncomputable def starAlgEquiv : σ(M, P) ≃⋆ₐ[ℂ] M := .ofAlgEquiv (algEquiv M P) fun _ ↦ rfl
 
+end Unital
+
 end Ultraweak
 
-variable [CStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
-
 open scoped Ultraweak
+namespace NonUnital
+
+variable [NonUnitalCStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
+
+open scoped ComplexStarModule
+
+/-- The ring structure on `σ(M, P)` it inherits from `M`. -/
+scoped instance : NonUnitalRing σ(M, P) := inferInstanceAs (NonUnitalRing M)
 
 @[simp]
 lemma isSelfAdjoint_ofUltraweak {x : σ(M, P)} :
@@ -362,3 +391,5 @@ lemma isSelfAdjoint_toUltraweak {x : M} :
   simp [isSelfAdjoint_iff, ← Ultraweak.toUltraweak_star]
 
 alias ⟨IsSelfAdjoint.of_toUltraweak, IsSelfAdjoint.toUltraweak⟩ := isSelfAdjoint_toUltraweak
+
+end NonUnital
