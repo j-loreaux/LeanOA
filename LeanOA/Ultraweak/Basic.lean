@@ -373,7 +373,7 @@ namespace NonUnital
 
 variable [NonUnitalCStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
 
-open scoped ComplexStarModule
+open scoped ComplexStarModule NonUnital
 
 /-- The ring structure on `σ(M, P)` it inherits from `M`. -/
 scoped instance : NonUnitalRing σ(M, P) := inferInstanceAs (NonUnitalRing M)
