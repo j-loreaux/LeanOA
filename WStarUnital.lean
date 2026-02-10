@@ -6,7 +6,7 @@ open CStarAlgebra Topology Filter
 open scoped ComplexStarModule Ultraweak
 
 variable {M P : Type*}
-variable [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M] [NormedAddCommGroup P]
+variable [NonUnitalCStarAlgebra M] [PartialOrder M] [StarOrderedRing M] [NormedAddCommGroup P]
 variable [NormedSpace ℂ P] [Predual ℂ M P]
 
 protected theorem Ultraweak.continuous_mul_left (m : σ(M, P)) : Continuous (m * ·) := by sorry
@@ -16,10 +16,8 @@ protected theorem Ultraweak.continuous_mul_right (m : σ(M, P)) : Continuous (·
 theorem ClusterPt_of_ApproximateUnit :
   ∃ e ∈ (ofUltraweak (𝕜 := ℂ) (P := P) )⁻¹' (Metric.closedBall (0 : M) 1),
     ClusterPt e (map (toUltraweak (𝕜 := ℂ) (P := P)) (approximateUnit M)) := by
-  have : NeBot <| approximateUnit M :=
-    IsApproximateUnit.iff_neBot_and_le_nhds_one (l := approximateUnit _) |>.mp
-    (increasingApproximateUnit M).toIsApproximateUnit |>.1
-  refine Set.inter_nonempty.mp (Ultraweak.isCompact_closedBall _ _ _ _ <|
+  have := (increasingApproximateUnit M).toIsApproximateUnit |>.3
+  exact Set.inter_nonempty.mp (Ultraweak.isCompact_closedBall _ _ _ _ <|
     le_principal_iff.mpr <| mem_inf_of_right fun ⦃a⦄ a_1 ↦ a_1)
 
 theorem LeftUnital {P : Type*} [NormedAddCommGroup P] [NormedSpace ℂ P]
