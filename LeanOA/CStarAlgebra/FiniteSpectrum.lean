@@ -103,7 +103,7 @@ open ContinuousMap LocallyConstant in
 instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
   CStarAlgebra.finiteSpectrum_iff_spectrum.mpr fun x hx ↦ by
     obtain ⟨y, rfl⟩ := range_realToRCLike_eq_isSelfAdjoint 𝕜 (A := A) ▸ hx
-    have : realToRCLike 𝕜 '' {x : C(A,ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} ⊆
+    have : realToRCLike 𝕜 '' {x : C(A, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} ⊆
       {x | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} := by aesop
     refine closure_mono this
       (mem_closure_image (isometry_realToRCLike 𝕜).continuous.continuousAt ?_)
@@ -111,7 +111,7 @@ instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
       fun _ ⟨f, hf⟩ ↦ by simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
     apply closure_mono this
     simpa using Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
-      (separatesPoints_subalgbraMap_toContinuousMapAlgHom_top ℝ)) _
+      (separatesPoints_subalgbraMap_toContinuousMapAlgHom_top ℝ)) y
 
 end totallySeparatedSpace
 
