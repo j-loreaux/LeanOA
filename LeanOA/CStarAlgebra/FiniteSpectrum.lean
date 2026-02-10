@@ -64,12 +64,8 @@ theorem range_realToRCLike_eq_isSelfAdjoint :
     ⟨f.rclikeToReal, hf.realToRCLike_rclikeToReal⟩
 
 variable (𝕜) in
-@[simp] theorem isometry_realToRCLike [CompactSpace A] : Isometry (realToRCLike 𝕜 (A := A)) := by
-  refine .of_dist_eq fun f g ↦ ?_
-  simp only [dist_eq_norm, norm_eq_iSup_norm, sub_apply, realToRCLike_apply, Real.norm_eq_abs]
-  congr; ext
-  rw [← RCLike.ofReal_sub]
-  simp [-map_sub]
+@[simp] theorem isometry_realToRCLike [CompactSpace A] : Isometry (realToRCLike 𝕜 (A := A)) :=
+  .of_dist_eq fun f g ↦ by simp [dist_eq_norm, norm_eq_iSup_norm, ← map_sub]
 
 end ContinuousMap
 
