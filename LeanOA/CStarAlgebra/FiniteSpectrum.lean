@@ -21,7 +21,7 @@ lemma single_def [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
     (i : A) (x : Y) {j : A} (hj : j ≠ 0) : single i x j = (Pi.single i x : A → Y) j := by simp_all
 
 @[simp] lemma mem_span_isStarProjection_of_finite [DiscreteTopology A] [Finite A] [Zero A]
-    (f : C(A, 𝕜)₀) : f ∈ Submodule.span 𝕜 {p : ContinuousMapZero A 𝕜 | IsStarProjection p} := by
+    (f : C(A, 𝕜)₀) : f ∈ Submodule.span 𝕜 {p : C(A, 𝕜)₀ | IsStarProjection p} := by
   have := Fintype.ofFinite A
   classical
   rw [show f = ∑ i, f i • single i 1 by aesop (add simp [Pi.single_apply])]
@@ -29,6 +29,40 @@ lemma single_def [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
     (by constructor <;> ext <;> simp_all [Pi.single_apply, apply_ite])
 
 end ContinuousMapZero
+
+namespace ContinuousMap
+
+/-- Lifting `C(A, ℝ)` to `C(A, ℂ)` using `Complex.ofReal`. -/
+@[simps] def realToComplex (f : C(A, ℝ)) : C(A, ℂ) where toFun x := .ofReal (f x)
+
+@[simp] lemma isSelfAdjoint_realToComplex {f : C(A, ℝ)} : IsSelfAdjoint f.realToComplex := by
+  ext; simp
+
+@[simp] lemma spectrum_realToComplex (f : C(A, ℝ)) : spectrum ℝ f.realToComplex = spectrum ℝ f := by
+  aesop (add simp [spectrum.mem_iff, isUnit_iff_forall_isUnit, Complex.ext_iff])
+
+/-- Mapping `C(A, ℂ)` to `C(A, ℝ)` using `Complex.re`. -/
+@[simps] def complexToReal (f : C(A, ℂ)) : C(A, ℝ) where toFun x := (f x).re
+
+@[simp] theorem complexToReal_realToComplex (f : C(A, ℝ)) : f.realToComplex.complexToReal = f := rfl
+
+theorem IsSelfAdjoint.realToComplex_complexToReal {f : C(A, ℂ)} (hf : IsSelfAdjoint f) :
+    f.complexToReal.realToComplex = f := by
+  ext
+  simp only [realToComplex_apply, complexToReal_apply, ← Complex.conj_eq_iff_re]
+  conv_rhs => rw [← hf.star_eq]
+  simp
+
+open ContinuousMap in
+theorem range_realToComplex_eq_isSelfAdjoint :
+    .range realToComplex = {f : C(A, ℂ) | IsSelfAdjoint f} :=
+  le_antisymm (fun _ ⟨_, h⟩ ↦ by simp [← h]) fun f hf ↦
+    ⟨f.complexToReal, hf.realToComplex_complexToReal⟩
+
+@[simp] theorem isometry_realToComplex [CompactSpace A] : Isometry (realToComplex (A := A)) :=
+  .of_dist_eq fun f g ↦ by simp [dist_eq_norm, norm_eq_iSup_norm, ← Complex.ofReal_sub]
+
+end ContinuousMap
 
 variable (A) in
 /-- A C⋆-algebra is **FS (Finite Spectrum)** if the set of self-adjoint elements has a dense subset
@@ -69,9 +103,13 @@ instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, ℝ) :=
     simpa using Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
       (separatesPoints_subalgbraMap_toContinuousMapAlgHom_top ℝ)) x
 
-set_option linter.unusedSectionVars false in
-proof_wanted CStarAlgebra.finiteSpectrumContinuousMapComplex [CompactSpace A] :
-    CStarAlgebra.FiniteSpectrum C(A, ℂ)
+open ContinuousMap in
+instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, ℂ) :=
+  CStarAlgebra.finiteSpectrum_iff_spectrum.mpr fun x hx ↦
+    have ⟨y, hy⟩ := range_realToComplex_eq_isSelfAdjoint (A := A) ▸ hx
+    have : realToComplex '' _ ⊆ {x | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} := by aesop
+    closure_mono this <| hy ▸ mem_closure_image isometry_realToComplex.continuous.continuousAt
+      (CStarAlgebra.finiteSpectrum_iff_spectrum.mp inferInstance (.all y))
 
 end totallySeparatedSpace
 
