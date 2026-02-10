@@ -100,21 +100,18 @@ theorem LocallyConstant.separatesPoints_subalgbraMap_toContinuousMapAlgHom_top (
   exact ⟨charFn Y hU, by simp_all [charFn]⟩
 
 open ContinuousMap LocallyConstant in
-instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, ℝ) :=
+instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
   CStarAlgebra.finiteSpectrum_iff_spectrum.mpr fun x hx ↦ by
+    obtain ⟨y, rfl⟩ := range_realToRCLike_eq_isSelfAdjoint 𝕜 (A := A) ▸ hx
+    have : realToRCLike 𝕜 '' {x : C(A,ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} ⊆
+      {x | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} := by aesop
+    refine closure_mono this
+      (mem_closure_image (isometry_realToRCLike 𝕜).continuous.continuousAt ?_)
     have : .range toContinuousMap ⊆ {x : C(A, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} :=
       fun _ ⟨f, hf⟩ ↦ by simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
     apply closure_mono this
     simpa using Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
-      (separatesPoints_subalgbraMap_toContinuousMapAlgHom_top ℝ)) x
-
-open ContinuousMap in
-instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
-  CStarAlgebra.finiteSpectrum_iff_spectrum.mpr fun x hx ↦
-    have ⟨y, hy⟩ := range_realToRCLike_eq_isSelfAdjoint 𝕜 (A := A) ▸ hx
-    have : realToRCLike 𝕜 '' _ ⊆ {x | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} := by aesop
-    closure_mono this <| hy ▸ mem_closure_image (isometry_realToRCLike 𝕜).continuous.continuousAt
-      (CStarAlgebra.finiteSpectrum_iff_spectrum.mp inferInstance (.all y))
+      (separatesPoints_subalgbraMap_toContinuousMapAlgHom_top ℝ)) _
 
 end totallySeparatedSpace
 
