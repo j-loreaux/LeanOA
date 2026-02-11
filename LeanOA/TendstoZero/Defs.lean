@@ -1,7 +1,7 @@
 import Mathlib.Analysis.Normed.Lp.lpSpace
 import Mathlib.Topology.MetricSpace.UniformConvergence
 import LeanOA.Lp.lpSpace
-import LeanOA.ForMathlib.Misc
+import LeanOA.Mathlib.Misc
 
 
 open scoped ENNReal NNReal Topology
