@@ -369,9 +369,9 @@ end Unital
 end Ultraweak
 
 open scoped Ultraweak
-namespace NonUnital
 
 variable [NonUnitalCStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
+namespace NonUnital
 
 open scoped ComplexStarModule NonUnital
 
@@ -379,8 +379,6 @@ open scoped ComplexStarModule NonUnital
 scoped instance : NonUnitalRing σ(M, P) := inferInstanceAs (NonUnitalRing M)
 
 end NonUnital
-
-variable [NonUnitalCStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
 
 @[simp]
 lemma isSelfAdjoint_ofUltraweak {x : σ(M, P)} :
