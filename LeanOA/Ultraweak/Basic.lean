@@ -378,6 +378,10 @@ open scoped ComplexStarModule NonUnital
 /-- The ring structure on `σ(M, P)` it inherits from `M`. -/
 scoped instance : NonUnitalRing σ(M, P) := inferInstanceAs (NonUnitalRing M)
 
+end NonUnital
+
+variable [NonUnitalCStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
+
 @[simp]
 lemma isSelfAdjoint_ofUltraweak {x : σ(M, P)} :
     IsSelfAdjoint (ofUltraweak x) ↔ IsSelfAdjoint x := by
@@ -391,5 +395,3 @@ lemma isSelfAdjoint_toUltraweak {x : M} :
   simp [isSelfAdjoint_iff, ← Ultraweak.toUltraweak_star]
 
 alias ⟨IsSelfAdjoint.of_toUltraweak, IsSelfAdjoint.toUltraweak⟩ := isSelfAdjoint_toUltraweak
-
-end NonUnital
