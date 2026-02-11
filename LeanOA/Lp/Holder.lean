@@ -1,4 +1,4 @@
-import LeanOA.ForMathlib.Misc
+import LeanOA.Mathlib.Misc
 import LeanOA.Lp.lpSpace
 
 open scoped lp ENNReal NNReal

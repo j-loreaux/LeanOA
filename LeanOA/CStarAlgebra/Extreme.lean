@@ -2,7 +2,7 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.Convex.Extreme
-import LeanOA.ForMathlib.Misc
+import LeanOA.Mathlib.Misc
 
 open Set Metric
 open scoped ComplexStarModule
