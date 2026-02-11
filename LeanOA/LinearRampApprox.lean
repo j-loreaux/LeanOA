@@ -33,7 +33,7 @@ open Filter Set Function
 
 open scoped Topology
 
-theorem TendsTo_of_epsilon_compression (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → ℝ≥0 → ℝ≥0)
+theorem Tendsto_of_epsilon_compression (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → ℝ≥0 → ℝ≥0)
    (hfc : ∀ ε > 0, Continuous (f ε)) (hf0 : ∀ ε > 0, f ε 0 = 0)
      (hf : ∀ ε > 0, Set.EqOn (f ε) 1 (Set.Ici ε))
      (hfl : ∀ ε > 0, ∀ x ≤ ε, f ε x ≤ 1) :
@@ -49,14 +49,14 @@ noncomputable def linearRamp (ε x : ℝ≥0) := min 1 (1 / ε * x)
 @[simp]
 lemma linearRamp_apply (ε : ℝ≥0) : linearRamp ε = min 1 (1 / ε * ·) := rfl
 
-theorem linearRamp_converge (a : A) (ha : 0 ≤ a) :
+theorem Tendsto_of_linearRamp_compression (a : A) (ha : 0 ≤ a) :
     Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ (linearRamp ε) a‖₊) (𝓝[>] 0) (𝓝 0) :=
-  TendsTo_of_epsilon_compression a ha linearRamp (fun _ ↦ by simpa [linearRamp] using by fun_prop) (by simp)
+  Tendsto_of_epsilon_compression a ha linearRamp (fun _ ↦ by simpa [linearRamp] using by fun_prop) (by simp)
     (fun _ h _ ↦ by simpa [linearRamp] using (one_le_inv_mul₀ h).mpr) (by simp)
 
-theorem linearRampSq_converge (a : A) (ha : 0 ≤ a) :
+theorem Tendsto_of_linearRampSq_compression (a : A) (ha : 0 ≤ a) :
     Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ ((· ^ 2) ∘ (linearRamp ε)) a‖₊) (𝓝[>] 0) (𝓝 0) :=
-  TendsTo_of_epsilon_compression a ha (fun ε ↦ (· ^ 2) ∘ (linearRamp ε))
+  Tendsto_of_epsilon_compression a ha (fun ε ↦ (· ^ 2) ∘ (linearRamp ε))
     (fun _ _ ↦ by simpa [linearRamp, one_div] using by fun_prop) (by simp)
     (fun _ h _ ↦ by simpa [linearRamp] using (one_le_inv_mul₀ h).mpr)
     (fun _ _ _ _ ↦ by simpa [linearRamp] using
