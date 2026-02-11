@@ -17,7 +17,7 @@ lemma single_def [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
     (i : A) (x : Y) (j : A) :
     single i x j = if j = 0 then 0 else (Pi.single i x : A → Y) j := rfl
 
-@[simp] lemma sigle_apply_of_ne_zero [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
+@[simp] lemma single_apply_of_ne_zero [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
     (i : A) (x : Y) {j : A} (hj : j ≠ 0) : single i x j = (Pi.single i x : A → Y) j := by simp_all
 
 @[simp] lemma mem_span_isStarProjection_of_finite [DiscreteTopology A] [Finite A] [Zero A]
@@ -33,7 +33,7 @@ end ContinuousMapZero
 namespace ContinuousMap
 
 variable (𝕜) in
-/-- Lifting `C(A, ℝ)` to `C(A, ℂ)` using `Complex.ofReal`. -/
+/-- Lifting `C(A, ℝ)` to `C(A, 𝕜)` using `RCLike.ofReal`. -/
 @[simps] def realToRCLike (f : C(A, ℝ)) : C(A, 𝕜) where toFun x := RCLike.ofReal (f x)
 
 @[simp] lemma isSelfAdjoint_realToRCLike {f : C(A, ℝ)} : IsSelfAdjoint (f.realToRCLike 𝕜) := by
@@ -43,10 +43,10 @@ variable (𝕜) in
     spectrum ℝ (f.realToRCLike 𝕜) = spectrum ℝ f := by
   ext; simp [spectrum.mem_iff, isUnit_iff_forall_isUnit, RCLike.ext_iff (K := 𝕜), Algebra.smul_def]
 
-/-- Mapping `C(A, ℂ)` to `C(A, ℝ)` using `Complex.re`. -/
+/-- Mapping `C(A, 𝕜)` to `C(A, ℝ)` using `RCLike.re`. -/
 @[simps] def rclikeToReal (f : C(A, 𝕜)) : C(A, ℝ) where toFun x := RCLike.re (f x)
 
-@[simp] theorem rclikeToReal_realToComplex (f : C(A, ℝ)) :
+@[simp] theorem rclikeToReal_realToRCLike (f : C(A, ℝ)) :
     (f.realToRCLike 𝕜).rclikeToReal = f := by ext; simp
 
 theorem IsSelfAdjoint.realToRCLike_rclikeToReal {f : C(A, 𝕜)} (hf : IsSelfAdjoint f) :
@@ -92,7 +92,7 @@ instance [Ring A] [Algebra ℝ A] [Star A] [Subsingleton A] :
 section totallySeparatedSpace
 variable [TotallySeparatedSpace A]
 
-theorem LocallyConstant.separatesPoints_subalgbraMap_toContinuousMapAlgHom_top (R : Type*)
+theorem LocallyConstant.separatesPoints_map_toContinuousMapAlgHom_top (R : Type*)
     [CommSemiring R] [Nontrivial Y] [Semiring Y] [Algebra R Y] [IsTopologicalSemiring Y] :
     (Subalgebra.map (toContinuousMapAlgHom R : _ →ₐ[R] C(A, Y)) ⊤).SeparatesPoints := by
   intro x y hxy
@@ -111,7 +111,7 @@ instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
       fun _ ⟨f, hf⟩ ↦ by simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
     apply closure_mono this
     simpa using Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
-      (separatesPoints_subalgbraMap_toContinuousMapAlgHom_top ℝ)) y
+      (separatesPoints_map_toContinuousMapAlgHom_top ℝ)) y
 
 end totallySeparatedSpace
 
