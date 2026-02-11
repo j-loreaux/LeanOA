@@ -5,6 +5,8 @@ open CStarAlgebra Topology Filter
 
 open scoped ComplexStarModule Ultraweak
 
+section ApproximateUnit
+
 variable {M P : Type*}
 variable [NonUnitalCStarAlgebra M] [PartialOrder M] [StarOrderedRing M] [NormedAddCommGroup P]
 variable [NormedSpace ℂ P] [Predual ℂ M P]
@@ -59,12 +61,53 @@ theorem RightUnital {P : Type*} [NormedAddCommGroup P] [NormedSpace ℂ P]
      (Continuous.tendsto toUltraweak_continuous (ofUltraweak _) <| a)
   exact tendsto_nhds_unique h₁ h₃
 
-#synth Mul σ(M, P)
-#synth NonUnitalRing (M, P)
-lemma left_unit_eq_right_unit (e : σ(M, P)) : (∀ m, m * e = m) → (∀ m, e * m = m) := by
-   intro h m
-   have : e * (m * e) = (e * m) * e := by exact NonUnitalRing.mul_assoc (α := σ(M, P))
+end ApproximateUnit
+section Unital
+
+variable {M P : Type*}
+variable [NonUnitalCStarAlgebra M] [NormedAddCommGroup P]
+variable [NormedSpace ℂ P] [Predual ℂ M P]
+
+lemma left_unit_eq_right_unit (e f : σ(M, P)) (he : ∀ m, m * e = m) (hf : ∀ m, f * m = m)
+    : e = f := Eq.trans (hf e).symm <| he f
+
+variable [PartialOrder M] [StarOrderedRing M]
+
+lemma Unital : ∃ e : σ(M, P), (∀ m, e * m = m) ∧ (∀ m, m * e = m) := by
+ obtain ⟨e, he⟩ := LeftUnital (M := M) (P := P)
+ obtain ⟨f, hf⟩ := RightUnital (M := M) (P := P)
+ have := Eq.trans (hf e).symm <| he f
+ use e
+ constructor
+ · intro m
+   rw [← this] at hf
+   exact hf m
+ ·intro m
+  exact he m
+
+noncomputable def Our_one := Classical.choose (Unital (M := M) (P := P))
+
+example : (∀ m, Our_one (M := M) (P := P) * m = m) :=
+  (Classical.choose_spec (Unital (M := M) (P := P))).1
 
 #exit
-instance : CStarAlgebra M where
-  one := Classical.choose LeftUnital
+/- Not the way to go...too much work. We need to get the equivalences right. -/
+noncomputable instance : CStarAlgebra σ(M, P) where
+  one := Our_one
+  one_mul := (Classical.choose_spec (Unital (M := M) (P := P))).1
+  mul_one := (Classical.choose_spec (Unital (M := M) (P := P))).2
+  dist_eq := NormedAddGroup.dist_eq
+  norm_mul_le := norm_mul_le
+  norm_mul_self_le := CStarRing.norm_mul_self_le
+  algebraMap :={
+    toFun := fun z ↦ z · Our_one
+    map_one' := by exact?
+    map_mul' := _
+    map_zero' := _
+    map_add' := _
+  }
+
+
+
+
+end Unital
