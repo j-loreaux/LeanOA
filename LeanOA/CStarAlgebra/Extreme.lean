@@ -3,14 +3,10 @@ import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.Misc
+import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 
 open Set Metric
 open scoped ComplexStarModule
-
-@[simp]
-lemma realPart_one {A : Type*} [Ring A] [StarRing A] [Module ℂ A] [StarModule ℂ A] :
-    ℜ (1 : A) = 1 := by
-  ext; simp [realPart_apply_coe, ← two_smul ℝ]
 
 @[simp]
 lemma Set.extremePoints_Icc {a b : ℝ} (hab : a ≤ b) :

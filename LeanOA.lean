@@ -7,6 +7,7 @@ import LeanOA.ConditionallyCompletePartialOrder
 import LeanOA.KreinSmulian
 import LeanOA.Lp.Holder
 import LeanOA.Lp.lpSpace
+import LeanOA.Mathlib.Algebra.Order.Star.Basic
 import LeanOA.Mathlib.Algebra.Star.StarProjection
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
@@ -14,11 +15,11 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
 import LeanOA.Mathlib.Analysis.CStarAlgebra.StarProjection
 import LeanOA.Mathlib.Analysis.Complex.Basic
 import LeanOA.Mathlib.Analysis.RCLike.Extend
+import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import LeanOA.Mathlib.Misc
 import LeanOA.Notation
 import LeanOA.PositiveContinuousLinearMap
 import LeanOA.PositiveLinearMap
-import LeanOA.StarOrderedRing
 import LeanOA.TendstoZero.Defs
 import LeanOA.TendstoZero.StrongDual
 import LeanOA.Ultraweak.Basic

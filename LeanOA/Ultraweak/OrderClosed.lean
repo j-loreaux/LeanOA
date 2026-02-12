@@ -1,5 +1,6 @@
 import LeanOA.Ultraweak.Basic
 import LeanOA.KreinSmulian
+import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 
 open scoped NNReal Ultraweak ComplexStarModule Topology
