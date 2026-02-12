@@ -53,17 +53,14 @@ lemma isStarNormal_iff_commute_realPart_imaginaryPart
   rw [← smul_one_smul ℂ 2 (I • (ℑ x * ℜ x : A)), ← smul_one_smul ℂ 2] at this
   simpa
 
-lemma star_mul_self_eq_add_I_smul {A : Type*} [NonUnitalNonAssocRing A]
-    [StarRing A] [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A] [StarModule ℂ A]
-    (x : A) : star x * x = ℜ x * ℜ x + ℑ x * ℑ x + Complex.I • (ℜ x * ℑ x - ℑ x * ℜ x) := by
-  conv_lhs => rw [← realPart_add_I_smul_imaginaryPart x]
-  simp [add_mul, mul_add, smul_mul_assoc, mul_smul_comm, smul_smul, smul_sub]
-  grind
-
 lemma star_mul_self_eq_realPart_sq_add_imaginaryPart_sq {A : Type*} [NonUnitalNonAssocRing A]
     [StarRing A] [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A] [StarModule ℂ A]
-    {x : A} [hx : IsStarNormal x] : star x * x = ℜ x * ℜ x + ℑ x * ℑ x := by
-  simp [star_mul_self_eq_add_I_smul, isStarNormal_iff_commute_realPart_imaginaryPart.mp hx |>.eq]
+    {x : A} [hx : IsStarNormal x] : star x * x = ℜ x * ℜ x + ℑ x * ℑ x := calc
+  star x * x = ℜ x * ℜ x + ℑ x * ℑ x + Complex.I • (ℜ x * ℑ x - ℑ x * ℜ x) := by
+    conv_lhs => rw [← realPart_add_I_smul_imaginaryPart x]
+    simp [add_mul, mul_add, smul_mul_assoc, mul_smul_comm, smul_smul, smul_sub]
+    grind
+  _ = _ := by simp [isStarNormal_iff_commute_realPart_imaginaryPart.mp hx |>.eq]
 
 lemma mem_unitary_iff_isStarNormal_and_realPart_sq_add_imaginaryPart_sq_eq_one {A : Type*} [Ring A]
     [StarRing A] [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A] [StarModule ℂ A] {x : A} :
