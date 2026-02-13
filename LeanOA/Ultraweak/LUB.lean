@@ -1,7 +1,8 @@
 import LeanOA.Ultraweak.SeparatingDual
 import LeanOA.WeakDual.UniformSpace
 import LeanOA.ComplexOrder
-import LeanOA.StarOrderedRing
+import LeanOA.Mathlib.Algebra.Order.Star.Basic
+import LeanOA.Mathlib.Analysis.Complex.Basic
 import LeanOA.CFC
 
 
