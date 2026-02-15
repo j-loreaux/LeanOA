@@ -1,11 +1,15 @@
 import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 
+namespace PositiveLinearMap
 variable {A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] [PartialOrder A₁]
-  [StarOrderedRing A₁] [PartialOrder A₂] [StarOrderedRing A₂]
+  [StarOrderedRing A₁] [PartialOrder A₂] [StarOrderedRing A₂] (f : A₁ →ₚ[ℂ] A₂)
 
 /-- Lift a positive linear map between C⋆-algebras to a continuous linear map. -/
-def PositiveLinearMap.toContinuousLinearMap (φ : A₁ →ₚ[ℂ] A₂) : A₁ →L[ℂ] A₂ :=
-  { φ with cont := map_continuous φ }
+def toContinuousLinearMap : A₁ →L[ℂ] A₂ := { f with cont := map_continuous f }
 
-@[simp] theorem PositiveLinearMap.toContinuousLinearMap_apply (φ : A₁ →ₚ[ℂ] A₂) (x : A₁) :
-    φ.toContinuousLinearMap x = φ x := rfl
+@[simp] theorem toContinuousLinearMap_apply (x : A₁) : f.toContinuousLinearMap x = f x := rfl
+
+@[simp] theorem toLinearMap_toContinuousLinearMap :
+    f.toContinuousLinearMap.toLinearMap = f.toLinearMap := rfl
+
+end PositiveLinearMap
