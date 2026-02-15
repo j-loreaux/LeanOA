@@ -8,11 +8,11 @@ variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 lemma PositiveLinearMap.norm_apply_le (f : A →ₚ[ℂ] ℂ) (x : A) : ‖f x‖ ≤ (f 1).re * ‖x‖ := by
   have := by simpa [f.preGNS_norm_def, f.preGNS_inner_def] using
     norm_inner_le_norm (𝕜 := ℂ) (f.toPreGNS 1) (f.toPreGNS x)
-  have f1 := Complex.nonneg_iff.mp (f.map_nonneg zero_le_one) |>.1
-  grw [this, ← sq_le_sq₀ (by positivity) (mul_nonneg f1 (by positivity))]
-  simp_rw [mul_pow, Real.sq_sqrt f1, sq, mul_assoc, ← sq, Real.sq_sqrt
+  have hf := Complex.nonneg_iff.mp (f.map_nonneg zero_le_one) |>.1
+  grw [this, ← sq_le_sq₀ (by positivity) (mul_nonneg hf (by positivity))]
+  simp_rw [mul_pow, Real.sq_sqrt hf, sq, mul_assoc, ← sq, Real.sq_sqrt
     (Complex.nonneg_iff.mp (f.map_nonneg (star_mul_self_nonneg _))).1]
-  refine mul_le_mul_of_nonneg_left ?_ f1
+  refine mul_le_mul_of_nonneg_left ?_ hf
   have := by simpa [CStarRing.norm_star_mul_self, Algebra.algebraMap_eq_smul_one, ← sq] using
     f.apply_le_of_isSelfAdjoint _ (.star_mul_self x)
   convert Complex.le_def.mp this |>.1
