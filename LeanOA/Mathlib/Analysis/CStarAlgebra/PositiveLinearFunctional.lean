@@ -6,23 +6,17 @@ open scoped ComplexOrder
 variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 lemma PositiveLinearMap.norm_apply_le (f : A →ₚ[ℂ] ℂ) (x : A) : ‖f x‖ ≤ (f 1).re * ‖x‖ := by
-  rw [← sq_le_sq₀ (by positivity) (mul_nonneg (Complex.nonneg_iff.mp
-      (f.map_nonneg zero_le_one) |>.1) (by positivity))]
-  calc
-    _ ≤ (f 1).re * (f (star x * x)).re := by
-      have (x y : A) : ‖f (star x * y)‖ ^ 2 ≤ (f (star x * x)).re * (f (star y * y)).re := by
-        simpa [← inner_conj_symm (f.toPreGNS y) (f.toPreGNS x), Complex.star_def, norm_star,
-            ← sq, f.preGNS_inner_def, ← Complex.ofReal_pow, f.preGNS_norm_def, Real.sq_sqrt,
-            Complex.nonneg_iff.mp (f.map_nonneg (star_mul_self_nonneg _))] using
-          inner_mul_inner_self_le (𝕜 := ℂ) (f.toPreGNS x) (f.toPreGNS y)
-      simpa using this 1 x
-    _ ≤ (f 1).re * (‖x‖ ^ 2 * (f 1).re) := by
-      refine mul_le_mul_of_nonneg_left ?_ (Complex.nonneg_iff.mp (f.map_nonneg zero_le_one) |>.1)
-      have := by simpa [CStarRing.norm_star_mul_self, Algebra.algebraMap_eq_smul_one, ← sq] using
-        f.apply_le_of_isSelfAdjoint _ (.star_mul_self x)
-      convert Complex.le_def.mp this |>.1
-      rw [← Complex.ofReal_pow, Complex.re_ofReal_mul]
-    _ = _ := by ring
+  have := by simpa [f.preGNS_norm_def, f.preGNS_inner_def] using
+    norm_inner_le_norm (𝕜 := ℂ) (f.toPreGNS 1) (f.toPreGNS x)
+  have f1 := Complex.nonneg_iff.mp (f.map_nonneg zero_le_one) |>.1
+  grw [this, ← sq_le_sq₀ (by positivity) (mul_nonneg f1 (by positivity))]
+  simp_rw [mul_pow, Real.sq_sqrt f1, sq, mul_assoc, ← sq, Real.sq_sqrt
+    (Complex.nonneg_iff.mp (f.map_nonneg (star_mul_self_nonneg _))).1]
+  refine mul_le_mul_of_nonneg_left ?_ f1
+  have := by simpa [CStarRing.norm_star_mul_self, Algebra.algebraMap_eq_smul_one, ← sq] using
+    f.apply_le_of_isSelfAdjoint _ (.star_mul_self x)
+  convert Complex.le_def.mp this |>.1
+  rw [← Complex.ofReal_pow, Complex.re_ofReal_mul, mul_comm]
 
 theorem PositiveLinearMap.norm_map_one (f : A →ₚ[ℂ] ℂ) : ‖f 1‖ = (f 1).re := by
   by_cases! Subsingleton A
