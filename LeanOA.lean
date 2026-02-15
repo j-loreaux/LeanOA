@@ -12,6 +12,8 @@ import LeanOA.Mathlib.Algebra.Star.StarProjection
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
+import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
+import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Projection
 import LeanOA.Mathlib.Analysis.Complex.Basic
 import LeanOA.Mathlib.Analysis.RCLike.Extend
