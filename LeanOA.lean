@@ -1,6 +1,7 @@
 import LeanOA.CFC
 import LeanOA.CStarAlgebra.Extreme
 import LeanOA.CStarAlgebra.FiniteSpectrum
+import LeanOA.CStarAlgebra.PositiveLinearFunctional
 import LeanOA.CStarModule.Standard
 import LeanOA.ComplexOrder
 import LeanOA.ConditionallyCompletePartialOrder
@@ -12,7 +13,6 @@ import LeanOA.Mathlib.Algebra.Star.StarProjection
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
-import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
 import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Projection
 import LeanOA.Mathlib.Analysis.Complex.Basic
