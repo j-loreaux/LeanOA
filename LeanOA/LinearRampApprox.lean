@@ -98,6 +98,7 @@ noncomputable def s (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
 @[simp]
 lemma s_apply {ε z δ c x : ℝ≥0} : s ε z δ c x = (linearRamp ε) x - (tent z δ c) x := rfl
 
+/- Missing constraint.-/
 lemma s_lt_one (ε z δ c x : ℝ≥0) (hc : c < 1) : γ ε z δ c x < 1 := by
   unfold γ linearRamp tent
   simp only [one_div, nnnorm_eq_self]
@@ -115,11 +116,12 @@ lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) =
 
 example {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : ¬ r ≤ 1 / 4 →
     min 1 (1 / sqrt r - 1) = 1 / sqrt r - 1 := by
-  contrapose
-  push_neg
-  rw [← cutoff]
-  simp only [one_div, ne_eq, inf_eq_right, tsub_le_iff_right, not_le, inf_eq_left, one_add_one_eq_two]
+  simp only [one_div, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, le_inv_iff_mul_le, not_le,
+    inf_eq_right, tsub_le_iff_right]
   intro a
+  rw [one_add_one_eq_two]
+
+  sorry
 
 /- I'm wondering which proof is better here, this one or the next? The first has a bunch of
    aesop calls, and the second seems shorter. Neither is really flexible...maybe you have
@@ -151,42 +153,8 @@ theorem abstract_approx_add' {a : A} {s r x ε : ℝ≥0} (ha : a ∈ Metric.bal
         (one_add_one_eq_two)) 2) rfl) (sq_nonneg (f x + c x)) (zero_le (1 / 4))) (by norm_num)
   · sorry
 
-/- This one is really bad...the above are improvements. -/
-theorem abstract_approx' {a : A} {t s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
-    (ht1 : t ∈ quasispectrum ℝ≥0 (star a * a)) (h0s : 0 < s) (hst : s < t)
-    (htr : t < r) (hr1 : r < 1) (c : ℝ≥0 → ℝ≥0) (hct : c t ≠ 0)
-    (hcle : ∀ y, c y ≤ min 1 ((1 - r) / r)) (hsupp : support c ⊆ Icc s r)
-    (hx : x ∈ quasispectrum ℝ≥0 (star a * a))
-    (f : ℝ≥0 → ℝ≥0) (hf0 : f 0 = 0)
-    (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ x, f x ≤ 1) :
-    x * (f x + c x) ≤ 1 ∧ x * (f x - c x) ≤ 1 := by
-  have qs_le_one : quasispectrum ℝ≥0 (star a * a) ⊆ Icc 0 1 := sorry
-  have h0r : 0 < r := lt_trans (lt_trans h0s hst) htr
-  constructor
-  · --Proof that ‖x * (f x + c x)‖₊ ≤ 1
-    by_cases h : x ≤ 1 / 2
-    · simpa using le_trans (mul_le_mul_left h (f _ + c _)) (le_trans (mul_le_mul_right
-        (le_of_le_of_eq (le_trans (add_le_add_left (hfl _) (c _)) ((add_le_add_iff_left _).mpr
-          (le_trans (hcle _) (min_le_left _ _)))) (one_add_one_eq_two)) _)
-            (le_of_eq (div_mul_cancel_of_invertible _ _)))
-    · have H : x * (f x + c x) ≤ x * (1 / r) := mul_le_mul_right (le_of_le_of_eq
-        (le_trans (add_le_add_left (hfl _) (c _)) <|
-          (add_le_add_iff_left _).mpr <| le_of_le_of_eq (le_trans (hcle _) (min_le_right _ _))
-            <| (NNReal.sub_div _ _ _).trans <| tsub_eq_tsub_of_add_eq_add (congrArg (HAdd.hAdd _)
-              (id (Eq.symm (div_self (ne_of_lt h0r |>.symm))))))
-                <| add_tsub_cancel_iff_le.mpr
-                  <| (one_le_div₀ <| h0r).mpr <| le_of_lt hr1) _
-      by_cases hh : (s ≤ x) ∧ (x ≤ r)
-      · have L : x * (f x + c x) ≤ r * (1 / r) := le_trans H (mul_le_mul_left hh.2 (1 / r))
-        exact le_of_le_of_eq L (mul_one_div_cancel (ne_of_gt h0r))
-      · dsimp [support, Icc] at hsupp
-        simp only [setOf_subset_setOf] at hsupp
-        have M : x * (f x + c x) ≤ x := le_of_eq_of_le
-          (by rw [(notMem_support.mp fun a ↦ hh (hsupp _ a)), add_zero])
-            <| mul_le_of_le_one_right' (hfl _)
-        exact coe_le_one.mp <| le_trans M (mem_Icc.mpr <| qs_le_one hx).2
-  · -- Proof that ‖x * (f x - c x)‖₊ ≤ 1
-    sorry
+/- We also need versions of the above for `x * (f x - c x) ^ 2 ≤ 1`. We actually will put these together
+   in the end. -/
 
 theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (E := A)
     (Metric.ball (0 : A) 1)) : quasispectrum ℝ≥0 (star a * a)  ⊆ {0, 1} := by
