@@ -74,7 +74,7 @@ lemma nhdsGT_basis_Ioc {α : Type*} [TopologicalSpace α] [LinearOrder α] [Orde
     refine ⟨b, hab, Ioc_subset_Ioo_right hbc⟩
   · exact mem_of_superset ((nhdsGT_basis a).mem_of_mem hac) Ioo_subset_Ioc_self
 
-/- Begin work on the second paragraph of 1.6.1.-/
+/- Begin work here on the second paragraph of 1.6.1.-/
 
 /- The following functions might end up the actual witnesses to the argument, but
 we need to develop some abstract machinery first. -/
@@ -103,7 +103,7 @@ lemma s_lt_one (ε z δ c x : ℝ≥0) (hc : c < 1) : γ ε z δ c x < 1 := by
   simp only [one_div, nnnorm_eq_self]
   sorry
 
-/- Monica, here's some stuff you've already seen and cleaned up!-/
+/- Monica, below are some things you've already seen and cleaned up!-/
 lemma two_pow_two {R : Type*} [Semiring R] : (2 : R) ^ 2 = 4 := by norm_num
 
 lemma NNReal.one_lt_inv_sqrt {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : 1 < (sqrt r)⁻¹ := by
@@ -112,6 +112,14 @@ lemma NNReal.one_lt_inv_sqrt {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : 1 < (sqr
 lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) = 1 ↔ r ≤ 1 / 4 := by
   simp [le_tsub_iff_left (one_lt_inv_sqrt hr hr1).le, le_inv_iff_mul_le (by aesop : sqrt r ≠ 0),
     ← sq_le_sq₀ (by aesop : 0 ≤ 2 * sqrt r), one_add_one_eq_two, mul_pow, two_pow_two, mul_comm]
+
+example {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : ¬ r ≤ 1 / 4 →
+    min 1 (1 / sqrt r - 1) = 1 / sqrt r - 1 := by
+  contrapose
+  push_neg
+  rw [← cutoff]
+  simp only [one_div, ne_eq, inf_eq_right, tsub_le_iff_right, not_le, inf_eq_left, one_add_one_eq_two]
+  intro a
 
 /- I'm wondering which proof is better here, this one or the next? The first has a bunch of
    aesop calls, and the second seems shorter. Neither is really flexible...maybe you have
