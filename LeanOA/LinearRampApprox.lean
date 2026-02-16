@@ -1,4 +1,5 @@
 import Mathlib.Analysis.CStarAlgebra.Classes
+import Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 
@@ -7,7 +8,7 @@ open NNReal CStarAlgebra
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 theorem epsilon_compression {ε : ℝ≥0} (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → ℝ≥0)
-      (hfc : Continuous f) (hf0 : f 0 = 0) (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ x ≤ ε, f x ≤ 1)
+      (hfc : Continuous f) (hf0 : f 0 = 0) (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ x, f x ≤ 1)
         : ‖a - a * cfcₙ f a‖₊ ≤ ε := by
   have H1 (x : ℝ≥0) : x - x * f x ≤ ε := by
     by_cases h : x ≥ ε
@@ -21,7 +22,7 @@ theorem epsilon_compression {ε : ℝ≥0} (a : A) (ha : 0 ≤ a) (f : ℝ≥0 �
     by_cases h : x ≥ ε
     · rw [hf h, Pi.one_apply, mul_one]
     · simp only [ge_iff_le, not_le] at h
-      exact mul_le_of_le_one_right' <| hfl _ (le_of_lt h)
+      exact mul_le_of_le_one_right' <| coe_le_one.mp (hfl x)
   nth_rw 1 2 [← cfcₙ_id (R := ℝ≥0) a]
   rw [← cfcₙ_mul id f,
        ← cfcₙ_tsub id (ha := ha) (fun _ ↦ id _ * f _)]
@@ -36,7 +37,7 @@ open scoped Topology
 theorem Tendsto_of_epsilon_compression (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → ℝ≥0 → ℝ≥0)
    (hfc : ∀ ε > 0, Continuous (f ε)) (hf0 : ∀ ε > 0, f ε 0 = 0)
      (hf : ∀ ε > 0, Set.EqOn (f ε) 1 (Set.Ici ε))
-     (hfl : ∀ ε > 0, ∀ x ≤ ε, f ε x ≤ 1) :
+     (hfl : ∀ ε > 0, ∀ x, f ε x ≤ 1) :
        Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ (f ε) a‖₊) (𝓝[>] 0) (𝓝 0) := by
   refine (nhdsGT_basis 0).tendsto_iff (Metric.nhds_basis_closedBall) |>.mpr fun ε hε ↦ ?_
   lift ε to ℝ≥0 using hε.le
@@ -51,15 +52,15 @@ lemma linearRamp_apply (ε : ℝ≥0) : linearRamp ε = min 1 (1 / ε * ·) := r
 
 theorem Tendsto_of_linearRamp_compression (a : A) (ha : 0 ≤ a) :
     Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ (linearRamp ε) a‖₊) (𝓝[>] 0) (𝓝 0) :=
-  Tendsto_of_epsilon_compression a ha linearRamp (fun _ ↦ by simpa [linearRamp] using by fun_prop) (by simp)
-    (fun _ h _ ↦ by simpa [linearRamp] using (one_le_inv_mul₀ h).mpr) (by simp)
+  Tendsto_of_epsilon_compression a ha linearRamp (fun _ ↦ by simpa [linearRamp] using by fun_prop)
+    (by simp) (fun _ h _ ↦ by simpa [linearRamp] using (one_le_inv_mul₀ h).mpr) (by simp)
 
 theorem Tendsto_of_linearRampSq_compression (a : A) (ha : 0 ≤ a) :
     Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ ((· ^ 2) ∘ (linearRamp ε)) a‖₊) (𝓝[>] 0) (𝓝 0) :=
   Tendsto_of_epsilon_compression a ha (fun ε ↦ (· ^ 2) ∘ (linearRamp ε))
     (fun _ _ ↦ by simpa [linearRamp, one_div] using by fun_prop) (by simp)
     (fun _ h _ ↦ by simpa [linearRamp] using (one_le_inv_mul₀ h).mpr)
-    (fun _ _ _ _ ↦ by simpa [linearRamp] using
+    (fun _ _ _ ↦ by simpa [linearRamp] using
       (sq_le_one_iff₀ <| zero_le (min 1 (_⁻¹ * _))).mpr <| min_le_left 1 (_⁻¹ * _))
 
 /- The following should be in Mathlib. -/
@@ -72,3 +73,131 @@ lemma nhdsGT_basis_Ioc {α : Type*} [TopologicalSpace α] [LinearOrder α] [Orde
   · obtain ⟨b, hab, hbc⟩ := exists_between hac
     refine ⟨b, hab, Ioc_subset_Ioo_right hbc⟩
   · exact mem_of_superset ((nhdsGT_basis a).mem_of_mem hac) Ioo_subset_Ioc_self
+
+/- Begin work on the second paragraph of 1.6.1.-/
+
+noncomputable def tent (z δ c x : ℝ≥0) : ℝ≥0 :=
+   c * (1 - ‖(x.toReal - z.toReal)‖.toNNReal / ‖δ‖₊)
+
+@[simp]
+lemma tent_apply {z δ c : ℝ≥0} : tent z δ c =
+  fun x ↦ c * (1 - ‖(x.toReal - z.toReal)‖.toNNReal / ‖δ‖₊) := rfl
+
+noncomputable def γ (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
+  fun x ↦ (linearRamp ε) x + (tent z δ c) x
+
+@[simp]
+lemma gamma_apply {ε z δ c x : ℝ≥0} : γ ε z δ c x = (linearRamp ε) x + (tent z δ c) x := rfl
+
+noncomputable def s (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
+  fun x ↦ (linearRamp ε) x - (tent z δ c) x
+
+@[simp]
+lemma s_apply {ε z δ c x : ℝ≥0} : s ε z δ c x = (linearRamp ε) x - (tent z δ c) x := rfl
+
+lemma s_le_one (ε z δ c x : ℝ≥0) (hc : c < 1) : γ ε z δ c x < 1 := by
+  unfold γ linearRamp tent
+  simp only [one_div, nnnorm_eq_self]
+  sorry
+
+lemma NNReal.one_lt_one_div_sqrt {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : 1 < 1 / sqrt r :=
+  one_lt_one_div (sqrt_pos_of_pos hr) (by rw [← sqrt_one, sqrt_lt_sqrt]; exact hr1)
+
+lemma sub_side {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : 1 / sqrt r - 1 ≥ 1 ↔ 1 / sqrt r ≥ 2 := by
+   have A : 1 / sqrt r - 1 ≥ 1 ↔ 1 / sqrt r ≥ 1 + 1 :=
+     le_tsub_iff_right <| le_of_lt <| one_lt_one_div_sqrt hr hr1
+   convert A
+   exact Eq.symm one_add_one_eq_two
+
+lemma brallg {r : ℝ≥0} (hr : 0 < r) : 1 / sqrt r < 2 ↔ 1 / 2 < sqrt r :=
+    one_div_lt (sqrt_pos_of_pos hr) (zero_lt_two)
+
+lemma brallg2 {r : ℝ≥0} (hr : 0 < r) : 1 / sqrt r ≥ 2 ↔ 1 / 2 ≥ sqrt r := by
+   rw [← not_iff_not]
+   push_neg
+   exact brallg hr
+
+--@[simp]
+--lemma sqrt_four : sqrt 4 = (2 : ℝ≥0) := sqrt_eq_iff_eq_sq.mpr (by norm_num)
+
+--lemma one_div_sqrt_four : (1 / (2 : ℝ≥0)) = 1 / sqrt 4 := by simp
+
+lemma two_pow_two : (2 : ℝ≥0) ^ 2 = 4 := by norm_num
+
+lemma inline_this1 {r : ℝ≥0} : sqrt (r : ℝ≥0) ≤ 1 / 2 ↔ r ≤ 1 / 4 := by
+    rw [NNReal.sqrt_le_iff_le_sq, div_pow, one_pow, two_pow_two]
+
+--lemma tsub_pains_fwd {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) (h : 1 / sqrt r < 2) :
+--    1 /sqrt r - 1 < 1 :=
+--  lt_of_lt_of_eq ((tsub_lt_tsub_iff_right (le_of_lt <| one_lt_one_div_sqrt hr hr1)).mpr h)
+--     (eq_tsub_of_add_eq one_add_one_eq_two).symm
+
+--lemma tsub_pains_rvs {r : ℝ≥0} (h : 1 / sqrt r - 1 < 2 - 1) :
+--    1 / sqrt r < 2 := lt_of_tsub_lt_tsub_right h
+
+lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) = 1 ↔ r ≤ 1 / 4 :=
+  ⟨inline_this1.mp ∘ ((brallg2 hr).mp ∘ ((sub_side hr hr1).mp ∘ (inf_eq_left).mp)),
+    (inf_eq_left).mpr ∘ ((sub_side hr hr1).mpr ∘ ((brallg2 hr).mpr ∘ inline_this1.mpr))⟩
+
+/- Maybe even abstract away the `min 1 (1 / sqrt r - 1)`? -/
+theorem abstract_approx_add {a : A} {s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
+     (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1) (c f : ℝ≥0 → ℝ≥0)
+     (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hsupp : support c ⊆ Icc s r)
+     (hx : x ∈ quasispectrum ℝ≥0 (star a * a)) (hxr : x < r) (hf0 : f 0 = 0)
+     (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ t, f t ≤ 1) :
+     x * (f x + c x) ^ 2 ≤ 1 := by
+  by_cases h : r ≤ 1 / 4
+  · rw [(cutoff (lt_trans h0s hsr) hr1).mpr h] at hcle
+    exact le_trans (mul_le_mul (le_trans (le_of_lt hxr) h)
+      (le_of_le_of_eq (pow_le_pow_left' (le_of_le_of_eq (add_le_add (hfl _) (hcle _))
+        (one_add_one_eq_two)) 2) rfl) (sq_nonneg (f x + c x)) (zero_le (1 / 4))) (by norm_num)
+  · sorry
+
+theorem abstract_approx' {a : A} {t s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
+    (ht1 : t ∈ quasispectrum ℝ≥0 (star a * a)) (h0s : 0 < s) (hst : s < t)
+    (htr : t < r) (hr1 : r < 1) (c : ℝ≥0 → ℝ≥0) (hct : c t ≠ 0)
+    (hcle : ∀ y, c y ≤ min 1 ((1 - r) / r)) (hsupp : support c ⊆ Icc s r)
+    (hx : x ∈ quasispectrum ℝ≥0 (star a * a))
+    (f : ℝ≥0 → ℝ≥0) (hf0 : f 0 = 0)
+    (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ x, f x ≤ 1) :
+    x * (f x + c x) ≤ 1 ∧ x * (f x - c x) ≤ 1 := by
+  have qs_le_one : quasispectrum ℝ≥0 (star a * a) ⊆ Icc 0 1 := sorry
+  have h0r : 0 < r := lt_trans (lt_trans h0s hst) htr
+  constructor
+  · --Proof that ‖x * (f x + c x)‖₊ ≤ 1
+    by_cases h : x ≤ 1 / 2
+    · simpa using le_trans (mul_le_mul_left h (f _ + c _)) (le_trans (mul_le_mul_right
+        (le_of_le_of_eq (le_trans (add_le_add_left (hfl _) (c _)) ((add_le_add_iff_left _).mpr
+          (le_trans (hcle _) (min_le_left _ _)))) (one_add_one_eq_two)) _)
+            (le_of_eq (div_mul_cancel_of_invertible _ _)))
+    · have H : x * (f x + c x) ≤ x * (1 / r) := mul_le_mul_right (le_of_le_of_eq
+        (le_trans (add_le_add_left (hfl _) (c _)) <|
+          (add_le_add_iff_left _).mpr <| le_of_le_of_eq (le_trans (hcle _) (min_le_right _ _))
+            <| (NNReal.sub_div _ _ _).trans <| tsub_eq_tsub_of_add_eq_add (congrArg (HAdd.hAdd _)
+              (id (Eq.symm (div_self (ne_of_lt h0r |>.symm))))))
+                <| add_tsub_cancel_iff_le.mpr
+                  <| (one_le_div₀ <| h0r).mpr <| le_of_lt hr1) _
+      by_cases hh : (s ≤ x) ∧ (x ≤ r)
+      · have L : x * (f x + c x) ≤ r * (1 / r) := le_trans H (mul_le_mul_left hh.2 (1 / r))
+        exact le_of_le_of_eq L (mul_one_div_cancel (ne_of_gt h0r))
+      · dsimp [support, Icc] at hsupp
+        simp only [setOf_subset_setOf] at hsupp
+        have M : x * (f x + c x) ≤ x := le_of_eq_of_le
+          (by rw [(notMem_support.mp fun a ↦ hh (hsupp _ a)), add_zero])
+            <| mul_le_of_le_one_right' (hfl _)
+        exact coe_le_one.mp <| le_trans M (mem_Icc.mpr <| qs_le_one hx).2
+  · -- Proof that ‖x * (f x - c x)‖₊ ≤ 1
+    sorry
+
+theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (E := A)
+    (Metric.ball (0 : A) 1)) : quasispectrum ℝ≥0 (star a * a)  ⊆ {0, 1} := by
+  by_contra h
+  obtain ⟨t, ht1, ht2⟩ := Set.not_subset.mp h
+  simp only [mem_insert_iff, mem_singleton_iff, not_or] at ht2
+  push_neg at ht2
+  have zero_lt := lt_of_le_of_ne (zero_le t) ht2.1.symm
+  have lt_one : t < 1 := by
+    have le_one : t ≤ 1 := sorry
+    exact lt_of_le_of_ne le_one ht2.2
+  let δ := min t / 2 <| (1 - t) /2
+  sorry
