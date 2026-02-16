@@ -95,49 +95,19 @@ noncomputable def s (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
 @[simp]
 lemma s_apply {ε z δ c x : ℝ≥0} : s ε z δ c x = (linearRamp ε) x - (tent z δ c) x := rfl
 
-lemma s_le_one (ε z δ c x : ℝ≥0) (hc : c < 1) : γ ε z δ c x < 1 := by
+lemma s_lt_one (ε z δ c x : ℝ≥0) (hc : c < 1) : γ ε z δ c x < 1 := by
   unfold γ linearRamp tent
   simp only [one_div, nnnorm_eq_self]
   sorry
 
-lemma NNReal.one_lt_one_div_sqrt {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : 1 < 1 / sqrt r :=
-  one_lt_one_div (sqrt_pos_of_pos hr) (by rw [← sqrt_one, sqrt_lt_sqrt]; exact hr1)
+lemma two_pow_two {R : Type*} [Semiring R] : (2 : R) ^ 2 = 4 := by norm_num
 
-lemma sub_side {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : 1 / sqrt r - 1 ≥ 1 ↔ 1 / sqrt r ≥ 2 := by
-   have A : 1 / sqrt r - 1 ≥ 1 ↔ 1 / sqrt r ≥ 1 + 1 :=
-     le_tsub_iff_right <| le_of_lt <| one_lt_one_div_sqrt hr hr1
-   convert A
-   exact Eq.symm one_add_one_eq_two
+lemma NNReal.one_lt_inv_sqrt {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : 1 < (sqrt r)⁻¹ := by
+  rw [lt_inv_iff_mul_lt, ← sq_lt_sq₀] <;> aesop
 
-lemma brallg {r : ℝ≥0} (hr : 0 < r) : 1 / sqrt r < 2 ↔ 1 / 2 < sqrt r :=
-    one_div_lt (sqrt_pos_of_pos hr) (zero_lt_two)
-
-lemma brallg2 {r : ℝ≥0} (hr : 0 < r) : 1 / sqrt r ≥ 2 ↔ 1 / 2 ≥ sqrt r := by
-   rw [← not_iff_not]
-   push_neg
-   exact brallg hr
-
---@[simp]
---lemma sqrt_four : sqrt 4 = (2 : ℝ≥0) := sqrt_eq_iff_eq_sq.mpr (by norm_num)
-
---lemma one_div_sqrt_four : (1 / (2 : ℝ≥0)) = 1 / sqrt 4 := by simp
-
-lemma two_pow_two : (2 : ℝ≥0) ^ 2 = 4 := by norm_num
-
-lemma inline_this1 {r : ℝ≥0} : sqrt (r : ℝ≥0) ≤ 1 / 2 ↔ r ≤ 1 / 4 := by
-    rw [NNReal.sqrt_le_iff_le_sq, div_pow, one_pow, two_pow_two]
-
---lemma tsub_pains_fwd {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) (h : 1 / sqrt r < 2) :
---    1 /sqrt r - 1 < 1 :=
---  lt_of_lt_of_eq ((tsub_lt_tsub_iff_right (le_of_lt <| one_lt_one_div_sqrt hr hr1)).mpr h)
---     (eq_tsub_of_add_eq one_add_one_eq_two).symm
-
---lemma tsub_pains_rvs {r : ℝ≥0} (h : 1 / sqrt r - 1 < 2 - 1) :
---    1 / sqrt r < 2 := lt_of_tsub_lt_tsub_right h
-
-lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) = 1 ↔ r ≤ 1 / 4 :=
-  ⟨inline_this1.mp ∘ ((brallg2 hr).mp ∘ ((sub_side hr hr1).mp ∘ (inf_eq_left).mp)),
-    (inf_eq_left).mpr ∘ ((sub_side hr hr1).mpr ∘ ((brallg2 hr).mpr ∘ inline_this1.mpr))⟩
+lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) = 1 ↔ r ≤ 1 / 4 := by
+  simp [le_tsub_iff_left (one_lt_inv_sqrt hr hr1).le, le_inv_iff_mul_le (by aesop : sqrt r ≠ 0),
+    ← sq_le_sq₀ (by aesop : 0 ≤ 2 * sqrt r), one_add_one_eq_two, mul_pow, two_pow_two, mul_comm]
 
 /- Maybe even abstract away the `min 1 (1 / sqrt r - 1)`? -/
 theorem abstract_approx_add {a : A} {s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
