@@ -120,7 +120,6 @@ example {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : ¬ r ≤ 1 / 4 →
     inf_eq_right, tsub_le_iff_right]
   intro a
   rw [one_add_one_eq_two]
-
   sorry
 
 /- I'm wondering which proof is better here, this one or the next? The first has a bunch of
