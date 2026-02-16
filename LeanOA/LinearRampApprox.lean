@@ -76,6 +76,9 @@ lemma nhdsGT_basis_Ioc {α : Type*} [TopologicalSpace α] [LinearOrder α] [Orde
 
 /- Begin work on the second paragraph of 1.6.1.-/
 
+/- The following functions might end up the actual witnesses to the argument, but
+we need to develop some abstract machinery first. -/
+
 noncomputable def tent (z δ c x : ℝ≥0) : ℝ≥0 :=
    c * (1 - ‖(x.toReal - z.toReal)‖.toNNReal / ‖δ‖₊)
 
@@ -100,6 +103,7 @@ lemma s_lt_one (ε z δ c x : ℝ≥0) (hc : c < 1) : γ ε z δ c x < 1 := by
   simp only [one_div, nnnorm_eq_self]
   sorry
 
+/- Monica, here's some stuff you've already seen and cleaned up!-/
 lemma two_pow_two {R : Type*} [Semiring R] : (2 : R) ^ 2 = 4 := by norm_num
 
 lemma NNReal.one_lt_inv_sqrt {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : 1 < (sqrt r)⁻¹ := by
@@ -109,8 +113,24 @@ lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) =
   simp [le_tsub_iff_left (one_lt_inv_sqrt hr hr1).le, le_inv_iff_mul_le (by aesop : sqrt r ≠ 0),
     ← sq_le_sq₀ (by aesop : 0 ≤ 2 * sqrt r), one_add_one_eq_two, mul_pow, two_pow_two, mul_comm]
 
-/- Maybe even abstract away the `min 1 (1 / sqrt r - 1)`? -/
+/- I'm wondering which proof is better here, this one or the next? The first has more
+   aesop calls, and the second seems shorter. Neither is really flexible...maybe you have
+   a better way! -/
 theorem abstract_approx_add {a : A} {s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
+     (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1) (c f : ℝ≥0 → ℝ≥0)
+     (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hsupp : support c ⊆ Icc s r)
+     (hx : x ∈ quasispectrum ℝ≥0 (star a * a)) (hxr : x < r) (hf0 : f 0 = 0)
+     (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ t, f t ≤ 1) :
+     x * (f x + c x) ^ 2 ≤ 1 := by
+  by_cases h : r ≤ 1 / 4
+  · exact le_trans (mul_le_mul (le_trans (le_of_lt hxr) h)
+      (le_of_le_of_eq ((sq_le_sq₀ (by aesop) (by aesop)).mpr
+        (le_of_le_of_eq (add_le_add (hfl _) (le_of_le_of_eq (hcle x)
+          ((cutoff (lt_trans h0s hsr) hr1).mpr h))) (one_add_one_eq_two))) (two_pow_two))
+            (by aesop) (by aesop)) (by aesop)
+  · sorry
+
+theorem abstract_approx_add' {a : A} {s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
      (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1) (c f : ℝ≥0 → ℝ≥0)
      (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hsupp : support c ⊆ Icc s r)
      (hx : x ∈ quasispectrum ℝ≥0 (star a * a)) (hxr : x < r) (hf0 : f 0 = 0)
