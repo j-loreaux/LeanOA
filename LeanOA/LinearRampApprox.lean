@@ -113,7 +113,7 @@ lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) =
   simp [le_tsub_iff_left (one_lt_inv_sqrt hr hr1).le, le_inv_iff_mul_le (by aesop : sqrt r ≠ 0),
     ← sq_le_sq₀ (by aesop : 0 ≤ 2 * sqrt r), one_add_one_eq_two, mul_pow, two_pow_two, mul_comm]
 
-/- I'm wondering which proof is better here, this one or the next? The first has more
+/- I'm wondering which proof is better here, this one or the next? The first has a bunch of
    aesop calls, and the second seems shorter. Neither is really flexible...maybe you have
    a better way! -/
 theorem abstract_approx_add {a : A} {s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
@@ -143,6 +143,7 @@ theorem abstract_approx_add' {a : A} {s r x ε : ℝ≥0} (ha : a ∈ Metric.bal
         (one_add_one_eq_two)) 2) rfl) (sq_nonneg (f x + c x)) (zero_le (1 / 4))) (by norm_num)
   · sorry
 
+/- This one is really bad...the above are improvements. -/
 theorem abstract_approx' {a : A} {t s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
     (ht1 : t ∈ quasispectrum ℝ≥0 (star a * a)) (h0s : 0 < s) (hst : s < t)
     (htr : t < r) (hr1 : r < 1) (c : ℝ≥0 → ℝ≥0) (hct : c t ≠ 0)
