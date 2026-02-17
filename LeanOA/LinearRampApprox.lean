@@ -40,6 +40,9 @@ theorem Tendsto_of_epsilon_compression (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → �
 
 noncomputable def linearRamp (ε x : ℝ≥0) := min 1 (1 / ε * x)
 
+lemma continuous_linearRamp (ε : ℝ≥0) : Continuous (linearRamp ε) :=
+  Continuous.inf (continuous_const) (continuous_mul_left (1 / ε))
+
 @[simp]
 lemma linearRamp_apply (ε : ℝ≥0) : linearRamp ε = min 1 (1 / ε * ·) := rfl
 
@@ -195,6 +198,24 @@ theorem t_tent_linearRamp_approx_sub {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t <
   refine le_trans ?_ (t_tent_linearRamp_approx_add (ε := ε) h0t ht1 hx)
   gcongr
   exact le_add_of_le_of_nonneg tsub_le_self (zero_le _)
+
+theorem continuous_t_tent (t : ℝ≥0) : Continuous (t_tent t) :=
+  continuous_tent t ((1 - t)/2) (min 1 (1 / sqrt ((1 + t) / 2) - 1))
+
+theorem continuous_approx_add {ε t : ℝ≥0} :
+  Continuous fun (x : ℝ≥0) ↦ x * (linearRamp ε x + t_tent t x) ^ 2 :=
+  Continuous.mul (continuous_id (X := ℝ≥0)) (Continuous.pow (Continuous.add
+    (continuous_linearRamp ε) (continuous_t_tent t)) 2)
+
+theorem continuous_approx_sub {ε t : ℝ≥0} :
+  Continuous fun (x : ℝ≥0) ↦ x * (linearRamp ε x - t_tent t x) ^ 2 :=
+  Continuous.mul (continuous_id (X := ℝ≥0)) (Continuous.pow (Continuous.sub
+    (continuous_linearRamp ε) (continuous_t_tent t)) 2)
+
+theorem norm1 {ε t : ℝ≥0} (a : A) (ha := 0 ≤ a) (ht0 : 0 < t) :
+    ‖cfcₙ (fun (x : ℝ≥0) ↦ x * (linearRamp ε x - t_tent t x) ^ 2) a‖₊ ≤ 1 := by
+  refine norm_cfcₙ_le_iff ?_ ?_
+  sorry
 
 /- To do:
 
