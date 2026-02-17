@@ -126,16 +126,18 @@ noncomputable def t_tent (t : ℝ≥0) := tent t ((1 - t)/2) (min 1 (1 / sqrt ((
 
 lemma contr_ave {t : ℝ≥0} (ht1 : t < 1) : (1 + t) / 2 < 1 :=
   div_lt_one_of_lt <| lt_of_lt_of_eq (add_lt_add_right ht1 _) (one_add_one_eq_two)
+
 lemma pos_ave {t : ℝ≥0} (h0t : 0 < t) : 0 < (1 + t)/ 2 := by positivity
+
 lemma t_tent_cap (t : ℝ≥0) (x : ℝ≥0) :
     t_tent t x
       ≤ (min 1 (1 / sqrt ((1 + t) / 2) - 1)) := by
   dsimp[t_tent]
   simp only [one_div, Real.toNNReal_abs, le_inf_iff]
   sorry
-lemma linearRamp_cap (ε t : ℝ≥0) : linearRamp ε t ≤ 1 := by
-  dsimp only [linearRamp_apply, Pi.inf_apply, Pi.one_apply]
-  simp only [one_div, inf_le_left]
+
+lemma linearRamp_cap (ε t : ℝ≥0) : linearRamp ε t ≤ 1 := by simp
+
 lemma if_big_t_tent_zero {t x : ℝ≥0} (hx : x ≤ 1) :
     ¬ (x < (1 + t) / 2) → t_tent t x = 0 := sorry
 
@@ -152,15 +154,10 @@ theorem t_tent_linearRamp_approx_add {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t <
     assumption
 
 theorem t_tent_linearRamp_approx_sub {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t < 1)
-  (hx : x ≤ 1) : x * (linearRamp ε x - t_tent t x) ^ 2 ≤ 1 := by
-  by_cases hxt : x < (1 + t) / 2
-  · exact abstract_approx_sub (x := x) (pos_ave h0t) (contr_ave ht1) (t_tent t) (linearRamp ε)
-      (t_tent_cap t) (hxt) (linearRamp_cap ε)
-  · rw [if_big_t_tent_zero hx hxt, tsub_zero, ← one_pow 2]
-    have B1 := (sq_le_sq₀ ((zero_le (linearRamp ε x))) (zero_le_one)).mpr  <| linearRamp_cap ε x
-    have B2 := mul_le_mul hx B1 (by positivity) (by positivity)
-    rw [one_mul] at B2
-    assumption
+    (hx : x ≤ 1) : x * (linearRamp ε x - t_tent t x) ^ 2 ≤ 1 := by
+  refine le_trans ?_ (t_tent_linearRamp_approx_add (ε := ε) h0t ht1 hx)
+  gcongr
+  exact le_add_of_le_of_nonneg tsub_le_self (zero_le _)
 
 theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (ball 0 1)) :
     quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
