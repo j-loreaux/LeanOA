@@ -146,14 +146,15 @@ lemma t_tent_cap (t : ℝ≥0) (x : ℝ≥0) :
       ≤ (min 1 (1 / sqrt ((1 + t) / 2) - 1)) := by
   dsimp[t_tent]
   simp only [one_div, Real.toNNReal_abs, le_inf_iff]
-  sorry
+  exact ⟨mul_le_of_le_one_of_le (min_le_left 1 ((sqrt ((1 + t) / 2))⁻¹ - 1)) (tsub_le_self),
+    (le_trans (mul_le_of_le_one_right' (tsub_le_self))
+      (min_le_right 1 ((sqrt ((1 + t) / 2))⁻¹ - 1)))⟩
 
 lemma linearRamp_cap (ε t : ℝ≥0) : linearRamp ε t ≤ 1 := by simp
 
 lemma if_big_t_tent_zero {t x : ℝ≥0} (hx : x ≤ 1) :
     ¬ (x < (1 + t) / 2) → t_tent t x = 0 := sorry
 
-/- Horrible proof of second direction needs fixing. -/
 theorem t_tent_linearRamp_approx_add {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t < 1)
   (hx : x ≤ 1) : x * (linearRamp ε x + t_tent t x) ^ 2 ≤ 1 := by
   by_cases hxt : x < (1 + t) / 2
