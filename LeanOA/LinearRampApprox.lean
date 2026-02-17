@@ -204,12 +204,12 @@ theorem continuous_t_tent (t : ℝ≥0) : Continuous (t_tent t) :=
 
 theorem continuous_approx_add {ε t : ℝ≥0} :
   Continuous fun (x : ℝ≥0) ↦ x * (linearRamp ε x + t_tent t x) ^ 2 :=
-  Continuous.mul (continuous_id (X := ℝ≥0)) (Continuous.pow (Continuous.add
+  Continuous.mul (continuous_id) (Continuous.pow (Continuous.add
     (continuous_linearRamp ε) (continuous_t_tent t)) 2)
 
 theorem continuous_approx_sub {ε t : ℝ≥0} :
   Continuous fun (x : ℝ≥0) ↦ x * (linearRamp ε x - t_tent t x) ^ 2 :=
-  Continuous.mul (continuous_id (X := ℝ≥0)) (Continuous.pow (Continuous.sub
+  Continuous.mul (continuous_id) (Continuous.pow (Continuous.sub
     (continuous_linearRamp ε) (continuous_t_tent t)) 2)
 
 theorem norm1 {ε t : ℝ≥0} (a : A) (ha := 0 ≤ a) (ht0 : 0 < t) :
