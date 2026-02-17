@@ -159,13 +159,13 @@ lemma linearRamp_cap (ε t : ℝ≥0) : linearRamp ε t ≤ 1 := by simp
 lemma if_big_t_tent_zero {t x : ℝ≥0} (h : ¬ (x < (1 + t) / 2)) : t_tent t x = 0 := by
   simp only [not_lt, t_tent, sub_def, coe_one, one_div, NNReal.coe_inv, Real.coe_sqrt,
     NNReal.coe_div, NNReal.coe_add, NNReal.coe_ofNat, Nat.ofNat_nonneg, Real.sqrt_div', inv_div,
-    tent_apply, Real.norm_eq_abs, Real.toNNReal_abs, nnnorm_eq_self, Real.coe_nnabs,
+    tent_apply,
     Real.coe_toNNReal', mul_eq_zero, Real.toNNReal_eq_zero, tsub_le_iff_right, zero_add] at h ⊢
   -- maybe attribute stuff for `NNReal` with `grind`
   rw [← NNReal.coe_le_coe, NNReal.coe_div, NNReal.coe_add, NNReal.coe_ofNat, NNReal.coe_one] at h
   by_cases ht : (t : ℝ) < 1
   · right
-    rw [le_div_iff₀ (by simpa), max_eq_left (by simpa using ht.le), abs_of_nonneg (by grind)]
+    rw [le_div_iff₀ (by simpa), max_eq_left (by simpa using ht.le)]
     grind
   · left
     rw [min_eq_right]
@@ -196,6 +196,15 @@ theorem t_tent_linearRamp_approx_sub {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t <
   gcongr
   exact le_add_of_le_of_nonneg tsub_le_self (zero_le _)
 
+/- To do:
+
+ * Use cfcₙ and the CStar identity to get from the above that
+   `‖a γε‖ ≤ 1` and `‖a sε‖ ≤ 1` with `γε` and `sε`
+   the cfcₙ images of the functions `linearRamp ε x + t_tent t x` and
+   `linearRamp ε x - t_tent t x`. (These were `γₙ` and `sₙ` in Sakai.)
+
+ -/
+
 theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (closedBall 0 1)) :
     quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
   by_contra h
@@ -203,9 +212,9 @@ theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ�
   simp only [mem_insert_iff, mem_singleton_iff, not_or] at ht2
   push_neg at ht2
   have zero_lt := lt_of_le_of_ne (zero_le t) ht2.1.symm
-  have J : ContinuousAt id t := continuousAt_id
   have lt_one : t < 1 := by
     have le_one : t ≤ 1 := sorry
+    -- something like NonUnitalIsometricContinuousFunctionalCalculus.isGreatest_norm_quasispectrum
     exact lt_of_le_of_ne le_one ht2.2
   let δ := min t / 2 <| (1 - t) /2
   sorry
