@@ -141,10 +141,8 @@ theorem abstract_approx_add {s r x : ℝ≥0} (h0s : 0 < s) (hsr : s < r) (hr1 :
       (by positivity) (by positivity)) (by simp [two_pow_two])
     exact pow_le_pow_left' (one_add_one_eq_two (R := ℝ≥0) ▸ (add_le_add (hfl x) (hcle x))) _
   · have : min 1 (1 / sqrt r - 1) = 1 / sqrt r - 1 := by
-      simp only [one_div, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, le_inv_iff_mul_le, not_le,
-        inf_eq_right, tsub_le_iff_right] at h ⊢
-      rw [one_add_one_eq_two, inv_le (by aesop), ← sq_le_sq₀ zero_le_one (by positivity)]
-      simpa [mul_pow, two_pow_two] using h.le
+      rw [← cutoff (by grind) (by grind), inf_eq_left, not_le] at h
+      exact min_eq_right_of_lt h
     simp_rw [this] at hcle
     have : x * (f x + c x) ^ 2 ≤ x / r := by
       have : f x + c x ≤ 1 / sqrt r := by
