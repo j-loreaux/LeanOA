@@ -3,13 +3,14 @@ import Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 
-open NNReal CStarAlgebra
+open NNReal CStarAlgebra Filter Set Function Metric
+open scoped Topology
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
-theorem epsilon_compression {ε : ℝ≥0} (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → ℝ≥0)
-      (hfc : Continuous f) (hf0 : f 0 = 0) (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ x, f x ≤ 1)
-        : ‖a - a * cfcₙ f a‖₊ ≤ ε := by
+theorem epsilon_compression {ε : ℝ≥0} (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → ℝ≥0) (hfc : Continuous f)
+    (hf0 : f 0 = 0) (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ x, f x ≤ 1) :
+    ‖a - a * cfcₙ f a‖₊ ≤ ε := by
   have H1 (x : ℝ≥0) : x - x * f x ≤ ε := by
     by_cases! h : x ≥ ε
     · simp [hf h]
@@ -26,15 +27,11 @@ theorem epsilon_compression {ε : ℝ≥0} (a : A) (ha : 0 ≤ a) (f : ℝ≥0 �
   · refine nnnorm_cfcₙ_nnreal_le (A := A) fun x _ ↦ H1 (id _)
   · exact fun _ _ ↦ H2 (id _)
 
-open Filter Set Function
-
-open scoped Topology
-
 theorem Tendsto_of_epsilon_compression (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → ℝ≥0 → ℝ≥0)
    (hfc : ∀ ε > 0, Continuous (f ε)) (hf0 : ∀ ε > 0, f ε 0 = 0)
-     (hf : ∀ ε > 0, Set.EqOn (f ε) 1 (Set.Ici ε))
-     (hfl : ∀ ε > 0, ∀ x, f ε x ≤ 1) :
-       Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ (f ε) a‖₊) (𝓝[>] 0) (𝓝 0) := by
+    (hf : ∀ ε > 0, Set.EqOn (f ε) 1 (Set.Ici ε))
+    (hfl : ∀ ε > 0, ∀ x, f ε x ≤ 1) :
+    Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ (f ε) a‖₊) (𝓝[>] 0) (𝓝 0) := by
   refine (nhdsGT_basis 0).tendsto_iff (Metric.nhds_basis_closedBall) |>.mpr fun ε hε ↦ ?_
   lift ε to ℝ≥0 using hε.le
   exact ⟨ε, hε, fun δ hδ ↦ by
@@ -63,12 +60,11 @@ theorem Tendsto_of_linearRampSq_compression (a : A) (ha : 0 ≤ a) :
 
 lemma nhdsGT_basis_Ioc {α : Type*} [TopologicalSpace α] [LinearOrder α] [OrderTopology α]
     [DenselyOrdered α] [NoMaxOrder α] (a : α) :
-    (𝓝[>] a).HasBasis (fun x => a < x) (Ioc a) := by
-  apply nhdsGT_basis a |>.to_hasBasis'
-  all_goals intro c hac
-  · obtain ⟨b, hab, hbc⟩ := exists_between hac
-    refine ⟨b, hab, Ioc_subset_Ioo_right hbc⟩
-  · exact mem_of_superset ((nhdsGT_basis a).mem_of_mem hac) Ioo_subset_Ioc_self
+    (𝓝[>] a).HasBasis (fun x => a < x) (Ioc a) := nhdsGT_basis a |>.to_hasBasis'
+  (fun _ hac ↦
+    have ⟨b, hab, hbc⟩ := exists_between hac
+    ⟨b, hab, Ioc_subset_Ioo_right hbc⟩)
+  fun _ hac ↦ mem_of_superset ((nhdsGT_basis a).mem_of_mem hac) Ioo_subset_Ioc_self
 
 /- Begin work here on the second paragraph of 1.6.1.-/
 
@@ -139,8 +135,6 @@ theorem abstract_approx_sub {s r x : ℝ≥0} (h0s : 0 < s) (hsr : s < r) (hr1 :
 
 /- We also need versions of the above for `x * (f x - c x) ^ 2 ≤ 1`. We actually will put these
 together in the end. -/
-
-open Metric
 
 theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (ball 0 1)) :
     quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
