@@ -132,16 +132,14 @@ lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) =
 --             (by aesop) (by aesop)) (by aesop)
 --   · sorry
 
-theorem abstract_approx_add {s r x : ℝ≥0}
-     (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1) (c f : ℝ≥0 → ℝ≥0)
-     (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1))
-     (hxr : x < r) (hfl : ∀ t, f t ≤ 1) :
-     x * (f x + c x) ^ 2 ≤ 1 := by
+theorem abstract_approx_add {s r x : ℝ≥0} (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1)
+    (c f : ℝ≥0 → ℝ≥0) (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hxr : x < r)
+    (hfl : ∀ t, f t ≤ 1) : x * (f x + c x) ^ 2 ≤ 1 := by
   by_cases h : r ≤ 1 / 4
   · rw [(cutoff (lt_trans h0s hsr) hr1).mpr h] at hcle
-    exact le_trans (mul_le_mul (le_trans (le_of_lt hxr) h)
-      (le_of_le_of_eq (pow_le_pow_left' (le_of_le_of_eq (add_le_add (hfl _) (hcle _))
-        (one_add_one_eq_two)) 2) rfl) (sq_nonneg (f x + c x)) (zero_le (1 / 4))) (by norm_num)
+    refine le_trans (mul_le_mul (le_trans hxr.le h) (?_ : _ ≤ (2 : ℝ≥0) ^ 2)
+      (by positivity) (by positivity)) (by simp [two_pow_two])
+    exact pow_le_pow_left' (one_add_one_eq_two (R := ℝ≥0) ▸ (add_le_add (hfl x) (hcle x))) _
   · have : min 1 (1 / sqrt r - 1) = 1 / sqrt r - 1 := by
       simp only [one_div, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, le_inv_iff_mul_le, not_le,
         inf_eq_right, tsub_le_iff_right] at h ⊢
@@ -150,19 +148,20 @@ theorem abstract_approx_add {s r x : ℝ≥0}
     simp_rw [this] at hcle
     have : x * (f x + c x) ^ 2 ≤ x / r := by
       have : f x + c x ≤ 1 / sqrt r := by
-        refine le_trans (add_le_add (hfl x) (hcle x)) ?_
-        rw [add_tsub_cancel_of_le _]
-        · rw [le_one_div (by aesop) (by grind [sqrt_pos_of_pos]), sqrt_le_iff_le_sq]
-          simp [hr1.le]
-      grw [mul_le_mul_of_nonneg_left (pow_le_pow_left₀ (by positivity) this 2) (by positivity)]
+        refine le_trans (add_le_add (hfl x) (hcle x)) (add_tsub_cancel_of_le (α := ℝ≥0) ?_ ▸ le_rfl)
+        rw [le_one_div (by aesop) (by grind [sqrt_pos_of_pos]), sqrt_le_iff_le_sq]
+        simp [hr1.le]
+      grw [mul_le_mul_of_nonneg_left (pow_le_pow_left' this 2) (by positivity)]
       simp [div_eq_mul_inv]
     grw [this, div_le_one_of_le₀ hxr.le (by positivity)]
 
 /- We also need versions of the above for `x * (f x - c x) ^ 2 ≤ 1`. We actually will put these
 together in the end. -/
 
-theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (E := A)
-    (Metric.ball (0 : A) 1)) : quasispectrum ℝ≥0 (star a * a)  ⊆ {0, 1} := by
+open Metric
+
+theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (ball 0 1)) :
+    quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
   by_contra h
   obtain ⟨t, ht1, ht2⟩ := Set.not_subset.mp h
   simp only [mem_insert_iff, mem_singleton_iff, not_or] at ht2
