@@ -80,21 +80,6 @@ lemma tent_apply {z δ c : ℝ≥0} : tent z δ c =
 noncomputable def γ (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
   fun x ↦ (linearRamp ε) x + (tent z δ c) x
 
-@[simp]
-lemma gamma_apply {ε z δ c x : ℝ≥0} : γ ε z δ c x = (linearRamp ε) x + (tent z δ c) x := rfl
-
-noncomputable def s (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
-  fun x ↦ (linearRamp ε) x - (tent z δ c) x
-
-@[simp]
-lemma s_apply {ε z δ c x : ℝ≥0} : s ε z δ c x = (linearRamp ε) x - (tent z δ c) x := rfl
-
-/- Missing constraint.-/
-lemma s_lt_one (ε z δ c x : ℝ≥0) (hc : c < 1) : γ ε z δ c x < 1 := by
-  unfold γ linearRamp tent
-  simp only [one_div, nnnorm_eq_self]
-  sorry
-
 -- move to ...?
 lemma two_pow_two {R : Type*} [Semiring R] : (2 : R) ^ 2 = 4 := by norm_num
 
@@ -107,11 +92,11 @@ lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) =
   simp [le_tsub_iff_left (one_lt_inv_sqrt hr hr1).le, le_inv_iff_mul_le (by aesop : sqrt r ≠ 0),
     ← sq_le_sq₀ (by aesop : 0 ≤ 2 * sqrt r), one_add_one_eq_two, mul_pow, two_pow_two, mul_comm]
 
-theorem abstract_approx_add {s r x : ℝ≥0} (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1)
+theorem abstract_approx_add {r x : ℝ≥0} (h0r : 0 < r) (hr1 : r < 1)
     (c f : ℝ≥0 → ℝ≥0) (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hxr : x < r)
     (hfl : ∀ t, f t ≤ 1) : x * (f x + c x) ^ 2 ≤ 1 := by
   by_cases h : r ≤ 1 / 4
-  · rw [(cutoff (lt_trans h0s hsr) hr1).mpr h] at hcle
+  · rw [(cutoff h0r hr1).mpr h] at hcle
     refine le_trans (mul_le_mul (le_trans hxr.le h) (?_ : _ ≤ (2 : ℝ≥0) ^ 2)
       (by positivity) (by positivity)) (by simp [two_pow_two])
     exact pow_le_pow_left' (one_add_one_eq_two (R := ℝ≥0) ▸ (add_le_add (hfl x) (hcle x))) _
@@ -125,15 +110,39 @@ theorem abstract_approx_add {s r x : ℝ≥0} (h0s : 0 < s) (hsr : s < r) (hr1 :
       simp [div_eq_mul_inv]
     grw [this, div_le_one_of_le₀ hxr.le (by positivity)]
 
-theorem abstract_approx_sub {s r x : ℝ≥0} (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1)
+theorem abstract_approx_sub {r x : ℝ≥0} (h0r : 0 < r) (hr1 : r < 1)
     (c f : ℝ≥0 → ℝ≥0) (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hxr : x < r)
     (hfl : ∀ t, f t ≤ 1) : x * (f x - c x) ^ 2 ≤ 1 := by
-  refine le_trans ?_ (abstract_approx_add h0s hsr hr1 c f hcle hxr hfl)
+  refine le_trans ?_ (abstract_approx_add h0r hr1 c f hcle hxr hfl)
   gcongr
   exact le_add_of_le_of_nonneg tsub_le_self (zero_le _)
 
-/- We also need versions of the above for `x * (f x - c x) ^ 2 ≤ 1`. We actually will put these
-together in the end. -/
+/- We aim to use abstract_approx_add with δ = (1 - t) / 2, r = (1 + t) / 2 for the t that is
+   the center of the tent function. The minimum below selects the c that keeps the height
+   of the tent less than min 1 (1 /sqrt r - 1). -/
+noncomputable def t_tent (t : ℝ≥0) := tent t ((1 - t)/2) (min 1 (1 / sqrt ((1 + t) / 2) - 1))
+
+/- Must include a proof that `t_tent` is continuous. -/
+
+/- theorem abstract_approx_add {r x : ℝ≥0} (h0r : 0 < r) (hr1 : r < 1)
+    (c f : ℝ≥0 → ℝ≥0) (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hxr : x < r)
+    (hfl : ∀ t, f t ≤ 1) : x * (f x + c x) ^ 2 ≤ 1 -/
+
+lemma contr_ave {t : ℝ≥0} (ht1 : t < 1) : (1 + t) / 2 < 1 := sorry
+lemma pos_ave {t : ℝ≥0} (h0t : 0 < t) : 0 < (1 + t)/ 2 := by positivity
+lemma t_tent_cap (t : ℝ≥0) (x : ℝ≥0) :
+    t_tent t x
+      ≤ (min 1 (1 / sqrt ((1 + t) / 2) - 1)) := by sorry
+lemma linearRamp_cap (ε t : ℝ≥0) : linearRamp ε t ≤ 1 := sorry
+
+theorem t_tent_linearRamp_approx_add {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t < 1)
+  (hx : x ≤ 1) : x * (linearRamp ε x + t_tent t x) ^ 2 ≤ 1 := by
+  by_cases hxt : x < (1 + t) / 2
+  · exact abstract_approx_add (x := x) (pos_ave h0t) (contr_ave ht1) (t_tent t) (linearRamp ε)
+      (t_tent_cap t) (hxt) (linearRamp_cap ε)
+  ·
+
+
 
 theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (ball 0 1)) :
     quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
@@ -142,6 +151,7 @@ theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ�
   simp only [mem_insert_iff, mem_singleton_iff, not_or] at ht2
   push_neg at ht2
   have zero_lt := lt_of_le_of_ne (zero_le t) ht2.1.symm
+  have J : ContinuousAt id t := continuousAt_id
   have lt_one : t < 1 := by
     have le_one : t ≤ 1 := sorry
     exact lt_of_le_of_ne le_one ht2.2
