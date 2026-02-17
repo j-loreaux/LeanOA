@@ -77,6 +77,11 @@ noncomputable def tent (z δ c x : ℝ≥0) : ℝ≥0 :=
 lemma tent_apply {z δ c : ℝ≥0} : tent z δ c =
   fun x ↦ c * (1 - ‖(x.toReal - z.toReal)‖.toNNReal / ‖δ‖₊) := rfl
 
+lemma tent_le_c (z δ c x) : tent z δ c x ≤ c := by aesop (add simp [mul_le_of_le_one_right])
+
+theorem continuous_tent (z δ c) : Continuous (tent z δ c) :=
+  .comp (continuous_const.mul continuous_id) (by fun_prop)
+
 noncomputable def γ (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
   fun x ↦ (linearRamp ε) x + (tent z δ c) x
 
@@ -142,8 +147,7 @@ lemma contr_ave {t : ℝ≥0} (ht1 : t < 1) : (1 + t) / 2 < 1 :=
 lemma pos_ave {t : ℝ≥0} (h0t : 0 < t) : 0 < (1 + t)/ 2 := by positivity
 
 lemma t_tent_cap (t : ℝ≥0) (x : ℝ≥0) :
-    t_tent t x
-      ≤ (min 1 (1 / sqrt ((1 + t) / 2) - 1)) := by
+    t_tent t x ≤ (min 1 (1 / sqrt ((1 + t) / 2) - 1)) := by
   dsimp[t_tent]
   simp only [one_div, Real.toNNReal_abs, le_inf_iff]
   exact ⟨mul_le_of_le_one_of_le (min_le_left 1 ((sqrt ((1 + t) / 2))⁻¹ - 1)) (tsub_le_self),
@@ -152,15 +156,35 @@ lemma t_tent_cap (t : ℝ≥0) (x : ℝ≥0) :
 
 lemma linearRamp_cap (ε t : ℝ≥0) : linearRamp ε t ≤ 1 := by simp
 
-lemma if_big_t_tent_zero {t x : ℝ≥0} (hx : x ≤ 1) :
-    ¬ (x < (1 + t) / 2) → t_tent t x = 0 := sorry
+lemma if_big_t_tent_zero {t x : ℝ≥0} (h : ¬ (x < (1 + t) / 2)) : t_tent t x = 0 := by
+  simp only [not_lt, t_tent, sub_def, coe_one, one_div, NNReal.coe_inv, Real.coe_sqrt,
+    NNReal.coe_div, NNReal.coe_add, NNReal.coe_ofNat, Nat.ofNat_nonneg, Real.sqrt_div', inv_div,
+    tent_apply, Real.norm_eq_abs, Real.toNNReal_abs, nnnorm_eq_self, Real.coe_nnabs,
+    Real.coe_toNNReal', mul_eq_zero, Real.toNNReal_eq_zero, tsub_le_iff_right, zero_add] at h ⊢
+  -- maybe attribute stuff for `NNReal` with `grind`
+  rw [← NNReal.coe_le_coe, NNReal.coe_div, NNReal.coe_add, NNReal.coe_ofNat, NNReal.coe_one] at h
+  by_cases ht : (t : ℝ) < 1
+  · right
+    rw [le_div_iff₀ (by simpa), max_eq_left (by simpa using ht.le), abs_of_nonneg (by grind)]
+    grind
+  · left
+    rw [min_eq_right]
+    · simp only [Real.toNNReal_eq_zero, tsub_le_iff_right, zero_add]
+      apply div_le_one_of_le₀ (by grind [Real.sqrt_le_sqrt])
+      simp
+    simp only [Real.toNNReal_le_one, tsub_le_iff_right]
+    apply div_le_of_le_mul₀ (by simp) (by simp)
+    rw [Real.sqrt_le_iff]
+    simp only [pos_add_self_iff, zero_lt_one, mul_nonneg_iff_of_pos_left, Real.sqrt_nonneg, mul_pow]
+    rw [Real.sq_sqrt (by grind)]
+    grind
 
 theorem t_tent_linearRamp_approx_add {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t < 1)
   (hx : x ≤ 1) : x * (linearRamp ε x + t_tent t x) ^ 2 ≤ 1 := by
   by_cases hxt : x < (1 + t) / 2
   · exact abstract_approx_add (x := x) (pos_ave h0t) (contr_ave ht1) (t_tent t) (linearRamp ε)
       (t_tent_cap t) (hxt) (linearRamp_cap ε)
-  · rw [if_big_t_tent_zero hx hxt, add_zero, ← one_pow 2]
+  · rw [if_big_t_tent_zero hxt, add_zero, ← one_pow 2]
     have B1 := (sq_le_sq₀ ((zero_le (linearRamp ε x))) (zero_le_one)).mpr  <| linearRamp_cap ε x
     have B2 := mul_le_mul hx B1 (by positivity) (by positivity)
     rw [one_mul] at B2
