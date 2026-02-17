@@ -71,11 +71,11 @@ lemma nhdsGT_basis_Ioc {α : Type*} [TopologicalSpace α] [LinearOrder α] [Orde
 we need to develop some abstract machinery first. -/
 
 noncomputable def tent (z δ c x : ℝ≥0) : ℝ≥0 :=
-   c * (1 - ‖(x.toReal - z.toReal)‖.toNNReal / ‖δ‖₊)
+   c * (1 - (x - z) / ‖δ‖₊)
 
 @[simp]
 lemma tent_apply {z δ c : ℝ≥0} : tent z δ c =
-  fun x ↦ c * (1 - ‖(x.toReal - z.toReal)‖.toNNReal / ‖δ‖₊) := rfl
+  fun x ↦ c * (1 - (x - z) / ‖δ‖₊) := rfl
 
 noncomputable def γ (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
   fun x ↦ (linearRamp ε) x + (tent z δ c) x
@@ -145,22 +145,40 @@ lemma t_tent_cap (t : ℝ≥0) (x : ℝ≥0) :
     t_tent t x
       ≤ (min 1 (1 / sqrt ((1 + t) / 2) - 1)) := by
   dsimp[t_tent]
-  simp only [one_div, Real.toNNReal_abs, le_inf_iff]
+  simp only [one_div, le_inf_iff]
   exact ⟨mul_le_of_le_one_of_le (min_le_left 1 ((sqrt ((1 + t) / 2))⁻¹ - 1)) (tsub_le_self),
     (le_trans (mul_le_of_le_one_right' (tsub_le_self))
       (min_le_right 1 ((sqrt ((1 + t) / 2))⁻¹ - 1)))⟩
 
 lemma linearRamp_cap (ε t : ℝ≥0) : linearRamp ε t ≤ 1 := by simp
 
-lemma if_big_t_tent_zero {t x : ℝ≥0} (hx : x ≤ 1) :
-    ¬ (x < (1 + t) / 2) → t_tent t x = 0 := sorry
+lemma if_big_t_tent_zero {t x : ℝ≥0} (ht : t < 1) (_ : x ≤ 1) :
+    ¬ (x < (1 + t) / 2) → t_tent t x = 0 := by
+  intro h
+  push_neg at h
+  dsimp [t_tent]
+  simp only [one_div, mul_eq_zero]
+  right
+  have B : (1 + t) / 2 - t ≤ x - t := tsub_le_tsub_right h t
+  have C := by
+    calc
+      (1 + t) / 2 - t = (1 + t) / 2 - 2 * t / 2 := by simp
+                    _ = ((1 + t) - 2 * t) / 2 := Eq.symm (NNReal.sub_div (1 + t) (2 * t) 2)
+                    _ = (1 - t) / 2 := by simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true,
+                                          div_left_inj']
+                                          refine Eq.symm (tsub_eq_tsub_of_add_eq_add ?_)
+                                          simp [← one_add_one_eq_two, add_mul, ← add_assoc]
+  rw [C] at B
+  have : 1 ≤ (x - t) / ((1 - t) / 2) :=
+    (one_le_div₀ (half_pos (tsub_pos_of_lt ht))).mpr B
+  exact tsub_eq_zero_of_le this
 
 theorem t_tent_linearRamp_approx_add {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t < 1)
   (hx : x ≤ 1) : x * (linearRamp ε x + t_tent t x) ^ 2 ≤ 1 := by
   by_cases hxt : x < (1 + t) / 2
   · exact abstract_approx_add (x := x) (pos_ave h0t) (contr_ave ht1) (t_tent t) (linearRamp ε)
       (t_tent_cap t) (hxt) (linearRamp_cap ε)
-  · rw [if_big_t_tent_zero hx hxt, add_zero, ← one_pow 2]
+  · rw [if_big_t_tent_zero ht1 hx hxt, add_zero, ← one_pow 2]
     have B1 := (sq_le_sq₀ ((zero_le (linearRamp ε x))) (zero_le_one)).mpr  <| linearRamp_cap ε x
     have B2 := mul_le_mul hx B1 (by positivity) (by positivity)
     rw [one_mul] at B2
@@ -172,7 +190,7 @@ theorem t_tent_linearRamp_approx_sub {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t <
   gcongr
   exact le_add_of_le_of_nonneg tsub_le_self (zero_le _)
 
-theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (ball 0 1)) :
+theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (closedBall 0 1)) :
     quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
   by_contra h
   obtain ⟨t, ht1, ht2⟩ := Set.not_subset.mp h
