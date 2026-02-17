@@ -11,23 +11,19 @@ theorem epsilon_compression {ε : ℝ≥0} (a : A) (ha : 0 ≤ a) (f : ℝ≥0 �
       (hfc : Continuous f) (hf0 : f 0 = 0) (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ x, f x ≤ 1)
         : ‖a - a * cfcₙ f a‖₊ ≤ ε := by
   have H1 (x : ℝ≥0) : x - x * f x ≤ ε := by
-    by_cases h : x ≥ ε
+    by_cases! h : x ≥ ε
     · simp [hf h]
-    · simp only [ge_iff_le, not_le] at h
-      have : x - x * (f x) ≤ x := by
+    · have : x - x * (f x) ≤ x := by
         nth_rw 1 [← mul_one x, ← mul_tsub]
         exact mul_le_of_le_one_right' tsub_le_self
-      exact le_trans this (le_of_lt h)
+      exact le_trans this h.le
   have H2 (x : ℝ≥0) :  x * f x ≤ x := by
-    by_cases h : x ≥ ε
-    · rw [hf h, Pi.one_apply, mul_one]
-    · simp only [ge_iff_le, not_le] at h
-      exact mul_le_of_le_one_right' <| coe_le_one.mp (hfl x)
+    by_cases! h : x ≥ ε
+    · simp [hf h]
+    · exact mul_le_of_le_one_right' <| coe_le_one.mp (hfl x)
   nth_rw 1 2 [← cfcₙ_id (R := ℝ≥0) a]
-  rw [← cfcₙ_mul id f,
-       ← cfcₙ_tsub id (ha := ha) (fun _ ↦ id _ * f _)]
-  · refine nnnorm_cfcₙ_nnreal_le (A := A) ?_
-    · exact fun x _ ↦ H1 (id _)
+  rw [← cfcₙ_mul id f, ← cfcₙ_tsub id (ha := ha) (fun _ ↦ id _ * f _)]
+  · refine nnnorm_cfcₙ_nnreal_le (A := A) fun x _ ↦ H1 (id _)
   · exact fun _ _ ↦ H2 (id _)
 
 open Filter Set Function
@@ -114,24 +110,6 @@ lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) =
   simp [le_tsub_iff_left (one_lt_inv_sqrt hr hr1).le, le_inv_iff_mul_le (by aesop : sqrt r ≠ 0),
     ← sq_le_sq₀ (by aesop : 0 ≤ 2 * sqrt r), one_add_one_eq_two, mul_pow, two_pow_two, mul_comm]
 
-/- I'm wondering which proof is better here, this one or the next? The first has a bunch of
-   aesop calls, and the second seems shorter. Neither is really flexible...maybe you have
-   a better way! -/
-/- Let's keep it commented for now and we'll see later -/
--- theorem abstract_approx_add {a : A} {s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
---      (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1) (c f : ℝ≥0 → ℝ≥0)
---      (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hsupp : support c ⊆ Icc s r)
---      (hx : x ∈ quasispectrum ℝ≥0 (star a * a)) (hxr : x < r) (hf0 : f 0 = 0)
---      (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ t, f t ≤ 1) :
---      x * (f x + c x) ^ 2 ≤ 1 := by
---   by_cases h : r ≤ 1 / 4
---   · exact le_trans (mul_le_mul (le_trans (le_of_lt hxr) h)
---       (le_of_le_of_eq ((sq_le_sq₀ (by aesop) (by aesop)).mpr
---         (le_of_le_of_eq (add_le_add (hfl _) (le_of_le_of_eq (hcle x)
---           ((cutoff (lt_trans h0s hsr) hr1).mpr h))) (one_add_one_eq_two))) (two_pow_two))
---             (by aesop) (by aesop)) (by aesop)
---   · sorry
-
 theorem abstract_approx_add {s r x : ℝ≥0} (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1)
     (c f : ℝ≥0 → ℝ≥0) (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hxr : x < r)
     (hfl : ∀ t, f t ≤ 1) : x * (f x + c x) ^ 2 ≤ 1 := by
@@ -151,6 +129,13 @@ theorem abstract_approx_add {s r x : ℝ≥0} (h0s : 0 < s) (hsr : s < r) (hr1 :
       grw [mul_le_mul_of_nonneg_left (pow_le_pow_left' this 2) (by positivity)]
       simp [div_eq_mul_inv]
     grw [this, div_le_one_of_le₀ hxr.le (by positivity)]
+
+theorem abstract_approx_sub {s r x : ℝ≥0} (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1)
+    (c f : ℝ≥0 → ℝ≥0) (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hxr : x < r)
+    (hfl : ∀ t, f t ≤ 1) : x * (f x - c x) ^ 2 ≤ 1 := by
+  refine le_trans ?_ (abstract_approx_add h0s hsr hr1 c f hcle hxr hfl)
+  gcongr
+  exact le_add_of_le_of_nonneg tsub_le_self (zero_le _)
 
 /- We also need versions of the above for `x * (f x - c x) ^ 2 ≤ 1`. We actually will put these
 together in the end. -/
