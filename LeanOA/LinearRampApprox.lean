@@ -114,46 +114,53 @@ lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) =
   simp [le_tsub_iff_left (one_lt_inv_sqrt hr hr1).le, le_inv_iff_mul_le (by aesop : sqrt r ≠ 0),
     ← sq_le_sq₀ (by aesop : 0 ≤ 2 * sqrt r), one_add_one_eq_two, mul_pow, two_pow_two, mul_comm]
 
-example {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : ¬ r ≤ 1 / 4 →
-    min 1 (1 / sqrt r - 1) = 1 / sqrt r - 1 := by
-  simp only [one_div, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, le_inv_iff_mul_le, not_le,
-    inf_eq_right, tsub_le_iff_right]
-  intro a
-  rw [one_add_one_eq_two]
-  sorry
-
 /- I'm wondering which proof is better here, this one or the next? The first has a bunch of
    aesop calls, and the second seems shorter. Neither is really flexible...maybe you have
    a better way! -/
-theorem abstract_approx_add {a : A} {s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
-     (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1) (c f : ℝ≥0 → ℝ≥0)
-     (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hsupp : support c ⊆ Icc s r)
-     (hx : x ∈ quasispectrum ℝ≥0 (star a * a)) (hxr : x < r) (hf0 : f 0 = 0)
-     (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ t, f t ≤ 1) :
-     x * (f x + c x) ^ 2 ≤ 1 := by
-  by_cases h : r ≤ 1 / 4
-  · exact le_trans (mul_le_mul (le_trans (le_of_lt hxr) h)
-      (le_of_le_of_eq ((sq_le_sq₀ (by aesop) (by aesop)).mpr
-        (le_of_le_of_eq (add_le_add (hfl _) (le_of_le_of_eq (hcle x)
-          ((cutoff (lt_trans h0s hsr) hr1).mpr h))) (one_add_one_eq_two))) (two_pow_two))
-            (by aesop) (by aesop)) (by aesop)
-  · sorry
+/- Let's keep it commented for now and we'll see later -/
+-- theorem abstract_approx_add {a : A} {s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
+--      (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1) (c f : ℝ≥0 → ℝ≥0)
+--      (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hsupp : support c ⊆ Icc s r)
+--      (hx : x ∈ quasispectrum ℝ≥0 (star a * a)) (hxr : x < r) (hf0 : f 0 = 0)
+--      (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ t, f t ≤ 1) :
+--      x * (f x + c x) ^ 2 ≤ 1 := by
+--   by_cases h : r ≤ 1 / 4
+--   · exact le_trans (mul_le_mul (le_trans (le_of_lt hxr) h)
+--       (le_of_le_of_eq ((sq_le_sq₀ (by aesop) (by aesop)).mpr
+--         (le_of_le_of_eq (add_le_add (hfl _) (le_of_le_of_eq (hcle x)
+--           ((cutoff (lt_trans h0s hsr) hr1).mpr h))) (one_add_one_eq_two))) (two_pow_two))
+--             (by aesop) (by aesop)) (by aesop)
+--   · sorry
 
-theorem abstract_approx_add' {a : A} {s r x ε : ℝ≥0} (ha : a ∈ Metric.ball 0 1)
+theorem abstract_approx_add {s r x : ℝ≥0}
      (h0s : 0 < s) (hsr : s < r) (hr1 : r < 1) (c f : ℝ≥0 → ℝ≥0)
-     (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hsupp : support c ⊆ Icc s r)
-     (hx : x ∈ quasispectrum ℝ≥0 (star a * a)) (hxr : x < r) (hf0 : f 0 = 0)
-     (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ t, f t ≤ 1) :
+     (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1))
+     (hxr : x < r) (hfl : ∀ t, f t ≤ 1) :
      x * (f x + c x) ^ 2 ≤ 1 := by
   by_cases h : r ≤ 1 / 4
   · rw [(cutoff (lt_trans h0s hsr) hr1).mpr h] at hcle
     exact le_trans (mul_le_mul (le_trans (le_of_lt hxr) h)
       (le_of_le_of_eq (pow_le_pow_left' (le_of_le_of_eq (add_le_add (hfl _) (hcle _))
         (one_add_one_eq_two)) 2) rfl) (sq_nonneg (f x + c x)) (zero_le (1 / 4))) (by norm_num)
-  · sorry
+  · have : min 1 (1 / sqrt r - 1) = 1 / sqrt r - 1 := by
+      simp only [one_div, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, le_inv_iff_mul_le, not_le,
+        inf_eq_right, tsub_le_iff_right] at h ⊢
+      rw [one_add_one_eq_two, inv_le (by aesop), ← sq_le_sq₀ zero_le_one (by positivity)]
+      simpa [mul_pow, two_pow_two] using h.le
+    simp_rw [this] at hcle
+    have : x * (f x + c x) ^ 2 ≤ x / r := by
+      have : f x + c x ≤ 1 / sqrt r := by
+        refine le_trans (add_le_add (hfl x) (hcle x)) ?_
+        rw [← NNReal.coe_le_coe, NNReal.coe_add, NNReal.coe_sub]
+        · simp only [coe_one, one_div, NNReal.coe_inv, Real.coe_sqrt, add_sub_cancel, le_refl]
+        rw [le_one_div (by aesop) (by grind [sqrt_pos_of_pos]), sqrt_le_iff_le_sq]
+        simp [hr1.le]
+      grw [mul_le_mul_of_nonneg_left (pow_le_pow_left₀ (by positivity) this 2) (by positivity)]
+      simp [div_eq_mul_inv]
+    grw [this, div_le_one_of_le₀ hxr.le (by positivity)]
 
-/- We also need versions of the above for `x * (f x - c x) ^ 2 ≤ 1`. We actually will put these together
-   in the end. -/
+/- We also need versions of the above for `x * (f x - c x) ^ 2 ≤ 1`. We actually will put these
+together in the end. -/
 
 theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (E := A)
     (Metric.ball (0 : A) 1)) : quasispectrum ℝ≥0 (star a * a)  ⊆ {0, 1} := by
