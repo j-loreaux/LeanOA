@@ -87,7 +87,7 @@ lemma two_pow_two {R : Type*} [Semiring R] : (2 : R) ^ 2 = 4 := by norm_num
 lemma NNReal.one_lt_inv_sqrt {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : 1 < (sqrt r)⁻¹ := by
   rw [lt_inv_iff_mul_lt, ← sq_lt_sq₀] <;> aesop
 
--- probably inline this unless we need it again?
+-- probably inline this unless we need it again? (Jon : I agree. Later, though?)
 lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) = 1 ↔ r ≤ 1 / 4 := by
   simp [le_tsub_iff_left (one_lt_inv_sqrt hr hr1).le, le_inv_iff_mul_le (by aesop : sqrt r ≠ 0),
     ← sq_le_sq₀ (by aesop : 0 ≤ 2 * sqrt r), one_add_one_eq_two, mul_pow, two_pow_two, mul_comm]
@@ -124,14 +124,24 @@ noncomputable def t_tent (t : ℝ≥0) := tent t ((1 - t)/2) (min 1 (1 / sqrt ((
 
 /- Must include a proof that `t_tent` is continuous to ensure cfcₙ works. -/
 
-lemma contr_ave {t : ℝ≥0} (ht1 : t < 1) : (1 + t) / 2 < 1 := sorry
+lemma contr_ave {t : ℝ≥0} (ht1 : t < 1) : (1 + t) / 2 < 1 :=
+  div_lt_one_of_lt <| lt_of_lt_of_eq (add_lt_add_right ht1 _) (one_add_one_eq_two)
 lemma pos_ave {t : ℝ≥0} (h0t : 0 < t) : 0 < (1 + t)/ 2 := by positivity
 lemma t_tent_cap (t : ℝ≥0) (x : ℝ≥0) :
     t_tent t x
-      ≤ (min 1 (1 / sqrt ((1 + t) / 2) - 1)) := by sorry
-lemma linearRamp_cap (ε t : ℝ≥0) : linearRamp ε t ≤ 1 := sorry
-lemma if_big_t_tent_zero {t x : ℝ≥0} :
-   ¬ (x < (1 + t) / 2) → t_tent t x = 0 := sorry
+      ≤ (min 1 (1 / sqrt ((1 + t) / 2) - 1)) := by
+  dsimp[t_tent]
+  simp only [one_div, Real.toNNReal_abs, le_inf_iff]
+  sorry
+lemma linearRamp_cap (ε t : ℝ≥0) : linearRamp ε t ≤ 1 := by
+  dsimp only [linearRamp_apply, Pi.inf_apply, Pi.one_apply]
+  simp only [one_div, inf_le_left]
+lemma if_big_t_tent_zero {t x : ℝ≥0} (hx : x ≤ 1) :
+    ¬ (x < (1 + t) / 2) → t_tent t x = 0 := sorry
+
+
+
+
 
 /- Horrible proof of second direction needs fixing. -/
 theorem t_tent_linearRamp_approx_add {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t < 1)
