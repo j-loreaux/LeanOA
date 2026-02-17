@@ -117,6 +117,18 @@ theorem abstract_approx_sub {r x : ℝ≥0} (h0r : 0 < r) (hr1 : r < 1)
   gcongr
   exact le_add_of_le_of_nonneg tsub_le_self (zero_le _)
 
+lemma quasispectrum.norm_le_norm_of_mem {A} [NonUnitalCStarAlgebra A]
+    {a : A} {x} (hx : x ∈ quasispectrum ℝ a) : ‖x‖ ≤ ‖a‖ :=
+  (spectrum.norm_le_norm_of_mem
+    ((Unitization.quasispectrum_eq_spectrum_inr' ℝ ℂ a).symm ▸ hx)).trans
+    (by simp [Unitization.norm_def])
+
+lemma quasispectrum_subset_Icc_of_norm_le_one_and_nonneg
+    (a : A) (ha : ‖a‖ ≤ 1) (h : 0 ≤ a := by cfc_tac) :
+    quasispectrum ℝ a ⊆ Icc 0 1 := by
+  refine fun x hx ↦ ⟨by grind, le_trans (Real.le_norm_self _) ?_⟩
+  grw [quasispectrum.norm_le_norm_of_mem hx, ha]
+
 /- We aim to use abstract_approx_add with δ = (1 - t) / 2, r = (1 + t) / 2 for the t that is
    the center of the tent function. The minimum below selects the c that keeps the height
    of the tent less than min 1 (1 /sqrt r - 1). -/
