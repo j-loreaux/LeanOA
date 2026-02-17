@@ -151,10 +151,9 @@ theorem abstract_approx_add {s r x : ℝ≥0}
     have : x * (f x + c x) ^ 2 ≤ x / r := by
       have : f x + c x ≤ 1 / sqrt r := by
         refine le_trans (add_le_add (hfl x) (hcle x)) ?_
-        rw [← NNReal.coe_le_coe, NNReal.coe_add, NNReal.coe_sub]
-        · simp only [coe_one, one_div, NNReal.coe_inv, Real.coe_sqrt, add_sub_cancel, le_refl]
-        rw [le_one_div (by aesop) (by grind [sqrt_pos_of_pos]), sqrt_le_iff_le_sq]
-        simp [hr1.le]
+        rw [add_tsub_cancel_of_le _]
+        · rw [le_one_div (by aesop) (by grind [sqrt_pos_of_pos]), sqrt_le_iff_le_sq]
+          simp [hr1.le]
       grw [mul_le_mul_of_nonneg_left (pow_le_pow_left₀ (by positivity) this 2) (by positivity)]
       simp [div_eq_mul_inv]
     grw [this, div_le_one_of_le₀ hxr.le (by positivity)]
