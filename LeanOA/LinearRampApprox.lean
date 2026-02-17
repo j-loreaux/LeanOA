@@ -134,13 +134,24 @@ lemma t_tent_cap (t : ℝ≥0) (x : ℝ≥0) :
     t_tent t x
       ≤ (min 1 (1 / sqrt ((1 + t) / 2) - 1)) := by sorry
 lemma linearRamp_cap (ε t : ℝ≥0) : linearRamp ε t ≤ 1 := sorry
+lemma if_big_t_tent_zero {t x : ℝ≥0} :
+   ¬ (x < (1 + t) / 2) → t_tent t x = 0 := sorry
 
+/- Horrible proof of second direction needs fixing. -/
 theorem t_tent_linearRamp_approx_add {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t < 1)
   (hx : x ≤ 1) : x * (linearRamp ε x + t_tent t x) ^ 2 ≤ 1 := by
   by_cases hxt : x < (1 + t) / 2
   · exact abstract_approx_add (x := x) (pos_ave h0t) (contr_ave ht1) (t_tent t) (linearRamp ε)
       (t_tent_cap t) (hxt) (linearRamp_cap ε)
-  ·
+  · rw [if_big_t_tent_zero hxt, add_zero, ← one_pow 2]
+    have B1 := (sq_le_sq₀ ((zero_le (linearRamp ε x))) (zero_le_one)).mpr  <| linearRamp_cap ε x
+    have B2 := mul_le_mul hx B1 (by positivity) (by positivity)
+    rw [one_mul] at B2
+    assumption
+
+
+
+
 
 
 
