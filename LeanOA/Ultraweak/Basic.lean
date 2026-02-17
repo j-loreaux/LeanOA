@@ -317,6 +317,23 @@ lemma toUltraweak_le [PartialOrder M] {x y : M} :
     toUltraweak ℂ P x ≤ toUltraweak ℂ P y ↔ x ≤ y :=
   Iff.rfl
 
+lemma monotone_ofUltraweak [PartialOrder M] :
+    Monotone (ofUltraweak : σ(M, P) → M) :=
+  fun _ _ ↦ id
+
+lemma monotone_toUltraweak [PartialOrder M] :
+    Monotone (toUltraweak ℂ P : M → σ(M, P)) :=
+  fun _ _ ↦ id
+
+/-- The identity map from `σ(M, P)` to `M` as an order isomorphism. -/
+noncomputable def ofUltraweakOrderIso [PartialOrder M] :
+    σ(M, P) ≃o M where
+  toFun := ofUltraweak
+  invFun := toUltraweak ℂ P
+  left_inv _ := rfl
+  right_inv _ := rfl
+  map_rel_iff' := Iff.rfl
+
 variable (M P) in
 /-- The canonical ⋆-algebra equivalence between `σ(M, P)` and `M`. -/
 @[simps!]

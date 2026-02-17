@@ -83,6 +83,13 @@ jobs:
           lint: true
           mk_all-check: true
 
+      - name: Generate upstream dashboard snippets
+        uses: leanprover-community/upstreaming-dashboard-action@main
+        with:
+          website-directory: home_page
+          project-name: LeanOA
+          branch-name: master
+
       - name: Compile blueprint and documentation
         uses: leanprover-community/docgen-action@main
         with:
