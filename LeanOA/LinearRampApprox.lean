@@ -122,11 +122,7 @@ theorem abstract_approx_sub {r x : ℝ≥0} (h0r : 0 < r) (hr1 : r < 1)
    of the tent less than min 1 (1 /sqrt r - 1). -/
 noncomputable def t_tent (t : ℝ≥0) := tent t ((1 - t)/2) (min 1 (1 / sqrt ((1 + t) / 2) - 1))
 
-/- Must include a proof that `t_tent` is continuous. -/
-
-/- theorem abstract_approx_add {r x : ℝ≥0} (h0r : 0 < r) (hr1 : r < 1)
-    (c f : ℝ≥0 → ℝ≥0) (hcle : ∀ y, c y ≤ min 1 (1 / sqrt r - 1)) (hxr : x < r)
-    (hfl : ∀ t, f t ≤ 1) : x * (f x + c x) ^ 2 ≤ 1 -/
+/- Must include a proof that `t_tent` is continuous to ensure cfcₙ works. -/
 
 lemma contr_ave {t : ℝ≥0} (ht1 : t < 1) : (1 + t) / 2 < 1 := sorry
 lemma pos_ave {t : ℝ≥0} (h0t : 0 < t) : 0 < (1 + t)/ 2 := by positivity
@@ -149,11 +145,16 @@ theorem t_tent_linearRamp_approx_add {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t <
     rw [one_mul] at B2
     assumption
 
-
-
-
-
-
+theorem t_tent_linearRamp_approx_sub {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t < 1)
+  (hx : x ≤ 1) : x * (linearRamp ε x - t_tent t x) ^ 2 ≤ 1 := by
+  by_cases hxt : x < (1 + t) / 2
+  · exact abstract_approx_sub (x := x) (pos_ave h0t) (contr_ave ht1) (t_tent t) (linearRamp ε)
+      (t_tent_cap t) (hxt) (linearRamp_cap ε)
+  · rw [if_big_t_tent_zero hxt, tsub_zero, ← one_pow 2]
+    have B1 := (sq_le_sq₀ ((zero_le (linearRamp ε x))) (zero_le_one)).mpr  <| linearRamp_cap ε x
+    have B2 := mul_le_mul hx B1 (by positivity) (by positivity)
+    rw [one_mul] at B2
+    assumption
 
 theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (ball 0 1)) :
     quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
