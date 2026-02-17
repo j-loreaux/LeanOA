@@ -149,8 +149,7 @@ theorem abstract_approx_add {s r x : ℝ≥0} (h0s : 0 < s) (hsr : s < r) (hr1 :
     have : x * (f x + c x) ^ 2 ≤ x / r := by
       have : f x + c x ≤ 1 / sqrt r := by
         refine le_trans (add_le_add (hfl x) (hcle x)) (add_tsub_cancel_of_le (α := ℝ≥0) ?_ ▸ le_rfl)
-        rw [le_one_div (by aesop) (by grind [sqrt_pos_of_pos]), sqrt_le_iff_le_sq]
-        simp [hr1.le]
+        exact one_div (sqrt r) ▸ one_lt_inv_sqrt (by grind) (by grind) |>.le
       grw [mul_le_mul_of_nonneg_left (pow_le_pow_left' this 2) (by positivity)]
       simp [div_eq_mul_inv]
     grw [this, div_le_one_of_le₀ hxr.le (by positivity)]
