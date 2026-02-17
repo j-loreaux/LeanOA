@@ -45,19 +45,18 @@ lemma linearRamp_apply (ε : ℝ≥0) : linearRamp ε = min 1 (1 / ε * ·) := r
 
 theorem Tendsto_of_linearRamp_compression (a : A) (ha : 0 ≤ a) :
     Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ (linearRamp ε) a‖₊) (𝓝[>] 0) (𝓝 0) :=
-  Tendsto_of_epsilon_compression a ha linearRamp (fun _ ↦ by simpa [linearRamp] using by fun_prop)
-    (by simp) (fun _ h _ ↦ by simpa [linearRamp] using (one_le_inv_mul₀ h).mpr) (by simp)
+  Tendsto_of_epsilon_compression a ha linearRamp (fun _ ↦ by simpa using by fun_prop)
+    (by simp) (fun _ h _ ↦ by simpa using (one_le_inv_mul₀ h).mpr) (by simp)
 
 theorem Tendsto_of_linearRampSq_compression (a : A) (ha : 0 ≤ a) :
     Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ ((· ^ 2) ∘ (linearRamp ε)) a‖₊) (𝓝[>] 0) (𝓝 0) :=
   Tendsto_of_epsilon_compression a ha (fun ε ↦ (· ^ 2) ∘ (linearRamp ε))
-    (fun _ _ ↦ by simpa [linearRamp, one_div] using by fun_prop) (by simp)
-    (fun _ h _ ↦ by simpa [linearRamp] using (one_le_inv_mul₀ h).mpr)
-    (fun _ _ _ ↦ by simpa [linearRamp] using
+    (fun _ _ ↦ by simpa using by fun_prop) (by simp)
+    (fun _ h _ ↦ by simpa using (one_le_inv_mul₀ h).mpr)
+    (fun _ _ _ ↦ by simpa using
       (sq_le_one_iff₀ <| zero_le (min 1 (_⁻¹ * _))).mpr <| min_le_left 1 (_⁻¹ * _))
 
-/- The following should be in Mathlib. -/
-
+-- move to `Mathlib.Topology.Order.LeftRightNhds` I think?
 lemma nhdsGT_basis_Ioc {α : Type*} [TopologicalSpace α] [LinearOrder α] [OrderTopology α]
     [DenselyOrdered α] [NoMaxOrder α] (a : α) :
     (𝓝[>] a).HasBasis (fun x => a < x) (Ioc a) := nhdsGT_basis a |>.to_hasBasis'
@@ -96,12 +95,14 @@ lemma s_lt_one (ε z δ c x : ℝ≥0) (hc : c < 1) : γ ε z δ c x < 1 := by
   simp only [one_div, nnnorm_eq_self]
   sorry
 
-/- Monica, below are some things you've already seen and cleaned up!-/
+-- move to ...?
 lemma two_pow_two {R : Type*} [Semiring R] : (2 : R) ^ 2 = 4 := by norm_num
 
+-- move to `Mathlib.Data.Real.Sqrt`
 lemma NNReal.one_lt_inv_sqrt {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : 1 < (sqrt r)⁻¹ := by
   rw [lt_inv_iff_mul_lt, ← sq_lt_sq₀] <;> aesop
 
+-- probably inline this unless we need it again?
 lemma cutoff {r : ℝ≥0} (hr : 0 < r) (hr1 : r < 1) : min 1 (1 / sqrt r - 1) = 1 ↔ r ≤ 1 / 4 := by
   simp [le_tsub_iff_left (one_lt_inv_sqrt hr hr1).le, le_inv_iff_mul_le (by aesop : sqrt r ≠ 0),
     ← sq_le_sq₀ (by aesop : 0 ≤ 2 * sqrt r), one_add_one_eq_two, mul_pow, two_pow_two, mul_comm]
@@ -114,10 +115,8 @@ theorem abstract_approx_add {s r x : ℝ≥0} (h0s : 0 < s) (hsr : s < r) (hr1 :
     refine le_trans (mul_le_mul (le_trans hxr.le h) (?_ : _ ≤ (2 : ℝ≥0) ^ 2)
       (by positivity) (by positivity)) (by simp [two_pow_two])
     exact pow_le_pow_left' (one_add_one_eq_two (R := ℝ≥0) ▸ (add_le_add (hfl x) (hcle x))) _
-  · have : min 1 (1 / sqrt r - 1) = 1 / sqrt r - 1 := by
-      rw [← cutoff (by grind) (by grind), inf_eq_left, not_le] at h
-      exact min_eq_right_of_lt h
-    simp_rw [this] at hcle
+  · rw [← cutoff (by grind) hr1, inf_eq_left, not_le] at h
+    simp_rw [min_eq_right_of_lt h] at hcle
     have : x * (f x + c x) ^ 2 ≤ x / r := by
       have : f x + c x ≤ 1 / sqrt r := by
         refine le_trans (add_le_add (hfl x) (hcle x)) (add_tsub_cancel_of_le (α := ℝ≥0) ?_ ▸ le_rfl)
