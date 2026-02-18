@@ -266,3 +266,17 @@ theorem partial_isom_of_extreme' {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ�
     quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
   -- use that `star a * a` is nonnegative to get that `quasispectrum ℝ .. ⊆ quasispectrum ℝ≥0 ...`
   sorry
+section Masa
+
+variable {R A : Type*} [CommSemiring R] [NonUnitalNonAssocCommRing A] [Module R A] [Star A]
+variable (hRA : NonUnitalStarSubalgebra R A)
+
+class NonUnitalStarSubalgebra.IsMasa (B : NonUnitalStarSubalgebra R A) : Prop where
+  comm (a b : B) : a * b = b * a
+  maximal :
+    ∀ C : NonUnitalStarSubalgebra R A,
+      B ≤ C → ∀ (a b : C), a * b = b * a → C ≤ B
+
+theorem StarSubalgebra.exists_le_masa : True := sorry
+
+end Masa
