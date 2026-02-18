@@ -117,7 +117,7 @@ lemma quasispectrum.norm_le_norm_of_mem {a : A} {x} (hx : x ∈ quasispectrum �
 private lemma cfcₙ_polynomial_aux (a : A) (α β γ : ℝ) (ha : IsSelfAdjoint a := by cfc_tac) :
     cfcₙ (fun x ↦ α * x + β * x ^ 2 + γ * x ^ 3) a = α • a + β • (a * a) + γ • (a * a * a) := by
   simp only [pow_three', sq]
-  repeat rw [cfcₙ_add (fun _ ↦ _) (fun _ => _ * _)]
+  repeat rw [cfcₙ_add (fun _ ↦ _) (fun _ ↦ _)]
   repeat rw [cfcₙ_const_mul _ (fun _ ↦ _)]
   repeat rw [cfcₙ_mul (fun _ ↦ _) (fun _ ↦ _), cfcₙ_id' ℝ a]
 

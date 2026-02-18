@@ -38,6 +38,7 @@ theorem Tendsto_of_epsilon_compression (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → �
     simpa using epsilon_compression a ha (f δ) (hfc δ hδ.1)
       (hf0 δ hδ.1) (hf δ hδ.1) (hfl δ  hδ.1) |>.trans hδ.2.le⟩
 
+/-- `ε ↦ x ↦ min 1 (1 / ε * x)` -/
 noncomputable def linearRamp (ε x : ℝ≥0) := min 1 (1 / ε * x)
 
 lemma continuous_linearRamp (ε : ℝ≥0) : Continuous (linearRamp ε) :=
@@ -62,17 +63,13 @@ theorem Tendsto_of_linearRampSq_compression (a : A) (ha : 0 ≤ a) :
 -- move to `Mathlib.Topology.Order.LeftRightNhds` I think?
 lemma nhdsGT_basis_Ioc {α : Type*} [TopologicalSpace α] [LinearOrder α] [OrderTopology α]
     [DenselyOrdered α] [NoMaxOrder α] (a : α) :
-    (𝓝[>] a).HasBasis (fun x => a < x) (Ioc a) := nhdsGT_basis a |>.to_hasBasis'
+    (𝓝[>] a).HasBasis (fun x ↦ a < x) (Ioc a) := nhdsGT_basis a |>.to_hasBasis'
   (fun _ hac ↦
     have ⟨b, hab, hbc⟩ := exists_between hac
     ⟨b, hab, Ioc_subset_Ioo_right hbc⟩)
   fun _ hac ↦ mem_of_superset ((nhdsGT_basis a).mem_of_mem hac) Ioo_subset_Ioc_self
 
-/- Begin work here on the second paragraph of 1.6.1.-/
-
-/- The following functions might end up the actual witnesses to the argument, but
-we need to develop some abstract machinery first. -/
-
+/-- tent function -/
 noncomputable def tent (z δ c x : ℝ≥0) : ℝ≥0 :=
    c * (1 - (x - z) / ‖δ‖₊)
 
@@ -85,6 +82,7 @@ lemma tent_le_c (z δ c x) : tent z δ c x ≤ c := by aesop (add simp [mul_le_o
 theorem continuous_tent (z δ c) : Continuous (tent z δ c) :=
   .comp (continuous_const.mul continuous_id) (by fun_prop)
 
+/-- `γ` function from Sakai -/
 noncomputable def γ (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
   fun x ↦ (linearRamp ε) x + (tent z δ c) x
 
@@ -128,6 +126,7 @@ theorem abstract_approx_sub {r x : ℝ≥0} (h0r : 0 < r) (hr1 : r < 1)
 /- We aim to use abstract_approx_add with δ = (1 - t) / 2, r = (1 + t) / 2 for the t that is
    the center of the tent function. The minimum below selects the c that keeps the height
    of the tent less than min 1 (1 /sqrt r - 1). -/
+/-- other tent function -/
 noncomputable def t_tent (t : ℝ≥0) := tent t ((1 - t)/2) (min 1 (1 / sqrt ((1 + t) / 2) - 1))
 
 /- Must include a proof that `t_tent` is continuous to ensure cfcₙ works. -/
