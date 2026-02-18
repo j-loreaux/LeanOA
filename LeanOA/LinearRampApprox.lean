@@ -245,16 +245,19 @@ theorem norm_cfcₙ_approx_sub {ε t : ℝ≥0} (a : A) (ha : 0 ≤ a) (ha1 : �
 
  -/
 
-theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (closedBall 0 1)) :
+theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) :
+    quasispectrum ℝ (star a * a) ⊆ {0, 1} := by
+  obtain ⟨x, hx⟩ := ha
+  apply IsIdempotentElem.quasispectrum_subset
+  suffices a * star a * a = a by grind [IsIdempotentElem]
+  suffices (1 / 2 : ℝ) • ((3 : ℝ) • a - a * star a * a) = a by sorry
+  refine @hx _ ?_ ((1 / 2 : ℝ) • (a + a * star a * a)) ?_ ⟨1 / 2, 1 / 2, ?_⟩
+  · sorry
+  · sorry
+  simp only [smul_sub, smul_smul, smul_add, sub_add_add_cancel, ← add_smul]
+  grind [one_smul]
+
+theorem partial_isom_of_extreme' {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (closedBall 0 1)) :
     quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
-  by_contra h
-  obtain ⟨t, ht1, ht2⟩ := Set.not_subset.mp h
-  simp only [mem_insert_iff, mem_singleton_iff, not_or] at ht2
-  push_neg at ht2
-  have zero_lt := lt_of_le_of_ne (zero_le t) ht2.1.symm
-  have lt_one : t < 1 := by
-    have le_one : t ≤ 1 := sorry
-    -- something like NonUnitalIsometricContinuousFunctionalCalculus.isGreatest_norm_quasispectrum
-    exact lt_of_le_of_ne le_one ht2.2
-  let δ := min t / 2 <| (1 - t) /2
+  -- use that `star a * a` is nonnegative to get that `quasispectrum ℝ .. = quasispectrum ℝ≥0 ...`
   sorry
