@@ -212,10 +212,29 @@ theorem continuous_approx_sub {ε t : ℝ≥0} :
   Continuous.mul (continuous_id) (Continuous.pow (Continuous.sub
     (continuous_linearRamp ε) (continuous_t_tent t)) 2)
 
-theorem norm1 {ε t : ℝ≥0} (a : A) (ha := 0 ≤ a) (ht0 : 0 < t) :
-    ‖cfcₙ (fun (x : ℝ≥0) ↦ x * (linearRamp ε x - t_tent t x) ^ 2) a‖₊ ≤ 1 := by
-  refine norm_cfcₙ_le_iff ?_ ?_
-  sorry
+
+theorem quasispectrum_le_one (a : A) (ha : 0 ≤ a) (ha1 : ‖a‖₊ ≤ 1) (t : ℝ≥0) :
+    t ∈ quasispectrum ℝ≥0 a → t ≤ 1 := by
+ have B := (nnnorm_cfcₙ_nnreal_le_iff id a 1).mp
+ have C := cfcₙ_id (R := ℝ≥0) (A := A) (ha := ha)
+ simp only [C, id_eq] at B
+ have F := B ha1
+ intro h
+ exact F t h
+
+theorem norm_cfcₙ_approx_add {ε t : ℝ≥0} (a : A) (ha : 0 ≤ a) (ha1 : ‖a‖₊ ≤ 1) (h0t : 0 < t)
+    (ht1 : t < 1) : ‖cfcₙ (fun (x : ℝ≥0) ↦ x * (linearRamp ε x + t_tent t x) ^ 2) a‖₊ ≤ 1 := by
+  refine nnnorm_cfcₙ_nnreal_le (A := A) ?_
+  intro x hx
+  have hx1 : x ≤ 1 := quasispectrum_le_one a ha ha1 x hx
+  exact t_tent_linearRamp_approx_add (x := x) (ε := ε) (t := t) h0t ht1 hx1
+
+theorem norm_cfcₙ_approx_sub {ε t : ℝ≥0} (a : A) (ha : 0 ≤ a) (ha1 : ‖a‖₊ ≤ 1) (h0t : 0 < t)
+    (ht1 : t < 1) : ‖cfcₙ (fun (x : ℝ≥0) ↦ x * (linearRamp ε x - t_tent t x) ^ 2) a‖₊ ≤ 1 := by
+  refine nnnorm_cfcₙ_nnreal_le (A := A) ?_
+  intro x hx
+  have hx1 : x ≤ 1 := quasispectrum_le_one a ha ha1 x hx
+  exact t_tent_linearRamp_approx_sub (x := x) (ε := ε) (t := t) h0t ht1 hx1
 
 /- To do:
 
