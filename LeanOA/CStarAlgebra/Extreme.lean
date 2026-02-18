@@ -104,3 +104,91 @@ lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebr
     CStarAlgebra.norm_le_one_iff_of_nonneg _ (add_nonneg zero_le_one (ℑ x).2.sq_nonneg)] at hx
   rw [← norm_eq_zero, ← sq_eq_zero_iff, ← IsSelfAdjoint.norm_mul_self (ℑ x).2, ← sq, norm_eq_zero]
   exact le_antisymm (by simpa using hx) (ℑ x).2.sq_nonneg
+
+lemma quasispectrum.norm_le_norm_of_mem {A} [NonUnitalCStarAlgebra A]
+    {a : A} {x} (hx : x ∈ quasispectrum ℝ a) : ‖x‖ ≤ ‖a‖ :=
+  (spectrum.norm_le_norm_of_mem
+    ((Unitization.quasispectrum_eq_spectrum_inr ℝ a).symm ▸ hx)).trans
+    (by simp [Unitization.norm_def])
+
+section nonUnital
+variable {A : Type*} [NonUnitalCStarAlgebra A]
+
+-- replace with the `cfc_pull` tactic
+private lemma cfcₙ_polynomial_aux (a : A) (α β γ : ℝ) (ha : IsSelfAdjoint a := by cfc_tac) :
+    cfcₙ (fun x ↦ α * x + β * x ^ 2 + γ * x ^ 3) a = α • a + β • (a * a) + γ • (a * a * a) := by
+  simp only [pow_three', sq]
+  repeat rw [cfcₙ_add (fun _ ↦ _) (fun _ => _ * _)]
+  repeat rw [cfcₙ_const_mul _ (fun _ ↦ _)]
+  repeat rw [cfcₙ_mul (fun _ ↦ _) (fun _ ↦ _), cfcₙ_id' ℝ a]
+
+theorem quasispectrum_star_mul_self_subset_of_mem_extremePoints_closedUnitBall
+    [PartialOrder A] [StarOrderedRing A] {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) :
+    quasispectrum ℝ (star a * a) ⊆ {0, 1} := by
+  apply IsIdempotentElem.quasispectrum_subset
+  suffices a * star a * a = a by grind [IsIdempotentElem]
+  suffices (1 / 2 : ℝ) • ((3 : ℝ) • a - a * star a * a) = a by
+    simp only [one_div, smul_sub, smul_smul] at this
+    nth_rw 5 [← one_smul ℝ a] at this
+    rw [sub_eq_iff_eq_add, ← sub_eq_iff_eq_add', ← sub_smul] at this
+    norm_num at this
+    exact this.symm
+  obtain ⟨ha, h⟩ := ha
+  simp only [mem_closedBall, dist_zero_right] at ha h
+  have (x : ℝ) (hx : x ∈ quasispectrum ℝ (star a * a)) : 0 ≤ x ∧ x ≤ 1 := by
+    refine ⟨quasispectrum_nonneg_of_nonneg _ (by simp) _ hx, le_trans (Real.le_norm_self _) ?_⟩
+    grw [quasispectrum.norm_le_norm_of_mem hx, CStarRing.norm_star_mul_self, ha, one_mul]
+  refine @h _ ?_ ((1 / 2 : ℝ) • (a + a * star a * a)) ?_ ⟨1 / 2, 1 / 2, ?_⟩
+  · rw [← sq_le_one_iff₀ (by simp), sq, ← CStarRing.norm_star_mul_self]
+    calc _ = ‖cfcₙ (fun x : ℝ ↦ 1 / 4 * x * (x - 3) ^ 2) (star a * a)‖ := ?_
+      _ ≤ _ := by
+        refine norm_cfcₙ_le fun y hy ↦ ?_
+        rw [Real.norm_of_nonneg (mul_nonneg (mul_nonneg (by simp) (this y hy).1) (sq_nonneg _)),
+          mul_assoc, one_div_mul_eq_div, div_le_one (by positivity), ← sub_nonpos]
+        calc _ = (y - 1) ^ 2 * (y - 4) := by ring
+          _ ≤ _ := by nlinarith [this y hy]
+    congr
+    ring_nf
+    simp_rw [mul_comm _ (_ / _ : ℝ)]
+    rw [cfcₙ_polynomial_aux (star a * a)]
+    -- wow this is an annoying proof
+    simp only [one_div, smul_sub, smul_smul, star_sub, star_smul, star_mul, mul_sub, sub_mul]
+    simp only [smul_mul_smul, mul_assoc, sub_eq_add_neg, neg_add_rev, neg_neg]
+    norm_num
+    simp only [one_div, add_assoc, add_right_inj]
+    rw [add_comm, add_assoc, add_comm, add_left_inj, ← neg_smul, ← add_smul]
+    norm_num
+  · rw [← sq_le_one_iff₀ (by simp), sq, ← CStarRing.norm_star_mul_self]
+    calc _ = ‖cfcₙ (fun x : ℝ ↦ 1 / 4 * x * (x + 1) ^ 2) (star a * a)‖ := ?_
+      _ ≤ _ := by
+        refine norm_cfcₙ_le fun y hy ↦ ?_
+        rw [Real.norm_of_nonneg (mul_nonneg (mul_nonneg (by simp) (this y hy).1) (sq_nonneg _))]
+        grw [this y hy |>.2] <;> grind
+    congr
+    ring_nf
+    simp_rw [mul_comm _ (_ / _ : ℝ)]
+    rw [cfcₙ_polynomial_aux (star a * a)]
+    -- again annoying proof
+    simp only [one_div, smul_add, star_add, star_smul, star_mul, mul_add, add_mul]
+    simp only [smul_mul_smul, mul_assoc]
+    norm_num
+    simp only [one_div, add_assoc, add_right_inj]
+    ring_nf
+    rw [← add_assoc, ← add_smul]
+    grind
+  simp only [smul_sub, smul_smul, smul_add, sub_add_add_cancel, ← add_smul]
+  grind [one_smul]
+
+open NNReal in
+theorem quasispectrum_star_mul_self_subset_of_mem_extremePoints_closedUnitBall'
+    [PartialOrder A] [StarOrderedRing A] {a : A} (ha : a ∈ extremePoints ℝ≥0 (closedBall 0 1)) :
+    quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
+  have : quasispectrum ℝ≥0 (star a * a) = Real.toNNReal '' quasispectrum ℝ (star a * a) := by
+    refine (QuasispectrumRestricts.image ?_).symm
+    exact nonneg_iff_isSelfAdjoint_and_quasispectrumRestricts.mp (star_mul_self_nonneg a) |>.2
+  grw [this, image_subset_iff, preimage,
+    quasispectrum_star_mul_self_subset_of_mem_extremePoints_closedUnitBall]
+  · simp [Set.subset_def]
+  sorry
+
+end nonUnital
