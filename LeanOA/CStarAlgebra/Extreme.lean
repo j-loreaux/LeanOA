@@ -105,14 +105,13 @@ lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebr
   rw [← norm_eq_zero, ← sq_eq_zero_iff, ← IsSelfAdjoint.norm_mul_self (ℑ x).2, ← sq, norm_eq_zero]
   exact le_antisymm (by simpa using hx) (ℑ x).2.sq_nonneg
 
-lemma quasispectrum.norm_le_norm_of_mem {A} [NonUnitalCStarAlgebra A]
-    {a : A} {x} (hx : x ∈ quasispectrum ℝ a) : ‖x‖ ≤ ‖a‖ :=
-  (spectrum.norm_le_norm_of_mem
-    ((Unitization.quasispectrum_eq_spectrum_inr ℝ a).symm ▸ hx)).trans
-    (by simp [Unitization.norm_def])
-
 section nonUnital
 variable {A : Type*} [NonUnitalCStarAlgebra A]
+
+-- what is the right generality for this?
+lemma quasispectrum.norm_le_norm_of_mem {a : A} {x} (hx : x ∈ quasispectrum ℝ a) : ‖x‖ ≤ ‖a‖ :=
+  (spectrum.norm_le_norm_of_mem ((Unitization.quasispectrum_eq_spectrum_inr ℝ a).symm ▸ hx)).trans
+    (by simp [Unitization.norm_def])
 
 -- replace with the `cfc_pull` tactic
 private lemma cfcₙ_polynomial_aux (a : A) (α β γ : ℝ) (ha : IsSelfAdjoint a := by cfc_tac) :
@@ -122,10 +121,9 @@ private lemma cfcₙ_polynomial_aux (a : A) (α β γ : ℝ) (ha : IsSelfAdjoint
   repeat rw [cfcₙ_const_mul _ (fun _ ↦ _)]
   repeat rw [cfcₙ_mul (fun _ ↦ _) (fun _ ↦ _), cfcₙ_id' ℝ a]
 
-theorem quasispectrum_star_mul_self_subset_of_mem_extremePoints_closedUnitBall
+theorem isIdempotentElem_star_mul_self_of_mem_extremePoints_closedUnitBall
     [PartialOrder A] [StarOrderedRing A] {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) :
-    quasispectrum ℝ (star a * a) ⊆ {0, 1} := by
-  apply IsIdempotentElem.quasispectrum_subset
+    IsIdempotentElem (star a * a) := by
   suffices a * star a * a = a by grind [IsIdempotentElem]
   suffices (1 / 2 : ℝ) • ((3 : ℝ) • a - a * star a * a) = a by
     simp only [one_div, smul_sub, smul_smul] at this
@@ -180,14 +178,14 @@ theorem quasispectrum_star_mul_self_subset_of_mem_extremePoints_closedUnitBall
   grind [one_smul]
 
 open NNReal in
-theorem quasispectrum_star_mul_self_subset_of_mem_extremePoints_closedUnitBall'
+theorem quasispectrum_star_mul_self_subset_of_mem_extremePoints_closedUnitBall
     [PartialOrder A] [StarOrderedRing A] {a : A} (ha : a ∈ extremePoints ℝ≥0 (closedBall 0 1)) :
     quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
   have : quasispectrum ℝ≥0 (star a * a) = Real.toNNReal '' quasispectrum ℝ (star a * a) := by
     refine (QuasispectrumRestricts.image ?_).symm
     exact nonneg_iff_isSelfAdjoint_and_quasispectrumRestricts.mp (star_mul_self_nonneg a) |>.2
   grw [this, image_subset_iff, preimage,
-    quasispectrum_star_mul_self_subset_of_mem_extremePoints_closedUnitBall]
+    (isIdempotentElem_star_mul_self_of_mem_extremePoints_closedUnitBall ?_).quasispectrum_subset]
   · simp [Set.subset_def]
   sorry
 
