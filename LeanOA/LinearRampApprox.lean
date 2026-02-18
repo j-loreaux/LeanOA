@@ -250,7 +250,12 @@ theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints ℝ (closedBal
   obtain ⟨x, hx⟩ := ha
   apply IsIdempotentElem.quasispectrum_subset
   suffices a * star a * a = a by grind [IsIdempotentElem]
-  suffices (1 / 2 : ℝ) • ((3 : ℝ) • a - a * star a * a) = a by sorry
+  suffices (1 / 2 : ℝ) • ((3 : ℝ) • a - a * star a * a) = a by
+    simp only [one_div, smul_sub, smul_smul] at this
+    nth_rw 5 [← one_smul ℝ a] at this
+    rw [sub_eq_iff_eq_add, ← sub_eq_iff_eq_add', ← sub_smul] at this
+    norm_num at this
+    exact this.symm
   refine @hx _ ?_ ((1 / 2 : ℝ) • (a + a * star a * a)) ?_ ⟨1 / 2, 1 / 2, ?_⟩
   · sorry
   · sorry
@@ -259,5 +264,5 @@ theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints ℝ (closedBal
 
 theorem partial_isom_of_extreme' {a : A} (ha : a ∈ extremePoints (𝕜 := ℝ≥0) (closedBall 0 1)) :
     quasispectrum ℝ≥0 (star a * a) ⊆ {0, 1} := by
-  -- use that `star a * a` is nonnegative to get that `quasispectrum ℝ .. = quasispectrum ℝ≥0 ...`
+  -- use that `star a * a` is nonnegative to get that `quasispectrum ℝ .. ⊆ quasispectrum ℝ≥0 ...`
   sorry
