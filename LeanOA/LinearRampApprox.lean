@@ -42,7 +42,7 @@ theorem Tendsto_of_epsilon_compression (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → �
 noncomputable def linearRamp (ε x : ℝ≥0) := min 1 (1 / ε * x)
 
 lemma continuous_linearRamp (ε : ℝ≥0) : Continuous (linearRamp ε) :=
-  Continuous.inf (continuous_const) (continuous_mul_left (1 / ε))
+  .inf (continuous_const) (continuous_mul_left (1 / ε))
 
 @[simp]
 lemma linearRamp_apply (ε : ℝ≥0) : linearRamp ε = min 1 (1 / ε * ·) := rfl
@@ -84,7 +84,7 @@ theorem continuous_tent (z δ c) : Continuous (tent z δ c) :=
 
 /-- `γ` function from Sakai -/
 noncomputable def γ (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
-  fun x ↦ (linearRamp ε) x + (tent z δ c) x
+  fun x ↦ linearRamp ε x + tent z δ c x
 
 -- move to ...?
 lemma two_pow_two {R : Type*} [Semiring R] : (2 : R) ^ 2 = 4 := by norm_num
@@ -199,7 +199,6 @@ theorem continuous_approx_sub {ε t : ℝ≥0} :
   Continuous.mul (continuous_id) (Continuous.pow (Continuous.sub
     (continuous_linearRamp ε) (continuous_t_tent t)) 2)
 
-
 theorem quasispectrum_le_one (a : A) (ha : 0 ≤ a) (ha1 : ‖a‖₊ ≤ 1) (t : ℝ≥0) :
     t ∈ quasispectrum ℝ≥0 a → t ≤ 1 := by
  have B := (nnnorm_cfcₙ_nnreal_le_iff id a 1).mp
@@ -210,14 +209,14 @@ theorem quasispectrum_le_one (a : A) (ha : 0 ≤ a) (ha1 : ‖a‖₊ ≤ 1) (t 
  exact F t h
 
 theorem norm_cfcₙ_approx_add {ε t : ℝ≥0} (a : A) (ha : 0 ≤ a) (ha1 : ‖a‖₊ ≤ 1) (h0t : 0 < t)
-    (ht1 : t < 1) : ‖cfcₙ (fun (x : ℝ≥0) ↦ x * (linearRamp ε x + t_tent t x) ^ 2) a‖₊ ≤ 1 := by
+    (ht1 : t < 1) : ‖cfcₙ (fun x : ℝ≥0 ↦ x * (linearRamp ε x + t_tent t x) ^ 2) a‖₊ ≤ 1 := by
   refine nnnorm_cfcₙ_nnreal_le (A := A) ?_
   intro x hx
   have hx1 : x ≤ 1 := quasispectrum_le_one a ha ha1 x hx
   exact t_tent_linearRamp_approx_add (x := x) (ε := ε) (t := t) h0t ht1 hx1
 
 theorem norm_cfcₙ_approx_sub {ε t : ℝ≥0} (a : A) (ha : 0 ≤ a) (ha1 : ‖a‖₊ ≤ 1) (h0t : 0 < t)
-    (ht1 : t < 1) : ‖cfcₙ (fun (x : ℝ≥0) ↦ x * (linearRamp ε x - t_tent t x) ^ 2) a‖₊ ≤ 1 := by
+    (ht1 : t < 1) : ‖cfcₙ (fun x : ℝ≥0 ↦ x * (linearRamp ε x - t_tent t x) ^ 2) a‖₊ ≤ 1 := by
   refine nnnorm_cfcₙ_nnreal_le (A := A) ?_
   intro x hx
   have hx1 : x ≤ 1 := quasispectrum_le_one a ha ha1 x hx
