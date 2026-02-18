@@ -20,12 +20,7 @@ theorem exists_le_masa (B : {C : NonUnitalStarSubalgebra R A // (∀ x y : C, x 
   have := by
     refine zorn_le (α := {C : NonUnitalStarSubalgebra R A // (∀ x y : C, x * y = y * x) ∧ B ≤ C}) ?_
     intro chain hchain
-    have I : Nonempty {C : NonUnitalStarSubalgebra R A // (∀ x y : C, x * y = y * x) ∧ B ≤ C} := by
-      refine nonempty_subtype.mpr ?_
-      have le_self : B ≤ B := Subtype.coe_le_coe.mp fun ⦃x⦄ a ↦ a
-      use B
-      exact ⟨B.2 , le_self⟩
-    have II : Nonempty chain := by sorry
+    have I : Nonempty chain := by sorry
     have J := NonUnitalStarSubalgebra.coe_iSup_of_directed (R := R) (A := A)
       (ι := chain)
       (S := fun chain ↦ chain.1)
