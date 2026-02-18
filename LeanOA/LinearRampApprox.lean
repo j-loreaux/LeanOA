@@ -268,8 +268,10 @@ theorem partial_isom_of_extreme {a : A} (ha : a ∈ extremePoints ℝ (closedBal
     calc _ = ‖cfcₙ (fun x : ℝ ↦ 1 / 4 * x * (x - 3) ^ 2) (star a * a)‖ := ?_
       _ ≤ _ := by
         refine norm_cfcₙ_le fun y hy ↦ ?_
-        rw [Real.norm_of_nonneg (mul_nonneg (mul_nonneg (by simp) (this y hy).1) (sq_nonneg _))]
-        sorry
+        rw [Real.norm_of_nonneg (mul_nonneg (mul_nonneg (by simp) (this y hy).1) (sq_nonneg _)),
+          mul_assoc, one_div_mul_eq_div, div_le_one (by positivity), ← sub_nonpos]
+        calc _ = (y - 1) ^ 2 * (y - 4) := by ring
+          _ ≤ _ := by nlinarith [this y hy]
     congr
     ring_nf
     simp_rw [mul_comm _ (_ / _ : ℝ)]
