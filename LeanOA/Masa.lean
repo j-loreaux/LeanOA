@@ -8,6 +8,7 @@ section NonUnitalStarSubalgebra
 variable {R A : Type*} [CommSemiring R] [NonUnitalSemiring A] [Module R A]
 variable [StarRing R] [StarRing A] [IsScalarTower R A A] [SMulCommClass R A A] [StarModule R A]
 
+/-- Maximal abelian star subalgebra (MASA). -/
 class NonUnitalStarSubalgebra.IsMasa (B : NonUnitalStarSubalgebra R A) : Prop where
   comm : ∀ a ∈ B, ∀ b ∈ B, a * b = b * a
   maximal (C : NonUnitalStarSubalgebra R A) (hC : ∀ a ∈ C, ∀ b ∈ C, a * b = b * a)
