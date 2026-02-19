@@ -1,6 +1,7 @@
 import Mathlib.Algebra.Star.Subalgebra
 import Mathlib.Topology.Algebra.Ring.Basic
 import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
+import Mathlib.Analysis.CStarAlgebra.Classes
 
 section NonUnitalStarSubalgebra
 
@@ -56,3 +57,16 @@ theorem masa_closed (B : NonUnitalStarSubalgebra R A) (hB : B.IsMasa) :
   simpa using mul_comm (G := B.topologicalClosure)
 
 end TopologicalAlgebra
+
+section NonUnitalCStarAlgebra
+
+variable {A : Type*}
+
+theorem isClosed_of_masa_of_nonUnitalCStarAlgebra [NonUnitalCStarAlgebra A]
+    (B : NonUnitalStarSubalgebra ℂ A) (hB : B.IsMasa) : IsClosed (B : Set A) := masa_closed B hB
+
+instance [NonUnitalCStarAlgebra A] {B : NonUnitalStarSubalgebra ℂ A} [hB : B.IsMasa] :
+    NonUnitalCStarAlgebra B :=
+  NonUnitalStarSubalgebra.nonUnitalCStarAlgebra B (h_closed := masa_closed B hB)
+
+end NonUnitalCStarAlgebra
