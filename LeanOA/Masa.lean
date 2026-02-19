@@ -1,9 +1,11 @@
 import Mathlib.Algebra.Star.Subalgebra
+import Mathlib.Topology.Algebra.Ring.Basic
+import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
 
 section NonUnitalStarSubalgebra
 
-variable {R A : Type*} [CommSemiring R] [NonUnitalRing A] [Module R A]
-  [StarRing R] [StarRing A] [IsScalarTower R A A] [SMulCommClass R A A] [StarModule R A]
+variable {R A : Type*} [CommSemiring R] [NonUnitalSemiring A] [Module R A]
+variable [StarRing R] [StarRing A] [IsScalarTower R A A] [SMulCommClass R A A] [StarModule R A]
 
 class NonUnitalStarSubalgebra.IsMasa (B : NonUnitalStarSubalgebra R A) : Prop where
   comm : ∀ a ∈ B, ∀ b ∈ B, a * b = b * a
@@ -40,3 +42,17 @@ theorem exists_le_masa (B : {C : NonUnitalStarSubalgebra R A //
   exact ⟨C, C.prop.2, ⟨C.prop.1, fun S h_comm hCS ↦ @hC ⟨S, h_comm, C.prop.2.trans hCS⟩ hCS⟩⟩
 
 end NonUnitalStarSubalgebra
+section TopologicalAlgebra
+
+variable {R A : Type*} [CommSemiring R] [NonUnitalRing A] [Module R A]
+variable [StarRing A] [TopologicalSpace A] [IsTopologicalRing A] (B : NonUnitalStarSubalgebra R A)
+variable [ContinuousConstSMul R A] [ContinuousStar A] [T2Space A]
+
+theorem masa_closed (B : NonUnitalStarSubalgebra R A) (hB : B.IsMasa) :
+    IsClosed (B : Set A) := by
+  rw [← closure_subset_iff_isClosed]
+  refine hB.maximal _ ?_ B.le_topologicalClosure
+  let h := B.nonUnitalCommSemiringTopologicalClosure <| by simpa using hB.comm
+  simpa using mul_comm (G := B.topologicalClosure)
+
+end TopologicalAlgebra
