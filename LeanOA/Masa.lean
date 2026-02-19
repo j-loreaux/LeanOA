@@ -1,4 +1,4 @@
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+import Mathlib.Algebra.Star.Subalgebra
 
 section NonUnitalStarSubalgebra
 
@@ -38,6 +38,5 @@ theorem exists_le_masa (B : {C : NonUnitalStarSubalgebra R A //
         lift S to chain using hS
         exact le_iSup (fun S : chain ↦ S.val.val) _
   exact ⟨C, C.prop.2, ⟨C.prop.1, fun S h_comm hCS ↦ @hC ⟨S, h_comm, C.prop.2.trans hCS⟩ hCS⟩⟩
-
 
 end NonUnitalStarSubalgebra
