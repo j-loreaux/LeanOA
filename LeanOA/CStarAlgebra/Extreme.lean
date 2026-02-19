@@ -2,10 +2,11 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.Convex.Extreme
-import LeanOA.Mathlib.Misc
+import LeanOA.Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.LinearAlgebra.Complex.Module
+import LeanOA.Mathlib.Misc
 
-open Set Metric
+open Set Metric Complex
 open scoped ComplexStarModule
 
 @[simp]
@@ -15,37 +16,13 @@ lemma Set.extremePoints_Icc {a b : ℝ} (hab : a ≤ b) :
   rw [convex_Icc .. |>.mem_extremePoints_iff_convex_diff]
   constructor
   · intro ⟨h₁, h₂⟩
-    have := eq_endpoints_or_mem_Ioo_of_mem_Icc h₁
     suffices x ∉ Ioo a b by grind
     intro hx
     have := h₂.isPreconnected.Icc_subset (a := a) (b := b) (by grind) (by grind)
     grind
-  · simp only [mem_insert_iff, mem_singleton_iff, mem_Icc]
-    rintro (rfl | rfl)
+  · rintro (rfl | rfl)
     · simpa using ⟨hab, convex_Ioc ..⟩
     · simpa using ⟨hab, convex_Ico ..⟩
-
-@[nontriviality]
-lemma Set.extremePoints_eq_self {𝕜 E : Type*} [Semiring 𝕜] [PartialOrder 𝕜]
-    [AddCommMonoid E] [SMul 𝕜 E] [Subsingleton E] (A : Set E) :
-    Set.extremePoints 𝕜 A = A :=
-  subset_antisymm extremePoints_subset fun _ h ↦ ⟨h, fun _ _ _ _ _ ↦ Subsingleton.elim ..⟩
-
-open Complex
-lemma cfc_re_id {A : Type*} [CStarAlgebra A] {a : A} [IsStarNormal a] :
-    cfc (re · : ℂ → ℂ) a = ℜ a := by
-  conv_rhs => rw [realPart_apply_coe, ← cfc_id' ℂ a, ← cfc_star, ← cfc_add .., ← cfc_smul ..]
-  refine cfc_congr fun x hx ↦ ?_
-  rw [Complex.re_eq_add_conj, ← smul_one_smul ℂ 2⁻¹]
-  simp [div_eq_inv_mul]
-
-open Complex
-lemma cfc_im_id {A : Type*} [CStarAlgebra A] {a : A} [IsStarNormal a] :
-    cfc (im · : ℂ → ℂ) a = ℑ a := by
-  suffices cfc (fun z : ℂ ↦ re z + I * im z) a = ℜ a + I • ℑ a by
-    rw [cfc_add .., cfc_const_mul .., cfc_re_id] at this
-    simpa
-  simp [mul_comm I, re_add_im, cfc_id' .., realPart_add_I_smul_imaginaryPart]
 
 lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] :
     1 ∈ extremePoints ℝ (closedBall (0 : A) 1) := by
