@@ -113,15 +113,7 @@ lemma quasispectrum.norm_le_norm_of_mem {a : A} {x} (hx : x ∈ quasispectrum �
   (spectrum.norm_le_norm_of_mem ((Unitization.quasispectrum_eq_spectrum_inr ℝ a).symm ▸ hx)).trans
     (by simp [Unitization.norm_def])
 
--- replace with the `cfc_pull` tactic
-private lemma cfcₙ_polynomial_aux (a : A) (α β γ : ℝ) (ha : IsSelfAdjoint a := by cfc_tac) :
-    cfcₙ (fun x ↦ α * x + β * x ^ 2 + γ * x ^ 3) a = α • a + β • (a * a) + γ • (a * a * a) := by
-  simp only [pow_three', sq]
-  repeat rw [cfcₙ_add _ _]
-  repeat rw [cfcₙ_const_mul _ _]
-  repeat rw [cfcₙ_mul _ _, cfcₙ_id' ℝ a]
-
-theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall' {a : A}
+theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
     (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
   letI := CStarAlgebra.spectralOrder A
   letI := CStarAlgebra.spectralOrderedRing A
@@ -151,44 +143,6 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall' {a : A}
       rw [Real.norm_of_nonneg] <;> nlinarith [this x hx]
   · simp [inv_pos, smul_smul, smul_sub]
     grind [one_smul]
-
-theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
-    (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
-  suffices (2 : ℝ)⁻¹ • _ = a by rwa [inv_smul_eq_iff₀ (by simp), two_smul, add_right_inj] at this
-  obtain ⟨ha, h⟩ := ha
-  simp only [mem_closedBall, dist_zero_right] at ha h
-  letI := CStarAlgebra.spectralOrder A
-  letI := CStarAlgebra.spectralOrderedRing A
-  have (x : ℝ) (hx : x ∈ quasispectrum ℝ (star a * a)) : 0 ≤ x ∧ x ≤ 1 := by
-    refine ⟨quasispectrum_nonneg_of_nonneg _ (by simp) _ hx, le_trans (Real.le_norm_self _) ?_⟩
-    grw [quasispectrum.norm_le_norm_of_mem hx, CStarRing.norm_star_mul_self, ha, one_mul]
-  refine @h _ ?_ ((2 : ℝ)⁻¹ • ((3 : ℝ) • a - a * star a * a)) ?_ ⟨2⁻¹, 2⁻¹, ?_⟩
-  on_goal 3 =>
-    simp only [inv_pos, smul_add, smul_smul, smul_sub, add_add_sub_cancel, ← add_smul]
-    grind [one_smul]
-  all_goals rw [← sq_le_one_iff₀ (by simp), sq, ← CStarRing.norm_star_mul_self]
-  on_goal 1 => calc _ = ‖cfcₙ (fun x : ℝ ↦ 4⁻¹ * x * (x + 1) ^ 2) (star a * a)‖ := ?_
-    _ ≤ _ := by
-      refine norm_cfcₙ_le fun y hy ↦ ?_
-      rw [Real.norm_of_nonneg (mul_nonneg (mul_nonneg (by simp) (this y hy).1) (sq_nonneg _))]
-      grw [this y hy |>.2] <;> grind
-  on_goal 2 => calc _ = ‖cfcₙ (fun x : ℝ ↦ 4⁻¹ * x * (x - 3) ^ 2) (star a * a)‖ := ?_
-    _ ≤ _ := by
-      refine norm_cfcₙ_le fun y hy ↦ ?_
-      rw [Real.norm_of_nonneg (mul_nonneg (mul_nonneg (by simp) (this y hy).1) (sq_nonneg _)),
-        mul_assoc, inv_mul_eq_div, div_le_one (by positivity), ← sub_nonpos]
-      calc _ = (y - 1) ^ 2 * (y - 4) := by ring
-        _ ≤ _ := by nlinarith [this y hy]
-  all_goals
-    congr
-    ring_nf
-    simp_rw [mul_comm _ (_ / _ : ℝ), cfcₙ_polynomial_aux (star a * a)]
-    simp only [star_smul, star_add, star_neg, star_mul, smul_mul_smul, sub_eq_add_neg]
-    simp only [add_mul, mul_add, smul_add, mul_assoc, mul_smul_comm, smul_smul, smul_mul_assoc]
-    norm_num
-    simp only [one_div, add_assoc, add_right_inj, ← neg_smul, mul_assoc]
-    rw [← add_assoc, ← add_smul]
-    grind
 
 theorem isIdempotentElem_star_mul_self_of_mem_extremePoints_closedUnitBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsIdempotentElem (star a * a) := by
