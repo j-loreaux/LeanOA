@@ -115,34 +115,38 @@ lemma quasispectrum.norm_le_norm_of_mem {a : A} {x} (hx : x ∈ quasispectrum �
 
 theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
     (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
+  /- Suppose `a` is an extreme point of the closed unit ball. Then we want to show that
+  `a * star a * a = a`. It suffices to show `a * |a| = a`. -/
   letI := CStarAlgebra.spectralOrder A
   letI := CStarAlgebra.spectralOrderedRing A
   suffices a * CFC.abs a = a by rw [mul_assoc, ← CFC.abs_mul_abs, ← mul_assoc, this, this]
   obtain ⟨ha, h⟩ := ha
   simp only [mem_closedBall, dist_zero_right] at ha h
-  refine @h _ ?_ ((2 : ℝ) • a - a * CFC.abs a) ?_ ⟨2⁻¹, 2⁻¹, ?_⟩
+  /- Using the extremity of `a`, it suffices to show that `2 • |a| - |a| * |a|` is in the
+  closed unit ball since `2 • |a| - |a| * |a| + a * |a| = a` (and clearly `a * |a|` is in
+  the closed unit ball since `a` is). -/
+  refine @h _ ?_ ((2 : ℝ) • a - a * CFC.abs a) ?_ ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← two_mul]⟩
   · grw [norm_mul_le, CFC.norm_abs, ha, one_mul]
-  · calc
+  · /- To show this inequality (i.e., `‖2 • a - a * |a|‖ ≤ 1`), we first
+    show equality with `‖2 • |a| - |a| * |a|‖` and then pass to the
+    continuous functional calculus, where we then use `norm_cfcₙ_le` to show the rest
+    (using the fact that the elements in the quasispectrum of `|a|`
+    are bounded between `0` and `1`). -/
+    calc
     _ = ‖(2 : ℝ) • CFC.abs a - CFC.abs a * CFC.abs a‖ := by
       simp_rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, ← CStarRing.norm_star_mul_self]
-      simp only [star_sub, star_smul, star_trivial, star_mul, mul_sub, mul_smul_comm, sub_mul,
-        smul_mul_assoc, smul_sub, smul_smul, sub_sub]
-      ring_nf
-      simp_rw [CFC.abs_nonneg a |>.star_eq, mul_assoc, ← mul_assoc _ a, ← CFC.abs_mul_abs]
-      grind
+      simp only [star_sub, star_smul, star_mul, mul_sub, mul_smul_comm, sub_mul, smul_mul_assoc]
+      simp [CFC.abs_nonneg a |>.star_eq, mul_assoc, ← mul_assoc _ a, ← CFC.abs_mul_abs]
     _ = ‖cfcₙ (fun x : ℝ ↦ x * (2 - x)) (CFC.abs a)‖ := by
       congr
       ring_nf
       simp_rw [mul_comm _ (2 : ℝ), sq]
       rw [cfcₙ_sub _ _, cfcₙ_const_mul _ _, cfcₙ_mul _ _, cfcₙ_id' ℝ (CFC.abs a)]
-    _ ≤ _ := by
-      have (x : ℝ) (hx : x ∈ quasispectrum ℝ (CFC.abs a)) : 0 ≤ x ∧ x ≤ 1 := by
+    _ ≤ _ := norm_cfcₙ_le fun x hx ↦ by
+      have : 0 ≤ x ∧ x ≤ 1 := by
         refine ⟨quasispectrum_nonneg_of_nonneg _ (by simp) _ hx, le_trans (Real.le_norm_self _) ?_⟩
         grw [quasispectrum.norm_le_norm_of_mem hx, CFC.norm_abs, ha]
-      refine norm_cfcₙ_le fun x hx ↦ ?_
-      rw [Real.norm_of_nonneg] <;> nlinarith [this x hx]
-  · simp [inv_pos, smul_smul, smul_sub]
-    grind [one_smul]
+      rw [Real.norm_of_nonneg] <;> nlinarith
 
 theorem isIdempotentElem_star_mul_self_of_mem_extremePoints_closedUnitBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsIdempotentElem (star a * a) := by
