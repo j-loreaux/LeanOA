@@ -8,6 +8,7 @@ import LeanOA.ConditionallyCompletePartialOrder
 import LeanOA.KreinSmulian
 import LeanOA.Lp.Holder
 import LeanOA.Lp.lpSpace
+import LeanOA.Masa
 import LeanOA.Mathlib.Algebra.Order.Star.Basic
 import LeanOA.Mathlib.Algebra.Star.StarProjection
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
