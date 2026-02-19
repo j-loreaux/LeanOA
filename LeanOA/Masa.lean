@@ -41,7 +41,7 @@ theorem exists_le_masa
   · exact M.2.2
   · constructor
     · simpa using M.2.1
-    · unfold IsMax at M1
+    · dsimp [IsMax] at M1
       intro C hC hBC
       simp_all only [Subtype.forall, forall_and_index]
       obtain ⟨b, hb⟩ := B
@@ -49,7 +49,6 @@ theorem exists_le_masa
       obtain ⟨left, right⟩ := hm
       simp_all only [Subtype.mk_le_mk, implies_true]
       simp_all only [implies_true, le_refl]
-      have imp := M1 C hC
-      apply imp
+      apply M1 C hC
       · exact NonUnitalStarSubalgebra.toNonUnitalSubalgebra_le_iff.mp fun ⦃x⦄ a ↦ hBC (right a)
       · exact NonUnitalStarSubalgebra.toNonUnitalSubalgebra_le_iff.mp hBC
