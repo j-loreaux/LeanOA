@@ -123,8 +123,8 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
   obtain ⟨ha, h⟩ := ha
   simp only [mem_closedBall, dist_zero_right] at ha h
   /- Using the extremity of `a`, it suffices to show that `2 • |a| - |a| * |a|` is in the
-  closed unit ball since `2 • |a| - |a| * |a| + a * |a| = a` (and clearly `a * |a|` is in
-  the closed unit ball since `a` is). -/
+  closed unit ball since `2⁻¹ • (2 • |a| - |a| * |a|) + 2⁻¹ • (a * |a|) = a`
+  (and clearly `a * |a|` is in the closed unit ball since `a` is). -/
   refine @h _ ?_ ((2 : ℝ) • a - a * CFC.abs a) ?_ ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← two_mul]⟩
   · grw [norm_mul_le, CFC.norm_abs, ha, one_mul]
   · /- To show this inequality (i.e., `‖2 • a - a * |a|‖ ≤ 1`), we first
