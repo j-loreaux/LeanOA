@@ -198,4 +198,35 @@ theorem isIdempotentElem_self_mul_star_of_mem_extremePoints_closedUnitBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsIdempotentElem (a * star a) := by
   grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha, IsIdempotentElem]
 
+
+/- Needs better name. Let's get the result first, though. -/
+theorem extremePoints_corner_characterization {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1))
+    (a : A) (ha : a ∈ closedBall 0 1) :
+    (∃ b : A, a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) → a = 0
+    := by
+  intro h
+  set p := star x * x with hp
+  set q := x * star x with hq
+  have IdemP : p * p = p := isIdempotentElem_star_mul_self_of_mem_extremePoints_closedUnitBall hx
+  have IdemQ : q * q = q := isIdempotentElem_self_mul_star_of_mem_extremePoints_closedUnitBall hx
+  have SAP : star p = p := star_star_mul x x
+  have SAQ : star q = q := star_mul_star x x
+  obtain ⟨b, hb⟩ := h
+  have Eq1 : ‖star (star x * a) * (star x * a)‖₊ = 0 := by
+    simp only [hb, mul_add, mul_sub, star_add, star_sub, star_mul, star_star, SAP, SAQ, add_mul,
+      sub_mul, nnnorm_eq_zero]
+    grind => ac
+  have Eq2 : star x * a = 0 := by
+    rw [CStarRing.nnnorm_star_mul_self, mul_self_eq_zero, nnnorm_eq_zero] at Eq1
+    assumption
+  have Eq3 : star a * x = 0 := by
+    rw [← star_star x, ← star_mul, ← star_zero]
+    exact star_inj.mpr Eq2
+  have Eq4 : p * star a * a = 0 := by
+    simp only [hb, mul_add, mul_sub, star_add, star_sub, star_mul, SAP, SAQ, add_mul,
+      sub_mul]
+    grind => ac
+  --have Eq5 : ‖x + a‖₊ = max
+  sorry
+
 end nonUnital
