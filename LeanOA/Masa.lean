@@ -65,6 +65,6 @@ instance [NonUnitalCStarAlgebra A] {B : NonUnitalStarSubalgebra ℂ A} [hB : B.I
     NonUnitalCommCStarAlgebra B :=
   { NonUnitalStarSubalgebra.nonUnitalCStarAlgebra B
     (h_closed := NonUnitalStarSubalgebra.IsMasa.isClosed B hB) with
-      mul_comm := by simpa using hB.comm }
+    mul_comm := by simpa using hB.comm }
 
 end NonUnitalCStarAlgebra
