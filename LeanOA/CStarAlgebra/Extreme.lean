@@ -122,16 +122,16 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
     (using the fact that the elements in the quasispectrum of `|a|`
     are bounded between `0` and `1`). -/
     calc
-    _ = ‖(2 : ℝ) • abs a - abs a * abs a‖ := by
-      simp_rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, ← CStarRing.norm_star_mul_self]
-      simp only [star_sub, star_smul, star_mul, mul_sub, mul_smul_comm, sub_mul, smul_mul_assoc]
-      simp [abs_nonneg a |>.star_eq, mul_assoc, ← mul_assoc _ a, ← abs_mul_abs]
-    _ = ‖cfcₙ (fun x : ℝ ↦ x * (2 - x)) (abs a)‖ := by
-      simp_rw [mul_sub, mul_comm _ (2 : ℝ)]
-      rw [cfcₙ_sub _ _, cfcₙ_const_mul _ _, cfcₙ_mul _ _, cfcₙ_id' ℝ (abs a)]
-    _ ≤ _ := norm_cfcₙ_le fun x hx ↦ by
-      have := x.le_norm_self.trans (by grw [quasispectrum.norm_le_norm_of_mem hx, norm_abs, ha])
-      rw [Real.norm_of_nonneg] <;> nlinarith [quasispectrum_nonneg_of_nonneg _ (by simp) _ hx]
+      _ = ‖(2 : ℝ) • abs a - abs a * abs a‖ := by
+        simp_rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, ← CStarRing.norm_star_mul_self]
+        simp only [star_sub, star_smul, star_mul, mul_sub, mul_smul_comm, sub_mul, smul_mul_assoc]
+        simp [abs_nonneg a |>.star_eq, mul_assoc, ← mul_assoc _ a, ← abs_mul_abs]
+      _ = ‖cfcₙ (fun x : ℝ ↦ x * (2 - x)) (abs a)‖ := by
+        simp_rw [mul_sub, mul_comm _ (2 : ℝ)]
+        rw [cfcₙ_sub _ _, cfcₙ_const_mul _ _, cfcₙ_mul _ _, cfcₙ_id' ℝ (abs a)]
+      _ ≤ _ := norm_cfcₙ_le fun x hx ↦ by
+        have := x.le_norm_self.trans (by grw [quasispectrum.norm_le_norm_of_mem hx, norm_abs, ha])
+        rw [Real.norm_of_nonneg] <;> nlinarith [quasispectrum_nonneg_of_nonneg _ (by simp) _ hx]
 
 theorem isIdempotentElem_star_mul_self_of_mem_extremePoints_closedUnitBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsIdempotentElem (star a * a) := by
