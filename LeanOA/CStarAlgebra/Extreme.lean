@@ -117,8 +117,8 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
   refine @h _ ?_ ((2 : ℝ) • a - a * abs a) ?_ ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← two_mul]⟩
   · grw [norm_mul_le, norm_abs, ha, one_mul]
   · /- To show this inequality (i.e., `‖2 • a - a * |a|‖ ≤ 1`), we first
-    show equality with `‖2 • |a| - |a| * |a|‖` and then pass to the
-    continuous functional calculus, where we then use `norm_cfcₙ_le` to show the rest
+    show equality with `‖2 • |a| - |a| * |a|‖` (using the C⋆-identity), and then pass to the
+    continuous functional calculus where we then use `norm_cfcₙ_le` to show the rest
     (using the fact that the elements in the quasispectrum of `|a|`
     are bounded between `0` and `1`). -/
     calc
@@ -126,8 +126,7 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
         simp_rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, ← CStarRing.norm_star_mul_self]
         simp only [star_sub, star_smul, star_mul, mul_sub, mul_smul_comm, sub_mul, smul_mul_assoc]
         simp [abs_nonneg a |>.star_eq, mul_assoc, ← mul_assoc _ a, ← abs_mul_abs]
-      _ = ‖cfcₙ (fun x : ℝ ↦ x * (2 - x)) (abs a)‖ := by
-        simp_rw [mul_sub, mul_comm _ (2 : ℝ)]
+      _ = ‖cfcₙ (fun x : ℝ ↦ 2 * x - x * x) (abs a)‖ := by
         rw [cfcₙ_sub _ _, cfcₙ_const_mul _ _, cfcₙ_mul _ _, cfcₙ_id' ℝ (abs a)]
       _ ≤ _ := norm_cfcₙ_le fun x hx ↦ by
         have := x.le_norm_self.trans (by grw [quasispectrum.norm_le_norm_of_mem hx, norm_abs, ha])
