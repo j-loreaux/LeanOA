@@ -14,15 +14,14 @@ class NonUnitalStarSubalgebra.IsMasa (B : NonUnitalStarSubalgebra R A) : Prop wh
   maximal (C : NonUnitalStarSubalgebra R A) (hC : ∀ a ∈ C, ∀ b ∈ C, a * b = b * a)
       (hBC : B ≤ C) : C ≤ B
 
-theorem exists_le_masa (B : {C : NonUnitalStarSubalgebra R A //
-  (∀ x ∈ C, ∀ y ∈ C, x * y = y * x)}) :
-    ∃ (C : NonUnitalStarSubalgebra R A), B ≤ C ∧ C.IsMasa  := by
+theorem exists_isMasa_ge (B : NonUnitalStarSubalgebra R A) (hB : ∀ x ∈ B, ∀ y ∈ B, x * y = y * x) :
+    ∃ (C : NonUnitalStarSubalgebra R A), B ≤ C ∧ C.IsMasa := by
   obtain ⟨C, hC⟩ := by
     apply zorn_le (α := {C : NonUnitalStarSubalgebra R A //
       (∀ x ∈ C, ∀ y ∈ C, x * y = y * x) ∧ B ≤ C})
     intro chain hchain
     obtain (rfl | h) := chain.eq_empty_or_nonempty
-    · exact ⟨⟨B.val, B.prop, le_rfl⟩, by simp⟩
+    · exact ⟨⟨B, hB, le_rfl⟩, by simp⟩
     · have := h.to_subtype
       have hdir : Directed (· ≤ ·) fun S : chain ↦ S.val.val :=
         hchain.directedOn.directed_val.mono_comp _ (by simp)
@@ -50,12 +49,12 @@ variable {R A : Type*} [CommSemiring R] [NonUnitalRing A] [Module R A]
 variable [StarRing A] [TopologicalSpace A] [IsTopologicalRing A] (B : NonUnitalStarSubalgebra R A)
 variable [ContinuousConstSMul R A] [ContinuousStar A] [T2Space A]
 
-theorem masa_closed (B : NonUnitalStarSubalgebra R A) (hB : B.IsMasa) :
-    IsClosed (B : Set A) := by
-  rw [← closure_subset_iff_isClosed]
-  refine hB.maximal _ ?_ B.le_topologicalClosure
-  let h := B.nonUnitalCommSemiringTopologicalClosure <| by simpa using hB.comm
-  simpa using mul_comm (G := B.topologicalClosure)
+theorem NonUnitalStarSubalgebra.IsMasa.isClosed (B : NonUnitalStarSubalgebra R A) (hB : B.IsMasa) :
+    IsClosed (B : Set A) := closure_subset_iff_isClosed.mp <|
+  by refine hB.maximal _ ?_ B.le_topologicalClosure
+     let h := B.nonUnitalCommSemiringTopologicalClosure <|
+     by simpa using hB.comm
+     simpa using mul_comm (G := B.topologicalClosure)
 
 end TopologicalAlgebra
 
@@ -64,10 +63,13 @@ section NonUnitalCStarAlgebra
 variable {A : Type*}
 
 theorem isClosed_of_masa_of_nonUnitalCStarAlgebra [NonUnitalCStarAlgebra A]
-    (B : NonUnitalStarSubalgebra ℂ A) (hB : B.IsMasa) : IsClosed (B : Set A) := masa_closed B hB
+    (B : NonUnitalStarSubalgebra ℂ A) (hB : B.IsMasa) : IsClosed (B : Set A) :=
+  NonUnitalStarSubalgebra.IsMasa.isClosed B hB
 
 instance [NonUnitalCStarAlgebra A] {B : NonUnitalStarSubalgebra ℂ A} [hB : B.IsMasa] :
-    NonUnitalCStarAlgebra B :=
-  NonUnitalStarSubalgebra.nonUnitalCStarAlgebra B (h_closed := masa_closed B hB)
+    NonUnitalCommCStarAlgebra B :=
+  { NonUnitalStarSubalgebra.nonUnitalCStarAlgebra B
+    (h_closed := NonUnitalStarSubalgebra.IsMasa.isClosed B hB) with
+      mul_comm := by simpa using hB.comm }
 
 end NonUnitalCStarAlgebra
