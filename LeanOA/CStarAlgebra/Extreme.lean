@@ -133,12 +133,15 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
         have := x.le_norm_self.trans (by grw [quasispectrum.norm_le_norm_of_mem hx, norm_abs, ha])
         rw [Real.norm_of_nonneg] <;> nlinarith [quasispectrum_nonneg_of_nonneg _ (by simp) _ hx]
 
-theorem isIdempotentElem_star_mul_self_of_mem_extremePoints_closedUnitBall
-    {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsIdempotentElem (star a * a) := by
-  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha, IsIdempotentElem]
+attribute [local grind .] IsSelfAdjoint.star_mul_self IsIdempotentElem IsSelfAdjoint.mul_star_self
+attribute [local grind] IsStarProjection
 
-theorem isIdempotentElem_self_mul_star_of_mem_extremePoints_closedUnitBall
-    {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsIdempotentElem (a * star a) := by
-  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha, IsIdempotentElem]
+theorem isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall
+    {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (star a * a) := by
+  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
+
+theorem isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall
+    {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (a * star a) := by
+  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
 
 end nonUnital

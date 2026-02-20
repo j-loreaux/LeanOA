@@ -22,6 +22,7 @@ import LeanOA.Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.Analysis.RCLike.Extend
 import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import LeanOA.Mathlib.Misc
+import LeanOA.Mathlib.Topology.Order.LeftRightNhds
 import LeanOA.Notation
 import LeanOA.PositiveContinuousLinearMap
 import LeanOA.PositiveLinearMap

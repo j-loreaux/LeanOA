@@ -60,15 +60,6 @@ theorem Tendsto_of_linearRampSq_compression (a : A) (ha : 0 ≤ a) :
     (fun _ _ _ ↦ by simpa using
       (sq_le_one_iff₀ <| zero_le (min 1 (_⁻¹ * _))).mpr <| min_le_left 1 (_⁻¹ * _))
 
--- move to `Mathlib.Topology.Order.LeftRightNhds` I think?
-lemma nhdsGT_basis_Ioc {α : Type*} [TopologicalSpace α] [LinearOrder α] [OrderTopology α]
-    [DenselyOrdered α] [NoMaxOrder α] (a : α) :
-    (𝓝[>] a).HasBasis (fun x ↦ a < x) (Ioc a) := nhdsGT_basis a |>.to_hasBasis'
-  (fun _ hac ↦
-    have ⟨b, hab, hbc⟩ := exists_between hac
-    ⟨b, hab, Ioc_subset_Ioo_right hbc⟩)
-  fun _ hac ↦ mem_of_superset ((nhdsGT_basis a).mem_of_mem hac) Ioo_subset_Ioc_self
-
 /-- tent function -/
 noncomputable def tent (z δ c x : ℝ≥0) : ℝ≥0 :=
    c * (1 - (x - z) / ‖δ‖₊)
