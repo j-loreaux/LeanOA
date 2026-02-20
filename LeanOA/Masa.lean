@@ -50,11 +50,10 @@ variable [StarRing A] [TopologicalSpace A] [IsTopologicalRing A] (B : NonUnitalS
 variable [ContinuousConstSMul R A] [ContinuousStar A] [T2Space A]
 
 theorem NonUnitalStarSubalgebra.IsMasa.isClosed (B : NonUnitalStarSubalgebra R A) (hB : B.IsMasa) :
-    IsClosed (B : Set A) := closure_subset_iff_isClosed.mp <|
-  by refine hB.maximal _ ?_ B.le_topologicalClosure
-     let h := B.nonUnitalCommSemiringTopologicalClosure <|
-     by simpa using hB.comm
-     simpa using mul_comm (G := B.topologicalClosure)
+    IsClosed (B : Set A) := closure_subset_iff_isClosed.mp <| by
+  refine hB.maximal _ ?_ B.le_topologicalClosure
+  let h := B.nonUnitalCommSemiringTopologicalClosure <| by simpa using hB.comm
+  simpa using mul_comm (G := B.topologicalClosure)
 
 end TopologicalAlgebra
 
