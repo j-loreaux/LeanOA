@@ -2,12 +2,24 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.Convex.Extreme
-import LeanOA.Mathlib.Misc
+import LeanOA.Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.LinearAlgebra.Complex.Module
+import LeanOA.Mathlib.Misc
 
-open Set Metric
+open Set Metric Complex CFC
 open scoped ComplexStarModule
 
+/-! # Extreme points of the closed unit ball in C⋆-algebras
+
+This file contains results on the extreme points of the closed unit ball in (unital) C⋆-algebras.
+In particular, we show that a C⋆-algebra is unital if and only if there exists an extreme point
+of the closed unit ball.
+
+## References
+[Sakai], [Pedersen], [Takesaki], [Kadison], [Murphy]
+-/
+
+-- move to...?
 @[simp]
 lemma Set.extremePoints_Icc {a b : ℝ} (hab : a ≤ b) :
     Set.extremePoints ℝ (Icc a b) = {a, b} := by
@@ -15,37 +27,13 @@ lemma Set.extremePoints_Icc {a b : ℝ} (hab : a ≤ b) :
   rw [convex_Icc .. |>.mem_extremePoints_iff_convex_diff]
   constructor
   · intro ⟨h₁, h₂⟩
-    have := eq_endpoints_or_mem_Ioo_of_mem_Icc h₁
     suffices x ∉ Ioo a b by grind
     intro hx
     have := h₂.isPreconnected.Icc_subset (a := a) (b := b) (by grind) (by grind)
     grind
-  · simp only [mem_insert_iff, mem_singleton_iff, mem_Icc]
-    rintro (rfl | rfl)
+  · rintro (rfl | rfl)
     · simpa using ⟨hab, convex_Ioc ..⟩
     · simpa using ⟨hab, convex_Ico ..⟩
-
-@[nontriviality]
-lemma Set.extremePoints_eq_self {𝕜 E : Type*} [Semiring 𝕜] [PartialOrder 𝕜]
-    [AddCommMonoid E] [SMul 𝕜 E] [Subsingleton E] (A : Set E) :
-    Set.extremePoints 𝕜 A = A :=
-  subset_antisymm extremePoints_subset fun _ h ↦ ⟨h, fun _ _ _ _ _ ↦ Subsingleton.elim ..⟩
-
-open Complex
-lemma cfc_re_id {A : Type*} [CStarAlgebra A] {a : A} [IsStarNormal a] :
-    cfc (re · : ℂ → ℂ) a = ℜ a := by
-  conv_rhs => rw [realPart_apply_coe, ← cfc_id' ℂ a, ← cfc_star, ← cfc_add .., ← cfc_smul ..]
-  refine cfc_congr fun x hx ↦ ?_
-  rw [Complex.re_eq_add_conj, ← smul_one_smul ℂ 2⁻¹]
-  simp [div_eq_inv_mul]
-
-open Complex
-lemma cfc_im_id {A : Type*} [CStarAlgebra A] {a : A} [IsStarNormal a] :
-    cfc (im · : ℂ → ℂ) a = ℑ a := by
-  suffices cfc (fun z : ℂ ↦ re z + I * im z) a = ℜ a + I • ℑ a by
-    rw [cfc_add .., cfc_const_mul .., cfc_re_id] at this
-    simpa
-  simp [mul_comm I, re_add_im, cfc_id' .., realPart_add_I_smul_imaginaryPart]
 
 lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] :
     1 ∈ extremePoints ℝ (closedBall (0 : A) 1) := by
@@ -109,94 +97,51 @@ section nonUnital
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
 -- what is the right generality for this? everything I try keeps timing out
+-- move to appropriate file after generalizing it
 lemma quasispectrum.norm_le_norm_of_mem {a : A} {x} (hx : x ∈ quasispectrum ℝ a) : ‖x‖ ≤ ‖a‖ :=
   (spectrum.norm_le_norm_of_mem ((Unitization.quasispectrum_eq_spectrum_inr ℝ a).symm ▸ hx)).trans
     (by simp [Unitization.norm_def])
 
--- replace with the `cfc_pull` tactic
-private lemma cfcₙ_polynomial_aux (a : A) (α β γ : ℝ) (ha : IsSelfAdjoint a := by cfc_tac) :
-    cfcₙ (fun x ↦ α * x + β * x ^ 2 + γ * x ^ 3) a = α • a + β • (a * a) + γ • (a * a * a) := by
-  simp only [pow_three', sq]
-  repeat rw [cfcₙ_add _ _]
-  repeat rw [cfcₙ_const_mul _ _]
-  repeat rw [cfcₙ_mul _ _, cfcₙ_id' ℝ a]
-
-theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall' {a : A}
-    (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
-  letI := CStarAlgebra.spectralOrder A
-  letI := CStarAlgebra.spectralOrderedRing A
-  suffices a * CFC.abs a = a by rw [mul_assoc, ← CFC.abs_mul_abs, ← mul_assoc, this, this]
-  obtain ⟨ha, h⟩ := ha
-  simp only [mem_closedBall, dist_zero_right] at ha h
-  refine @h _ ?_ ((2 : ℝ) • a - a * CFC.abs a) ?_ ⟨2⁻¹, 2⁻¹, ?_⟩
-  · grw [norm_mul_le, CFC.norm_abs, ha, one_mul]
-  · calc
-    _ = ‖(2 : ℝ) • CFC.abs a - CFC.abs a * CFC.abs a‖ := by
-      simp_rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, ← CStarRing.norm_star_mul_self]
-      simp only [star_sub, star_smul, star_trivial, star_mul, mul_sub, mul_smul_comm, sub_mul,
-        smul_mul_assoc, smul_sub, smul_smul, sub_sub]
-      ring_nf
-      simp_rw [CFC.abs_nonneg a |>.star_eq, mul_assoc, ← mul_assoc _ a, ← CFC.abs_mul_abs]
-      grind
-    _ = ‖cfcₙ (fun x : ℝ ↦ x * (2 - x)) (CFC.abs a)‖ := by
-      congr
-      ring_nf
-      simp_rw [mul_comm _ (2 : ℝ), sq]
-      rw [cfcₙ_sub _ _, cfcₙ_const_mul _ _, cfcₙ_mul _ _, cfcₙ_id' ℝ (CFC.abs a)]
-    _ ≤ _ := by
-      have (x : ℝ) (hx : x ∈ quasispectrum ℝ (CFC.abs a)) : 0 ≤ x ∧ x ≤ 1 := by
-        refine ⟨quasispectrum_nonneg_of_nonneg _ (by simp) _ hx, le_trans (Real.le_norm_self _) ?_⟩
-        grw [quasispectrum.norm_le_norm_of_mem hx, CFC.norm_abs, ha]
-      refine norm_cfcₙ_le fun x hx ↦ ?_
-      rw [Real.norm_of_nonneg] <;> nlinarith [this x hx]
-  · simp [inv_pos, smul_smul, smul_sub]
-    grind [one_smul]
-
 theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
     (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
-  suffices (2 : ℝ)⁻¹ • _ = a by rwa [inv_smul_eq_iff₀ (by simp), two_smul, add_right_inj] at this
-  obtain ⟨ha, h⟩ := ha
-  simp only [mem_closedBall, dist_zero_right] at ha h
+  /- Suppose `a` is an extreme point of the closed unit ball. Then we want to show that
+  `a * star a * a = a`. It suffices to show `a * |a| = a`. -/
   letI := CStarAlgebra.spectralOrder A
   letI := CStarAlgebra.spectralOrderedRing A
-  have (x : ℝ) (hx : x ∈ quasispectrum ℝ (star a * a)) : 0 ≤ x ∧ x ≤ 1 := by
-    refine ⟨quasispectrum_nonneg_of_nonneg _ (by simp) _ hx, le_trans (Real.le_norm_self _) ?_⟩
-    grw [quasispectrum.norm_le_norm_of_mem hx, CStarRing.norm_star_mul_self, ha, one_mul]
-  refine @h _ ?_ ((2 : ℝ)⁻¹ • ((3 : ℝ) • a - a * star a * a)) ?_ ⟨2⁻¹, 2⁻¹, ?_⟩
-  on_goal 3 =>
-    simp only [inv_pos, smul_add, smul_smul, smul_sub, add_add_sub_cancel, ← add_smul]
-    grind [one_smul]
-  all_goals rw [← sq_le_one_iff₀ (by simp), sq, ← CStarRing.norm_star_mul_self]
-  on_goal 1 => calc _ = ‖cfcₙ (fun x : ℝ ↦ 4⁻¹ * x * (x + 1) ^ 2) (star a * a)‖ := ?_
-    _ ≤ _ := by
-      refine norm_cfcₙ_le fun y hy ↦ ?_
-      rw [Real.norm_of_nonneg (mul_nonneg (mul_nonneg (by simp) (this y hy).1) (sq_nonneg _))]
-      grw [this y hy |>.2] <;> grind
-  on_goal 2 => calc _ = ‖cfcₙ (fun x : ℝ ↦ 4⁻¹ * x * (x - 3) ^ 2) (star a * a)‖ := ?_
-    _ ≤ _ := by
-      refine norm_cfcₙ_le fun y hy ↦ ?_
-      rw [Real.norm_of_nonneg (mul_nonneg (mul_nonneg (by simp) (this y hy).1) (sq_nonneg _)),
-        mul_assoc, inv_mul_eq_div, div_le_one (by positivity), ← sub_nonpos]
-      calc _ = (y - 1) ^ 2 * (y - 4) := by ring
-        _ ≤ _ := by nlinarith [this y hy]
-  all_goals
-    congr
-    ring_nf
-    simp_rw [mul_comm _ (_ / _ : ℝ), cfcₙ_polynomial_aux (star a * a)]
-    simp only [star_smul, star_add, star_neg, star_mul, smul_mul_smul, sub_eq_add_neg]
-    simp only [add_mul, mul_add, smul_add, mul_assoc, mul_smul_comm, smul_smul, smul_mul_assoc]
-    norm_num
-    simp only [one_div, add_assoc, add_right_inj, ← neg_smul, mul_assoc]
-    rw [← add_assoc, ← add_smul]
-    grind
+  suffices a * abs a = a by rw [mul_assoc, ← abs_mul_abs, ← mul_assoc, this, this]
+  obtain ⟨ha, h⟩ := ha
+  simp only [mem_closedBall, dist_zero_right] at ha h
+  /- Using the extremity of `a`, it suffices to show that `2 • |a| - |a| * |a|` is in the
+  closed unit ball since `2⁻¹ • (2 • |a| - |a| * |a|) + 2⁻¹ • (a * |a|) = a`
+  (and clearly `a * |a|` is in the closed unit ball since `a` is). -/
+  refine @h _ ?_ ((2 : ℝ) • a - a * abs a) ?_ ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← two_mul]⟩
+  · grw [norm_mul_le, norm_abs, ha, one_mul]
+  · /- To show this inequality (i.e., `‖2 • a - a * |a|‖ ≤ 1`), we first
+    show equality with `‖2 • |a| - |a| * |a|‖` (using the C⋆-identity), and then pass to the
+    continuous functional calculus where we then use `norm_cfcₙ_le` to show the rest
+    (using the fact that the elements in the quasispectrum of `|a|`
+    are bounded between `0` and `1`). -/
+    calc
+      _ = ‖(2 : ℝ) • abs a - abs a * abs a‖ := by
+        simp_rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, ← CStarRing.norm_star_mul_self]
+        simp only [star_sub, star_smul, star_mul, mul_sub, mul_smul_comm, sub_mul, smul_mul_assoc]
+        simp [abs_nonneg a |>.star_eq, mul_assoc, ← mul_assoc _ a, ← abs_mul_abs]
+      _ = ‖cfcₙ (fun x : ℝ ↦ 2 * x - x * x) (abs a)‖ := by
+        rw [cfcₙ_sub _ _, cfcₙ_const_mul _ _, cfcₙ_mul _ _, cfcₙ_id' ℝ (abs a)]
+      _ ≤ _ := norm_cfcₙ_le fun x hx ↦ by
+        have := x.le_norm_self.trans (by grw [quasispectrum.norm_le_norm_of_mem hx, norm_abs, ha])
+        rw [Real.norm_of_nonneg] <;> nlinarith [quasispectrum_nonneg_of_nonneg _ (by simp) _ hx]
 
-theorem isIdempotentElem_star_mul_self_of_mem_extremePoints_closedUnitBall
-    {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsIdempotentElem (star a * a) := by
-  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha, IsIdempotentElem]
+attribute [local grind .] IsSelfAdjoint.star_mul_self IsIdempotentElem IsSelfAdjoint.mul_star_self
+attribute [local grind] IsStarProjection
 
-theorem isIdempotentElem_self_mul_star_of_mem_extremePoints_closedUnitBall
-    {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsIdempotentElem (a * star a) := by
-  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha, IsIdempotentElem]
+theorem isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall
+    {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (star a * a) := by
+  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
+
+theorem isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall
+    {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (a * star a) := by
+  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
 
 
 /- Needs better name. Let's get the result first, though. -/
