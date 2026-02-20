@@ -152,8 +152,10 @@ theorem extremePoints_corner_characterization {x : A} (hx : x ∈ extremePoints 
   intro h
   set p := star x * x with hp
   set q := x * star x with hq
-  have IdemP : p * p = p := isIdempotentElem_star_mul_self_of_mem_extremePoints_closedUnitBall hx
-  have IdemQ : q * q = q := isIdempotentElem_self_mul_star_of_mem_extremePoints_closedUnitBall hx
+  have IdemP : p * p = p :=
+    (isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx).1
+  have IdemQ : q * q = q :=
+    (isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall hx).1
   have SAP : star p = p := star_star_mul x x
   have SAQ : star q = q := star_mul_star x x
   obtain ⟨b, hb⟩ := h
