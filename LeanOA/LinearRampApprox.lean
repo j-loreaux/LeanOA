@@ -8,29 +8,24 @@ open scoped Topology
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
+-- i only managed to shave off 5 lines, maybe revert to old proof?
 theorem epsilon_compression {ε : ℝ≥0} (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → ℝ≥0) (hfc : Continuous f)
     (hf0 : f 0 = 0) (hf : Set.EqOn f 1 (Set.Ici ε)) (hfl : ∀ x, f x ≤ 1) :
-    ‖a - a * cfcₙ f a‖₊ ≤ ε := by
-  have H1 (x : ℝ≥0) : x - x * f x ≤ ε := by
-    by_cases! h : x ≥ ε
+    ‖a - a * cfcₙ f a‖₊ ≤ ε := calc
+  _ = ‖cfcₙ (fun x : ℝ ↦ x - x * f x.toNNReal) a‖₊ := by
+    rw [cfcₙ_sub _ _, cfcₙ_mul _ _, ← cfcₙ_nnreal_eq_real _ _, cfcₙ_id' _ _]
+  _ ≤ _ := nnnorm_cfcₙ_le fun x hx ↦ by
+    let y : ℝ≥0 := ⟨x, quasispectrum_nonneg_of_nonneg a ha x hx⟩
+    simp only [show x = y by rfl, Real.toNNReal_coe, ← NNReal.coe_mul, ge_iff_le]
+    if hy' : y = 0 then simp_all else
+    rw [← NNReal.coe_sub (by grw [mul_le_iff_le_one_right (pos_of_ne_zero hy'), hfl]), nnnorm_eq]
+    by_cases! h : y ≥ ε
     · simp [hf h]
-    · have : x - x * (f x) ≤ x := by
-        nth_rw 1 [← mul_one x, ← mul_tsub]
-        exact mul_le_of_le_one_right' tsub_le_self
-      exact le_trans this h.le
-  have H2 (x : ℝ≥0) :  x * f x ≤ x := by
-    by_cases! h : x ≥ ε
-    · simp [hf h]
-    · exact mul_le_of_le_one_right' <| coe_le_one.mp (hfl x)
-  nth_rw 1 2 [← cfcₙ_id (R := ℝ≥0) a]
-  rw [← cfcₙ_mul id f, ← cfcₙ_tsub id (ha := ha) (fun _ ↦ id _ * f _)]
-  · refine nnnorm_cfcₙ_nnreal_le (A := A) fun x _ ↦ H1 (id _)
-  · exact fun _ _ ↦ H2 (id _)
+    · exact le_trans (by simp) h.le
 
 theorem Tendsto_of_epsilon_compression (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → ℝ≥0 → ℝ≥0)
-   (hfc : ∀ ε > 0, Continuous (f ε)) (hf0 : ∀ ε > 0, f ε 0 = 0)
-    (hf : ∀ ε > 0, Set.EqOn (f ε) 1 (Set.Ici ε))
-    (hfl : ∀ ε > 0, ∀ x, f ε x ≤ 1) :
+    (hfc : ∀ ε > 0, Continuous (f ε)) (hf0 : ∀ ε > 0, f ε 0 = 0)
+    (hf : ∀ ε > 0, Set.EqOn (f ε) 1 (Set.Ici ε)) (hfl : ∀ ε > 0, ∀ x, f ε x ≤ 1) :
     Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ (f ε) a‖₊) (𝓝[>] 0) (𝓝 0) := by
   refine (nhdsGT_basis 0).tendsto_iff (Metric.nhds_basis_closedBall) |>.mpr fun ε hε ↦ ?_
   lift ε to ℝ≥0 using hε.le
@@ -42,10 +37,9 @@ theorem Tendsto_of_epsilon_compression (a : A) (ha : 0 ≤ a) (f : ℝ≥0 → �
 noncomputable def linearRamp (ε x : ℝ≥0) := min 1 (1 / ε * x)
 
 lemma continuous_linearRamp (ε : ℝ≥0) : Continuous (linearRamp ε) :=
-  .inf (continuous_const) (continuous_mul_left (1 / ε))
+  continuous_const.inf (continuous_mul_left (1 / ε))
 
-@[simp]
-lemma linearRamp_apply (ε : ℝ≥0) : linearRamp ε = min 1 (1 / ε * ·) := rfl
+@[simp] lemma linearRamp_apply (ε : ℝ≥0) : linearRamp ε = min 1 (1 / ε * ·) := rfl
 
 theorem Tendsto_of_linearRamp_compression (a : A) (ha : 0 ≤ a) :
     Tendsto (fun (ε : ℝ≥0) ↦ ‖a - a * cfcₙ (linearRamp ε) a‖₊) (𝓝[>] 0) (𝓝 0) :=
@@ -57,16 +51,12 @@ theorem Tendsto_of_linearRampSq_compression (a : A) (ha : 0 ≤ a) :
   Tendsto_of_epsilon_compression a ha (fun ε ↦ (· ^ 2) ∘ (linearRamp ε))
     (fun _ _ ↦ by simpa using by fun_prop) (by simp)
     (fun _ h _ ↦ by simpa using (one_le_inv_mul₀ h).mpr)
-    (fun _ _ _ ↦ by simpa using
-      (sq_le_one_iff₀ <| zero_le (min 1 (_⁻¹ * _))).mpr <| min_le_left 1 (_⁻¹ * _))
+    (fun _ _ _ ↦ by simpa using (sq_le_one_iff₀ <| zero_le (min 1 _)).mpr <| min_le_left 1 _)
 
 /-- tent function -/
-noncomputable def tent (z δ c x : ℝ≥0) : ℝ≥0 :=
-   c * (1 - (x - z) / ‖δ‖₊)
+noncomputable def tent (z δ c x : ℝ≥0) : ℝ≥0 := c * (1 - (x - z) / ‖δ‖₊)
 
-@[simp]
-lemma tent_apply {z δ c : ℝ≥0} : tent z δ c =
-  fun x ↦ c * (1 - (x - z) / δ) := rfl
+@[simp] lemma tent_apply {z δ c : ℝ≥0} : tent z δ c = fun x ↦ c * (1 - (x - z) / δ) := rfl
 
 lemma tent_le_c (z δ c x) : tent z δ c x ≤ c := by aesop (add simp [mul_le_of_le_one_right])
 
@@ -74,8 +64,7 @@ theorem continuous_tent (z δ c) : Continuous (tent z δ c) :=
   .comp (continuous_const.mul continuous_id) (by fun_prop)
 
 /-- `γ` function from Sakai -/
-noncomputable def γ (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
-  fun x ↦ linearRamp ε x + tent z δ c x
+noncomputable def γ (ε z δ c : ℝ≥0) : ℝ≥0 → ℝ≥0 := fun x ↦ linearRamp ε x + tent z δ c x
 
 -- move to ...?
 lemma two_pow_two {R : Type*} [Semiring R] : (2 : R) ^ 2 = 4 := by norm_num
@@ -127,13 +116,10 @@ lemma contr_ave {t : ℝ≥0} (ht1 : t < 1) : (1 + t) / 2 < 1 :=
 
 lemma pos_ave {t : ℝ≥0} (h0t : 0 < t) : 0 < (1 + t)/ 2 := by positivity
 
-lemma t_tent_cap (t : ℝ≥0) (x : ℝ≥0) :
-    t_tent t x ≤ (min 1 (1 / sqrt ((1 + t) / 2) - 1)) := by
-  dsimp[t_tent]
-  simp only [one_div, le_inf_iff]
-  exact ⟨mul_le_of_le_one_of_le (min_le_left 1 ((sqrt ((1 + t) / 2))⁻¹ - 1)) (tsub_le_self),
-    (le_trans (mul_le_of_le_one_right' (tsub_le_self))
-      (min_le_right 1 ((sqrt ((1 + t) / 2))⁻¹ - 1)))⟩
+lemma t_tent_cap (t : ℝ≥0) (x : ℝ≥0) : t_tent t x ≤ (min 1 (1 / sqrt ((1 + t) / 2) - 1)) := by
+  simp only [t_tent, one_div, le_inf_iff]
+  exact ⟨mul_le_of_le_one_of_le (min_le_left 1 _) tsub_le_self,
+    (le_trans (mul_le_of_le_one_right' tsub_le_self) (min_le_right 1 _))⟩
 
 lemma linearRamp_cap (ε t : ℝ≥0) : linearRamp ε t ≤ 1 := by simp
 
@@ -145,8 +131,7 @@ lemma if_big_t_tent_zero {t x : ℝ≥0} (h : ¬ (x < (1 + t) / 2)) : t_tent t x
   -- maybe attribute stuff for `NNReal` with `grind`
   rw [← NNReal.coe_le_coe, NNReal.coe_div, NNReal.coe_add, NNReal.coe_ofNat, NNReal.coe_one] at h
   by_cases ht : (t : ℝ) < 1
-  · right
-    rw [le_div_iff₀ (by simpa), max_eq_left (by simpa using ht.le)]
+  · rw [le_div_iff₀ (by simpa), max_eq_left (by simpa using ht.le)]
     grind
   · left
     rw [min_eq_right]
@@ -161,15 +146,13 @@ lemma if_big_t_tent_zero {t x : ℝ≥0} (h : ¬ (x < (1 + t) / 2)) : t_tent t x
     grind
 
 theorem t_tent_linearRamp_approx_add {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t < 1)
-  (hx : x ≤ 1) : x * (linearRamp ε x + t_tent t x) ^ 2 ≤ 1 := by
+    (hx : x ≤ 1) : x * (linearRamp ε x + t_tent t x) ^ 2 ≤ 1 := by
   by_cases hxt : x < (1 + t) / 2
   · exact abstract_approx_add (x := x) (pos_ave h0t) (contr_ave ht1) (t_tent t) (linearRamp ε)
-      (t_tent_cap t) (hxt) (linearRamp_cap ε)
+      (t_tent_cap t) hxt (linearRamp_cap ε)
   · rw [if_big_t_tent_zero hxt, add_zero, ← one_pow 2]
-    have B1 := (sq_le_sq₀ ((zero_le (linearRamp ε x))) (zero_le_one)).mpr  <| linearRamp_cap ε x
-    have B2 := mul_le_mul hx B1 (by positivity) (by positivity)
-    rw [one_mul] at B2
-    assumption
+    have B1 := (sq_le_sq₀ (zero_le (linearRamp ε x)) zero_le_one).mpr (linearRamp_cap ε x)
+    simpa using mul_le_mul hx B1
 
 theorem t_tent_linearRamp_approx_sub {t ε x : ℝ≥0} (h0t : 0 < t) (ht1 : t < 1)
     (hx : x ≤ 1) : x * (linearRamp ε x - t_tent t x) ^ 2 ≤ 1 := by
@@ -181,37 +164,28 @@ theorem continuous_t_tent (t : ℝ≥0) : Continuous (t_tent t) :=
   continuous_tent t ((1 - t)/2) (min 1 (1 / sqrt ((1 + t) / 2) - 1))
 
 theorem continuous_approx_add {ε t : ℝ≥0} :
-  Continuous fun (x : ℝ≥0) ↦ x * (linearRamp ε x + t_tent t x) ^ 2 :=
-  Continuous.mul (continuous_id) (Continuous.pow (Continuous.add
-    (continuous_linearRamp ε) (continuous_t_tent t)) 2)
+    Continuous fun (x : ℝ≥0) ↦ x * (linearRamp ε x + t_tent t x) ^ 2 :=
+  continuous_id.mul (((continuous_linearRamp ε).add (continuous_t_tent t)).pow 2)
 
 theorem continuous_approx_sub {ε t : ℝ≥0} :
-  Continuous fun (x : ℝ≥0) ↦ x * (linearRamp ε x - t_tent t x) ^ 2 :=
-  Continuous.mul (continuous_id) (Continuous.pow (Continuous.sub
-    (continuous_linearRamp ε) (continuous_t_tent t)) 2)
+    Continuous fun (x : ℝ≥0) ↦ x * (linearRamp ε x - t_tent t x) ^ 2 :=
+  continuous_id.mul (((continuous_linearRamp ε).sub (continuous_t_tent t)).pow 2)
 
 theorem quasispectrum_le_one (a : A) (ha : 0 ≤ a) (ha1 : ‖a‖₊ ≤ 1) (t : ℝ≥0) :
     t ∈ quasispectrum ℝ≥0 a → t ≤ 1 := by
- have B := (nnnorm_cfcₙ_nnreal_le_iff id a 1).mp
- have C := cfcₙ_id (R := ℝ≥0) (A := A) (ha := ha)
- simp only [C, id_eq] at B
- have F := B ha1
- intro h
- exact F t h
+  have B := (nnnorm_cfcₙ_nnreal_le_iff id a 1).mp
+  rw [cfcₙ_id _ _] at B
+  exact (B ha1) t
 
 theorem norm_cfcₙ_approx_add {ε t : ℝ≥0} (a : A) (ha : 0 ≤ a) (ha1 : ‖a‖₊ ≤ 1) (h0t : 0 < t)
-    (ht1 : t < 1) : ‖cfcₙ (fun x : ℝ≥0 ↦ x * (linearRamp ε x + t_tent t x) ^ 2) a‖₊ ≤ 1 := by
-  refine nnnorm_cfcₙ_nnreal_le (A := A) ?_
-  intro x hx
-  have hx1 : x ≤ 1 := quasispectrum_le_one a ha ha1 x hx
-  exact t_tent_linearRamp_approx_add (x := x) (ε := ε) (t := t) h0t ht1 hx1
+    (ht1 : t < 1) : ‖cfcₙ (fun x : ℝ≥0 ↦ x * (linearRamp ε x + t_tent t x) ^ 2) a‖₊ ≤ 1 :=
+  nnnorm_cfcₙ_nnreal_le fun x hx ↦
+    t_tent_linearRamp_approx_add h0t ht1 (quasispectrum_le_one a ha ha1 x hx)
 
 theorem norm_cfcₙ_approx_sub {ε t : ℝ≥0} (a : A) (ha : 0 ≤ a) (ha1 : ‖a‖₊ ≤ 1) (h0t : 0 < t)
-    (ht1 : t < 1) : ‖cfcₙ (fun x : ℝ≥0 ↦ x * (linearRamp ε x - t_tent t x) ^ 2) a‖₊ ≤ 1 := by
-  refine nnnorm_cfcₙ_nnreal_le (A := A) ?_
-  intro x hx
-  have hx1 : x ≤ 1 := quasispectrum_le_one a ha ha1 x hx
-  exact t_tent_linearRamp_approx_sub (x := x) (ε := ε) (t := t) h0t ht1 hx1
+    (ht1 : t < 1) : ‖cfcₙ (fun x : ℝ≥0 ↦ x * (linearRamp ε x - t_tent t x) ^ 2) a‖₊ ≤ 1 :=
+  nnnorm_cfcₙ_nnreal_le fun x hx ↦
+    t_tent_linearRamp_approx_sub h0t ht1 (quasispectrum_le_one a ha ha1 x hx)
 
 /- To do:
 
