@@ -62,10 +62,6 @@ section NonUnitalCStarAlgebra
 
 variable {A : Type*}
 
-theorem isClosed_of_masa_of_nonUnitalCStarAlgebra [NonUnitalCStarAlgebra A]
-    (B : NonUnitalStarSubalgebra ℂ A) (hB : B.IsMasa) : IsClosed (B : Set A) :=
-  NonUnitalStarSubalgebra.IsMasa.isClosed B hB
-
 instance [NonUnitalCStarAlgebra A] {B : NonUnitalStarSubalgebra ℂ A} [hB : B.IsMasa] :
     NonUnitalCommCStarAlgebra B :=
   { NonUnitalStarSubalgebra.nonUnitalCStarAlgebra B
