@@ -19,6 +19,8 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Projection
 import LeanOA.Mathlib.Analysis.Complex.Basic
 import LeanOA.Mathlib.Analysis.Convex.Extreme
+import LeanOA.Mathlib.Analysis.InnerProductSpace.Basic
+import LeanOA.Mathlib.Analysis.Normed.Extreme
 import LeanOA.Mathlib.Analysis.RCLike.Extend
 import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import LeanOA.Mathlib.Misc
