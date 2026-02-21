@@ -173,7 +173,16 @@ theorem extremePoints_corner_characterization {x : A} (hx : x ∈ extremePoints 
     simp only [hb, mul_add, mul_sub, star_add, star_sub, star_mul, SAP, SAQ, add_mul,
       sub_mul]
     grind => ac
-  --have Eq5 : ‖x + a‖₊ = max
+  have Eq41 : ‖(star x + star a) * (x + a)‖₊ = ‖x + a‖₊ * ‖x + a‖₊ := by
+    rw [← star_add ,CStarRing.nnnorm_star_mul_self]
+  have Eq42 : (‖(star x + star a) * (x + a)‖₊).sqrt = ‖x + a‖₊ := by
+    refine NNReal.sqrt_eq_iff_eq_sq.mpr (by simpa [pow_two])
+  have Eq51 : (star x + star a) * (x + a) = p + star a * a := by
+    simp [hp, mul_add, add_mul, Eq2, Eq3]
+  have Eq6 : ‖x + a‖₊ = max (‖p‖₊).sqrt (‖star a * a‖₊).sqrt := by
+    rw [Eq51] at Eq42
+
+
   sorry
 
 end nonUnital
