@@ -249,19 +249,27 @@ theorem extremePoints_corner_characterization {x : A} (hx : x ∈ extremePoints 
   have Eq51 : (star x + star a) * (x + a) = p + star a * a := by
     simp [hp, mul_add, add_mul, Eq2, Eq3]
   rw [Eq51] at Eq41
-  have Eq6 : ‖p + star a * a‖ = max ‖p‖ ‖star a * a‖ := by
-    refine IsSelfAdjoint.norm_add_eq Eq4 (IsSelfAdjoint.star_mul_self x)
-      (IsSelfAdjoint.star_mul_self a)
-  have Eq 7 : max ‖p‖ ‖star a * a‖ ≤ 1 := by
+  have Eq6 : ‖p + star a * a‖ = max ‖p‖ ‖star a * a‖ := IsSelfAdjoint.norm_add_eq Eq4
+    (IsSelfAdjoint.star_mul_self x) (IsSelfAdjoint.star_mul_self a)
+  have Eq61 : ‖p + star a * a‖₊ = max ‖p‖₊ ‖star a * a‖₊ := Eq.symm (NNReal.eq (id (Eq.symm Eq6)))
+  have Eq7 : max ‖p‖ ‖star a * a‖ ≤ 1 := by
     rw [sup_le_iff]
     constructor
     · have JJ : ‖x‖ ≤ 1 := by
         simpa [closedBall, dist_zero_right, mem_setOf_eq] using mem_of_mem_inter_left hx
       rw [hp, CStarRing.norm_star_mul_self, ← one_mul 1]
-      exact  mul_le_mul JJ (mem_closedBall_zero_iff.mp _) (norm_nonneg x) (zero_le_one' ℝ)
+      refine  mul_le_mul JJ (mem_closedBall_zero_iff.mp ?_) (norm_nonneg x) (zero_le_one' ℝ)
+      simp [JJ]
     · have LL : ‖a‖ ≤ 1 := by
         simpa [closedBall, dist_zero_right, mem_setOf_eq] using ha
       simpa [CStarRing.norm_star_mul_self, ← one_mul 1]
         using  mul_le_mul LL (mem_closedBall_zero_iff.mp ha) (norm_nonneg a) (zero_le_one' ℝ)
+  have Eq71 : max ‖p‖₊ ‖star a * a‖₊ ≤ 1 := NNReal.coe_le_one.mp Eq7
+  have Eq8 : ‖x + a‖₊ * ‖x + a‖₊ ≤ 1 := by
+    rw [Eq61] at Eq41
+    grind
+  have Eq81 : ‖x + a‖₊ ≤ 1 := mul_self_le_one_iff.mp Eq8
+  /- Now should seriously golf the above, then get it for x - a as well. Then we obtain
+     that a = 0 by the fact that x is an extreme point. -/
 
 end nonUnital
