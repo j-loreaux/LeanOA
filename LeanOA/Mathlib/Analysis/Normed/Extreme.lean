@@ -26,6 +26,8 @@ theorem norm_eq_one_of_mem_extremePoints_closedUnitBall [Nontrivial H] {x : H}
   on_goal 2 => rw [sub_pos, ← RCLike.ofReal_one (K := 𝕜), RCLike.ofReal_lt_ofReal]; grind
   all_goals simp [norm_smul, norm_ne_zero_iff.mpr h]
 
-lemma extremePoints_closedUnitBall_subset_sphere [Nontrivial H] :
+/-- In a nontrivial normed space, the extreme points of the closed unit ball is contained in
+the unit sphere. -/
+lemma extremePoints_closedUnitBall_subset_unitSphere [Nontrivial H] :
     extremePoints 𝕜 (closedBall (0 : H) 1) ⊆ sphere 0 1 :=
   fun _ hx ↦ by simpa using norm_eq_one_of_mem_extremePoints_closedUnitBall hx
