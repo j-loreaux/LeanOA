@@ -10,9 +10,9 @@ theorem subsingleton_of_zero_mem_extremePoints_closedUnitBall
   by_contra!
   obtain ⟨y, hy⟩ := exists_ne (0 : H)
   set z := (1 / ‖y‖ : 𝕜) • y
-  have hz : z ∈ closedBall (0 : H) 1 ∧ ‖z‖ = 1 := by simp [norm_smul, norm_ne_zero_iff.mpr hy, z]
+  have hz : ‖z‖ = 1 := by simp [norm_smul, norm_ne_zero_iff.mpr hy, z]
   simp only [mem_extremePoints, mem_closedBall, dist_zero_right] at h
-  have := h.2 z hz.2.le (-z) (norm_neg z ▸ hz.2.le) ⟨1 / 2, ⟨1 / 2, by simp [-one_div]⟩⟩
+  have := h.2 z hz.le (-z) (norm_neg z ▸ hz.le) ⟨1 / 2, ⟨1 / 2, by simp [-one_div]⟩⟩
   simp_all
 
 theorem norm_eq_one_of_mem_extremePoints_closedUnitBall [Nontrivial H] {x : H}

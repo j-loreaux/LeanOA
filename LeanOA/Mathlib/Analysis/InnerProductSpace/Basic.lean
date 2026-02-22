@@ -34,8 +34,6 @@ theorem InnerProductSpace.extremePoints_closedUnitBall_eq_unitSphere {𝕜 E : T
       _ = 1 := by simp [← add_sq, hab]
     grind
   · obtain (h | h) := not_and_or.mp H
-    on_goal 1 => have Hy : ‖y‖ < 1 := by grind
-    on_goal 2 => have Hz : ‖z‖ < 1 := by grind
     all_goals
       have := calc 1 = ‖x‖ := hx.symm
         _ ≤ a' * ‖y‖ + b' * ‖z‖ := by
@@ -44,7 +42,7 @@ theorem InnerProductSpace.extremePoints_closedUnitBall_eq_unitSphere {𝕜 E : T
         _ < a' * 1 + b' * 1 := ?_
         _ = 1 := by simp [hab]
       grind
-    · exact add_lt_add_of_lt_of_le (mul_lt_mul' le_rfl Hy (norm_nonneg _) ha.1)
+    · exact add_lt_add_of_lt_of_le (mul_lt_mul' le_rfl (by grind) (norm_nonneg _) ha.1)
         (mul_le_mul_of_nonneg_left hz hb.1.le)
     · exact add_lt_add_of_le_of_lt (mul_le_mul_of_nonneg_left hy ha.1.le)
-        (mul_lt_mul' le_rfl Hz (norm_nonneg _) hb.1)
+        (mul_lt_mul' le_rfl (by grind) (norm_nonneg _) hb.1)

@@ -208,68 +208,39 @@ lemma IsSelfAdjoint.norm_add_eq {A : Type*} [NonUnitalCStarAlgebra A]
   let d : S := ⟨b, subset_closure <| subset_adjoin _ _ <| by grind⟩
   exact CommCStarAlgebra.norm_add_eq (a := c) (b := d) (h := by ext; simpa)
 
-/- Needs better name, and to be less "hacky"! Let's get the result first, though. -/
-theorem extremePoints_corner_characterization {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1))
-    (a : A) (ha : a ∈ closedBall 0 1) :
-    (∃ b : A, a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) → a = 0
-    := by
-  intro h
+-- still needs a better name, but will probably be private anyway
+theorem eq_zero_of_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
+    {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
+    (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
+    a = 0 := by
+  have hP := isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx
   set p := star x * x with hp
-  set q := x * star x with hq
-  have IdemP : p * p = p :=
-    (isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx).1
-  have IdemQ : q * q = q :=
-    (isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall hx).1
-  have SAP : star p = p := star_star_mul x x
-  have SAQ : star q = q := star_mul_star x x
-  obtain ⟨b, hb⟩ := h
-  have Eq1 : ‖star (star x * a) * (star x * a)‖₊ = 0 := by
-    simp only [hb, mul_add, mul_sub, star_add, star_sub, star_mul, star_star, SAP, SAQ, add_mul,
-      sub_mul, nnnorm_eq_zero]
-    grind => ac
-  have Eq2 : star x * a = 0 := by
-    rw [CStarRing.nnnorm_star_mul_self, mul_self_eq_zero, nnnorm_eq_zero] at Eq1
-    assumption
-  have Eq3 : star a * x = 0 := by
+  have hxa : star x * a = 0 := by
+    rw [← norm_eq_zero, ← mul_self_eq_zero, ← CStarRing.norm_star_mul_self]
+    simp [hb, mul_add, mul_sub, add_mul, sub_mul]
+    grind [hP.isIdempotentElem.eq] => ac
+  have hax : star a * x = 0 := by
     rw [← star_star x, ← star_mul, ← star_zero]
-    exact star_inj.mpr Eq2
-  have Eq4 : p * (star a * a) = 0 := by
-    simp only [hb, mul_add, mul_sub, star_add, star_sub, star_mul, SAP, SAQ, add_mul,
-      sub_mul]
-    grind => ac
-  have Eq401 : star a * a * p = 0 := by
-    nth_rw 2 [← star_star a]
-    rw [← SAP, ← star_zero, ← star_mul, ← star_mul]
-    refine star_inj.mpr ?_
-    exact CancelDenoms.derive_trans₂ rfl rfl Eq4
-  have Eq41 : ‖(star x + star a) * (x + a)‖₊ = ‖x + a‖₊ * ‖x + a‖₊ := by
-    rw [← star_add ,CStarRing.nnnorm_star_mul_self]
-  have Eq42 : (‖(star x + star a) * (x + a)‖₊).sqrt = ‖x + a‖₊ := by
-    refine NNReal.sqrt_eq_iff_eq_sq.mpr (by simpa [pow_two])
-  have Eq51 : (star x + star a) * (x + a) = p + star a * a := by
-    simp [hp, mul_add, add_mul, Eq2, Eq3]
-  rw [Eq51] at Eq41
-  have Eq6 : ‖p + star a * a‖ = max ‖p‖ ‖star a * a‖ := IsSelfAdjoint.norm_add_eq Eq4
-    (IsSelfAdjoint.star_mul_self x) (IsSelfAdjoint.star_mul_self a)
-  have Eq61 : ‖p + star a * a‖₊ = max ‖p‖₊ ‖star a * a‖₊ := Eq.symm (NNReal.eq (id (Eq.symm Eq6)))
-  have Eq7 : max ‖p‖ ‖star a * a‖ ≤ 1 := by
-    rw [sup_le_iff]
+    exact star_inj.mpr hxa
+  have hpa : p * (star a * a) = 0 := by
+    simp only [hb, mul_add, mul_sub]
+    grind [hP.isIdempotentElem.eq]
+  have : (star x + star a) * (x + a) = p + star a * a := by
+    simp [hp, mul_add, add_mul, hax, hxa]
+  have : ‖p + star a * a‖ = ‖x + a‖ * ‖x + a‖ := by
+    rw [← this, ← star_add, CStarRing.norm_star_mul_self]
+  have hmax : ‖p + star a * a‖ ≤ 1 := by
+    rw [IsSelfAdjoint.norm_add_eq hpa (.star_mul_self x) (.star_mul_self a), sup_le_iff]
     constructor
-    · have JJ : ‖x‖ ≤ 1 := by
-        simpa [closedBall, dist_zero_right, mem_setOf_eq] using mem_of_mem_inter_left hx
-      rw [hp, CStarRing.norm_star_mul_self, ← one_mul 1]
-      refine  mul_le_mul JJ (mem_closedBall_zero_iff.mp ?_) (norm_nonneg x) (zero_le_one' ℝ)
-      simp [JJ]
-    · have LL : ‖a‖ ≤ 1 := by
-        simpa [closedBall, dist_zero_right, mem_setOf_eq] using ha
-      simpa [CStarRing.norm_star_mul_self, ← one_mul 1]
-        using  mul_le_mul LL (mem_closedBall_zero_iff.mp ha) (norm_nonneg a) (zero_le_one' ℝ)
-  have Eq71 : max ‖p‖₊ ‖star a * a‖₊ ≤ 1 := NNReal.coe_le_one.mp Eq7
-  have Eq8 : ‖x + a‖₊ * ‖x + a‖₊ ≤ 1 := by
-    rw [Eq61] at Eq41
-    grind
-  have Eq81 : ‖x + a‖₊ ≤ 1 := mul_self_le_one_iff.mp Eq8
-  /- Now should seriously golf the above, then get it for x - a as well. Then we obtain
-     that a = 0 by the fact that x is an extreme point. -/
+    · have : ‖x‖ ≤ 1 := by simpa using mem_of_mem_inter_left hx
+      simpa [hp, CStarRing.norm_star_mul_self] using mul_le_mul this (by simpa) (norm_nonneg x)
+    · have : ‖a‖ ≤ 1 := by simpa using ha
+      simpa [CStarRing.norm_star_mul_self] using mul_le_mul this (by simpa) (norm_nonneg a)
+  have : ‖x + a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp (by grind)
+  have : ‖x - a‖ ≤ 1 := by
+    rw [← sq_le_one_iff₀ (by positivity)]
+    simp [sq, ← CStarRing.norm_star_mul_self, star_sub, sub_mul, mul_sub, hax, hxa, ← hp, hmax]
+  exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
+    ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
 
 end nonUnital
