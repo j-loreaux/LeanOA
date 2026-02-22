@@ -151,8 +151,9 @@ variable {X R : Type*} [TopologicalSpace X] [NormedRing R] [IsDomain R]
 -- you compose pointwise with the norm. That should simplify the argument a
 -- bit I think, at the cost of developing more API (which is probably worthwhile).
 
+-- Mathlib.Topology.ContinuousMap.Bounded.Normed
 open BoundedContinuousFunction in
-/-- If the product of bounded continuous functions is zero, then the norm of their sum is the
+/-- If the product of bounded continuous fun ctions is zero, then the norm of their sum is the
 maximum of their norms. -/
 lemma BoundedContinuousFunction.norm_add_eq_max {f g : X →ᵇ R} (h : f * g = 0) :
     ‖f + g‖ = max ‖f‖ ‖g‖ := by
@@ -172,6 +173,7 @@ lemma BoundedContinuousFunction.norm_add_eq_max {f g : X →ᵇ R} (h : f * g = 
       grw [← (f + g).norm_coe_le_norm x, hfg']
       simp
 
+-- Mathlib.Topology.ContinuousMap.Compact
 open BoundedContinuousFunction in
 lemma ContinuousMap.norm_add_eq_max [CompactSpace X] {f g : C(X, R)} (h : f * g = 0) :
     ‖f + g‖ = max ‖f‖ ‖g‖ := by
@@ -182,6 +184,7 @@ end Functions
 
 variable {A : Type*} [NonUnitalCommCStarAlgebra A]
 
+-- Mathlib.Analysis.CStarAlgebra.GelfandDuality
 open scoped CStarAlgebra in
 open Unitization in
 lemma CommCStarAlgebra.norm_add_eq {a b : A} (h : a * b = 0) :
@@ -192,6 +195,7 @@ lemma CommCStarAlgebra.norm_add_eq {a b : A} (h : a * b = 0) :
   simp_rw [← hf.norm_map_of_map_zero h0, show f (a + b) = f a + f b by simp [f]]
   exact ContinuousMap.norm_add_eq_max <| by simpa [f] using congr(f $h)
 
+-- Mathlib.Analysis.CStarAlgebra.GelfandDuality
 open NonUnitalStarAlgebra in
 lemma IsSelfAdjoint.norm_add_eq {A : Type*} [NonUnitalCStarAlgebra A]
     {a b : A} (hab : a * b = 0) (ha : IsSelfAdjoint a) (hb : IsSelfAdjoint b) :
@@ -213,32 +217,24 @@ theorem eq_zero_of_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
     a = 0 := by
-  have hP := isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx
+  have h := isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx
   set p := star x * x with hp
   have hxa : star x * a = 0 := by
     rw [← norm_eq_zero, ← mul_self_eq_zero, ← CStarRing.norm_star_mul_self]
     simp [hb, mul_add, mul_sub, add_mul, sub_mul]
-    grind [hP.isIdempotentElem.eq] => ac
-  have hax : star a * x = 0 := by
-    rw [← star_star x, ← star_mul, ← star_zero]
-    exact star_inj.mpr hxa
+    grind [h.isIdempotentElem.eq] => ac
+  have hax : star a * x = 0 := by simpa [star_mul] using congr(star $hxa)
   have hpa : p * (star a * a) = 0 := by
     simp only [hb, mul_add, mul_sub]
-    grind [hP.isIdempotentElem.eq]
-  have : (star x + star a) * (x + a) = p + star a * a := by
-    simp [hp, mul_add, add_mul, hax, hxa]
-  have : ‖p + star a * a‖ = ‖x + a‖ * ‖x + a‖ := by
-    rw [← this, ← star_add, CStarRing.norm_star_mul_self]
+    grind [h.isIdempotentElem.eq]
+  have : star (x + a) * (x + a) = p + star a * a := by simp [hp, mul_add, add_mul, hax, hxa]
+  have : ‖p + star a * a‖ = ‖x + a‖ * ‖x + a‖ := by rw [← this, CStarRing.norm_star_mul_self]
   have hmax : ‖p + star a * a‖ ≤ 1 := by
-    rw [IsSelfAdjoint.norm_add_eq hpa (.star_mul_self x) (.star_mul_self a), sup_le_iff]
-    constructor
-    · have : ‖x‖ ≤ 1 := by simpa using mem_of_mem_inter_left hx
-      simpa [hp, CStarRing.norm_star_mul_self] using mul_le_mul this (by simpa) (norm_nonneg x)
-    · have : ‖a‖ ≤ 1 := by simpa using ha
-      simpa [CStarRing.norm_star_mul_self] using mul_le_mul this (by simpa) (norm_nonneg a)
+    rw [IsSelfAdjoint.norm_add_eq hpa (.star_mul_self x) (.star_mul_self a), sup_le_iff, hp]
+    simp only [CStarRing.norm_star_mul_self]
+    grw [mem_closedBall_zero_iff.mp hx.1, mem_closedBall_zero_iff.mp ha, one_mul, and_self]
   have : ‖x + a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp (by grind)
-  have : ‖x - a‖ ≤ 1 := by
-    rw [← sq_le_one_iff₀ (by positivity)]
+  have : ‖x - a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp <| by
     simp [sq, ← CStarRing.norm_star_mul_self, star_sub, sub_mul, mul_sub, hax, hxa, ← hp, hmax]
   exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
     ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
