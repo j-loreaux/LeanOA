@@ -142,9 +142,73 @@ theorem isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall
 theorem isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (a * star a) := by
   grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
+section Functions
 
+variable {X R : Type*} [TopologicalSpace X] [NormedRing R] [IsDomain R]
 
-/- Needs better name. Let's get the result first, though. -/
+-- A better way to do this would be to prove that the norm of a bounded
+-- continuous function agrees with the norm of the real-valued function where
+-- you compose pointwise with the norm. That should simplify the argument a
+-- bit I think, at the cost of developing more API (which is probably worthwhile).
+
+open BoundedContinuousFunction in
+/-- If the product of bounded continuous functions is zero, then the norm of their sum is the
+maximum of their norms. -/
+lemma BoundedContinuousFunction.norm_add_eq_max {f g : X →ᵇ R} (h : f * g = 0) :
+    ‖f + g‖ = max ‖f‖ ‖g‖ := by
+  have hfg : ∀ x, f x = 0 ∨ g x = 0 := by
+    simpa [DFunLike.ext_iff, mul_eq_zero] using h
+  have hfg' (x : X) : ‖(f + g) x‖ = max ‖f x‖ ‖g x‖ := by
+    obtain (h | h) := hfg x <;> simp [h]
+  apply le_antisymm
+  · rw [norm_le (by positivity)]
+    intro x
+    rw [hfg']
+    apply max_le <;> exact norm_coe_le_norm _ x |>.trans (by simp)
+  · apply max_le
+    all_goals
+      rw [norm_le (by positivity)]
+      intro x
+      grw [← (f + g).norm_coe_le_norm x, hfg']
+      simp
+
+open BoundedContinuousFunction in
+lemma ContinuousMap.norm_add_eq_max [CompactSpace X] {f g : C(X, R)} (h : f * g = 0) :
+    ‖f + g‖ = max ‖f‖ ‖g‖ := by
+  replace h : mkOfCompact f * mkOfCompact g = 0 := by ext x; simpa using congr($h x)
+  simpa using BoundedContinuousFunction.norm_add_eq_max h
+
+end Functions
+
+variable {A : Type*} [NonUnitalCommCStarAlgebra A]
+
+open scoped CStarAlgebra in
+open Unitization in
+lemma CommCStarAlgebra.norm_add_eq {a b : A} (h : a * b = 0) :
+    ‖a + b‖ = max ‖a‖ ‖b‖ := by
+  let f := gelfandStarTransform A⁺¹ ∘ inrNonUnitalAlgHom ℂ A
+  have hf : Isometry f := gelfandTransform_isometry _ |>.comp isometry_inr
+  have h0 : f 0 = 0 := by simp [f]
+  simp_rw [← hf.norm_map_of_map_zero h0, show f (a + b) = f a + f b by simp [f]]
+  exact ContinuousMap.norm_add_eq_max <| by simpa [f] using congr(f $h)
+
+open NonUnitalStarAlgebra in
+lemma IsSelfAdjoint.norm_add_eq {A : Type*} [NonUnitalCStarAlgebra A]
+    {a b : A} (hab : a * b = 0) (ha : IsSelfAdjoint a) (hb : IsSelfAdjoint b) :
+    ‖a + b‖ = max ‖a‖ ‖b‖ := by
+  let S : NonUnitalStarSubalgebra ℂ A := (adjoin ℂ {a, b}).topologicalClosure
+  have hS : IsClosed (S : Set A) := (adjoin ℂ {a, b}).isClosed_topologicalClosure
+  have hab' : a * b = b * a := by
+    rw [hab, eq_comm]; simpa [ha.star_eq, hb.star_eq] using congr(star $hab)
+  let _ : NonUnitalCommRing (adjoin ℂ {a, b}) :=
+    adjoinNonUnitalCommRingOfComm ℂ (by grind) (by grind [IsSelfAdjoint.star_eq])
+  let _ : NonUnitalCommRing S := (adjoin ℂ {a, b}).nonUnitalCommRingTopologicalClosure mul_comm
+  let _ : NonUnitalCommCStarAlgebra S := { }
+  let c : S := ⟨a, subset_closure <| subset_adjoin _ _ <| by grind⟩
+  let d : S := ⟨b, subset_closure <| subset_adjoin _ _ <| by grind⟩
+  exact CommCStarAlgebra.norm_add_eq (a := c) (b := d) (h := by ext; simpa)
+
+/- Needs better name, and to be less "hacky"! Let's get the result first, though. -/
 theorem extremePoints_corner_characterization {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1))
     (a : A) (ha : a ∈ closedBall 0 1) :
     (∃ b : A, a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) → a = 0
@@ -169,20 +233,35 @@ theorem extremePoints_corner_characterization {x : A} (hx : x ∈ extremePoints 
   have Eq3 : star a * x = 0 := by
     rw [← star_star x, ← star_mul, ← star_zero]
     exact star_inj.mpr Eq2
-  have Eq4 : p * star a * a = 0 := by
+  have Eq4 : p * (star a * a) = 0 := by
     simp only [hb, mul_add, mul_sub, star_add, star_sub, star_mul, SAP, SAQ, add_mul,
       sub_mul]
     grind => ac
+  have Eq401 : star a * a * p = 0 := by
+    nth_rw 2 [← star_star a]
+    rw [← SAP, ← star_zero, ← star_mul, ← star_mul]
+    refine star_inj.mpr ?_
+    exact CancelDenoms.derive_trans₂ rfl rfl Eq4
   have Eq41 : ‖(star x + star a) * (x + a)‖₊ = ‖x + a‖₊ * ‖x + a‖₊ := by
     rw [← star_add ,CStarRing.nnnorm_star_mul_self]
   have Eq42 : (‖(star x + star a) * (x + a)‖₊).sqrt = ‖x + a‖₊ := by
     refine NNReal.sqrt_eq_iff_eq_sq.mpr (by simpa [pow_two])
   have Eq51 : (star x + star a) * (x + a) = p + star a * a := by
     simp [hp, mul_add, add_mul, Eq2, Eq3]
-  have Eq6 : ‖x + a‖₊ = max (‖p‖₊).sqrt (‖star a * a‖₊).sqrt := by
-    rw [Eq51] at Eq42
-
-
-  sorry
+  rw [Eq51] at Eq41
+  have Eq6 : ‖p + star a * a‖ = max ‖p‖ ‖star a * a‖ := by
+    refine IsSelfAdjoint.norm_add_eq Eq4 (IsSelfAdjoint.star_mul_self x)
+      (IsSelfAdjoint.star_mul_self a)
+  have Eq 7 : max ‖p‖ ‖star a * a‖ ≤ 1 := by
+    rw [sup_le_iff]
+    constructor
+    · have JJ : ‖x‖ ≤ 1 := by
+        simpa [closedBall, dist_zero_right, mem_setOf_eq] using mem_of_mem_inter_left hx
+      rw [hp, CStarRing.norm_star_mul_self, ← one_mul 1]
+      exact  mul_le_mul JJ (mem_closedBall_zero_iff.mp _) (norm_nonneg x) (zero_le_one' ℝ)
+    · have LL : ‖a‖ ≤ 1 := by
+        simpa [closedBall, dist_zero_right, mem_setOf_eq] using ha
+      simpa [CStarRing.norm_star_mul_self, ← one_mul 1]
+        using  mul_le_mul LL (mem_closedBall_zero_iff.mp ha) (norm_nonneg a) (zero_le_one' ℝ)
 
 end nonUnital
