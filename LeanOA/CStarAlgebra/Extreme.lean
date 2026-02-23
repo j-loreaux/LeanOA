@@ -249,14 +249,14 @@ theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
   exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
     ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
 
-theorem IsSelfAdjoint.isIdempotentElem_iff_spectrum_subset {p : A} (hp : IsSelfAdjoint p) :
+theorem IsSelfAdjoint.isIdempotentElem_iff_quasispectrum_subset {p : A} (hp : IsSelfAdjoint p) :
     IsIdempotentElem p ↔ quasispectrum ℝ p ⊆ {0, 1} := by
-  refine ⟨fun h ↦ h.quasispectrum_subset, fun h ↦ ?_⟩
+  refine ⟨IsIdempotentElem.quasispectrum_subset, fun h ↦ ?_⟩
   rw [IsIdempotentElem, ← cfcₙ_id' ℝ p, ← cfcₙ_mul _ _]
   exact cfcₙ_congr fun x hx ↦ by grind
 
 theorem isIdempotentElem_star_mul_self_iff_isIdempotent_self_mul_star {x : A} :
     IsIdempotentElem (star x * x) ↔ IsIdempotentElem (x * star x) := by
-  simp [IsSelfAdjoint.isIdempotentElem_iff_spectrum_subset, quasispectrum.mul_comm]
+  simp [IsSelfAdjoint.isIdempotentElem_iff_quasispectrum_subset, quasispectrum.mul_comm]
 
 end nonUnital
