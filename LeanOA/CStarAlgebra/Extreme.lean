@@ -262,15 +262,13 @@ theorem eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall {x a b : A}
     (hx : x ∈ extremePoints ℝ (closedBall 0 1))
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
     a = 0 := by
-  by_cases h : a = 0
-  · assumption
-  · have I : ‖a‖⁻¹ • a = (‖a‖⁻¹ • b) - (‖a‖⁻¹ • b) * (star x * x)
-        - (x * star x) * (‖a‖⁻¹ • b) + (x * star x) * (‖a‖⁻¹ • b) * (star x * x) := by
-      nth_rw 2 [hb]
-      grind [mul_smul_comm, smul_sub, smul_add, mul_assoc]
-    have := eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
-           hx (inv_norm_smul_mem_unitClosedBall a) I
-    simpa
+  by_contra h
+  have : ‖a‖⁻¹ • a = (‖a‖⁻¹ • b) - (‖a‖⁻¹ • b) * (star x * x) -
+      (x * star x) * (‖a‖⁻¹ • b) + (x * star x) * (‖a‖⁻¹ • b) * (star x * x) := by
+    grind [mul_smul_comm, smul_sub, smul_add, mul_assoc]
+  have := eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
+    hx (inv_norm_smul_mem_unitClosedBall a) this
+  simp [h] at this
 
 theorem isIdempotentElem_iff_quasispectrum_subset (R : Type*) {A : Type*} {p : A → Prop} [Field R]
     [StarRing R] [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A]
@@ -286,48 +284,34 @@ theorem isIdempotentElem_star_mul_self_iff_isIdempotent_self_mul_star {x : A} :
   simp [isIdempotentElem_iff_quasispectrum_subset ℝ, quasispectrum.mul_comm]
 
 open Filter Topology in
-theorem approx_unit_mul_left_eq {x a : A} [PartialOrder A] [StarOrderedRing A]
-    (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+theorem approx_unit_mul_left_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     a - a * (star x * x) - a * (x * star x) + a * (x * star x) * (star x * x) = 0 := by
+  letI := CStarAlgebra.spectralOrder A
+  letI := CStarAlgebra.spectralOrderedRing A
   let u := CStarAlgebra.approximateUnit A
-  have I : ∀ t : A, t - t * (star x * x) - (x * star x) * t
-      + (x * star x) * t * (star x * x) = 0 := by
-    intro t
-    refine eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall
-      (a := t - t * (star x * x) - (x * star x) * t + (x * star x) * t * (star x * x)) (b := t)
-      hx rfl
+  have h : ∀ t : A, t - t * (star x * x) - (x * star x) * t + (x * star x) * t * (star x * x) = 0 :=
+    fun t ↦ eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall hx rfl
   have left := IsApproximateUnit.tendsto_mul_left
     (IsIncreasingApproximateUnit.toIsApproximateUnit <| CStarAlgebra.increasingApproximateUnit A)
   have right := IsApproximateUnit.tendsto_mul_right
     (IsIncreasingApproximateUnit.toIsApproximateUnit <| CStarAlgebra.increasingApproximateUnit A)
-  have first : Tendsto (a * ·) u (𝓝 a) := left a
-  have second : Tendsto (fun j ↦ a * (j * (star x * x))) u (𝓝 (a * (star x * x))) :=
-    Tendsto.const_mul a (right (star x * x))
-  have third : Tendsto (fun j ↦ a * ((x * star x) * j)) u (𝓝 (a * (x * star x))) :=
-    Tendsto.const_mul a (left (x * star x))
-  have fourth : Tendsto (fun j ↦ a * (x * star x) * j * (star x * x)) u
-    (𝓝 (a * (x * star x) * (star x * x))) :=
-      Tendsto.mul_const (star x * x) (left (a * (x * star x)))
-  have overall := Tendsto.add (Tendsto.sub (Tendsto.sub first second) third) fourth
-  have (x_1 : A) : a * x_1 - a * (x_1 * (star x * x)) - a * (x * star x * x_1)
-      + a * (x * star x) * x_1 * (star x * x) = 0 := by
+  have overall := (((left a).sub (.const_mul a (right (star x * x)))).sub
+    (.const_mul a (left (x * star x)))).add (.mul_const (star x * x) (left (a * (x * star x))))
+  have (x_1 : A) : a * x_1 - a * (x_1 * (star x * x)) - a * (x * star x * x_1) +
+      a * (x * star x) * x_1 * (star x * x) = 0 := by
     simp only [← mul_sub, mul_assoc, ← mul_add] at *
-    exact mul_eq_zero_of_right a (I x_1)
-  simp [this] at overall
+    exact mul_eq_zero_of_right a (h x_1)
   grind
 
-open Filter Topology in
-theorem approx_unit_mul_right_eq {x a : A} [PartialOrder A] [StarOrderedRing A]
-    (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+theorem approx_unit_mul_right_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     a - (star x * x) * a - (x * star x) * a + (x * star x) * (star x * x) * a = 0 := by
-  have hxstar : star x ∈ extremePoints ℝ (closedBall 0 1) := by sorry
+  have hxstar : star x ∈ extremePoints ℝ (closedBall 0 1) := by
+    refine ⟨by simpa using hx.1, fun y hy z hz ⟨α, β, hα, hβ, hαβ, hxyz⟩ ↦ ?_⟩
+    rw [eq_star_iff_eq_star, eq_comm] at hxyz ⊢
+    apply @hx.2 _ (by simpa using hy) (star z) (by simpa using hz) ⟨star α, star β, ?_⟩
+    simp [← hxyz, hα, hβ, hαβ]
   have := approx_unit_mul_left_eq (x := star x) (a := star a) (hx := hxstar)
   rw [← star_inj]
   grind [star_add, ← star_zero, star_mul, star_sub]
-
-
-
-
-
 
 end nonUnital
