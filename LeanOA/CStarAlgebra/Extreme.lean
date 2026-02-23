@@ -324,4 +324,42 @@ theorem exists_identity {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) 
   · have := approx_unit_mul_left_eq (a := a) hx
     grind [mul_add, mul_sub]
 
+theorem identity_of_mem_extremePoints_closedUnitBall {x : A}
+    (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (y : A) :
+    letI e := star x * x + x * star x - x * star x * star x * x
+    e * y = y ∧ y * e = y := by
+  simp [add_mul, sub_mul, mul_sub, mul_add]
+  grind [approx_unit_mul_right_eq, approx_unit_mul_left_eq]
+
+/-- The `1` given a point in a non-unital C⋆-algebra.
+This is a helper definition for constructing the unital C⋆-algebra given an extreme point
+of the closed unit ball in a non-unital C⋆-algebra. -/
+abbrev CStarAlgebra.oneOfExtremePt (x : A) :
+    One A where one := star x * x + x * star x - x * star x * star x * x
+
+lemma CStarAlgebra.oneOfExtremePt_one_def (x : A) :
+    have := CStarAlgebra.oneOfExtremePt x
+    1 = star x * x + x * star x - x * star x * star x * x := rfl
+
+/-- The ring structure given an extreme point of the closed unit ball on a non-unital
+C⋆-algebra. Only an implementation for `CStarAlgebra.ofExtremePt`. -/
+abbrev CStarAlgebra.ringOfExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+    Ring A where
+  __ := ‹NonUnitalCStarAlgebra A›
+  __ := CStarAlgebra.oneOfExtremePt x
+  one_mul y := by
+    rw [oneOfExtremePt_one_def]
+    exact identity_of_mem_extremePoints_closedUnitBall hx y |>.1
+  mul_one y := by
+    rw [oneOfExtremePt_one_def]
+    exact identity_of_mem_extremePoints_closedUnitBall hx y |>.2
+
+/-- Upgrade a non-unital C⋆-algebra to a unital C⋆-algebra, given there exists an
+extreme point of the closed unit ball. -/
+abbrev CStarAlgebra.ofExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+    CStarAlgebra A where
+  __ := ‹NonUnitalCStarAlgebra A›
+  __ := CStarAlgebra.ringOfExtremePt hx
+  __ := Algebra.ofModule smul_mul_assoc mul_smul_comm
+
 end nonUnital
