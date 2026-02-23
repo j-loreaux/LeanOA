@@ -228,15 +228,15 @@ lemma IsSelfAdjoint.norm_sub_eq_max {A : Type*} [NonUnitalCStarAlgebra A]
 
 end NonUnitalCommCStarAlgebra
 
-variable {A : Type*} [NonUnitalCommCStarAlgebra A]
+variable {A : Type*} [NonUnitalCStarAlgebra A]
 
 -- still needs a better name, but will probably be private anyway
 theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
     a = 0 := by
-  have hp := isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx
-  have hq := isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall hx
+  have hP := isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx
+  have hQ := isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall hx
   set p := star x * x with hp
   have hxa : star x * a = 0 := by
     rw [← norm_eq_zero, ← mul_self_eq_zero, ← CStarRing.norm_star_mul_self]
@@ -244,8 +244,8 @@ theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     grind
   have hax : star a * x = 0 := by simpa [star_mul] using congr(star $hxa)
   have hpa : p * (star a * a) = 0 := by
-    simp only [hb, mul_add, mul_sub]
-    grind
+    simp only [hb, mul_add, mul_sub, star_add, star_sub, star_mul, add_mul, sub_mul]
+    grind [star_star_mul x x]
   have : star (x + a) * (x + a) = p + star a * a := by simp [hp, mul_add, add_mul, hax, hxa]
   have : ‖p + star a * a‖ = ‖x + a‖ * ‖x + a‖ := by rw [← this, CStarRing.norm_star_mul_self]
   have hmax : ‖p + star a * a‖ ≤ 1 := by
@@ -265,7 +265,7 @@ theorem eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall {x a b : A}
   by_contra h
   have : ‖a‖⁻¹ • a = (‖a‖⁻¹ • b) - (‖a‖⁻¹ • b) * (star x * x) -
       (x * star x) * (‖a‖⁻¹ • b) + (x * star x) * (‖a‖⁻¹ • b) * (star x * x) := by
-    grind [mul_smul_comm, smul_sub, smul_add, mul_assoc]
+    simp [← mul_assoc, smul_mul_assoc, mul_smul_comm, sub_sub, ← smul_sub, ← smul_add, hb]
   have := eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     hx (inv_norm_smul_mem_unitClosedBall a) this
   simp [h] at this
@@ -301,7 +301,8 @@ theorem approx_unit_mul_left_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedB
       a * (x * star x) * x_1 * (star x * x) = 0 := by
     simp only [← mul_sub, mul_assoc, ← mul_add] at *
     exact mul_eq_zero_of_right a (h x_1)
-  grind
+  simp [this] at overall
+  sorry
 
 theorem approx_unit_mul_right_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     a - (star x * x) * a - (x * star x) * a + (x * star x) * (star x * x) * a = 0 := by
@@ -312,6 +313,7 @@ theorem approx_unit_mul_right_eq {x a : A} (hx : x ∈ extremePoints ℝ (closed
     simp [← hxyz, hα, hβ, hαβ]
   have := approx_unit_mul_left_eq (x := star x) (a := star a) (hx := hxstar)
   rw [← star_inj]
+  simp at *
   grind [star_add, ← star_zero, star_mul, star_sub]
 
 theorem exists_identity {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
