@@ -316,7 +316,14 @@ theorem approx_unit_mul_left_eq {x a : A} [PartialOrder A] [StarOrderedRing A]
   simp [this] at overall
   grind
 
-
+open Filter Topology in
+theorem approx_unit_mul_right_eq {x a : A} [PartialOrder A] [StarOrderedRing A]
+    (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+    a - (star x * x) * a - (x * star x) * a + (x * star x) * (star x * x) * a = 0 := by
+  have hxstar : star x ∈ extremePoints ℝ (closedBall 0 1) := by sorry
+  have := approx_unit_mul_left_eq (x := star x) (a := star a) (hx := hxstar)
+  rw [← star_inj]
+  grind [star_add, ← star_zero, star_mul, star_sub]
 
 
 
