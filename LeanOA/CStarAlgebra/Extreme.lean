@@ -314,4 +314,14 @@ theorem approx_unit_mul_right_eq {x a : A} (hx : x ∈ extremePoints ℝ (closed
   rw [← star_inj]
   grind [star_add, ← star_zero, star_mul, star_sub]
 
+theorem exists_identity {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+  ∃ e : A , (∀ a : A, e * a = a  ∧ a * e = a) := by
+  use (star x * x) + (x * star x) - (x * star x) * (star x * x)
+  intro a
+  constructor
+  · have := approx_unit_mul_right_eq (a := a) hx
+    grind [add_mul, sub_mul]
+  · have := approx_unit_mul_left_eq (a := a) hx
+    grind [mul_add, mul_sub]
+
 end nonUnital
