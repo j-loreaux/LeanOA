@@ -142,6 +142,7 @@ theorem isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall
 theorem isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (a * star a) := by
   grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
+
 section Functions
 
 variable {X R : Type*} [TopologicalSpace X] [NormedRing R] [IsDomain R]
@@ -153,7 +154,7 @@ variable {X R : Type*} [TopologicalSpace X] [NormedRing R] [IsDomain R]
 
 -- Mathlib.Topology.ContinuousMap.Bounded.Normed
 open BoundedContinuousFunction in
-/-- If the product of bounded continuous fun ctions is zero, then the norm of their sum is the
+/-- If the product of bounded continuous functions is zero, then the norm of their sum is the
 maximum of their norms. -/
 lemma BoundedContinuousFunction.norm_add_eq_max {f g : X →ᵇ R} (h : f * g = 0) :
     ‖f + g‖ = max ‖f‖ ‖g‖ := by
@@ -187,7 +188,7 @@ variable {A : Type*} [NonUnitalCommCStarAlgebra A]
 -- Mathlib.Analysis.CStarAlgebra.GelfandDuality
 open scoped CStarAlgebra in
 open Unitization in
-lemma CommCStarAlgebra.norm_add_eq {a b : A} (h : a * b = 0) :
+lemma CommCStarAlgebra.norm_add_eq_max {a b : A} (h : a * b = 0) :
     ‖a + b‖ = max ‖a‖ ‖b‖ := by
   let f := gelfandStarTransform A⁺¹ ∘ inrNonUnitalAlgHom ℂ A
   have hf : Isometry f := gelfandTransform_isometry _ |>.comp isometry_inr
@@ -197,7 +198,7 @@ lemma CommCStarAlgebra.norm_add_eq {a b : A} (h : a * b = 0) :
 
 -- Mathlib.Analysis.CStarAlgebra.GelfandDuality
 open NonUnitalStarAlgebra in
-lemma IsSelfAdjoint.norm_add_eq {A : Type*} [NonUnitalCStarAlgebra A]
+lemma IsSelfAdjoint.norm_add_eq_max {A : Type*} [NonUnitalCStarAlgebra A]
     {a b : A} (hab : a * b = 0) (ha : IsSelfAdjoint a) (hb : IsSelfAdjoint b) :
     ‖a + b‖ = max ‖a‖ ‖b‖ := by
   let S : NonUnitalStarSubalgebra ℂ A := (adjoin ℂ {a, b}).topologicalClosure
@@ -210,10 +211,19 @@ lemma IsSelfAdjoint.norm_add_eq {A : Type*} [NonUnitalCStarAlgebra A]
   let _ : NonUnitalCommCStarAlgebra S := { }
   let c : S := ⟨a, subset_closure <| subset_adjoin _ _ <| by grind⟩
   let d : S := ⟨b, subset_closure <| subset_adjoin _ _ <| by grind⟩
-  exact CommCStarAlgebra.norm_add_eq (a := c) (b := d) (h := by ext; simpa)
+  exact CommCStarAlgebra.norm_add_eq_max (a := c) (b := d) (by ext; simpa)
+
+-- Mathlib.Analysis.CStarAlgebra.GelfandDuality
+lemma IsSelfAdjoint.norm_sub_eq_max {A : Type*} [NonUnitalCStarAlgebra A]
+    {a b : A} (hab : a * b = 0) (ha : IsSelfAdjoint a) (hb : IsSelfAdjoint b) :
+    ‖a - b‖ = max ‖a‖ ‖b‖ := by
+  rw [← sq_eq_sq₀ (by positivity) (by positivity)]
+  simp only [sq, ← ha.norm_add_eq_max hab hb, ← CStarRing.norm_star_mul_self]
+  have : b * a = 0 := by simpa [ha.star_eq, hb.star_eq] using congr(star $hab)
+  simp [sub_mul, mul_sub, hb.star_eq, ha.star_eq, hab, this, add_mul, mul_add]
 
 -- still needs a better name, but will probably be private anyway
-theorem eq_zero_of_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
+theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
     a = 0 := by
@@ -222,7 +232,7 @@ theorem eq_zero_of_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
   have hxa : star x * a = 0 := by
     rw [← norm_eq_zero, ← mul_self_eq_zero, ← CStarRing.norm_star_mul_self]
     simp [hb, mul_add, mul_sub, add_mul, sub_mul]
-    grind [h.isIdempotentElem.eq] => ac
+    grind [h.isIdempotentElem.eq]
   have hax : star a * x = 0 := by simpa [star_mul] using congr(star $hxa)
   have hpa : p * (star a * a) = 0 := by
     simp only [hb, mul_add, mul_sub]
@@ -230,13 +240,23 @@ theorem eq_zero_of_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
   have : star (x + a) * (x + a) = p + star a * a := by simp [hp, mul_add, add_mul, hax, hxa]
   have : ‖p + star a * a‖ = ‖x + a‖ * ‖x + a‖ := by rw [← this, CStarRing.norm_star_mul_self]
   have hmax : ‖p + star a * a‖ ≤ 1 := by
-    rw [IsSelfAdjoint.norm_add_eq hpa (.star_mul_self x) (.star_mul_self a), sup_le_iff, hp]
+    rw [IsSelfAdjoint.star_mul_self x |>.norm_add_eq_max hpa (.star_mul_self a), sup_le_iff, hp]
     simp only [CStarRing.norm_star_mul_self]
     grw [mem_closedBall_zero_iff.mp hx.1, mem_closedBall_zero_iff.mp ha, one_mul, and_self]
-  have : ‖x + a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp (by grind)
+  have : ‖x + a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp <| by grind
   have : ‖x - a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp <| by
-    simp [sq, ← CStarRing.norm_star_mul_self, star_sub, sub_mul, mul_sub, hax, hxa, ← hp, hmax]
+    simp [sq, ← CStarRing.norm_star_mul_self, sub_mul, mul_sub, hax, hxa, ← hp, hmax]
   exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
     ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
+
+theorem IsSelfAdjoint.isIdempotentElem_iff_spectrum_subset {p : A} (hp : IsSelfAdjoint p) :
+    IsIdempotentElem p ↔ quasispectrum ℝ p ⊆ {0, 1} := by
+  refine ⟨fun h ↦ h.quasispectrum_subset, fun h ↦ ?_⟩
+  rw [IsIdempotentElem, ← cfcₙ_id' ℝ p, ← cfcₙ_mul _ _]
+  exact cfcₙ_congr fun x hx ↦ by grind
+
+theorem isIdempotentElem_star_mul_self_iff_isIdempotent_self_mul_star {x : A} :
+    IsIdempotentElem (star x * x) ↔ IsIdempotentElem (x * star x) := by
+  simp [IsSelfAdjoint.isIdempotentElem_iff_spectrum_subset, quasispectrum.mul_comm]
 
 end nonUnital
