@@ -290,9 +290,9 @@ theorem approx_unit_mul_left_eq {x a : A} [PartialOrder A] [StarOrderedRing A]
     (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     a - a * (star x * x) - a * (x * star x) + a * (x * star x) * (star x * x) = 0 := by
   let u := CStarAlgebra.approximateUnit A
-  have I : ∀ s ∈ u, ∀ t ∈ s, t - t * (star x * x) - (x * star x) * t
+  have I : ∀ t : A, t - t * (star x * x) - (x * star x) * t
       + (x * star x) * t * (star x * x) = 0 := by
-    intro s hs t ht
+    intro t
     refine eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall
       (a := t - t * (star x * x) - (x * star x) * t + (x * star x) * t * (star x * x)) (b := t)
       hx rfl
@@ -309,6 +309,15 @@ theorem approx_unit_mul_left_eq {x a : A} [PartialOrder A] [StarOrderedRing A]
     (𝓝 (a * (x * star x) * (star x * x))) :=
       Tendsto.mul_const (star x * x) (left (a * (x * star x)))
   have overall := Tendsto.add (Tendsto.sub (Tendsto.sub first second) third) fourth
+  have (x_1 : A) : a * x_1 - a * (x_1 * (star x * x)) - a * (x * star x * x_1)
+      + a * (x * star x) * x_1 * (star x * x) = 0 := by
+    simp only [← mul_sub, mul_assoc, ← mul_add] at *
+    exact mul_eq_zero_of_right a (I x_1)
+  simp [this] at overall
+  grind
+
+
+
 
 
 
