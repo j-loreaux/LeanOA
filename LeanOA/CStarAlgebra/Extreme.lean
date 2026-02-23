@@ -285,10 +285,10 @@ theorem isIdempotentElem_star_mul_self_iff_isIdempotent_self_mul_star {x : A} :
     IsIdempotentElem (star x * x) ↔ IsIdempotentElem (x * star x) := by
   simp [isIdempotentElem_iff_quasispectrum_subset ℝ, quasispectrum.mul_comm]
 
-open Filter in
+open Filter Topology in
 theorem approx_unit_mul_left_eq {x a : A} [PartialOrder A] [StarOrderedRing A]
     (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
-    a = a * (star x * x) + a * (x * star x) - a * (x * star x) * (star x * x) := by
+    a - a * (star x * x) - a * (x * star x) + a * (x * star x) * (star x * x) = 0 := by
   let u := CStarAlgebra.approximateUnit A
   have I : ∀ s ∈ u, ∀ t ∈ s, t - t * (star x * x) - (x * star x) * t
       + (x * star x) * t * (star x * x) = 0 := by
@@ -300,6 +300,17 @@ theorem approx_unit_mul_left_eq {x a : A} [PartialOrder A] [StarOrderedRing A]
     (IsIncreasingApproximateUnit.toIsApproximateUnit <| CStarAlgebra.increasingApproximateUnit A)
   have right := IsApproximateUnit.tendsto_mul_right
     (IsIncreasingApproximateUnit.toIsApproximateUnit <| CStarAlgebra.increasingApproximateUnit A)
+  have first : Tendsto (a * ·) u (𝓝 a) := left a
+  have second : Tendsto (fun j ↦ a * (j * (star x * x))) u (𝓝 (a * (star x * x))) :=
+    Tendsto.const_mul a (right (star x * x))
+  have third : Tendsto (fun j ↦ a * ((x * star x) * j)) u (𝓝 (a * (x * star x))) :=
+    Tendsto.const_mul a (left (x * star x))
+  have fourth : Tendsto (fun j ↦ a * (x * star x) * j * (star x * x)) u
+    (𝓝 (a * (x * star x) * (star x * x))) :=
+      Tendsto.mul_const (star x * x) (left (a * (x * star x)))
+  have overall := Tendsto.add (Tendsto.sub (Tendsto.sub first second) third) fourth
+
+
 
 
 
