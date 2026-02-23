@@ -6,7 +6,7 @@ import LeanOA.Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import LeanOA.Mathlib.Misc
 import Mathlib.Algebra.Group.Idempotent
-import Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 
 open Set Metric Complex CFC
 open scoped ComplexStarModule
@@ -283,26 +283,24 @@ theorem isIdempotentElem_star_mul_self_iff_isIdempotent_self_mul_star {x : A} :
     IsIdempotentElem (star x * x) ↔ IsIdempotentElem (x * star x) := by
   simp [isIdempotentElem_iff_quasispectrum_subset ℝ, quasispectrum.mul_comm]
 
-open Filter Topology in
+open CStarAlgebra Filter Topology in
 theorem approx_unit_mul_left_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     a - a * (star x * x) - a * (x * star x) + a * (x * star x) * (star x * x) = 0 := by
-  letI := CStarAlgebra.spectralOrder A
-  letI := CStarAlgebra.spectralOrderedRing A
-  let u := CStarAlgebra.approximateUnit A
+  let := spectralOrder A
+  let := spectralOrderedRing A
+  let u := increasingApproximateUnit A
   have h : ∀ t : A, t - t * (star x * x) - (x * star x) * t + (x * star x) * t * (star x * x) = 0 :=
     fun t ↦ eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall hx rfl
-  have left := IsApproximateUnit.tendsto_mul_left
-    (IsIncreasingApproximateUnit.toIsApproximateUnit <| CStarAlgebra.increasingApproximateUnit A)
-  have right := IsApproximateUnit.tendsto_mul_right
-    (IsIncreasingApproximateUnit.toIsApproximateUnit <| CStarAlgebra.increasingApproximateUnit A)
-  have overall := (((left a).sub (.const_mul a (right (star x * x)))).sub
-    (.const_mul a (left (x * star x)))).add (.mul_const (star x * x) (left (a * (x * star x))))
+  have overall := (((u.tendsto_mul_left a).sub
+    (.const_mul a (u.tendsto_mul_right (star x * x)))).sub
+    (.const_mul a (u.tendsto_mul_left (x * star x)))).add
+    (.mul_const (star x * x) (u.tendsto_mul_left (a * (x * star x))))
   have (x_1 : A) : a * x_1 - a * (x_1 * (star x * x)) - a * (x * star x * x_1) +
       a * (x * star x) * x_1 * (star x * x) = 0 := by
     simp only [← mul_sub, mul_assoc, ← mul_add] at *
     exact mul_eq_zero_of_right a (h x_1)
-  simp [this] at overall
-  sorry --this is the last thing to do. What you just sent should do it...
+  symm
+  simpa [this] using overall
 
 theorem approx_unit_mul_right_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     a - (star x * x) * a - (x * star x) * a + (x * star x) * (star x * x) * a = 0 := by
