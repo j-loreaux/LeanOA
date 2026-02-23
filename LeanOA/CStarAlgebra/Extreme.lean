@@ -5,6 +5,8 @@ import Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import LeanOA.Mathlib.Misc
+import Mathlib.Algebra.Group.Idempotent
+import Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 
 open Set Metric Complex CFC
 open scoped ComplexStarModule
@@ -183,6 +185,8 @@ lemma ContinuousMap.norm_add_eq_max [CompactSpace X] {f g : C(X, R)} (h : f * g 
 
 end Functions
 
+section NonUnitalCommCStarAlgebra
+
 variable {A : Type*} [NonUnitalCommCStarAlgebra A]
 
 -- Mathlib.Analysis.CStarAlgebra.GelfandDuality
@@ -222,21 +226,26 @@ lemma IsSelfAdjoint.norm_sub_eq_max {A : Type*} [NonUnitalCStarAlgebra A]
   have : b * a = 0 := by simpa [ha.star_eq, hb.star_eq] using congr(star $hab)
   simp [sub_mul, mul_sub, hb.star_eq, ha.star_eq, hab, this, add_mul, mul_add]
 
+end NonUnitalCommCStarAlgebra
+
+variable {A : Type*} [NonUnitalCommCStarAlgebra A]
+
 -- still needs a better name, but will probably be private anyway
 theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
     a = 0 := by
-  have h := isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx
+  have hp := isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx
+  have hq := isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall hx
   set p := star x * x with hp
   have hxa : star x * a = 0 := by
     rw [← norm_eq_zero, ← mul_self_eq_zero, ← CStarRing.norm_star_mul_self]
     simp [hb, mul_add, mul_sub, add_mul, sub_mul]
-    grind [h.isIdempotentElem.eq]
+    grind
   have hax : star a * x = 0 := by simpa [star_mul] using congr(star $hxa)
   have hpa : p * (star a * a) = 0 := by
     simp only [hb, mul_add, mul_sub]
-    grind [h.isIdempotentElem.eq]
+    grind
   have : star (x + a) * (x + a) = p + star a * a := by simp [hp, mul_add, add_mul, hax, hxa]
   have : ‖p + star a * a‖ = ‖x + a‖ * ‖x + a‖ := by rw [← this, CStarRing.norm_star_mul_self]
   have hmax : ‖p + star a * a‖ ≤ 1 := by
@@ -248,6 +257,20 @@ theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     simp [sq, ← CStarRing.norm_star_mul_self, sub_mul, mul_sub, hax, hxa, ← hp, hmax]
   exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
     ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
+
+theorem eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall {x a b : A}
+    (hx : x ∈ extremePoints ℝ (closedBall 0 1))
+    (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
+    a = 0 := by
+  by_cases h : a = 0
+  · assumption
+  · have I : ‖a‖⁻¹ • a = (‖a‖⁻¹ • b) - (‖a‖⁻¹ • b) * (star x * x)
+        - (x * star x) * (‖a‖⁻¹ • b) + (x * star x) * (‖a‖⁻¹ • b) * (star x * x) := by
+      nth_rw 2 [hb]
+      grind [mul_smul_comm, smul_sub, smul_add, mul_assoc]
+    have := eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
+           hx (inv_norm_smul_mem_unitClosedBall a) I
+    simpa
 
 theorem isIdempotentElem_iff_quasispectrum_subset (R : Type*) {A : Type*} {p : A → Prop} [Field R]
     [StarRing R] [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A]
@@ -261,5 +284,23 @@ theorem isIdempotentElem_iff_quasispectrum_subset (R : Type*) {A : Type*} {p : A
 theorem isIdempotentElem_star_mul_self_iff_isIdempotent_self_mul_star {x : A} :
     IsIdempotentElem (star x * x) ↔ IsIdempotentElem (x * star x) := by
   simp [isIdempotentElem_iff_quasispectrum_subset ℝ, quasispectrum.mul_comm]
+
+open Filter in
+theorem approx_unit_mul_left_eq {x a : A} [PartialOrder A] [StarOrderedRing A]
+    (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+    a = a * (star x * x) + a * (x * star x) - a * (x * star x) * (star x * x) := by
+  let u := CStarAlgebra.approximateUnit A
+  have I : ∀ s ∈ u, ∀ t ∈ s, t - t * (star x * x) - (x * star x) * t
+      + (x * star x) * t * (star x * x) = 0 := by
+    intro s hs t ht
+    refine eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall
+      (a := t - t * (star x * x) - (x * star x) * t + (x * star x) * t * (star x * x)) (b := t)
+      hx rfl
+  have left := IsApproximateUnit.tendsto_mul_left
+    (IsIncreasingApproximateUnit.toIsApproximateUnit <| CStarAlgebra.increasingApproximateUnit A)
+  have right := IsApproximateUnit.tendsto_mul_right
+    (IsIncreasingApproximateUnit.toIsApproximateUnit <| CStarAlgebra.increasingApproximateUnit A)
+
+
 
 end nonUnital
