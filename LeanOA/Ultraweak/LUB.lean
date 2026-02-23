@@ -4,6 +4,172 @@ import LeanOA.ComplexOrder
 import LeanOA.StarOrderedRing
 import LeanOA.CFC
 
+variable {R A : Type*} [CommSemiring R] [NonUnitalRing A] [Module R A]
+  [StarRing R] [StarRing A] [IsScalarTower R A A] [SMulCommClass R A A] [StarModule R A]
+
+class NonUnitalStarSubalgebra.IsMasa (B : NonUnitalStarSubalgebra R A) : Prop where
+  comm : ∀ a ∈ B, ∀ b ∈ B, a * b = b * a
+  maximal (C : NonUnitalStarSubalgebra R A) (hC : ∀ a ∈ C, ∀ b ∈ C, a * b = b * a)
+      (hBC : B ≤ C) : C ≤ B
+
+theorem exists_le_masa (B : {C : NonUnitalStarSubalgebra R A // (∀ x ∈ C, ∀ y ∈ C, x * y = y * x)}) :
+    ∃ (C : NonUnitalStarSubalgebra R A), B ≤ C ∧ C.IsMasa  := by
+  obtain ⟨C, hC⟩ := by
+    refine zorn_le (α := {C : NonUnitalStarSubalgebra R A // (∀ x ∈ C, ∀ y ∈ C, x * y = y * x) ∧ B ≤ C}) ?_
+    intro chain hchain
+    obtain (rfl | h) := chain.eq_empty_or_nonempty
+    · exact ⟨⟨B.val, B.prop, le_rfl⟩, by simp⟩
+    · have := h.to_subtype
+      have hdir : Directed (· ≤ ·) fun S : chain ↦ S.val.val :=
+        hchain.directedOn.directed_val.mono_comp _ (by simp)
+      let bound : NonUnitalStarSubalgebra R A := ⨆ S : chain, S
+      refine ⟨⟨bound, ?_, ?_⟩, ?_⟩
+      · simp only [bound]
+        intro a ha b hb
+        rw [← SetLike.mem_coe, NonUnitalStarSubalgebra.coe_iSup_of_directed hdir,
+          Set.mem_iUnion] at ha hb
+        obtain ⟨S, hS⟩ := ha
+        obtain ⟨T, hT⟩ := hb
+        obtain ⟨V, hV, hSV, hTV⟩ := hchain.directedOn _ S.prop _ T.prop
+        exact V.prop.1 _ (hSV hS) _ (hTV hT)
+      · exact Classical.arbitrary chain |>.val.prop.2 |>.trans <|
+          le_iSup (fun S : chain ↦ S.val.val) _
+      · intro S hS
+        lift S to chain using hS
+        exact le_iSup (fun S : chain ↦ S.val.val) _
+  exact ⟨C, C.prop.2, ⟨C.prop.1, fun S h_comm hCS ↦ @hC ⟨S, h_comm, C.prop.2.trans hCS⟩ hCS⟩⟩
+
+
+#exit
+namespace OrderIso
+
+variable {α β : Type*} [Preorder α] [Preorder β]
+
+/-- To show that `f : α →o β` and `g : β →o α` make up an order isomorphism it is enough to show
+that `g` is the inverse of `f`. -/
+@[simps apply]
+def ofHomInv' (f : α →o β) (g : β →o α) (h₁ : f.comp g = .id) (h₂ : g.comp f = .id) :
+    α ≃o β where
+  toFun := f
+  invFun := g
+  left_inv := DFunLike.congr_fun h₂
+  right_inv := DFunLike.congr_fun h₁
+  map_rel_iff' :=
+    { mp h := by simpa [h₂] using show g.comp f _ ≤ g.comp f _ from map_rel g h
+      mpr h := f.monotone h }
+
+@[simp]
+theorem ofHomInv'_symm_apply (f : α →o β) (g : β →o α) (h₁ : f.comp g = .id) (h₂ : g.comp f = .id)
+    (a : β) : (ofHomInv f g h₁ h₂).symm a = g a := rfl
+
+end OrderIso
+
+namespace OrderHom
+
+variable {α : Type*} [Preorder α]
+
+instance : Mul (α →o α) where mul f g := f.comp g
+instance : One (α →o α) where one := .id
+
+@[simp] lemma mul_apply (f g : α →o α) (x : α) : (f * g) x = f (g x) := rfl
+@[simp] lemma one_apply (x : α) : (1 : α →o α) x = x := rfl
+
+lemma mul_eq_comp (f g : α →o α) : (f * g : α →o α) = f.comp g := rfl
+lemma one_eq_id : (1 : α →o α) = .id := rfl
+
+instance : Monoid (α →o α) where
+  mul_assoc f g h := by simp [DFunLike.ext_iff]
+  one_mul f := by simp [DFunLike.ext_iff]
+  mul_one f := by simp [DFunLike.ext_iff]
+
+end OrderHom
+
+namespace OrderIso
+
+variable {α : Type*} [Preorder α]
+
+instance : Mul (α ≃o α) where mul f g := g.trans f
+instance : One (α ≃o α) where one := refl α
+instance : Inv (α ≃o α) where inv := symm
+
+@[simp] lemma mul_apply (f g : α ≃o α) (x : α) : (f * g) x = f (g x) := rfl
+@[simp] lemma one_apply (x : α) : (1 : α ≃o α) x = x := rfl
+@[simp] lemma inv_apply' (f : α ≃o α) (x : α) : f⁻¹ x = f.symm x := rfl
+
+lemma mul_eq_trans (f g : α ≃o α) : (f * g : α ≃o α) = g.trans f := rfl
+lemma one_eq_refl : (1 : α ≃o α) = refl α := rfl
+lemma inv_eq_symm (f : α ≃o α) : f⁻¹ = f.symm := rfl
+
+instance : Group (α ≃o α) where
+  mul_assoc f g h := by simp [DFunLike.ext_iff]
+  one_mul f := by simp [DFunLike.ext_iff]
+  mul_one f := by simp [DFunLike.ext_iff]
+  inv_mul_cancel f := by simp [DFunLike.ext_iff]
+
+end OrderIso
+
+namespace StarOrderedRing
+
+section NonUnital
+
+variable {R : Type*} [NonUnitalRing R] [StarRing R] [PartialOrder R] [StarOrderedRing R]
+
+/-- The map `x ↦ r * x * star r` as an order homomorphism in a star-ordered ring. -/
+@[simps]
+def conjOrderHom (r : R) : R →o R where
+  toFun x := r * x * star r
+  monotone' _ _ h := star_right_conjugate_le_conjugate h r
+
+lemma conjOrderHom_mul (r s : R) :
+    conjOrderHom (r * s) = (conjOrderHom r).comp (conjOrderHom s) := by
+  ext; simp [mul_assoc]
+
+/-- The map `r x ↦ r * x * star r` as a semigroup homomorphism from `R` into `R →o R`. -/
+@[simps]
+def conjOrderHomMulHom : R →ₙ* R →o R where
+  toFun := conjOrderHom
+  map_mul' := conjOrderHom_mul
+
+end NonUnital
+
+section Unital
+
+variable {R : Type*} [Ring R] [StarRing R] [PartialOrder R] [StarOrderedRing R]
+
+@[simp]
+lemma conjOrderHom_one : conjOrderHom (1 : R) = .id := by ext; simp
+
+/-- The map `r x ↦ r * x * star r` as a monoid homomorphism from `R` into `R →o R`. -/
+@[simps]
+def conjOrderHomMonoidHom : R →* R →o R where
+  toFun := conjOrderHom
+  map_mul' := conjOrderHom_mul
+  map_one' := conjOrderHom_one
+
+@[simp]
+lemma toMulHom_conjOrderHomMonoidHom :
+    (conjOrderHomMonoidHom (R := R)).toMulHom = conjOrderHomMulHom :=
+  rfl
+
+/-- The map  `r x ↦ r * x * star r` as a group homomorphism from `Rˣ` into `R ≃o R`
+in a star-ordered ring `R`. -/
+def conjUnitsOrderIso : Rˣ →* (R ≃o R) where
+  toFun r := .ofHomInv' (conjOrderHomMonoidHom (r : R)) (conjOrderHomMonoidHom (↑r⁻¹ : R))
+    (by rw [← OrderHom.mul_eq_comp, ← map_mul]; simp)
+    (by rw [← OrderHom.mul_eq_comp, ← map_mul]; simp)
+  map_mul' _ _ := by ext; simp [mul_assoc]
+  map_one' := by ext; simp
+
+lemma _root_.IsLUB.conjugate_star_right_of_isUnit {s : Set R} {x : R}
+      (h : IsLUB s x) (r : R) (hr : IsUnit r) :
+    IsLUB (conjOrderHom r '' s) (r * x * star r) := by
+  lift r to Rˣ using hr
+  exact (conjUnitsOrderIso r).isLUB_image'.mpr h
+
+end Unital
+
+--- we could also turn `conjOrderHom` into a `PositiveLinearMap`, which we should do.
+end StarOrderedRing
 
 variable {M P : Type*} [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M]
 variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P] [CompleteSpace P]
@@ -63,6 +229,22 @@ private lemma cauchy_weakE_iff_forall_posCLM {l : Filter (WeakE M P)} :
     simpa using (ihφ.prod ihψ).mono (tendsto_map.prodMk tendsto_map) |>.map uniformContinuous_add
   | smul a φ hφ ihφ => simpa using ihφ.map <| uniformContinuous_const_smul a
 
+open Filter Topology in
+private lemma tendsto_weakE_iff_forall_posCLM {α : Type*} [TopologicalSpace α]
+    {l : Filter α} (x : WeakE M P) {f : α → WeakE M P} :
+    Tendsto f l (𝓝 x) ↔ ∀ φ : σ(M, P) →P[ℂ] ℂ,
+      Tendsto (fun m ↦ φ (toUltraweak ℂ P (weakEEquiv M P (f m)))) l
+        (𝓝 (φ (toUltraweak ℂ P (weakEEquiv M P x)))) := by
+  rw [WeakBilin.tendsto_iff_forall_eval_tendsto (fromEₗ M P) (fromEₗ_injective M P)]
+  refine ⟨fun h φ ↦ h ⟨φ.toContinuousLinearMap, Submodule.subset_span <| by simp⟩,
+    fun h ⟨φ, hφ⟩ ↦ ?_⟩
+  simp only [fromEₗ_apply_apply]
+  induction hφ using Submodule.span_induction with
+  | mem φ hφ => obtain ⟨φ, hφ, rfl⟩ := hφ; exact h φ
+  | zero => exact h 0
+  | add φ ψ hφ hψ ihφ ihψ => simpa using ihφ.add ihψ
+  | smul a φ hφ ihφ => simpa using ihφ.const_smul a
+
 -- ugh, `WeakBilin` has some nasty defeq abuse.
 -- we should get this out of tactic mode as a proof.
 private noncomputable def weakEUniformEquiv (r : ℝ) :
@@ -79,6 +261,12 @@ private noncomputable def weakEUniformEquiv (r : ℝ) :
   rw [continuous_induced_rng, Function.comp_def]
   refine WeakBilin.continuous_of_continuous_eval _ fun ⟨φ, hφ⟩ ↦ ?_
   exact (map_continuous φ).comp continuous_subtype_val
+
+private lemma isCompact_weakE_closedBall (r : ℝ) :
+    IsCompact (weakEEquiv M P ⁻¹' Metric.closedBall (0 : M) r) := by
+  have := Ultraweak.isCompact_closedBall ℂ P (0 : M) r
+  rw [isCompact_iff_compactSpace] at this ⊢
+  exact weakEUniformEquiv M P r |>.toHomeomorph.compactSpace
 
 private lemma uniformContinuousOn_toUltraweak_comp_weakEEquiv (r : ℝ) :
     UniformContinuousOn (toUltraweak ℂ P ∘ weakEEquiv M P)
@@ -108,6 +296,60 @@ lemma cauchy_of_forall_posCLM_cauchy_map {l : Filter σ(M, P)} {r : ℝ}
       mapsTo_weakEEquiv_symm_comp_ofUltraweak_preimage_closedBall M P r |>.tendsto
   simpa using key.map_of_le
     (uniformContinuousOn_toUltraweak_comp_weakEEquiv M P r) hlr'
+
+open Filter in
+/-- A bounded filter `l` in `σ(M, P)` is cauchy if and only if `map φ l` is cauchy in `ℂ`
+for every positive continuous linear functional `φ`. -/
+lemma cauchy_of_forall_posCLM_cauchy_map' {l : Filter σ(M, P)} {s : Set M}
+    (hs : Bornology.IsBounded s) (hlr : l ≤ 𝓟 (ofUltraweak ⁻¹' s))
+    (hl : ∀ φ : σ(M, P) →P[ℂ] ℂ, Cauchy (map φ l)) :
+    Cauchy l := by
+  obtain ⟨r, hr⟩ := hs |>.subset_closedBall 0
+  replace hlr : l ≤ 𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r) := hlr.trans <| by simpa
+  have key : Cauchy (map ((weakEEquiv M P).symm ∘ ofUltraweak) l) := by
+    rw [cauchy_weakE_iff_forall_posCLM]
+    simpa [Function.comp_def]
+  have hlr' : map ((weakEEquiv M P).symm ∘ ofUltraweak) l ≤
+      𝓟 (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r)) :=
+    map_mono hlr |>.trans <|
+      mapsTo_weakEEquiv_symm_comp_ofUltraweak_preimage_closedBall M P r |>.tendsto
+  simpa using key.map_of_le
+    (uniformContinuousOn_toUltraweak_comp_weakEEquiv M P r) hlr'
+
+attribute [push] Filter.not_neBot
+attribute [push ←] Filter.neBot_iff
+
+#check tendsto_nhdsWithin_iff
+
+-- this proof is totally gross
+open Filter Topology in
+private lemma tendsto_of_forall_posCLM {α : Type*} [TopologicalSpace α]
+    {l : Filter α} (x : σ(M, P)) {f : α → σ(M, P)} {r : ℝ}
+    (hfl : Tendsto f l (𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r)))
+    (hf : ∀ φ : σ(M, P) →P[ℂ] ℂ, Tendsto (fun m ↦ φ (f m)) l (𝓝 (φ x))) :
+    Tendsto f l (𝓝 x) := by
+  by_cases! h_bot : l = ⊥
+  · simp [h_bot]
+  have key : Tendsto (fun m : α ↦ (weakEEquiv M P).symm (ofUltraweak (f m))) l
+      (𝓝 ((weakEEquiv M P).symm (ofUltraweak x))) := by
+    rw [tendsto_weakE_iff_forall_posCLM]
+    simpa [Function.comp_def]
+  have hfl' : Tendsto (fun m : α ↦ (weakEEquiv M P).symm (ofUltraweak (f m))) l
+      (𝓟 (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r))) :=
+    map_mono hfl |>.trans <|
+      mapsTo_weakEEquiv_symm_comp_ofUltraweak_preimage_closedBall M P r |>.tendsto
+  have := (uniformContinuousOn_toUltraweak_comp_weakEEquiv M P r).continuousOn
+  have hx : (weakEEquiv M P).symm (ofUltraweak x) ∈
+      weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r) :=
+    isCompact_weakE_closedBall M P r |>.isClosed.mem_of_tendsto key <| by
+      simpa using hfl'
+  have := this _ hx |>.tendsto
+  have key2 : Tendsto (fun m : α ↦ (weakEEquiv M P).symm (ofUltraweak (f m))) l
+      (𝓝[weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r)]
+        ((weakEEquiv M P).symm (ofUltraweak x))) := by
+    rw [tendsto_nhdsWithin_iff]
+    refine ⟨key, by simpa using hfl'⟩
+  simpa using this.comp key2
 
 open scoped ComplexStarModule
 
@@ -197,8 +439,6 @@ noncomputable instance : ConditionallyCompletePartialOrderSup σ(M, P) where
     rw [dif_pos (by grind)]
     exact (DirectedOn.exists_isLUB M P s h_dir h_non hbdd).choose_spec.1
 
-attribute [push] Filter.not_neBot
-attribute [push ←] Filter.neBot_iff
 
 open Filter in
 /-- An increasing net of elements which is bounded above in `σ(M, P)` converges
@@ -216,5 +456,60 @@ instance : SupConvergenceClass σ(M, P) where
       exact h₂
     obtain ⟨u, hu₁, hu₂⟩ := DirectedOn.exists_isLUB M P s h₂ h₁ ⟨_, hsa.1⟩
     exact hsa.unique hu₁ ▸ hu₂
+
+open StarOrderedRing
+lemma _root_.IsLUB.conjugate_star_right_of_isUnit' {R : Type*} [Ring R]
+      [StarRing R] [PartialOrder R] [StarOrderedRing R] {s : Set R} {x : R}
+      (h : IsLUB s x) (r : R) (hr : IsUnit r) :
+    IsLUB (conjOrderHom r '' s) (r * x * star r) := by
+  lift r to Rˣ using hr
+  exact (conjUnitsOrderIso r).isLUB_image'.mpr h
+
+open Filter
+lemma IsLUB.conjugate_star_right (a u : σ(M, P)) (s : Set σ(M, P))
+    (hd : DirectedOn (· ≤ ·) s) (hnon : s.Nonempty) (hbd : BddAbove s)
+    (h : IsLUB s u) : IsLUB (conjOrderHom a '' s) (a * u * star a) := by
+  have hd' : DirectedOn (· ≤ ·) (conjOrderHom a '' s) :=
+    RelHomClass.directedOn hd
+  have hnon' : (conjOrderHom a '' s).Nonempty := hnon.image _
+  have hbd' : BddAbove (conjOrderHom a '' s) := (conjOrderHom a).monotone.map_bddAbove hbd
+  have isLUB := hd'.isLUB_csSup hnon' hbd'
+  have := tendsto_atTop_isLUB (Subtype.mono_coe (conjOrderHom a '' s))
+    (Subtype.range_coe (s := conjOrderHom a '' s) ▸ isLUB)
+  simp only [Subtype.range_coe_subtype, Set.setOf_mem_eq] at this
+  have hnon'' := hnon'.to_subtype
+  have hd'' := directedOn_iff_isDirectedOrder.mp hd'
+  have neBot : (atTop : Filter (conjOrderHom a '' s)).NeBot := atTop_neBot
+  convert isLUB
+  refine tendsto_nhds_unique ?_ this
+
+  sorry
+
+-- on master this is about `Subtype t` ... gross.
+theorem _root_.Subtype.mono_coe' {α : Type*} [Preorder α] (t : Set α) : Monotone ((↑) : t → α) :=
+  fun _ _ ↦ id
+
+open Topology
+lemma foo (a u : σ(M, P)) (s : Set σ(M, P))
+    (hd : DirectedOn (· ≤ ·) s) (hnon : s.Nonempty) (hbd : BddAbove s)
+    (h : IsLUB s u) : IsLUB (conjOrderHom a '' s) (a * u * star a) := by
+  have : Nonempty s := hnon.to_subtype
+  have : IsDirectedOrder s := directedOn_iff_isDirectedOrder.mp hd
+  have h₁ : Tendsto (· : s → σ(M, P)) atTop (𝓝 u) :=
+    tendsto_atTop_isLUB (Subtype.mono_coe s) <| Subtype.range_coe ▸ h
+  have h₂ (b : σ(M, P)) (hb : IsUnit b) :
+      Tendsto (fun x : s ↦ b * x * star b) atTop (𝓝 (b * u * star b)) := by
+    refine tendsto_atTop_isLUB (conjOrderHom b |>.monotone.comp <| Subtype.mono_coe' s) ?_
+    convert h.conjugate_star_right_of_isUnit' b hb
+    ext
+    simp
+  suffices Tendsto (fun x : s ↦ a * x * star a) atTop (𝓝 (a * u * star a)) by
+    convert isLUB_of_tendsto_atTop' (conjOrderHom a |>.monotone.comp <| Subtype.mono_coe' s) this
+    ext
+    simp
+
+  sorry
+
+
 
 end Ultraweak
