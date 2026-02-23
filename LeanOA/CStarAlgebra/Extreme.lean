@@ -249,14 +249,17 @@ theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
   exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
     ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
 
-theorem IsSelfAdjoint.isIdempotentElem_iff_quasispectrum_subset {p : A} (hp : IsSelfAdjoint p) :
-    IsIdempotentElem p ↔ quasispectrum ℝ p ⊆ {0, 1} := by
+theorem isIdempotentElem_iff_quasispectrum_subset (R : Type*) {A : Type*} {p : A → Prop} [Field R]
+    [StarRing R] [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A]
+    [StarRing A] [TopologicalSpace A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
+    [NonUnitalContinuousFunctionalCalculus R A p] (a : A) (ha : p a) :
+    IsIdempotentElem a ↔ quasispectrum R a ⊆ {0, 1} := by
   refine ⟨IsIdempotentElem.quasispectrum_subset, fun h ↦ ?_⟩
-  rw [IsIdempotentElem, ← cfcₙ_id' ℝ p, ← cfcₙ_mul _ _]
+  rw [IsIdempotentElem, ← cfcₙ_id' R a, ← cfcₙ_mul _ _]
   exact cfcₙ_congr fun x hx ↦ by grind
 
 theorem isIdempotentElem_star_mul_self_iff_isIdempotent_self_mul_star {x : A} :
     IsIdempotentElem (star x * x) ↔ IsIdempotentElem (x * star x) := by
-  simp [IsSelfAdjoint.isIdempotentElem_iff_quasispectrum_subset, quasispectrum.mul_comm]
+  simp [isIdempotentElem_iff_quasispectrum_subset ℝ, quasispectrum.mul_comm]
 
 end nonUnital
