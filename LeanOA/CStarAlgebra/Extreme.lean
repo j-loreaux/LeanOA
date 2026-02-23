@@ -316,12 +316,36 @@ theorem approx_unit_mul_left_eq {x a : A} [PartialOrder A] [StarOrderedRing A]
   simp [this] at overall
   grind
 
+/- The following is way to specific. Maybe it's better to prove a general result about
+the image of an open segment under star being an open segment? -/
+
+/- Generalize and rename. -/
+lemma star_extreme_of_extreme {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+    star x ∈ extremePoints ℝ (closedBall 0 1) := by
+  refine mem_extremePoints.mpr ?_
+  constructor
+  · refine mem_closedBall_zero_iff.mpr ?_
+    simpa [norm_star] using hx.1
+  · intro r hr s hs hrs
+    obtain ⟨a, b, ha, hb, f, g⟩ := hrs
+    have hsa : a = star a := Real.ext_cauchy rfl
+    have hsb : b = star b := Real.ext_cauchy rfl
+    rw [← star_star r, ← star_star s, hsa, hsb, ← star_smul, ← star_smul, ← star_add] at g
+    simp only [star_inj] at g
+    have rball : star r ∈ closedBall 0 1 := by simpa [norm_star] using hr
+    have sball : star s ∈ closedBall 0 1 := by simpa [norm_star] using hs
+    have H := mem_extremePoints.mp hx
+    have I := H.2 (star r) rball (star s) sball
+    have J : ∃ (a b : ℝ) , 0 < a ∧ 0 < b ∧ a + b = 1 ∧ (a • star r + b • star s = x) :=
+      ⟨a, b, ha, hb, f, g⟩
+    have := I J
+    constructor <;> grind [star_eq_iff_star_eq]
+
 open Filter Topology in
 theorem approx_unit_mul_right_eq {x a : A} [PartialOrder A] [StarOrderedRing A]
     (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     a - (star x * x) * a - (x * star x) * a + (x * star x) * (star x * x) * a = 0 := by
-  have hxstar : star x ∈ extremePoints ℝ (closedBall 0 1) := by sorry
-  have := approx_unit_mul_left_eq (x := star x) (a := star a) (hx := hxstar)
+  have := approx_unit_mul_left_eq (x := star x) (a := star a) (hx := star_extreme_of_extreme hx)
   rw [← star_inj]
   grind [star_add, ← star_zero, star_mul, star_sub]
 
