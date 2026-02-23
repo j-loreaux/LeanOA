@@ -302,7 +302,7 @@ theorem approx_unit_mul_left_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedB
     simp only [← mul_sub, mul_assoc, ← mul_add] at *
     exact mul_eq_zero_of_right a (h x_1)
   simp [this] at overall
-  sorry
+  sorry --this is the last thing to do. What you just sent should do it...
 
 theorem approx_unit_mul_right_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     a - (star x * x) * a - (x * star x) * a + (x * star x) * (star x * x) * a = 0 := by
