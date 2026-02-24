@@ -1,27 +1,26 @@
 import Mathlib.Analysis.Complex.Basic
 
--- Can go in `Algebra.Order.Star.Basic`
-lemma IsSelfAdjoint.iff_of_le {R : Type*} [NonUnitalRing R] [StarRing R]
-    [PartialOrder R] [StarOrderedRing R] {a b : R} (hab : a ≤ b) :
-    IsSelfAdjoint a ↔ IsSelfAdjoint b := by
-  replace hab := (sub_nonneg.mpr hab).isSelfAdjoint
-  exact ⟨fun ha ↦ by simpa using hab.add ha, fun hb ↦ by simpa using (hab.sub hb).neg⟩
+namespace Complex
 
-alias ⟨IsSelfAdjoint.of_ge, IsSelfAdjoint.of_le⟩ := IsSelfAdjoint.iff_of_le
+open Metric in
+/-- A subset of circle centered at the origin in `ℂ` of radius `r` is a subset of
+the `slitPlane` if it does not contain `-r`. -/
+lemma subset_slitPlane_of_subset_sphere {r : ℝ} {s : Set ℂ} (hs : s ⊆ sphere 0 r)
+      (hr : (-r : ℂ) ∉ s) :
+      s ⊆ slitPlane := by
+  intro z hz
+  rw [Complex.mem_slitPlane_iff_not_le_zero]
+  by_contra! h
+  have ⟨_, h_im⟩ := h
+  apply hr
+  convert hz
+  rw [← Complex.re_eq_neg_norm] at h
+  rw [← Complex.re_add_im z, h_im, h]
+  simpa using (hs hz).symm
+
+end Complex
 
 open scoped ComplexStarModule
-
--- can go in `LinearAlgebra.Complex.Module`
-namespace ComplexStarModule
-
-variable {M : Type*} [AddCommGroup M] [StarAddMonoid M] [Module ℂ M] [StarModule ℂ M] {x y : M}
-
-lemma ext (h₁ : ℜ x = ℜ y) (h₂ : ℑ x = ℑ y) : x = y := by
-  rw [← realPart_add_I_smul_imaginaryPart x, ← realPart_add_I_smul_imaginaryPart y, h₁, h₂]
-
-lemma ext_iff : x = y ↔ ℜ x = ℜ y ∧ ℑ x = ℑ y := ⟨by grind, fun h ↦ ext h.1 h.2⟩
-
-end ComplexStarModule
 
 section StarOrderedRing
 

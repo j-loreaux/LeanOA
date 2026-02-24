@@ -1,4 +1,4 @@
-import LeanOA.StarOrderedRing
+import LeanOA.Mathlib.Algebra.Order.Star.Basic
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart.Isometric
 
