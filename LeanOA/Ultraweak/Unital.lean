@@ -12,20 +12,36 @@ This may not deserve its own file, but here it is, provisionally.
 open Set Metric WeakBilin ComplexOrder
 open scoped Ultraweak
 
-variable {M P : Type*}
+section CStarFromExtreme
 
-theorem exists_extremePoint_closedBall_of_ultraweak [NonUnitalCStarAlgebra M] [NormedAddCommGroup P]
-  [NormedSpace ℂ P] [Predual ℂ M P] :
+variable {M P : Type*} [NonUnitalCStarAlgebra M] [NormedAddCommGroup P]
+  [NormedSpace ℂ P] [Predual ℂ M P]
+
+include P
+
+theorem exists_extremePoint_closedBall_of_ultraweak :
     ∃ x : σ(M, P), x ∈ extremePoints ℝ (ofUltraweak ⁻¹' closedBall 0 1) :=
     IsCompact.extremePoints_nonempty (Ultraweak.isCompact_closedBall ..)
       (nonempty_closedBall.mpr (zero_le_one))
 
-theorem exists_extremePoint_closedBall [NonUnitalCStarAlgebra M] [NormedAddCommGroup P]
-  [NormedSpace ℂ P] [Predual ℂ M P] : ∃ x : M , x ∈ extremePoints ℝ (closedBall 0 1) := by
+theorem exists_extremePoint_closedBall : ∃ x : M , x ∈ extremePoints ℝ (closedBall 0 1) := by
   obtain ⟨x, hx⟩ := exists_extremePoint_closedBall_of_ultraweak (M := M) (P := P)
   use ofUltraweak x
   exact mem_extremePoints_iff_left.mpr hx
 
-noncomputable def CStarAlgofExtreme [NonUnitalCStarAlgebra M] [NormedAddCommGroup P]
-  [NormedSpace ℂ P] [Predual ℂ M P] : CStarAlgebra M :=
+variable (M) in
+noncomputable abbrev CStarAlgofExtreme : CStarAlgebra M :=
     CStarAlgebra.ofExtremePt <| Classical.choose_spec <| exists_extremePoint_closedBall (P := P)
+
+end CStarFromExtreme
+
+section UnitalLoop
+
+variable {M P : Type*} [CStarAlgebra M] [NormedAddCommGroup P]
+  [NormedSpace ℂ P] [Predual ℂ M P]
+
+include P
+
+-- What should this equivalence look like?
+
+end UnitalLoop
