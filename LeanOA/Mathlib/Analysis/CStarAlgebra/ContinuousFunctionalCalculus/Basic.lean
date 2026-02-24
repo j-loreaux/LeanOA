@@ -39,6 +39,6 @@ end unital
 
 theorem isIdempotentElem_star_mul_self_iff_isIdempotent_self_mul_star {A : Type*}
     [TopologicalSpace A] [NonUnitalRing A] [StarRing A] [Module ℝ A] [IsScalarTower ℝ A A]
-    [SMulCommClass ℝ A A] [StarModule ℝ A] [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
+    [SMulCommClass ℝ A A] [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
     {x : A} : IsIdempotentElem (star x * x) ↔ IsIdempotentElem (x * star x) := by
   simp [isIdempotentElem_iff_quasispectrum_subset ℝ, quasispectrum.mul_comm]
