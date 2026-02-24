@@ -7,6 +7,7 @@ import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import LeanOA.Mathlib.Misc
 import Mathlib.Algebra.Group.Idempotent
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 
 open Set Metric Complex CFC
 open scoped ComplexStarModule
@@ -145,92 +146,8 @@ theorem isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (a * star a) := by
   grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
 
-section Functions
-
-variable {X R : Type*} [TopologicalSpace X] [NormedRing R] [IsDomain R]
-
--- A better way to do this would be to prove that the norm of a bounded
--- continuous function agrees with the norm of the real-valued function where
--- you compose pointwise with the norm. That should simplify the argument a
--- bit I think, at the cost of developing more API (which is probably worthwhile).
-
--- Mathlib.Topology.ContinuousMap.Bounded.Normed
-open BoundedContinuousFunction in
-/-- If the product of bounded continuous functions is zero, then the norm of their sum is the
-maximum of their norms. -/
-lemma BoundedContinuousFunction.norm_add_eq_max {f g : X →ᵇ R} (h : f * g = 0) :
-    ‖f + g‖ = max ‖f‖ ‖g‖ := by
-  have hfg : ∀ x, f x = 0 ∨ g x = 0 := by
-    simpa [DFunLike.ext_iff, mul_eq_zero] using h
-  have hfg' (x : X) : ‖(f + g) x‖ = max ‖f x‖ ‖g x‖ := by
-    obtain (h | h) := hfg x <;> simp [h]
-  apply le_antisymm
-  · rw [norm_le (by positivity)]
-    intro x
-    rw [hfg']
-    apply max_le <;> exact norm_coe_le_norm _ x |>.trans (by simp)
-  · apply max_le
-    all_goals
-      rw [norm_le (by positivity)]
-      intro x
-      grw [← (f + g).norm_coe_le_norm x, hfg']
-      simp
-
--- Mathlib.Topology.ContinuousMap.Compact
-open BoundedContinuousFunction in
-lemma ContinuousMap.norm_add_eq_max [CompactSpace X] {f g : C(X, R)} (h : f * g = 0) :
-    ‖f + g‖ = max ‖f‖ ‖g‖ := by
-  replace h : mkOfCompact f * mkOfCompact g = 0 := by ext x; simpa using congr($h x)
-  simpa using BoundedContinuousFunction.norm_add_eq_max h
-
-end Functions
-
-section NonUnitalCommCStarAlgebra
-
-variable {A : Type*} [NonUnitalCommCStarAlgebra A]
-
--- Mathlib.Analysis.CStarAlgebra.GelfandDuality
-open scoped CStarAlgebra in
-open Unitization in
-lemma CommCStarAlgebra.norm_add_eq_max {a b : A} (h : a * b = 0) :
-    ‖a + b‖ = max ‖a‖ ‖b‖ := by
-  let f := gelfandStarTransform A⁺¹ ∘ inrNonUnitalAlgHom ℂ A
-  have hf : Isometry f := gelfandTransform_isometry _ |>.comp isometry_inr
-  have h0 : f 0 = 0 := by simp [f]
-  simp_rw [← hf.norm_map_of_map_zero h0, show f (a + b) = f a + f b by simp [f]]
-  exact ContinuousMap.norm_add_eq_max <| by simpa [f] using congr(f $h)
-
--- Mathlib.Analysis.CStarAlgebra.GelfandDuality
-open NonUnitalStarAlgebra in
-lemma IsSelfAdjoint.norm_add_eq_max {A : Type*} [NonUnitalCStarAlgebra A]
-    {a b : A} (hab : a * b = 0) (ha : IsSelfAdjoint a) (hb : IsSelfAdjoint b) :
-    ‖a + b‖ = max ‖a‖ ‖b‖ := by
-  let S : NonUnitalStarSubalgebra ℂ A := (adjoin ℂ {a, b}).topologicalClosure
-  have hS : IsClosed (S : Set A) := (adjoin ℂ {a, b}).isClosed_topologicalClosure
-  have hab' : a * b = b * a := by
-    rw [hab, eq_comm]; simpa [ha.star_eq, hb.star_eq] using congr(star $hab)
-  let _ : NonUnitalCommRing (adjoin ℂ {a, b}) :=
-    adjoinNonUnitalCommRingOfComm ℂ (by grind) (by grind [IsSelfAdjoint.star_eq])
-  let _ : NonUnitalCommRing S := (adjoin ℂ {a, b}).nonUnitalCommRingTopologicalClosure mul_comm
-  let _ : NonUnitalCommCStarAlgebra S := { }
-  let c : S := ⟨a, subset_closure <| subset_adjoin _ _ <| by grind⟩
-  let d : S := ⟨b, subset_closure <| subset_adjoin _ _ <| by grind⟩
-  exact CommCStarAlgebra.norm_add_eq_max (a := c) (b := d) (by ext; simpa)
-
--- Mathlib.Analysis.CStarAlgebra.GelfandDuality
-lemma IsSelfAdjoint.norm_sub_eq_max {A : Type*} [NonUnitalCStarAlgebra A]
-    {a b : A} (hab : a * b = 0) (ha : IsSelfAdjoint a) (hb : IsSelfAdjoint b) :
-    ‖a - b‖ = max ‖a‖ ‖b‖ := by
-  rw [← sq_eq_sq₀ (by positivity) (by positivity)]
-  simp only [sq, ← ha.norm_add_eq_max hab hb, ← CStarRing.norm_star_mul_self]
-  have : b * a = 0 := by simpa [ha.star_eq, hb.star_eq] using congr(star $hab)
-  simp [sub_mul, mul_sub, hb.star_eq, ha.star_eq, hab, this, add_mul, mul_add]
-
-end NonUnitalCommCStarAlgebra
-
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
--- still needs a better name, but will probably be private anyway
 theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
@@ -262,26 +179,9 @@ theorem eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall {x a b : A}
     (hx : x ∈ extremePoints ℝ (closedBall 0 1))
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
     a = 0 := by
-  by_contra h
-  have : ‖a‖⁻¹ • a = (‖a‖⁻¹ • b) - (‖a‖⁻¹ • b) * (star x * x) -
-      (x * star x) * (‖a‖⁻¹ • b) + (x * star x) * (‖a‖⁻¹ • b) * (star x * x) := by
-    simp [← mul_assoc, smul_mul_assoc, mul_smul_comm, sub_sub, ← smul_sub, ← smul_add, hb]
-  have := eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
-    hx (inv_norm_smul_mem_unitClosedBall a) this
-  simp [h] at this
-
-theorem isIdempotentElem_iff_quasispectrum_subset (R : Type*) {A : Type*} {p : A → Prop} [Field R]
-    [StarRing R] [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A]
-    [StarRing A] [TopologicalSpace A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
-    [NonUnitalContinuousFunctionalCalculus R A p] (a : A) (ha : p a) :
-    IsIdempotentElem a ↔ quasispectrum R a ⊆ {0, 1} := by
-  refine ⟨IsIdempotentElem.quasispectrum_subset, fun h ↦ ?_⟩
-  rw [IsIdempotentElem, ← cfcₙ_id' R a, ← cfcₙ_mul _ _]
-  exact cfcₙ_congr fun x hx ↦ by grind
-
-theorem isIdempotentElem_star_mul_self_iff_isIdempotent_self_mul_star {x : A} :
-    IsIdempotentElem (star x * x) ↔ IsIdempotentElem (x * star x) := by
-  simp [isIdempotentElem_iff_quasispectrum_subset ℝ, quasispectrum.mul_comm]
+  simpa using eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
+    hx (inv_norm_smul_mem_unitClosedBall a) (b := ‖a‖⁻¹ • b)
+    (by simp [← mul_assoc, smul_mul_assoc, mul_smul_comm, sub_sub, ← smul_sub, ← smul_add, hb])
 
 open CStarAlgebra Filter Topology in
 theorem approx_unit_mul_left_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
@@ -302,27 +202,23 @@ theorem approx_unit_mul_left_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedB
   symm
   simpa [this] using overall
 
+@[simp] theorem star_mem_extremePoints_closedBall_zero_iff {A : Type*} [NonUnitalSeminormedRing A]
+    [StarRing A] [NormedStarGroup A] [Module ℝ A] [StarModule ℝ A] {x : A} (c : ℝ) :
+    star x ∈ extremePoints ℝ (closedBall 0 c) ↔ x ∈ extremePoints ℝ (closedBall 0 c) := by
+  suffices ∀ x : A, x ∈ extremePoints ℝ (closedBall 0 c) → star x ∈ extremePoints ℝ (closedBall 0 c)
+    from ⟨by simpa using this (star x), this x⟩
+  clear x
+  refine fun x hx ↦ ⟨by simpa using hx.1, fun y hy z hz ⟨α, β, hα, hβ, hαβ, hxyz⟩ ↦ ?_⟩
+  rw [eq_star_iff_eq_star, eq_comm] at hxyz ⊢
+  apply @hx.2 _ (by simpa using hy) (star z) (by simpa using hz) ⟨star α, star β, ?_⟩
+  simp [← hxyz, hα, hβ, hαβ]
+
 theorem approx_unit_mul_right_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     a - (star x * x) * a - (x * star x) * a + (x * star x) * (star x * x) * a = 0 := by
-  have hxstar : star x ∈ extremePoints ℝ (closedBall 0 1) := by
-    refine ⟨by simpa using hx.1, fun y hy z hz ⟨α, β, hα, hβ, hαβ, hxyz⟩ ↦ ?_⟩
-    rw [eq_star_iff_eq_star, eq_comm] at hxyz ⊢
-    apply @hx.2 _ (by simpa using hy) (star z) (by simpa using hz) ⟨star α, star β, ?_⟩
-    simp [← hxyz, hα, hβ, hαβ]
-  have := approx_unit_mul_left_eq (x := star x) (a := star a) (hx := hxstar)
+  have := approx_unit_mul_left_eq (x := star x) (a := star a) (hx := by simpa)
   rw [← star_inj]
   simp at *
   grind [star_add, ← star_zero, star_mul, star_sub]
-
-theorem exists_identity {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
-  ∃ e : A , (∀ a : A, e * a = a  ∧ a * e = a) := by
-  use (star x * x) + (x * star x) - (x * star x) * (star x * x)
-  intro a
-  constructor
-  · have := approx_unit_mul_right_eq (a := a) hx
-    grind [add_mul, sub_mul]
-  · have := approx_unit_mul_left_eq (a := a) hx
-    grind [mul_add, mul_sub]
 
 theorem identity_of_mem_extremePoints_closedUnitBall {x : A}
     (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (y : A) :
@@ -331,7 +227,7 @@ theorem identity_of_mem_extremePoints_closedUnitBall {x : A}
   simp [add_mul, sub_mul, mul_sub, mul_add]
   grind [approx_unit_mul_right_eq, approx_unit_mul_left_eq]
 
-/-- The `1` given a point in a non-unital C⋆-algebra.
+/-- The unit given a point in a non-unital C⋆-algebra.
 This is a helper definition for constructing the unital C⋆-algebra given an extreme point
 of the closed unit ball in a non-unital C⋆-algebra. -/
 abbrev CStarAlgebra.oneOfExtremePt (x : A) :
@@ -345,14 +241,9 @@ lemma CStarAlgebra.oneOfExtremePt_one_def (x : A) :
 C⋆-algebra. Only an implementation for `CStarAlgebra.ofExtremePt`. -/
 abbrev CStarAlgebra.ringOfExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     Ring A where
-  __ := ‹NonUnitalCStarAlgebra A›
   __ := CStarAlgebra.oneOfExtremePt x
-  one_mul y := by
-    rw [oneOfExtremePt_one_def]
-    exact identity_of_mem_extremePoints_closedUnitBall hx y |>.1
-  mul_one y := by
-    rw [oneOfExtremePt_one_def]
-    exact identity_of_mem_extremePoints_closedUnitBall hx y |>.2
+  one_mul y := identity_of_mem_extremePoints_closedUnitBall hx y |>.1
+  mul_one y := identity_of_mem_extremePoints_closedUnitBall hx y |>.2
 
 /-- Upgrade a non-unital C⋆-algebra to a unital C⋆-algebra, given there exists an
 extreme point of the closed unit ball. -/
