@@ -85,8 +85,8 @@ lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebr
   then suffices to show that `ℑ x = 0`. -/
   have hx' : IsStarNormal x := by simp [isStarNormal_iff_commute_realPart_imaginaryPart, ← ha']
   suffices (ℑ x : A) = 0 by rw [← realPart_add_I_smul_imaginaryPart x, ← ha', this]; simp
-  letI := spectralOrder A
-  letI := spectralOrderedRing A
+  let := spectralOrder A
+  let := spectralOrderedRing A
   /- Note that `‖1 + (ℑ x) ^ 2‖ = ‖(ℜ x) ^ 2 + (ℑ x) ^ 2‖ = ‖star x * x‖ = ‖x‖ ^ 2 ≤ 1`.
   Therefore, `1 + (ℑ x) ^ 2 ≤ 1`, so `(ℑ x) ^ 2 ≤ 0`. Since `(ℑ x) ^ 2` is clearly nonnegative,
   we conclude that it is zero, and hence so also `ℑ x = 0`, as desired. -/
@@ -109,8 +109,8 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
     (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
   /- Suppose `a` is an extreme point of the closed unit ball. Then we want to show that
   `a * star a * a = a`. It suffices to show `a * |a| = a`. -/
-  letI := CStarAlgebra.spectralOrder A
-  letI := CStarAlgebra.spectralOrderedRing A
+  let := CStarAlgebra.spectralOrder A
+  let := CStarAlgebra.spectralOrderedRing A
   suffices a * abs a = a by rw [mul_assoc, ← abs_mul_abs, ← mul_assoc, this, this]
   obtain ⟨ha, h⟩ := ha
   simp only [mem_closedBall, dist_zero_right] at ha h
@@ -180,19 +180,18 @@ open CStarAlgebra Filter Topology in
 then `star x * x + x * star x - x * star x * star x * x` is a right identity.
 (See also `CStarAlgebra.ofExtremePtOne_mul` for the left identity.) -/
 theorem CStarAlgebra.mul_ofExtremePtOne {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1))
-    (a : A) : a * (star x * x + x * star x - (x * star x) * (star x * x)) = a := by
+    (a : A) : a * (star x * x + x * star x - x * star x * (star x * x)) = a := by
   let := spectralOrder A
   let := spectralOrderedRing A
   let u := approximateUnit A
   let hu := increasingApproximateUnit A
-  let f (t : A) : A :=
-    t - t * (star x * x) - (x * star x) * t + (x * star x) * t * (star x * x)
+  let f (t : A) : A := t - t * (star x * x) - x * star x * t + x * star x * t * (star x * x)
   have h (t : A) : f t = 0 := by
     simpa using eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
       hx (inv_norm_smul_mem_unitClosedBall (f t)) (b := ‖f t‖⁻¹ • t)
       (by simp [← mul_assoc, smul_mul_assoc, mul_smul_comm, sub_sub, ← smul_sub, ← smul_add, f])
   have h_tendsto : Tendsto (fun t ↦ a * f t) u
-      (𝓝 (a - a * (star x * x + x * star x - (x * star x) * (star x * x)))) := by
+      (𝓝 (a - a * (star x * x + x * star x - x * star x * (star x * x)))) := by
     conv => enter [1, t]; simp only [f]; rw [sub_add, sub_sub, add_sub, mul_sub]
     apply_rules [Tendsto.sub, Tendsto.add, hu.tendsto_mul_left, hu.tendsto_mul_right,
       Tendsto.mul_const, Tendsto.const_mul]
