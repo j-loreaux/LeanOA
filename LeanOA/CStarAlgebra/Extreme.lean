@@ -99,11 +99,9 @@ lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebr
 section nonUnital
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
--- what is the right generality for this? everything I try keeps timing out
--- move to appropriate file after generalizing it
-lemma quasispectrum.norm_le_norm_of_mem {a : A} {x} (hx : x ∈ quasispectrum ℝ a) : ‖x‖ ≤ ‖a‖ :=
-  (spectrum.norm_le_norm_of_mem ((Unitization.quasispectrum_eq_spectrum_inr ℝ a).symm ▸ hx)).trans
-    (by simp [Unitization.norm_def])
+-- `Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Isometric`
+alias quasispectrum.norm_le_norm_of_mem :=
+  NonUnitalIsometricContinuousFunctionalCalculus.norm_quasispectrum_le
 
 theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
     (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
@@ -132,7 +130,7 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
       _ = ‖cfcₙ (fun x : ℝ ↦ 2 * x - x * x) (abs a)‖ := by
         rw [cfcₙ_sub _ _, cfcₙ_const_mul _ _, cfcₙ_mul _ _, cfcₙ_id' ℝ (abs a)]
       _ ≤ _ := norm_cfcₙ_le fun x hx ↦ by
-        have := x.le_norm_self.trans (by grw [quasispectrum.norm_le_norm_of_mem hx, norm_abs, ha])
+        have := x.le_norm_self.trans (by grw [quasispectrum.norm_le_norm_of_mem _ hx, norm_abs, ha])
         rw [Real.norm_of_nonneg] <;> nlinarith [quasispectrum_nonneg_of_nonneg _ (by simp) _ hx]
 
 attribute [local grind .] IsSelfAdjoint.star_mul_self IsIdempotentElem IsSelfAdjoint.mul_star_self
