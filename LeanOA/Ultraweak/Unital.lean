@@ -12,8 +12,6 @@ This may not deserve its own file, but here it is, provisionally.
 open Set Metric WeakBilin ComplexOrder
 open scoped Ultraweak
 
-section CStarFromExtreme
-
 variable {M P : Type*} [NonUnitalCStarAlgebra M] [NormedAddCommGroup P]
   [NormedSpace ℂ P] [Predual ℂ M P]
 
@@ -29,19 +27,5 @@ theorem exists_extremePoint_closedBall : ∃ x : M , x ∈ extremePoints ℝ (cl
   use ofUltraweak x
   exact mem_extremePoints_iff_left.mpr hx
 
-variable (M) in
 noncomputable abbrev CStarAlgofExtreme : CStarAlgebra M :=
     CStarAlgebra.ofExtremePt <| Classical.choose_spec <| exists_extremePoint_closedBall (P := P)
-
-end CStarFromExtreme
-
-section UnitalLoop
-
-variable {M P : Type*} [CStarAlgebra M] [NormedAddCommGroup P]
-  [NormedSpace ℂ P] [Predual ℂ M P]
-
-include P
-
--- What should this equivalence look like?
-
-end UnitalLoop
