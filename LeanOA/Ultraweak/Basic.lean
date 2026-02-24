@@ -351,7 +351,6 @@ variable [NonUnitalCStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [P
 scoped instance : NonUnitalCStarAlgebra σ(M, P) := inferInstanceAs (NonUnitalCStarAlgebra M)
 
 end NonUnital
-section Unital
 
 /-! ## Ring, star and order structures -/
 
