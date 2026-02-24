@@ -148,7 +148,7 @@ theorem isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
-theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
+private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
     a = 0 := by
@@ -175,7 +175,7 @@ theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
   exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
     ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
 
-theorem eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall {x a b : A}
+private theorem eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall {x a b : A}
     (hx : x ∈ extremePoints ℝ (closedBall 0 1))
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
     a = 0 := by
@@ -184,7 +184,7 @@ theorem eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall {x a b : A}
     (by simp [← mul_assoc, smul_mul_assoc, mul_smul_comm, sub_sub, ← smul_sub, ← smul_add, hb])
 
 open CStarAlgebra Filter Topology in
-theorem approx_unit_mul_left_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+private theorem approx_unit_mul_left_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     a - a * (star x * x) - a * (x * star x) + a * (x * star x) * (star x * x) = 0 := by
   let := spectralOrder A
   let := spectralOrderedRing A
@@ -213,14 +213,14 @@ theorem approx_unit_mul_left_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedB
   apply @hx.2 _ (by simpa using hy) (star z) (by simpa using hz) ⟨star α, star β, ?_⟩
   simp [← hxyz, hα, hβ, hαβ]
 
-theorem approx_unit_mul_right_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+private theorem approx_unit_mul_right_eq {x a : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     a - (star x * x) * a - (x * star x) * a + (x * star x) * (star x * x) * a = 0 := by
   have := approx_unit_mul_left_eq (x := star x) (a := star a) (hx := by simpa)
   rw [← star_inj]
   simp at *
   grind [star_add, ← star_zero, star_mul, star_sub]
 
-theorem identity_of_mem_extremePoints_closedUnitBall {x : A}
+theorem CStarAlgebra.unit_of_mem_extremePoints_closedUnitBall {x : A}
     (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (y : A) :
     letI e := star x * x + x * star x - x * star x * star x * x
     e * y = y ∧ y * e = y := by
@@ -242,8 +242,8 @@ C⋆-algebra. Only an implementation for `CStarAlgebra.ofExtremePt`. -/
 abbrev CStarAlgebra.ringOfExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     Ring A where
   __ := CStarAlgebra.oneOfExtremePt x
-  one_mul y := identity_of_mem_extremePoints_closedUnitBall hx y |>.1
-  mul_one y := identity_of_mem_extremePoints_closedUnitBall hx y |>.2
+  one_mul y := unit_of_mem_extremePoints_closedUnitBall hx y |>.1
+  mul_one y := unit_of_mem_extremePoints_closedUnitBall hx y |>.2
 
 /-- Upgrade a non-unital C⋆-algebra to a unital C⋆-algebra, given there exists an
 extreme point of the closed unit ball. -/
