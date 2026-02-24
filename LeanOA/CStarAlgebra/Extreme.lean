@@ -180,29 +180,26 @@ open CStarAlgebra Filter Topology in
 then `star x * x + x * star x - x * star x * star x * x` is a right identity.
 (See also `CStarAlgebra.ofExtremePtOne_mul` for the left identity.) -/
 theorem CStarAlgebra.mul_ofExtremePtOne {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1))
-    (a : A) : a * (star x * x + x * star x - x * star x * star x * x) = a := by
+    (a : A) : a * (star x * x + x * star x - (x * star x) * (star x * x)) = a := by
   let := spectralOrder A
   let := spectralOrderedRing A
-  let u := increasingApproximateUnit A
-  have h b : b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x) = 0 := by
-    set a := b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)
+  let u := approximateUnit A
+  let hu := increasingApproximateUnit A
+  let f (t : A) : A :=
+    t - t * (star x * x) - (x * star x) * t + (x * star x) * t * (star x * x)
+  have h (t : A) : f t = 0 := by
     simpa using eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
-      hx (inv_norm_smul_mem_unitClosedBall a) (b := ‖a‖⁻¹ • b)
-      (by simp [← mul_assoc, smul_mul_assoc, mul_smul_comm, sub_sub, ← smul_sub, ← smul_add, a])
-  have overall := (((u.tendsto_mul_left a).sub
-    (.const_mul a (u.tendsto_mul_right (star x * x)))).sub
-    (.const_mul a (u.tendsto_mul_left (x * star x)))).add
-    (.mul_const (star x * x) (u.tendsto_mul_left (a * (x * star x))))
-  have (x_1 : A) : a * x_1 - a * (x_1 * (star x * x)) - a * (x * star x * x_1) +
-      a * (x * star x) * x_1 * (star x * x) = 0 := by
-    simp only [← mul_sub, mul_assoc, ← mul_add] at *
-    exact mul_eq_zero_of_right a (h x_1)
-  rw [eq_comm, ← sub_eq_zero]
-  have := by simpa [this] using overall
-  simp [mul_add, mul_sub, mul_assoc] at *
-  grind
+      hx (inv_norm_smul_mem_unitClosedBall (f t)) (b := ‖f t‖⁻¹ • t)
+      (by simp [← mul_assoc, smul_mul_assoc, mul_smul_comm, sub_sub, ← smul_sub, ← smul_add, f])
+  have h_tendsto : Tendsto (fun t ↦ a * f t) u
+      (𝓝 (a - a * (star x * x + x * star x - (x * star x) * (star x * x)))) := by
+    conv => enter [1, t]; simp only [f]; rw [sub_add, sub_sub, add_sub, mul_sub]
+    apply_rules [Tendsto.sub, Tendsto.add, hu.tendsto_mul_left, hu.tendsto_mul_right,
+      Tendsto.mul_const, Tendsto.const_mul]
+  simpa [h, sub_eq_zero, eq_comm (a := (0 : A)), eq_comm (a := a)] using h_tendsto
 
-@[simp] theorem star_mem_extremePoints_closedBall_zero_iff {A : Type*} [NonUnitalSeminormedRing A]
+@[simp]
+theorem star_mem_extremePoints_closedBall_zero_iff {A : Type*} [NonUnitalSeminormedRing A]
     [StarRing A] [NormedStarGroup A] [Module ℝ A] [StarModule ℝ A] {x : A} (c : ℝ) :
     star x ∈ extremePoints ℝ (closedBall 0 c) ↔ x ∈ extremePoints ℝ (closedBall 0 c) := by
   suffices ∀ x : A, x ∈ extremePoints ℝ (closedBall 0 c) → star x ∈ extremePoints ℝ (closedBall 0 c)
@@ -216,21 +213,21 @@ theorem CStarAlgebra.mul_ofExtremePtOne {x : A} (hx : x ∈ extremePoints ℝ (c
 then `star x * x + x * star x - x * star x * star x * x` is a left identity.
 (See also `CStarAlgebra.mul_ofExtremePtOne` for the right identity.) -/
 theorem CStarAlgebra.ofExtremePtOne_mul {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1))
-    (a : A) : (star x * x + x * star x - x * star x * star x * x) * a = a := by
-  rw [← star_inj, ← mul_ofExtremePtOne (x := star x) (a := star a) (by simpa)]
-  simp [mul_assoc, mul_add, mul_sub, add_comm]
+    (a : A) : (star x * x + x * star x - x * star x * (star x * x)) * a = a := by
+  simpa [add_comm] using congr(star $(mul_ofExtremePtOne (x := star x) (by simpa) (star a)))
 
 /-- The ring structure given an extreme point of the closed unit ball on a non-unital
 C⋆-algebra. Only an implementation for `CStarAlgebra.ofExtremePt`. -/
 abbrev CStarAlgebra.ringOfExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
     Ring A where
-  one := star x * x + x * star x - x * star x * star x * x
+  one := star x * x + x * star x - x * star x * (star x * x)
   one_mul y := ofExtremePtOne_mul hx y
   mul_one y := mul_ofExtremePtOne hx y
 
 lemma CStarAlgebra.ofExtremePt_one_def {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
-    have := CStarAlgebra.ringOfExtremePt hx
-    1 = star x * x + x * star x - x * star x * star x * x := rfl
+    letI := CStarAlgebra.ringOfExtremePt hx
+    1 = star x * x + x * star x - x * star x * (star x * x) :=
+  rfl
 
 /-- Upgrade a non-unital C⋆-algebra to a unital C⋆-algebra, given there exists an
 extreme point of the closed unit ball. -/
