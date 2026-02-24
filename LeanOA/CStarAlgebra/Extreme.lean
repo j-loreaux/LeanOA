@@ -175,14 +175,6 @@ private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedU
   exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
     ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
 
-private theorem eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall {x a b : A}
-    (hx : x ∈ extremePoints ℝ (closedBall 0 1))
-    (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
-    a = 0 := by
-  simpa using eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
-    hx (inv_norm_smul_mem_unitClosedBall a) (b := ‖a‖⁻¹ • b)
-    (by simp [← mul_assoc, smul_mul_assoc, mul_smul_comm, sub_sub, ← smul_sub, ← smul_add, hb])
-
 open CStarAlgebra Filter Topology in
 /-- When `x` is an extreme point of the closed unit ball in a non-unital C⋆-algebra,
 then `star x * x + x * star x - x * star x * star x * x` is a right identity.
@@ -192,8 +184,11 @@ theorem CStarAlgebra.mul_ofExtremePtOne {x : A} (hx : x ∈ extremePoints ℝ (c
   let := spectralOrder A
   let := spectralOrderedRing A
   let u := increasingApproximateUnit A
-  have h t : t - t * (star x * x) - (x * star x) * t + (x * star x) * t * (star x * x) = 0 :=
-    eq_zero_of_eq_sub_of_mem_extremePoints_closedUnitBall hx rfl
+  have h b : b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x) = 0 := by
+    set a := b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)
+    simpa using eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
+      hx (inv_norm_smul_mem_unitClosedBall a) (b := ‖a‖⁻¹ • b)
+      (by simp [← mul_assoc, smul_mul_assoc, mul_smul_comm, sub_sub, ← smul_sub, ← smul_add, a])
   have overall := (((u.tendsto_mul_left a).sub
     (.const_mul a (u.tendsto_mul_right (star x * x)))).sub
     (.const_mul a (u.tendsto_mul_left (x * star x)))).add
