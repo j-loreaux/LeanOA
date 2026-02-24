@@ -37,7 +37,7 @@ lemma cfc_im_id (a : A) (hp : p a := by cfc_tac) :
 
 end unital
 
-theorem isIdempotentElem_star_mul_self_iff_isIdempotent_self_mul_star {A : Type*}
+theorem isIdempotentElem_star_mul_self_iff_isIdempotentElem_self_mul_star {A : Type*}
     [TopologicalSpace A] [NonUnitalRing A] [StarRing A] [Module ℝ A] [IsScalarTower ℝ A A]
     [SMulCommClass ℝ A A] [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
     {x : A} : IsIdempotentElem (star x * x) ↔ IsIdempotentElem (x * star x) := by
