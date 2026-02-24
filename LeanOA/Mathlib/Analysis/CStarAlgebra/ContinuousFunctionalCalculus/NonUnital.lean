@@ -9,8 +9,3 @@ theorem isIdempotentElem_iff_quasispectrum_subset (R : Type*) {A : Type*} {p : A
   refine ⟨IsIdempotentElem.quasispectrum_subset, fun h ↦ ?_⟩
   rw [IsIdempotentElem, ← cfcₙ_id' R a, ← cfcₙ_mul _ _]
   exact cfcₙ_congr fun x hx ↦ by grind
-
--- theorem isIdempotentElem_star_mul_self_iff_isIdempotent_self_mul_star {A : Type*}
---     [NonUnitalCStarAlgebra A] {x : A} :
---     IsIdempotentElem (star x * x) ↔ IsIdempotentElem (x * star x) := by
---   simp [isIdempotentElem_iff_quasispectrum_subset ℝ, quasispectrum.mul_comm]
