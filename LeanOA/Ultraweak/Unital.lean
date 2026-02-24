@@ -28,5 +28,4 @@ theorem exists_extremePoint_closedBall [NonUnitalCStarAlgebra M] [NormedAddCommG
 
 noncomputable def CStarAlgofExtreme [NonUnitalCStarAlgebra M] [NormedAddCommGroup P]
   [NormedSpace ℂ P] [Predual ℂ M P] : CStarAlgebra M :=
-    CStarAlgebra.ofExtremePt (A := M)
-      (Classical.choose_spec (exists_extremePoint_closedBall (M := M) (P := P)))
+    CStarAlgebra.ofExtremePt <| Classical.choose_spec <| exists_extremePoint_closedBall (P := P)
