@@ -171,7 +171,7 @@ def lp.evalₗ (i : ι) : lp E p →ₗ[𝕜] E i where
 
 variable (𝕜 E p) in
 /-- Evaluation at a single coordinate, as a continuous linear map on `lp E p`. -/
-def lp.evalCLM [Fact (1 ≤ p)] (i : ι) : lp E p →L[𝕜] E i :=
+noncomputable def lp.evalCLM [Fact (1 ≤ p)] (i : ι) : lp E p →L[𝕜] E i :=
   (lp.evalₗ E p i).mkContinuous 1 fun x ↦ by
     have hp : p ≠ 0 := zero_lt_one.trans_le Fact.out |>.ne'
     simpa only [evalₗ_apply, one_mul, ge_iff_le] using lp.norm_apply_le_norm hp x i
@@ -203,7 +203,7 @@ variable {p q r : ℝ≥0∞}
 /-- A uniformly bounded family of continuous linear maps, as a continuous linear map
 on the `lp` space. -/
 @[simps!]
-def lp.mapCLM (p : ℝ≥0∞) [Fact (1 ≤ p)]
+noncomputable def lp.mapCLM (p : ℝ≥0∞) [Fact (1 ≤ p)]
     (T : ∀ i, E i →L[𝕜] F i) {K : ℝ} (hK : 0 ≤ K) (hTK : ∀ i, ‖T i‖ ≤ K) :
     lp E p →L[𝕜] lp F p :=
   haveI key (i : ι) (x : E i) : ‖T i x‖ ≤ K * ‖x‖ := by

@@ -127,7 +127,7 @@ lemma Ultraweak.eval_continuous (p : P) :
 
 variable (𝕜 M P) in
 /-- The canonical continuous linear equivalence between `σ(M, P)_𝕜` and `WeakDual 𝕜 P`. -/
-def Ultraweak.weakDualCLE : σ(M, P)_𝕜 ≃L[𝕜] WeakDual 𝕜 P where
+noncomputable def Ultraweak.weakDualCLE : σ(M, P)_𝕜 ≃L[𝕜] WeakDual 𝕜 P where
   toLinearEquiv :=
     Ultraweak.linearEquiv 𝕜 M P ≪≫ₗ
     Predual.equivDual.toLinearEquiv ≪≫ₗ
