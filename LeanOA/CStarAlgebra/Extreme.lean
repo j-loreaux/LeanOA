@@ -260,7 +260,7 @@ lemma weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a
     exact inr_injective h1
   suffices h : a' = a' * e' by
     rwa [mul_assoc, ← h, ← he'.2, ← star_star a', ← star_mul, star_inj, LE.le.star_eq h0a']
-  have J : star (1 - e') * e' * (1 - e') = 0 := by
+  have : star (1 - e') * e' * (1 - e') = 0 := by
     rw [star_sub, star_one, sub_mul, one_mul, mul_sub, mul_one, he'.2, he'.1, sub_self,
       zero_mul, zero_sub_zero]
   have L : ‖(star (1 - e') * sqrt a') * (sqrt a' * (1 - e'))‖ = 0 := by
