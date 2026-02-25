@@ -125,9 +125,16 @@ lemma Ultraweak.eval_continuous (p : P) :
     Continuous fun m : σ(M, P)_𝕜 ↦ (Predual.equivDual (𝕜 := 𝕜) (ofUltraweak m)) p :=
   WeakBilin.eval_continuous _ p
 
+/-- The ultraweak topology is weaker than the norm topology. -/
+@[fun_prop]
+lemma continuous_toUltraweak : Continuous (toUltraweak 𝕜 P : M → σ(M, P)_𝕜) :=
+  continuous_of_continuous_eval fun p ↦ by
+    change Continuous (ContinuousLinearMap.apply 𝕜 𝕜 p ∘ Predual.equivDual)
+    fun_prop
+
 variable (𝕜 M P) in
 /-- The canonical continuous linear equivalence between `σ(M, P)_𝕜` and `WeakDual 𝕜 P`. -/
-def Ultraweak.weakDualCLE : σ(M, P)_𝕜 ≃L[𝕜] WeakDual 𝕜 P where
+noncomputable def Ultraweak.weakDualCLE : σ(M, P)_𝕜 ≃L[𝕜] WeakDual 𝕜 P where
   toLinearEquiv :=
     Ultraweak.linearEquiv 𝕜 M P ≪≫ₗ
     Predual.equivDual.toLinearEquiv ≪≫ₗ
@@ -177,6 +184,185 @@ end Linear
 
 namespace Ultraweak
 
+section NonUnitalNormedRing
+
+variable [NonUnitalNormedRing M] [NormedSpace ℂ M]
+variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
+
+/-- The nonunital ring structure on `σ(M, P)` it inherits from `M`. -/
+scoped instance : NonUnitalRing σ(M, P) := inferInstanceAs (NonUnitalRing M)
+
+@[simp]
+lemma ofUltraweak_mul (x y : σ(M, P)) :
+    ofUltraweak (x * y) = ofUltraweak x * ofUltraweak y := rfl
+
+@[simp]
+lemma toUltraweak_mul (x y : M) :
+    toUltraweak ℂ P (x * y) = toUltraweak ℂ P x * toUltraweak ℂ P y := rfl
+
+variable (M P) in
+/-- The canonical ring equivalence between `σ(M, P)` and `M`. -/
+@[simps]
+noncomputable def ringEquiv : σ(M, P) ≃+* M where
+  toFun := ofUltraweak
+  invFun := toUltraweak ℂ P
+  map_mul' _ _ := rfl
+  map_add' _ _ := rfl
+
+end NonUnitalNormedRing
+
+section StarRing
+
+variable [NonUnitalNormedRing M] [NormedSpace ℂ M]
+variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
+variable [StarRing M]
+
+/-- The StarRing structure on `σ(M, P)` it inherits from `M`. -/
+scoped instance : StarRing σ(M, P) := inferInstanceAs (StarRing M)
+
+@[simp]
+lemma ofUltraweak_star (x : σ(M, P)) :
+    ofUltraweak (star x) = star (ofUltraweak x) := rfl
+
+@[simp]
+lemma toUltraweak_star (x : M) :
+    toUltraweak ℂ P (star x) = star (toUltraweak ℂ P x) := rfl
+
+variable (M P) in
+/-- The canonical StarRing equivalence between `σ(M, P)` and `M`. -/
+@[simps]
+noncomputable def ofUltraweak_starRingEquiv' : σ(M, P) ≃⋆+* M where
+  toFun := ofUltraweak
+  invFun := toUltraweak ℂ P
+  map_mul' _ _ := rfl
+  map_add' _ _ := rfl
+  map_star' _ := rfl
+
+@[simp]
+lemma isSelfAdjoint_ofUltraweak {x : σ(M, P)} :
+    IsSelfAdjoint (ofUltraweak x) ↔ IsSelfAdjoint x := by
+  simp [isSelfAdjoint_iff, ← Ultraweak.ofUltraweak_star]
+
+alias ⟨_root_.IsSelfAdjoint.of_ofUltraweak, _root_.IsSelfAdjoint.ofUltraweak⟩
+  := isSelfAdjoint_ofUltraweak
+
+@[simp]
+lemma isSelfAdjoint_toUltraweak {x : M} :
+    IsSelfAdjoint (toUltraweak ℂ P x) ↔ IsSelfAdjoint x := by
+  simp [isSelfAdjoint_iff, ← Ultraweak.toUltraweak_star]
+
+alias ⟨_root_.IsSelfAdjoint.of_toUltraweak, _root_.IsSelfAdjoint.toUltraweak⟩
+  := isSelfAdjoint_toUltraweak
+
+variable (M P) in
+/-- The canonical ⋆-algebra equivalence between `σ(M, P)` and `M`.
+
+This comes *before* `algEquiv` because unlike the `AlgEquiv` type, `StarAlgEquiv`
+doesn't require the algebra to be unital.
+-/
+@[simps!]
+noncomputable def starAlgEquiv : σ(M, P) ≃⋆ₐ[ℂ] M :=
+  { linearEquiv ℂ M P, ringEquiv M P with
+    map_star' _ := rfl }
+
+end StarRing
+
+section StarModule
+
+variable [NonUnitalNormedRing M] [NormedSpace ℂ M]
+variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
+variable [StarRing M] [StarModule ℂ M]
+
+open scoped ComplexStarModule
+
+/-- The star module structure on `σ(M, P)` it inherits from `M`. -/
+scoped instance : StarModule ℂ σ(M, P) := inferInstanceAs (StarModule ℂ M)
+
+set_option backward.isDefEq.respectTransparency false in
+@[simp]
+lemma ofUltraweak_realPart (a : σ(M, P)) :
+    ofUltraweak (ℜ a : σ(M, P)) = ℜ (ofUltraweak a) := rfl
+
+set_option backward.isDefEq.respectTransparency false in
+@[simp]
+lemma toUltraweak_realPart (a : M) :
+    toUltraweak ℂ P (ℜ a : M) = ℜ (toUltraweak ℂ P a) := rfl
+
+set_option backward.isDefEq.respectTransparency false in
+@[simp]
+lemma ofUltraweak_imaginaryPart (a : σ(M, P)) :
+    ofUltraweak (ℑ a : σ(M, P)) = ℑ (ofUltraweak a) := rfl
+
+set_option backward.isDefEq.respectTransparency false in
+@[simp]
+lemma toUltraweak_imaginaryPart (a : M) :
+    toUltraweak ℂ P (ℑ a : M) = ℑ (toUltraweak ℂ P a) := rfl
+
+end StarModule
+
+section PartialOrder
+
+variable [NonUnitalNormedRing M] [NormedSpace ℂ M]
+variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
+variable [PartialOrder M]
+
+/-- The partial order on `σ(M, P)` it inherits from `M`. -/
+scoped instance : PartialOrder σ(M, P) :=
+  inferInstanceAs (PartialOrder M)
+
+
+@[simp]
+lemma ofUltraweak_nonneg {x : σ(M, P)} :
+    0 ≤ ofUltraweak x ↔ 0 ≤ x :=
+  Iff.rfl
+
+@[simp]
+lemma toUltraweak_nonneg {x : M} :
+    0 ≤ toUltraweak ℂ P x ↔ 0 ≤ x :=
+  Iff.rfl
+
+@[simp]
+lemma ofUltraweak_le {x y : σ(M, P)} :
+    ofUltraweak x ≤ ofUltraweak y ↔ x ≤ y :=
+  Iff.rfl
+
+@[simp]
+lemma toUltraweak_le {x y : M} :
+    toUltraweak ℂ P x ≤ toUltraweak ℂ P y ↔ x ≤ y :=
+  Iff.rfl
+
+lemma monotone_ofUltraweak :
+    Monotone (ofUltraweak : σ(M, P) → M) :=
+  fun _ _ ↦ id
+
+lemma monotone_toUltraweak :
+    Monotone (toUltraweak ℂ P : M → σ(M, P)) :=
+  fun _ _ ↦ id
+
+/-- The identity map from `σ(M, P)` to `M` as an order isomorphism. -/
+noncomputable def ofUltraweakOrderIso :
+    σ(M, P) ≃o M where
+  toFun := ofUltraweak
+  invFun := toUltraweak ℂ P
+  left_inv _ := rfl
+  right_inv _ := rfl
+  map_rel_iff' := Iff.rfl
+
+end PartialOrder
+
+section StarOrderedRing
+
+variable [NonUnitalNormedRing M] [NormedSpace ℂ M]
+variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
+variable [StarRing M] [PartialOrder M] [StarOrderedRing M]
+
+scoped instance : StarOrderedRing σ(M, P) :=
+  inferInstanceAs (StarOrderedRing M)
+
+end StarOrderedRing
+
+section Unital
+
 /-! ## Ring, star and order structures -/
 
 -- With `CStarAlgebra M` and `Predual 𝕜 M P`, this is effectively a `WStarAlgebra M` where
@@ -186,8 +372,6 @@ namespace Ultraweak
 -- `def` which produces a `Predual` instance from a `WStarAlgebra` instance. This will allow us
 -- to work with the ultraweak topology in a proof without needing to carry around a predual.
 variable [CStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
-
-open scoped ComplexStarModule
 
 -- We don't want these intances to pollute `WeakBilin`, so we scope them to `Ultraweak`.
 /-- The ring structure on `σ(M, P)` it inherits from `M`. -/
@@ -200,14 +384,6 @@ lemma ofUltraweak_one : ofUltraweak (1 : σ(M, P)) = (1 : M) := rfl
 
 @[simp]
 lemma toUltraweak_one : toUltraweak ℂ P (1 : M) = (1 : σ(M, P)) := rfl
-
-@[simp]
-lemma ofUltraweak_mul (x y : σ(M, P)) :
-    ofUltraweak (x * y) = ofUltraweak x * ofUltraweak y := rfl
-
-@[simp]
-lemma toUltraweak_mul (x y : M) :
-    toUltraweak ℂ P (x * y) = toUltraweak ℂ P x * toUltraweak ℂ P y := rfl
 
 @[simp]
 lemma ofUltraweak_pow (x : σ(M, P)) (n : ℕ) :
@@ -263,98 +439,6 @@ variable (M P) in
 @[simp]
 lemma toLinearEquiv_algEquiv : (algEquiv M P).toLinearEquiv = linearEquiv .. := rfl
 
-/-- The star ring structure on `σ(M, P)` it inherits from `M`. -/
-scoped instance : StarRing σ(M, P) := inferInstanceAs (StarRing M)
-scoped instance : StarModule ℂ σ(M, P) := inferInstanceAs (StarModule ℂ M)
-
-/-- The partial order on `σ(M, P)` it inherits from `M`. -/
-scoped instance [PartialOrder M] : PartialOrder σ(M, P) :=
-  inferInstanceAs (PartialOrder M)
-scoped instance [PartialOrder M] [StarOrderedRing M] : StarOrderedRing σ(M, P) :=
-  inferInstanceAs (StarOrderedRing M)
-
-@[simp]
-lemma ofUltraweak_star (x : σ(M, P)) :
-    ofUltraweak (star x) = star (ofUltraweak x) := rfl
-
-@[simp]
-lemma toUltraweak_star (x : M) :
-    toUltraweak ℂ P (star x) = star (toUltraweak ℂ P x) := rfl
-
-@[simp]
-lemma ofUltraweak_realPart (a : σ(M, P)) :
-    ofUltraweak (ℜ a : σ(M, P)) = ℜ (ofUltraweak a) := rfl
-
-@[simp]
-lemma toUltraweak_realPart (a : M) :
-    toUltraweak ℂ P (ℜ a : M) = ℜ (toUltraweak ℂ P a) := rfl
-
-@[simp]
-lemma ofUltraweak_imaginaryPart (a : σ(M, P)) :
-    ofUltraweak (ℑ a : σ(M, P)) = ℑ (ofUltraweak a) := rfl
-
-@[simp]
-lemma toUltraweak_imaginaryPart (a : M) :
-    toUltraweak ℂ P (ℑ a : M) = ℑ (toUltraweak ℂ P a) := rfl
-
-@[simp]
-lemma ofUltraweak_nonneg [PartialOrder M] {x : σ(M, P)} :
-    0 ≤ ofUltraweak x ↔ 0 ≤ x :=
-  Iff.rfl
-
-@[simp]
-lemma toUltraweak_nonneg [PartialOrder M] {x : M} :
-    0 ≤ toUltraweak ℂ P x ↔ 0 ≤ x :=
-  Iff.rfl
-
-@[simp]
-lemma ofUltraweak_le [PartialOrder M] {x y : σ(M, P)} :
-    ofUltraweak x ≤ ofUltraweak y ↔ x ≤ y :=
-  Iff.rfl
-
-@[simp]
-lemma toUltraweak_le [PartialOrder M] {x y : M} :
-    toUltraweak ℂ P x ≤ toUltraweak ℂ P y ↔ x ≤ y :=
-  Iff.rfl
-
-lemma monotone_ofUltraweak [PartialOrder M] :
-    Monotone (ofUltraweak : σ(M, P) → M) :=
-  fun _ _ ↦ id
-
-lemma monotone_toUltraweak [PartialOrder M] :
-    Monotone (toUltraweak ℂ P : M → σ(M, P)) :=
-  fun _ _ ↦ id
-
-/-- The identity map from `σ(M, P)` to `M` as an order isomorphism. -/
-noncomputable def ofUltraweakOrderIso [PartialOrder M] :
-    σ(M, P) ≃o M where
-  toFun := ofUltraweak
-  invFun := toUltraweak ℂ P
-  left_inv _ := rfl
-  right_inv _ := rfl
-  map_rel_iff' := Iff.rfl
-
-variable (M P) in
-/-- The canonical ⋆-algebra equivalence between `σ(M, P)` and `M`. -/
-@[simps!]
-noncomputable def starAlgEquiv : σ(M, P) ≃⋆ₐ[ℂ] M := .ofAlgEquiv (algEquiv M P) fun _ ↦ rfl
+end Unital
 
 end Ultraweak
-
-variable [CStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
-
-open scoped Ultraweak
-
-@[simp]
-lemma isSelfAdjoint_ofUltraweak {x : σ(M, P)} :
-    IsSelfAdjoint (ofUltraweak x) ↔ IsSelfAdjoint x := by
-  simp [isSelfAdjoint_iff, ← Ultraweak.ofUltraweak_star]
-
-alias ⟨IsSelfAdjoint.of_ofUltraweak, IsSelfAdjoint.ofUltraweak⟩ := isSelfAdjoint_ofUltraweak
-
-@[simp]
-lemma isSelfAdjoint_toUltraweak {x : M} :
-    IsSelfAdjoint (toUltraweak ℂ P x) ↔ IsSelfAdjoint x := by
-  simp [isSelfAdjoint_iff, ← Ultraweak.toUltraweak_star]
-
-alias ⟨IsSelfAdjoint.of_toUltraweak, IsSelfAdjoint.toUltraweak⟩ := isSelfAdjoint_toUltraweak

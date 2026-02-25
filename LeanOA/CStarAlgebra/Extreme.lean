@@ -2,16 +2,27 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.Convex.Extreme
-import LeanOA.ForMathlib.Misc
+import LeanOA.Mathlib.Analysis.Convex.Extreme
+import LeanOA.Mathlib.LinearAlgebra.Complex.Module
+import LeanOA.Mathlib.Misc
+import Mathlib.Algebra.Group.Idempotent
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 
-open Set Metric
+open Set Metric Complex CFC
 open scoped ComplexStarModule
 
-@[simp]
-lemma realPart_one {A : Type*} [Ring A] [StarRing A] [Module ℂ A] [StarModule ℂ A] :
-    ℜ (1 : A) = 1 := by
-  ext; simp [realPart_apply_coe, ← two_smul ℝ]
+/-! # Extreme points of the closed unit ball in C⋆-algebras
 
+This file contains results on the extreme points of the closed unit ball in (unital) C⋆-algebras.
+In particular, we show that a C⋆-algebra is unital if and only if there exists an extreme point
+of the closed unit ball.
+
+## References
+[Sakai], [Pedersen], [Takesaki], [Kadison], [Murphy]
+-/
+
+-- move to...?
 @[simp]
 lemma Set.extremePoints_Icc {a b : ℝ} (hab : a ≤ b) :
     Set.extremePoints ℝ (Icc a b) = {a, b} := by
@@ -19,37 +30,13 @@ lemma Set.extremePoints_Icc {a b : ℝ} (hab : a ≤ b) :
   rw [convex_Icc .. |>.mem_extremePoints_iff_convex_diff]
   constructor
   · intro ⟨h₁, h₂⟩
-    have := eq_endpoints_or_mem_Ioo_of_mem_Icc h₁
     suffices x ∉ Ioo a b by grind
     intro hx
     have := h₂.isPreconnected.Icc_subset (a := a) (b := b) (by grind) (by grind)
     grind
-  · simp only [mem_insert_iff, mem_singleton_iff, mem_Icc]
-    rintro (rfl | rfl)
+  · rintro (rfl | rfl)
     · simpa using ⟨hab, convex_Ioc ..⟩
     · simpa using ⟨hab, convex_Ico ..⟩
-
-@[nontriviality]
-lemma Set.extremePoints_eq_self {𝕜 E : Type*} [Semiring 𝕜] [PartialOrder 𝕜]
-    [AddCommMonoid E] [SMul 𝕜 E] [Subsingleton E] (A : Set E) :
-    Set.extremePoints 𝕜 A = A :=
-  subset_antisymm extremePoints_subset fun _ h ↦ ⟨h, fun _ _ _ _ _ ↦ Subsingleton.elim ..⟩
-
-open Complex
-lemma cfc_re_id {A : Type*} [CStarAlgebra A] {a : A} [IsStarNormal a] :
-    cfc (re · : ℂ → ℂ) a = ℜ a := by
-  conv_rhs => rw [realPart_apply_coe, ← cfc_id' ℂ a, ← cfc_star, ← cfc_add .., ← cfc_smul ..]
-  refine cfc_congr fun x hx ↦ ?_
-  rw [Complex.re_eq_add_conj, ← smul_one_smul ℂ 2⁻¹]
-  simp [div_eq_inv_mul]
-
-open Complex
-lemma cfc_im_id {A : Type*} [CStarAlgebra A] {a : A} [IsStarNormal a] :
-    cfc (im · : ℂ → ℂ) a = ℑ a := by
-  suffices cfc (fun z : ℂ ↦ re z + I * im z) a = ℜ a + I • ℑ a by
-    rw [cfc_add .., cfc_const_mul .., cfc_re_id] at this
-    simpa
-  simp [mul_comm I, re_add_im, cfc_id' .., realPart_add_I_smul_imaginaryPart]
 
 lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] :
     1 ∈ extremePoints ℝ (closedBall (0 : A) 1) := by
@@ -98,8 +85,8 @@ lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebr
   then suffices to show that `ℑ x = 0`. -/
   have hx' : IsStarNormal x := by simp [isStarNormal_iff_commute_realPart_imaginaryPart, ← ha']
   suffices (ℑ x : A) = 0 by rw [← realPart_add_I_smul_imaginaryPart x, ← ha', this]; simp
-  letI := spectralOrder A
-  letI := spectralOrderedRing A
+  let := spectralOrder A
+  let := spectralOrderedRing A
   /- Note that `‖1 + (ℑ x) ^ 2‖ = ‖(ℜ x) ^ 2 + (ℑ x) ^ 2‖ = ‖star x * x‖ = ‖x‖ ^ 2 ≤ 1`.
   Therefore, `1 + (ℑ x) ^ 2 ≤ 1`, so `(ℑ x) ^ 2 ≤ 0`. Since `(ℑ x) ^ 2` is clearly nonnegative,
   we conclude that it is zero, and hence so also `ℑ x = 0`, as desired. -/
@@ -108,3 +95,143 @@ lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebr
     CStarAlgebra.norm_le_one_iff_of_nonneg _ (add_nonneg zero_le_one (ℑ x).2.sq_nonneg)] at hx
   rw [← norm_eq_zero, ← sq_eq_zero_iff, ← IsSelfAdjoint.norm_mul_self (ℑ x).2, ← sq, norm_eq_zero]
   exact le_antisymm (by simpa using hx) (ℑ x).2.sq_nonneg
+
+section nonUnital
+variable {A : Type*} [NonUnitalCStarAlgebra A]
+
+-- `Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Isometric`
+alias quasispectrum.norm_le_norm_of_mem :=
+  NonUnitalIsometricContinuousFunctionalCalculus.norm_quasispectrum_le
+
+theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
+    (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
+  /- Suppose `a` is an extreme point of the closed unit ball. Then we want to show that
+  `a * star a * a = a`. It suffices to show `a * |a| = a`. -/
+  let := CStarAlgebra.spectralOrder A
+  let := CStarAlgebra.spectralOrderedRing A
+  suffices a * abs a = a by rw [mul_assoc, ← abs_mul_abs, ← mul_assoc, this, this]
+  obtain ⟨ha, h⟩ := ha
+  simp only [mem_closedBall, dist_zero_right] at ha h
+  /- Using the extremity of `a`, it suffices to show that `2 • |a| - |a| * |a|` is in the
+  closed unit ball since `2⁻¹ • (2 • |a| - |a| * |a|) + 2⁻¹ • (a * |a|) = a`
+  (and clearly `a * |a|` is in the closed unit ball since `a` is). -/
+  refine @h _ ?_ ((2 : ℝ) • a - a * abs a) ?_ ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← two_mul]⟩
+  · grw [norm_mul_le, norm_abs, ha, one_mul]
+  · /- To show this inequality (i.e., `‖2 • a - a * |a|‖ ≤ 1`), we first
+    show equality with `‖2 • |a| - |a| * |a|‖` (using the C⋆-identity), and then pass to the
+    continuous functional calculus where we then use `norm_cfcₙ_le` to show the rest
+    (using the fact that the elements in the quasispectrum of `|a|`
+    are bounded between `0` and `1`). -/
+    calc
+      _ = ‖(2 : ℝ) • abs a - abs a * abs a‖ := by
+        simp_rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), sq, ← CStarRing.norm_star_mul_self]
+        simp only [star_sub, star_smul, star_mul, mul_sub, mul_smul_comm, sub_mul, smul_mul_assoc]
+        simp [abs_nonneg a |>.star_eq, mul_assoc, ← mul_assoc _ a, ← abs_mul_abs]
+      _ = ‖cfcₙ (fun x : ℝ ↦ 2 * x - x * x) (abs a)‖ := by
+        rw [cfcₙ_sub _ _, cfcₙ_const_mul _ _, cfcₙ_mul _ _, cfcₙ_id' ℝ (abs a)]
+      _ ≤ _ := norm_cfcₙ_le fun x hx ↦ by
+        have := x.le_norm_self.trans (by grw [quasispectrum.norm_le_norm_of_mem _ hx, norm_abs, ha])
+        rw [Real.norm_of_nonneg] <;> nlinarith [quasispectrum_nonneg_of_nonneg _ (by simp) _ hx]
+
+attribute [local grind .] IsSelfAdjoint.star_mul_self IsIdempotentElem IsSelfAdjoint.mul_star_self
+attribute [local grind] IsStarProjection
+
+theorem isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall
+    {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (star a * a) := by
+  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
+
+theorem isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall
+    {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (a * star a) := by
+  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
+
+variable {A : Type*} [NonUnitalCStarAlgebra A]
+
+private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
+    {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
+    (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
+    a = 0 := by
+  have hP := isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx
+  have hQ := isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall hx
+  set p := star x * x with hp
+  have hxa : star x * a = 0 := by
+    rw [← norm_eq_zero, ← mul_self_eq_zero, ← CStarRing.norm_star_mul_self]
+    simp [hb, mul_add, mul_sub, add_mul, sub_mul]
+    grind
+  have hax : star a * x = 0 := by simpa [star_mul] using congr(star $hxa)
+  have hpa : p * (star a * a) = 0 := by
+    simp only [hb, mul_add, mul_sub, star_add, star_sub, star_mul, add_mul, sub_mul]
+    grind [star_star_mul x x]
+  have : star (x + a) * (x + a) = p + star a * a := by simp [hp, mul_add, add_mul, hax, hxa]
+  have : ‖p + star a * a‖ = ‖x + a‖ * ‖x + a‖ := by rw [← this, CStarRing.norm_star_mul_self]
+  have hmax : ‖p + star a * a‖ ≤ 1 := by
+    rw [IsSelfAdjoint.star_mul_self x |>.norm_add_eq_max hpa (.star_mul_self a), sup_le_iff, hp]
+    simp only [CStarRing.norm_star_mul_self]
+    grw [mem_closedBall_zero_iff.mp hx.1, mem_closedBall_zero_iff.mp ha, one_mul, and_self]
+  have : ‖x + a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp <| by grind
+  have : ‖x - a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp <| by
+    simp [sq, ← CStarRing.norm_star_mul_self, sub_mul, mul_sub, hax, hxa, ← hp, hmax]
+  exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
+    ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
+
+open CStarAlgebra Filter Topology in
+/-- When `x` is an extreme point of the closed unit ball in a non-unital C⋆-algebra,
+then `star x * x + x * star x - x * star x * star x * x` is a right identity.
+(See also `CStarAlgebra.ofExtremePtOne_mul` for the left identity.) -/
+theorem CStarAlgebra.mul_ofExtremePtOne {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1))
+    (a : A) : a * (star x * x + x * star x - x * star x * (star x * x)) = a := by
+  let := spectralOrder A
+  let := spectralOrderedRing A
+  let u := approximateUnit A
+  let hu := increasingApproximateUnit A
+  let f (t : A) : A := t - t * (star x * x) - x * star x * t + x * star x * t * (star x * x)
+  have h (t : A) : f t = 0 := by
+    simpa using eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
+      hx (inv_norm_smul_mem_unitClosedBall (f t)) (b := ‖f t‖⁻¹ • t)
+      (by simp [← mul_assoc, smul_mul_assoc, mul_smul_comm, sub_sub, ← smul_sub, ← smul_add, f])
+  have h_tendsto : Tendsto (fun t ↦ a * f t) u
+      (𝓝 (a - a * (star x * x + x * star x - x * star x * (star x * x)))) := by
+    conv => enter [1, t]; simp only [f]; rw [sub_add, sub_sub, add_sub, mul_sub]
+    apply_rules [Tendsto.sub, Tendsto.add, hu.tendsto_mul_left, hu.tendsto_mul_right,
+      Tendsto.mul_const, Tendsto.const_mul]
+  simpa [h, sub_eq_zero, eq_comm (a := (0 : A)), eq_comm (a := a)] using h_tendsto
+
+@[simp]
+theorem star_mem_extremePoints_closedBall_zero_iff {A : Type*} [NonUnitalSeminormedRing A]
+    [StarRing A] [NormedStarGroup A] [Module ℝ A] [StarModule ℝ A] {x : A} (c : ℝ) :
+    star x ∈ extremePoints ℝ (closedBall 0 c) ↔ x ∈ extremePoints ℝ (closedBall 0 c) := by
+  suffices ∀ x : A, x ∈ extremePoints ℝ (closedBall 0 c) → star x ∈ extremePoints ℝ (closedBall 0 c)
+    from ⟨fun h ↦ star_star x ▸ this (star x) h, this x⟩
+  refine fun x hx ↦ ⟨by simpa using hx.1, fun y hy z hz ⟨α, β, hα, hβ, hαβ, hxyz⟩ ↦ ?_⟩
+  rw [eq_star_iff_eq_star, eq_comm] at hxyz ⊢
+  apply @hx.2 _ (by simpa using hy) (star z) (by simpa using hz) ⟨star α, star β, ?_⟩
+  simp [← hxyz, hα, hβ, hαβ]
+
+/-- When `x` is an extreme point of the closed unit ball in a non-unital C⋆-algebra,
+then `star x * x + x * star x - x * star x * star x * x` is a left identity.
+(See also `CStarAlgebra.mul_ofExtremePtOne` for the right identity.) -/
+theorem CStarAlgebra.ofExtremePtOne_mul {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1))
+    (a : A) : (star x * x + x * star x - x * star x * (star x * x)) * a = a := by
+  simpa [add_comm] using congr(star $(mul_ofExtremePtOne (x := star x) (by simpa) (star a)))
+
+/-- The ring structure given an extreme point of the closed unit ball on a non-unital
+C⋆-algebra. Only an implementation for `CStarAlgebra.ofExtremePt`. -/
+abbrev CStarAlgebra.ringOfExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+    Ring A where
+  one := star x * x + x * star x - x * star x * (star x * x)
+  one_mul y := ofExtremePtOne_mul hx y
+  mul_one y := mul_ofExtremePtOne hx y
+
+lemma CStarAlgebra.ofExtremePt_one_def {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+    letI := CStarAlgebra.ringOfExtremePt hx
+    1 = star x * x + x * star x - x * star x * (star x * x) :=
+  rfl
+
+/-- Upgrade a non-unital C⋆-algebra to a unital C⋆-algebra, given there exists an
+extreme point of the closed unit ball. -/
+abbrev CStarAlgebra.ofExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
+    CStarAlgebra A where
+  __ := ‹NonUnitalCStarAlgebra A›
+  __ := ringOfExtremePt hx
+  __ := Algebra.ofModule smul_mul_assoc mul_smul_comm
+
+end nonUnital

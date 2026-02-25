@@ -3,8 +3,8 @@ Copyright (c) 2024 Jireh Loreaux. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jireh Loreaux
 -/
-import LeanOA.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-import LeanOA.ForMathlib.Analysis.CStarAlgebra.Module.Defs
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.CStarAlgebra.Module.Defs
 import Mathlib.Analysis.Normed.Lp.lpSpace
@@ -279,7 +279,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
       · exact tendsto_norm.comp <| tendsto_finset_sum t fun i hi ↦
           (continuous_inner.tendsto _).comp ((hy i).prodMk_nhds (hy i))
       · filter_upwards [Ici_mem_atTop N] with m hm
-        replace hN := (hN N le_rfl m hm).le
+        replace hN := norm_neg_add (x N) (x m) ▸ (hN N le_rfl m hm).le
         have (j : ι) (a b : E j) :
             ⟪b, b⟫_A = ⟪a - b, a - b⟫_A + ⟪a, b - a⟫_A + ⟪b - a, a⟫_A + ⟪a, a⟫_A := by
           simp; abel

@@ -1,4 +1,4 @@
-import LeanOA.ForMathlib.Misc
+import LeanOA.Mathlib.Misc
 import LeanOA.Lp.lpSpace
 
 open scoped lp ENNReal NNReal
@@ -151,6 +151,7 @@ def lp.holder (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i) {K : ℝ} (hB
   val := fun i ↦ B i (e i) (f i)
   property := (lp.memℓp e).holder _ (lp.memℓp f) B hBK
 
+set_option backward.isDefEq.respectTransparency false in
 /-- `lp.holder` as a bilinear map. -/
 @[simps!]
 def lp.holderₗ (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i) {K : ℝ} (hBK : ∀ i, ‖B i‖ ≤ K) :
