@@ -241,35 +241,10 @@ section Positive
 
 /- In this section we prove that the extreme points of the set of positive elements
    in the unit ball of a `NonUnitalCStarAlgebra A` are precisely the projections in `A`. -/
+section Unital
 
-/-
-This will use the very same trick Jireh used yesterday. The idea is probably to go and
-figure out the right abstractions to use. We can write a proof description here, and then
-fill in the Lean code around it.
--/
-
-/- A few notes: It may be that we only need this for `CStarAlgebra`s. In this case we have
-Gelfand Duality. Note that Jireh uses the GelfandStarTransform of the unitization of A in the
-theorem CommCStarAlgebra.norm_add_eq_max in Mathlib.Analysis.GelfandDuality. We can mimic this.-/
-
-/- Here is the meat of Jireh's comment:
-It should suffice to have an isometric A →⋆ₙₐ[ℂ] C(X, ℂ) for some compact Hausdorff X.
-This is easily achieved with A →⋆ₙₐ[ℂ] A⁺¹ →⋆ₐ[ℂ] C(characterSpace ℂ (A⁺¹), ℂ) where
-the first map is the canonical embedding of A into its unitization,
-and the second map is the Gelfand transform for A⁺¹.-/
-
-/- Before worrying about details, is it actually enough in our case to have such a map?
-If this map is isometric, then it will crush neither `e` nor `a`. We can conclude from
-the algebra (or inherited order structure) that the function `a` is "supported on" `e`,
-at least in the image. That gets `eae=a` in the image, or `eae - a =0` in the image. Since the
-map was isometric, it must be that `eae - a = 0` in the algebra, as well. So it seems that
-having this map is enough.
- -/
-
-open StarAlgebra
-
-/- First, let's do this in a `CStarAlgebra` for simplicity. We then can go to
-the `NonUnitalCStarAlgebra` case by passing to a unitization. -/
+/- First, we prove the following "weak heredity" result in a `CStarAlgebra` for simplicity.
+We then can go to the `NonUnitalCStarAlgebra` case by passing to a unitization. -/
 
 variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
@@ -281,12 +256,11 @@ theorem weak_heredity_left {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (
     rw [he.2, he.1, he.1]
     exact sub_self ..
   rw [J] at I
-  have K : star (1 - e) * a * (1 - e) = 0 := by
-    apply le_antisymm I (star_left_conjugate_nonneg h0a (1 - e))
   have L : ‖(star (1 - e) * sqrt a) * (sqrt a * (1 - e))‖ = 0 := by
-    grind [CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, ← norm_eq_zero]
+    grind [CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, ← norm_eq_zero,
+      le_antisymm I (star_left_conjugate_nonneg h0a (1 - e))]
   have M : star (sqrt a * (1 - e)) = (star (1 - e) * sqrt a) := by
-    simp [star_mul, LE.le.star_eq <| sqrt_nonneg a]
+    simp only [star_mul, star_sub, star_one, LE.le.star_eq <| sqrt_nonneg a]
   rw [← M, CStarRing.norm_star_mul_self] at L
   simp only [mul_eq_zero, norm_eq_zero, or_self] at L
   have N : sqrt a * (sqrt a * (1 - e)) = 0 := mul_eq_zero_of_right (sqrt a) L
@@ -302,5 +276,31 @@ theorem weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae :
     a = e * a * e := by
   rw [← weak_heredity_right he h0a hae, ← weak_heredity_left he h0a hae]
 
+end Unital
+
+section NonUnital
+
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+
+open CStarAlgebra Unitization
+
+lemma Unitization.coe_pos {a : A} (ha : 0 ≤ a) : 0 ≤ inrNonUnitalStarAlgHom ℂ A a := by
+  obtain ⟨x, hx⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp ha
+  grind [map_star, star_mul_self_nonneg ((inrNonUnitalStarAlgHom ℂ A) x)]
+
+lemma Unitization.coe_le {a b : A} (hab : b ≤ a) :
+    inrNonUnitalStarAlgHom ℂ A b ≤ inrNonUnitalStarAlgHom ℂ A a := by
+  simpa using Unitization.coe_pos <| sub_nonneg_of_le hab
+
+
+theorem NonUnital.weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
+    a = e * a * e := sorry
+
+
+
+  --have := weak_heredity
+
+
+end NonUnital
 
 end Positive
