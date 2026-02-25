@@ -235,3 +235,23 @@ abbrev CStarAlgebra.ofExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBal
   __ := Algebra.ofModule smul_mul_assoc mul_smul_comm
 
 end nonUnital
+
+section Positive
+
+/- In this section we prove that the extreme points of the set of positive elements
+   in the unit ball of a `NonUnitalCStarAlgebra A` are precisely the projections in `A`. -/
+
+/-
+This will use the very same trick Jireh used yesterday. The idea is probably to go and
+figure out the right abstractions to use. We can write a proof description here, and then
+fill in the Lean code around it.
+-/
+
+/- A few notes: It may be that we only need this for `CStarAlgebra`s. In this case we have
+Gelfand Duality. Note that Jireh uses the GelfandStarTransform of the unitization of A in the
+theorem CommCStarAlgebra.norm_add_eq_max in Mathlib.Analysis.GelfandDuality. We can mimic this.-/
+
+
+
+
+end Positive
