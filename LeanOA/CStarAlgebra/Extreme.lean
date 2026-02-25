@@ -245,15 +245,16 @@ section Positive
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
-open CStarAlgebra Unitization
+open Unitization
 
-theorem weak_heredity' {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
+lemma weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
     a = e * a * e := by
   let a' := inrNonUnitalStarAlgHom ℂ A a
   let e' := inrNonUnitalStarAlgHom ℂ A e
-  have he' : IsStarProjection e' := sorry
-  have hae' : a' ≤ e' := sorry
-  have h0a' : 0 ≤ a' := sorry
+  have he' : IsStarProjection e' := he.inr
+  have hae' : a' ≤ e' := inr_le_iff (ha := LE.le.isSelfAdjoint h0a)
+    (hb := he.isSelfAdjoint) |>.mpr hae
+  have h0a' : 0 ≤ a' := inr_nonneg_iff.mpr h0a
   suffices h1 : a' = e' * a' * e' by
     rw [← map_mul, ← map_mul] at h1
     exact inr_injective h1
@@ -270,7 +271,7 @@ theorem weak_heredity' {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae 
   rw [← (LE.le.star_eq <| sqrt_nonneg a'), ← star_mul, CStarRing.norm_star_mul_self, mul_eq_zero,
      norm_eq_zero, or_self, (LE.le.star_eq <| sqrt_nonneg _)] at L
   apply  mul_eq_zero_of_right (sqrt _) at L
-  rwa [← mul_assoc, ← CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp _, mul_sub,
+  rwa [← mul_assoc, ← CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a', mul_sub,
     mul_one, sub_eq_zero] at L
 
 end Positive
