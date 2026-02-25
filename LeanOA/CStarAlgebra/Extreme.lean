@@ -290,14 +290,13 @@ theorem weak_heredity_left {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (
   rw [← M, CStarRing.norm_star_mul_self] at L
   simp only [mul_eq_zero, norm_eq_zero, or_self] at L
   have N : sqrt a * (sqrt a * (1 - e)) = 0 := mul_eq_zero_of_right (sqrt a) L
-  rw [← mul_assoc, ← CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, mul_sub,
+  rwa [← mul_assoc, ← CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, mul_sub,
     mul_one, sub_eq_zero] at N
 
 theorem weak_heredity_right {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
     a = e * a := by
   have := weak_heredity_left he h0a hae
   rwa [← star_star a, ← star_star e, ← star_mul, star_inj, LE.le.star_eq h0a, he.2]
-
 
 theorem weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
     a = e * a * e := by
