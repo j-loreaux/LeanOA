@@ -277,6 +277,7 @@ theorem weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae :
   rw [← weak_heredity_right he h0a hae, ← weak_heredity_left he h0a hae]
 
 end Unital
+
 section NonUnital
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
