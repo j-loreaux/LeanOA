@@ -12,7 +12,6 @@ variable {𝕜 M P : Type*} [RCLike 𝕜] [NormedAddCommGroup M] [NormedSpace �
 variable [NormedAddCommGroup P] [NormedSpace 𝕜 P] [Predual 𝕜 M P] [CompleteSpace P]
 variable [Module ℝ≥0 M] [IsScalarTower ℝ≥0 𝕜 M]
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The Krein-Smulian theorem transferred from `WeakDual ℂ P` to `σ(M, P)`. This could
 generalize trivially from `ℂ` to `RCLike 𝕜`. -/
 protected lemma Ultraweak.krein_smulian_of_submodule (S : Submodule ℝ≥0 (σ(M, P)_𝕜))
@@ -88,7 +87,6 @@ lemma IsSelfAdjoint.max_norm_add_sub_algebraMap_ge
 
 namespace Ultraweak
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The selfadjoint elements are closed in the ultraweak topology. -/
 lemma isClosed_setOf_isSelfAdjoint : IsClosed {x : σ(M, P) | IsSelfAdjoint x} := by
   nontriviality σ(M, P)
@@ -148,7 +146,6 @@ lemma isClosed_setOf_isSelfAdjoint : IsClosed {x : σ(M, P) | IsSelfAdjoint x} :
 
 variable [PartialOrder M] [StarOrderedRing M]
 
-set_option backward.isDefEq.respectTransparency false in
 open Pointwise in
 /-- The nonnegative elements are closed in the ultraweak topology. -/
 lemma isClosed_nonneg : IsClosed {x : σ(M, P) | 0 ≤ x} := by
@@ -180,7 +177,6 @@ lemma isClosed_nonneg : IsClosed {x : σ(M, P) | 0 ≤ x} := by
   convert h₃.inter (isClosed_closedBall ℂ P (0 : M) 1) using 1
   exact subset_antisymm (Set.subset_inter h₁ Set.inter_subset_right) (by gcongr; exact h₂)
 
-set_option backward.isDefEq.respectTransparency false in
 instance : OrderClosedTopology σ(M, P) where
   isClosed_le' := isClosed_le_of_isClosed_nonneg isClosed_nonneg
 

@@ -149,7 +149,6 @@ lemma separation_aux (hA : KreinSmulianProperty A)
   rw [separationSeq_apply_fst_snd_eq_iUnion, polar]
   exact LinearMap.polar_iUnion₂ _ |>.symm
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The sequence obtained in `separation_aux` tends to zero along the cofinite filter
 (on the subtype domain). -/
 lemma separation_aux_tendsto
@@ -170,7 +169,6 @@ lemma separation_aux_tendsto
   have hm_pos : 0 < (m : ℝ) := lt_of_lt_of_le (by positivity) hmn
   simpa using closedBall_subset_closedBall (by field_simp; assumption) <| hF₂ m hxm
 
-set_option backward.isDefEq.respectTransparency false in
 -- Lemma 12.3, a separation lemma
 open scoped lp Set.Notation ComplexOrder in
 set_option linter.style.setOption false in
@@ -239,7 +237,6 @@ lemma KreinSmulianProperty.isClosed_inter_closedBall
   rw [← inter_eq_right.mpr this, preimage_inter, ← inter_assoc]
   exact hA _ |>.inter <| isClosed_closedBall ..
 
-set_option backward.isDefEq.respectTransparency false in
 lemma KreinSmulianProperty.translate (hA : KreinSmulianProperty A) (x : WeakDual 𝕜 E) :
     KreinSmulianProperty (x +ᵥ A) := by
   intro r
@@ -290,7 +287,6 @@ open KreinSmulian
 
 variable [CompleteSpace E]
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The **Krein-Smulian theorem**. If `A : Set (WeakDual 𝕜 E)` is convex and its intersection with
 arbitrarily large closed balls is closed, then `A` is itself closed (in the weak⋆ topology). -/
 theorem krein_smulian (A : Set (WeakDual 𝕜 E))
@@ -325,7 +321,6 @@ theorem krein_smulian (A : Set (WeakDual 𝕜 E))
   simp only [map_zero] at this
   exact lt_irrefl _ <| hs.trans_le this
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The **Krein-Smulian theorem**. If `A : Submodule 𝕜 (WeakDual 𝕜 E)` and if
 the intersection of `A` with the closed unit ball is closed, then `A` is itself
 closed (in the weak⋆ topology). -/
@@ -344,7 +339,6 @@ lemma krein_smulian_of_submodule (A : Submodule ℝ≥0 (WeakDual 𝕜 E))
   · simp [mem_smul_set_iff_inv_smul_mem₀, Units.smul_def,
       NNReal.smul_def, norm_smul, inv_mul_le_one₀ hr]
 
-set_option backward.isDefEq.respectTransparency false in
 /-- A linear map from the weak dual of a Banach space to itself is continuous if
 it is continuous on the closed unit ball. -/
 lemma continuous_of_continuousOn (f : WeakDual 𝕜 E →ₗ[𝕜] WeakDual 𝕜 E)
@@ -357,7 +351,6 @@ lemma continuous_of_continuousOn (f : WeakDual 𝕜 E →ₗ[𝕜] WeakDual 𝕜
   exact eval_continuous x |>.comp_continuousOn hf |>.preimage_isClosed_of_isClosed
     (isClosed_closedBall 0 1) isClosed_singleton
 
-set_option backward.isDefEq.respectTransparency false in
 /-- A *real* linear man from the weak dual of a Banach space to itself is continuous
 if it is continuous on the closed unit ball. -/
 lemma continuous_of_continuousOn_of_real (f : WeakDual 𝕜 E →ₗ[ℝ] WeakDual 𝕜 E)

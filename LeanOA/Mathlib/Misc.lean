@@ -33,7 +33,6 @@ instance {𝕜 A : Type*} [RCLike 𝕜] [Norm A] [MulAction 𝕜 A] [SMul ℤ A]
     rw [← smul_one_smul 𝕜]
     simp only [norm_smul, norm_one, mul_one]
 
-set_option backward.isDefEq.respectTransparency false in
 open NNReal in
 /-- The collection of nonnegative elements as an `ℝ≥0`-submodule. -/
 def Nonneg.nnrealSubmodule (α : Type*) [AddCommGroup α] [PartialOrder α] [Module ℝ α]
@@ -144,7 +143,6 @@ instance ContinuousSMul.smulMemClass (S M α : Type*) [Monoid M] [MulAction M α
     [SMulMemClass S M α] (s : S) : ContinuousSMul M s where
   continuous_smul := by fun_prop
 
-set_option backward.isDefEq.respectTransparency false in
 instance ContinuousSMul.complexToReal {E : Type*} [AddCommGroup E] [Module ℂ E] [TopologicalSpace E]
     [ContinuousSMul ℂ E] : ContinuousSMul ℝ E :=
   IsScalarTower.continuousSMul ℂ

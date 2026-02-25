@@ -21,7 +21,6 @@ lemma lp.norm_scalarDualPairing {p q : ℝ≥0∞} [Fact (1 ≤ p)] [Fact (1 ≤
 
 namespace tendstoZero
 
-set_option backward.isDefEq.respectTransparency false in
 variable (ι 𝕜) in
 /-- The natural continuous linear map from `ℓ¹(ι, 𝕜)` into the (strong) dual of `c₀(ι, 𝕜)`
 given by `fun x y ↦ ∑' i, (y i) * (x i)`. the order of the parameter is reversed because we
@@ -36,7 +35,6 @@ lemma lpOneToStrongDual_apply_apply
     lpOneToStrongDual ι 𝕜 x y = ∑' i, y.1 i * x i :=
   rfl
 
-set_option backward.isDefEq.respectTransparency false in
 lemma norm_lpOneToStrongDual_apply (x : ℓ¹(ι, 𝕜)) :
     ‖lpOneToStrongDual ι 𝕜 x‖ ≤ ‖x‖ := by
   refine (lpOneToStrongDual ι 𝕜 x).opNorm_le_bound (by positivity) fun φ ↦ ?_
@@ -46,12 +44,10 @@ lemma norm_lpOneToStrongDual_apply (x : ℓ¹(ι, 𝕜)) :
   · exact lp.norm_scalarDualPairing
   · exact le_rfl
 
-set_option backward.isDefEq.respectTransparency false in
 lemma norm_lpOneToStrongDual : ‖lpOneToStrongDual ι 𝕜‖ ≤ 1 :=
   lpOneToStrongDual ι 𝕜 |>.opNorm_le_bound (by positivity) fun x ↦ by
     simpa only [one_mul] using norm_lpOneToStrongDual_apply x
 
-set_option backward.isDefEq.respectTransparency false in
 open ComplexOrder in
 lemma sum_strongDual_eval_single_le_norm [DecidableEq ι]
     (φ : StrongDual 𝕜 c₀(ι, 𝕜)) (s : Finset ι) :
@@ -95,7 +91,6 @@ noncomputable def strongDualTolpOne [DecidableEq ι]
     (φ : StrongDual 𝕜 c₀(ι, 𝕜)) : ℓ¹(ι, 𝕜) :=
   ⟨fun i ↦ φ (single i 1), strongDual_eval_single_memℓp_one φ⟩
 
-set_option backward.isDefEq.respectTransparency false in
 lemma norm_strongDualTolpOne_apply [DecidableEq ι]
     (φ : StrongDual 𝕜 c₀(ι, 𝕜)) : ‖strongDualTolpOne φ‖ ≤ ‖φ‖ :=
   lp.norm_le_of_forall_sum_le (by simp) (by positivity) <| by
@@ -132,7 +127,6 @@ noncomputable def lpOneToStrongDualLinearEquiv [DecidableEq ι] :
       simp_rw [← smul_eq_mul, ← map_smul, smul_single, smul_eq_mul, mul_one]
       exact φ.hasSum (hasSum_single x) |>.tsum_eq }
 
-set_option backward.isDefEq.respectTransparency false in
 variable (ι 𝕜) in
 /-- The linear isometry equivalence between `ℓ¹(ι, 𝕜)` and the (strong) dual of `c₀(ι, 𝕜)`.
 In the forward direction, this is given by `fun x y ↦ ∑' i, (y i) * (x i)`, and in the

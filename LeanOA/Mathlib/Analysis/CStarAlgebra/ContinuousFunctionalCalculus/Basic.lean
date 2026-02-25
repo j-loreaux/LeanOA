@@ -9,7 +9,6 @@ section nonUnital
 variable [NonUnitalRing A] [StarRing A] [Module ℂ A] [IsScalarTower ℂ A A] [SMulCommClass ℂ A A]
   [StarModule ℂ A] [NonUnitalContinuousFunctionalCalculus ℂ A p]
 
-set_option backward.isDefEq.respectTransparency false in
 lemma cfcₙ_re_id (a : A) (hp : p a := by cfc_tac) :
     cfcₙ (re · : ℂ → ℂ) a = ℜ a := by
   conv_rhs => rw [realPart_apply_coe, ← cfcₙ_id' ℂ a, ← cfcₙ_star, ← cfcₙ_add .., ← cfcₙ_smul ..]
