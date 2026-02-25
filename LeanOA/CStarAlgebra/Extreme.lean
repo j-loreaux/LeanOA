@@ -280,9 +280,14 @@ end Unital
 
 section NonUnital
 
-variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+variable {A : Type*} [NonUnitalCStarAlgebra A]
 
 open CStarAlgebra Unitization
+
+lemma Unitization.coe_starProjection {e : A} (he : IsStarProjection e) :
+    IsStarProjection (inrNonUnitalStarAlgHom ℂ A e) := ⟨by simp [he.1], by simp [he.2]⟩
+
+variable [PartialOrder A] [StarOrderedRing A]
 
 lemma Unitization.coe_pos {a : A} (ha : 0 ≤ a) : 0 ≤ inrNonUnitalStarAlgHom ℂ A a := by
   obtain ⟨x, hx⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp ha
@@ -292,13 +297,13 @@ lemma Unitization.coe_le {a b : A} (hab : b ≤ a) :
     inrNonUnitalStarAlgHom ℂ A b ≤ inrNonUnitalStarAlgHom ℂ A a := by
   simpa using Unitization.coe_pos <| sub_nonneg_of_le hab
 
+variable {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e)
 
-theorem NonUnital.weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
-    a = e * a * e := sorry
-
-
-
-  --have := weak_heredity
+theorem nonUnital_weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
+    a = e * a * e := by
+  have := weak_heredity (Unitization.coe_starProjection he) (Unitization.coe_pos h0a)
+    (Unitization.coe_le hae)
+  rw [← map_mul, ← map_mul, inrNonUnitalStarAlgHom_apply, inrNonUnitalStarAlgHom_apply] at this
 
 
 end NonUnital
