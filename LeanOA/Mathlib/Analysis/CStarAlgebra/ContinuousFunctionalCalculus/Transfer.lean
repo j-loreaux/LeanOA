@@ -34,7 +34,7 @@ lemma cfcHomTransfer_id (e : A ≃⋆ₐ[R] B) (hpq : ∀ x, p x ↔ q (e x)) (b
 open ContinuousFunctionalCalculus in
 /-- Transfer a continuous functional calculus instance to a type synonym with
 a weaker topology. -/
-theorem ContinuousFunctionCalculus.transfer (e : A ≃⋆ₐ[R] B)
+theorem ContinuousFunctionalCalculus.transfer (e : A ≃⋆ₐ[R] B)
     (he : Continuous e) (hpq : ∀ x, p x ↔ q (e x)) :
     ContinuousFunctionalCalculus R B q where
   predicate_zero := map_zero e ▸ (hpq 0 |>.mp instCFC.predicate_zero)
@@ -130,7 +130,7 @@ lemma cfcₙHomTransfer_id (e : A ≃⋆ₐ[R] B) (hpq : ∀ x, p x ↔ q (e x))
 open NonUnitalContinuousFunctionalCalculus in
 /-- Transfer a continuous functional calculus instance to a type synonym with
 a weaker topology. -/
-theorem NonUnitalContinuousFunctionCalculus.transfer (e : A ≃⋆ₐ[R] B)
+theorem NonUnitalContinuousFunctionalCalculus.transfer (e : A ≃⋆ₐ[R] B)
     (he : Continuous e) (hpq : ∀ x, p x ↔ q (e x)) :
     NonUnitalContinuousFunctionalCalculus R B q where
   predicate_zero := map_zero e ▸ (hpq 0 |>.mp instCFC.predicate_zero)

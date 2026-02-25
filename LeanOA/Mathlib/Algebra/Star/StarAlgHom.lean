@@ -2,6 +2,25 @@ import Mathlib.Algebra.Star.StarAlgHom
 
 namespace StarAlgEquiv
 
+section RestrictScalars
+
+-- this should replace the existing `StarAlgEquiv.restrictScalars`
+
+variable (R : Type*) {S A B : Type*} [CommSemiring R] [CommSemiring S]
+  [NonUnitalNonAssocSemiring A] [NonUnitalNonAssocSemiring B] [SMul R S] [Module S A] [Module S B]
+  [Module R A] [Module R B] [IsScalarTower R S A] [IsScalarTower R S B] [Star A] [Star B]
+
+@[simps]
+def restrictScalars' (f : A ≃⋆ₐ[S] B) : A ≃⋆ₐ[R] B :=
+  { (f : A →ₗ[S] B).restrictScalars R, f with
+    toFun := f }
+
+theorem restrictScalars_injective' :
+    Function.Injective (StarAlgEquiv.restrictScalars' R : (A ≃⋆ₐ[S] B) → A ≃⋆ₐ[R] B) :=
+  fun f g h => StarAlgEquiv.ext fun x =>
+    show f.restrictScalars' R x = g.restrictScalars' R x from DFunLike.congr_fun h x
+
+end RestrictScalars
 section NonUnital
 
 variable {R A₁ A₂ A₃ A₁' A₂' A₃' : Type*} [Monoid R]
