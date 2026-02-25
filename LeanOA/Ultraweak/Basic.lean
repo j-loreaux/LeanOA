@@ -343,14 +343,6 @@ scoped instance : StarOrderedRing σ(M, P) :=
 
 end StarOrderedRing
 
-section NonUnital
-
-variable [NonUnitalCStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
-
-/-- The NonUnitalCStarAlgebra structure on `σ(M, P)` it inherits from `M`. -/
-scoped instance : NonUnitalCStarAlgebra σ(M, P) := inferInstanceAs (NonUnitalCStarAlgebra M)
-
-end NonUnital
 section Unital
 
 /-! ## Ring, star and order structures -/
