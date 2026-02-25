@@ -10,8 +10,8 @@ section KreinSmulian
 
 variable {𝕜 M P : Type*} [RCLike 𝕜] [NormedAddCommGroup M] [NormedSpace 𝕜 M]
 variable [NormedAddCommGroup P] [NormedSpace 𝕜 P] [Predual 𝕜 M P] [CompleteSpace P]
-
 variable [Module ℝ≥0 M] [IsScalarTower ℝ≥0 𝕜 M]
+
 /-- The Krein-Smulian theorem transferred from `WeakDual ℂ P` to `σ(M, P)`. This could
 generalize trivially from `ℂ` to `RCLike 𝕜`. -/
 protected lemma Ultraweak.krein_smulian_of_submodule (S : Submodule ℝ≥0 (σ(M, P)_𝕜))

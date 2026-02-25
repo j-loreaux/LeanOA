@@ -1,7 +1,7 @@
 import Mathlib.Topology.Algebra.Module.LinearMap
 import Mathlib.Algebra.Order.Star.Basic
 import Mathlib.Analysis.Complex.Basic
-import LeanOA.PositiveLinearMap
+import Mathlib.Algebra.Order.Module.PositiveLinearMap
 
 /-- A class to encode that selfadjoint elements may be expressed as the
 difference of nonnegative elements. This is satisfied by types with a

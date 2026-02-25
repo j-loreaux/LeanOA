@@ -1,5 +1,5 @@
 import Mathlib.Analysis.Complex.Basic
-import LeanOA.ConditionallyCompletePartialOrder
+import Mathlib.Order.ConditionallyCompletePartialOrder.Defs
 
 /-
 There's still a lot of API missing here.

@@ -128,7 +128,8 @@ instance : ContinuousStar σ(M, P) where
         .of_forall fun m ↦ by
           nth_rewrite 1 [← realPart_add_I_smul_imaginaryPart m]
           simp
-    simpa [hz.imaginaryPart, hy.coe_realPart, eq_comm (a := y), sub_eq_zero]
+    simpa only [eq_comm (a := y), map_sub, AddSubgroupClass.coe_sub, hy.coe_realPart,
+      realPart_I_smul, hz.imaginaryPart, neg_zero, ZeroMemClass.coe_zero, sub_eq_zero]
       using congr((ℜ $hxyz : σ(M, P))).symm
 
 end Ultraweak

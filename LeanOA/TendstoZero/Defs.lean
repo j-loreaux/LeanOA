@@ -65,19 +65,19 @@ instance isClosed : IsClosed (c₀ E : Set (lp E ∞)) := by
     |>.equicontinuous.isClosed_setOf_tendsto continuous_const
   simpa using lp.isometry_single i |>.lipschitz.comp <| lp.lipschitzWith_one_eval ∞ i
 
-instance : SMul 𝕜 (c₀ E) where
+noncomputable instance : SMul 𝕜 (c₀ E) where
   smul k x := ⟨k • x, squeeze_zero (fun _ ↦ by positivity)
     (fun i ↦ norm_smul_le k ((x : lp E ∞) i)) <| by simpa using Tendsto.const_mul ‖k‖ x.2⟩
 
 @[simp]
 lemma coe_smul (k : 𝕜) (x : c₀ E) : ↑(k • x) = k • (x : lp E ∞) := rfl
 
-instance : Module 𝕜 (c₀ E) := fast_instance%
+noncomputable instance : Module 𝕜 (c₀ E) := fast_instance%
   Subtype.val_injective.module 𝕜 (c₀ E).subtype fun _ _ ↦ rfl
 
 instance : IsBoundedSMul 𝕜 (c₀ E) := .of_norm_smul_le (fun _ _ ↦ norm_smul_le _ (_ : lp E ∞))
 
-instance {ι 𝕜 : Type*} {E : ι → Type*} [NormedField 𝕜] [∀ i, NormedAddCommGroup (E i)]
+noncomputable instance {ι 𝕜 : Type*} {E : ι → Type*} [NormedField 𝕜] [∀ i, NormedAddCommGroup (E i)]
     [∀ i, NormedSpace 𝕜 (E i)] : NormedSpace 𝕜 (c₀ E) where
   norm_smul_le := norm_smul_le
 
