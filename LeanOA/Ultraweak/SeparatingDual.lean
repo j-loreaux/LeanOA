@@ -52,7 +52,10 @@ lemma exists_positiveCLM_apply_lt_zero (a : σ(M, P)) (ha₁ : IsSelfAdjoint a) 
   have hφ (x : σ(M, P)) : φ x = f (ℜ x) + I • f (ℑ x) := by
     conv_lhs =>
       rw [← realPart_add_I_smul_imaginaryPart x, map_add, map_smul]
-      simp [φ, StrongDual.extendRCLike_apply, hfg, ← smul_eq_mul]
+      -- had to squeeze this because of an instance timeout
+      simp only [StrongDual.extendRCLike_apply, hfg, selfAdjoint.realPart_coe, coe_algebraMap,
+        RCLike.I_to_complex, realPart_I_smul, selfAdjoint.imaginaryPart_coe, neg_zero,
+        ZeroMemClass.coe_zero, map_zero, ofReal_zero, ← smul_eq_mul, smul_zero, sub_zero, φ]
   have hφ_sa {x : σ(M, P)} (hx : IsSelfAdjoint x) : φ x = f x := by
     simp [hφ, hx.imaginaryPart, hx.coe_realPart]
   /- Since `f` is nonnegative and coincides with `φ` on selfadjoint elements,
