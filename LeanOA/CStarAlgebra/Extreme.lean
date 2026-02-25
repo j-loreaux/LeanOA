@@ -245,7 +245,7 @@ section Positive
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
-open Unitization
+open CStarAlgebra Unitization
 
 lemma weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
     a = e * a * e := by
@@ -273,5 +273,15 @@ lemma weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a
   apply  mul_eq_zero_of_right (sqrt _) at L
   rwa [← mul_assoc, ← CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a', mul_sub,
     mul_one, sub_eq_zero] at L
+
+lemma weak_heredity' {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
+    a = e * a * e := by
+  suffices h : a = a * e by
+    rwa [mul_assoc, ← h, ← he.2, ← star_star a, ← star_mul, star_inj, LE.le.star_eq h0a]
+  suffices (a' e' : A⁺¹) (he' : IsStarProjection e') (h0a' : 0 ≤ a') (hae : a' ≤ e') : a' = a' * e' by
+    --exact mod_cast this a e he.inr (by rwa [inr_nonneg_iff a]) (by rwa [inr_le_inr a e])
+  --intro a e he h0a hae
+  sorry
+
 
 end Positive
