@@ -244,7 +244,7 @@ section Positive
 section Unital
 
 /- First, we prove the following "weak heredity" result in a `CStarAlgebra` for simplicity.
-We then can go to the `NonUnitalCStarAlgebra` case by passing to a unitization. -/
+We then can go to the `NonUnitalCStarAlgebra` case by passing to the unitization. -/
 
 variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
@@ -277,7 +277,6 @@ theorem weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae :
   rw [← weak_heredity_right he h0a hae, ← weak_heredity_left he h0a hae]
 
 end Unital
-
 section NonUnital
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
@@ -301,10 +300,10 @@ variable {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e)
 
 theorem nonUnital_weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
     a = e * a * e := by
-  have := weak_heredity (Unitization.coe_starProjection he) (Unitization.coe_pos h0a)
+  have I := weak_heredity (Unitization.coe_starProjection he) (Unitization.coe_pos h0a)
     (Unitization.coe_le hae)
-  rw [← map_mul, ← map_mul, inrNonUnitalStarAlgHom_apply, inrNonUnitalStarAlgHom_apply] at this
-
+  rw [← map_mul, ← map_mul] at I
+  exact Unitization.inr_injective I
 
 end NonUnital
 
