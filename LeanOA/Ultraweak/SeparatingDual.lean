@@ -22,6 +22,7 @@ instance : StarHomClass (σ(M, P) →ₚ[ℂ] ℂ) σ(M, P) ℂ :=
   inferInstanceAs (StarHomClass (M →ₚ[ℂ] ℂ) M ℂ)
 
 open Complex
+set_option backward.isDefEq.respectTransparency false in
 /-- If `a : σ(M, P)` is a selfadjoint element which is not nonnegative, then there is some
 positive continuous linear functional which takes a negative value at `a`.
 
@@ -66,6 +67,7 @@ instance : SelfAdjointDecompose σ(M, P) where
     replace key := by simpa using congr(toUltraweak ℂ P $key)
     exact ⟨_, _, by simpa, by simpa, key⟩
 
+set_option backward.isDefEq.respectTransparency false in
 lemma eq_zero_of_forall_positiveCLM (a : σ(M, P))
     (ha : ∀ φ : σ(M, P) →P[ℂ] ℂ, φ a = 0) :
     a = 0 := by
@@ -80,6 +82,7 @@ lemma eq_zero_of_forall_positiveCLM (a : σ(M, P))
   refine le_antisymm (h₂ ?_) (h₁ ?_)
   all_goals simp [h]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma ext_positiveCLM {a b : σ(M, P)} (h : ∀ φ : σ(M, P) →P[ℂ] ℂ, φ a = φ b) :
     a = b :=
   sub_eq_zero.mp <| eq_zero_of_forall_positiveCLM _ fun φ ↦ by simp [h]

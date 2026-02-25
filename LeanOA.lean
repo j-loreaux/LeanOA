@@ -4,7 +4,6 @@ import LeanOA.CStarAlgebra.FiniteSpectrum
 import LeanOA.CStarAlgebra.PositiveLinearFunctional
 import LeanOA.CStarModule.Standard
 import LeanOA.ComplexOrder
-import LeanOA.ConditionallyCompletePartialOrder
 import LeanOA.KreinSmulian
 import LeanOA.Lp.Holder
 import LeanOA.Lp.lpSpace
@@ -31,7 +30,6 @@ import LeanOA.Mathlib.Topology.ContinuousMap.Compact
 import LeanOA.Mathlib.Topology.Order.LeftRightNhds
 import LeanOA.Notation
 import LeanOA.PositiveContinuousLinearMap
-import LeanOA.PositiveLinearMap
 import LeanOA.TendstoZero.Defs
 import LeanOA.TendstoZero.StrongDual
 import LeanOA.Ultraweak.Basic

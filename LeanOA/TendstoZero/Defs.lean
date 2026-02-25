@@ -15,6 +15,7 @@ variable [NormedRing 𝕜] [∀ i, NormedAddCommGroup (E i)]
 
 open Filter
 
+set_option backward.isDefEq.respectTransparency false in
 variable (E) in
 -- maybe we want this to be a subgroup of `preLp`?
 /-- The additive subgroup of `lp E ∞` consisting of those sequences whose norms converge
@@ -52,6 +53,7 @@ lemma coe_mk {ι : Type*} {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
     ⇑(mk f h : lp E ∞) = f :=
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 instance isClosed : IsClosed (c₀ E : Set (lp E ∞)) := by
   simp only [tendstoZero, AddSubgroup.coe_set_mk, AddSubmonoid.coe_set_mk,
     AddSubsemigroup.coe_set_mk]
@@ -65,19 +67,20 @@ instance isClosed : IsClosed (c₀ E : Set (lp E ∞)) := by
     |>.equicontinuous.isClosed_setOf_tendsto continuous_const
   simpa using lp.isometry_single i |>.lipschitz.comp <| lp.lipschitzWith_one_eval ∞ i
 
-instance : SMul 𝕜 (c₀ E) where
+noncomputable instance : SMul 𝕜 (c₀ E) where
   smul k x := ⟨k • x, squeeze_zero (fun _ ↦ by positivity)
     (fun i ↦ norm_smul_le k ((x : lp E ∞) i)) <| by simpa using Tendsto.const_mul ‖k‖ x.2⟩
 
 @[simp]
 lemma coe_smul (k : 𝕜) (x : c₀ E) : ↑(k • x) = k • (x : lp E ∞) := rfl
 
-instance : Module 𝕜 (c₀ E) := fast_instance%
+noncomputable instance : Module 𝕜 (c₀ E) := fast_instance%
   Subtype.val_injective.module 𝕜 (c₀ E).subtype fun _ _ ↦ rfl
 
 instance : IsBoundedSMul 𝕜 (c₀ E) := .of_norm_smul_le (fun _ _ ↦ norm_smul_le _ (_ : lp E ∞))
 
-instance {ι 𝕜 : Type*} {E : ι → Type*} [NormedField 𝕜] [∀ i, NormedAddCommGroup (E i)]
+set_option backward.isDefEq.respectTransparency false in
+noncomputable instance {ι 𝕜 : Type*} {E : ι → Type*} [NormedField 𝕜] [∀ i, NormedAddCommGroup (E i)]
     [∀ i, NormedSpace 𝕜 (E i)] : NormedSpace 𝕜 (c₀ E) where
   norm_smul_le := norm_smul_le
 
@@ -113,6 +116,7 @@ def toSubmodule : Submodule 𝕜 (lp E ∞) :=
 @[simp]
 lemma toAddSubgroup_toSubmodule : (toSubmodule 𝕜 E).toAddSubgroup = c₀ E := rfl
 
+set_option backward.isDefEq.respectTransparency false in
 variable (𝕜 E) in
 /-- The linear isometry equivalence between `c₀ E` and itself, viewed as a
 submodule of `lp E ∞` (as opposed to only an `AddSubgroup`). -/
@@ -145,6 +149,7 @@ lemma range_linearMapOfLE_top_le_tendstoZero (hp : p < ∞) :
   simpa [← Submodule.toAddSubgroup_le, LinearMap.range_toAddSubgroup]
     using range_addMonoidHomOfLE_top_le_tendstoZero E hp
 
+set_option backward.isDefEq.respectTransparency false in
 lemma topologicalClosure_range_addMonoidHomOfLE_top (hp : p < ∞) :
     (addMonoidHomOfLE E hp.le).range.topologicalClosure = c₀ E := by
   apply le_antisymm
@@ -196,6 +201,7 @@ lemma smul_single (i : ι) (c : 𝕜) (x : E i) :
     c • single i x = single i (c • x) := by
   ext; simp [single]
 
+set_option backward.isDefEq.respectTransparency false in
 open Filter Topology in
 lemma hasSum_single (x : c₀ E) :
     HasSum (fun i ↦ single i (x.1 i)) x := by
