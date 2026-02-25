@@ -186,7 +186,6 @@ lemma DirectedOn.exists_isLUB (s : Set σ(M, P)) (hs : DirectedOn (· ≤ ·) s)
   refine ⟨x, ?_, hx⟩
   /- Since the net is increasing, and the topology on `σ(M, P)` is order closed, the
   limit is the least upper bound. -/
-  set_option backward.isDefEq.respectTransparency false in
   simpa [setOf] using isLUB_of_tendsto_atTop (β := s) (Subtype.mono_coe s) hx
 
 /-- `σ(M, P)` is a conditionally complete partial order. Since this is only dependent upon the

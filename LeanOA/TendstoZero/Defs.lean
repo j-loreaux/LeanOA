@@ -79,7 +79,6 @@ noncomputable instance : Module 𝕜 (c₀ E) := fast_instance%
 
 instance : IsBoundedSMul 𝕜 (c₀ E) := .of_norm_smul_le (fun _ _ ↦ norm_smul_le _ (_ : lp E ∞))
 
-set_option backward.isDefEq.respectTransparency false in
 noncomputable instance {ι 𝕜 : Type*} {E : ι → Type*} [NormedField 𝕜] [∀ i, NormedAddCommGroup (E i)]
     [∀ i, NormedSpace 𝕜 (E i)] : NormedSpace 𝕜 (c₀ E) where
   norm_smul_le := norm_smul_le
