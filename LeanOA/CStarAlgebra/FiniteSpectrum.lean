@@ -63,6 +63,7 @@ theorem range_realToRCLike_eq_isSelfAdjoint :
   le_antisymm (fun _ ⟨_, h⟩ ↦ by simp [← h]) fun f hf ↦
     ⟨f.rclikeToReal, hf.realToRCLike_rclikeToReal⟩
 
+set_option backward.isDefEq.respectTransparency false in
 variable (𝕜) in
 @[simp] theorem isometry_realToRCLike [CompactSpace A] : Isometry (realToRCLike 𝕜 (A := A)) :=
   .of_dist_eq fun f g ↦ by simp [dist_eq_norm, norm_eq_iSup_norm, ← map_sub]

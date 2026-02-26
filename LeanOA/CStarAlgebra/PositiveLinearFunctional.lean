@@ -5,6 +5,7 @@ open scoped ComplexOrder
 
 variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma PositiveLinearMap.norm_apply_le (f : A →ₚ[ℂ] ℂ) (x : A) : ‖f x‖ ≤ (f 1).re * ‖x‖ := by
   have := by simpa [f.preGNS_norm_def, f.preGNS_inner_def] using
     norm_inner_le_norm (𝕜 := ℂ) (f.toPreGNS 1) (f.toPreGNS x)

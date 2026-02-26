@@ -60,6 +60,7 @@ namespace WeakDual
 variable {𝕜 F : Type*} [RCLike 𝕜] [TopologicalSpace F] [AddCommGroup F] [Module 𝕜 F]
   [ContinuousConstSMul 𝕜 F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The extension `StrongDual.extendRCLike` as a continuous linear equivalence between
 the weak duals. -/
 noncomputable def extendRCLikeL : WeakDual ℝ F ≃L[ℝ] WeakDual 𝕜 F where

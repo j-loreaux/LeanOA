@@ -15,6 +15,7 @@ variable [NormedRing 𝕜] [∀ i, NormedAddCommGroup (E i)]
 
 open Filter
 
+set_option backward.isDefEq.respectTransparency false in
 variable (E) in
 -- maybe we want this to be a subgroup of `preLp`?
 /-- The additive subgroup of `lp E ∞` consisting of those sequences whose norms converge
@@ -52,6 +53,7 @@ lemma coe_mk {ι : Type*} {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
     ⇑(mk f h : lp E ∞) = f :=
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 instance isClosed : IsClosed (c₀ E : Set (lp E ∞)) := by
   simp only [tendstoZero, AddSubgroup.coe_set_mk, AddSubmonoid.coe_set_mk,
     AddSubsemigroup.coe_set_mk]
@@ -113,6 +115,7 @@ def toSubmodule : Submodule 𝕜 (lp E ∞) :=
 @[simp]
 lemma toAddSubgroup_toSubmodule : (toSubmodule 𝕜 E).toAddSubgroup = c₀ E := rfl
 
+set_option backward.isDefEq.respectTransparency false in
 variable (𝕜 E) in
 /-- The linear isometry equivalence between `c₀ E` and itself, viewed as a
 submodule of `lp E ∞` (as opposed to only an `AddSubgroup`). -/
@@ -145,6 +148,7 @@ lemma range_linearMapOfLE_top_le_tendstoZero (hp : p < ∞) :
   simpa [← Submodule.toAddSubgroup_le, LinearMap.range_toAddSubgroup]
     using range_addMonoidHomOfLE_top_le_tendstoZero E hp
 
+set_option backward.isDefEq.respectTransparency false in
 lemma topologicalClosure_range_addMonoidHomOfLE_top (hp : p < ∞) :
     (addMonoidHomOfLE E hp.le).range.topologicalClosure = c₀ E := by
   apply le_antisymm
@@ -196,6 +200,7 @@ lemma smul_single (i : ι) (c : 𝕜) (x : E i) :
     c • single i x = single i (c • x) := by
   ext; simp [single]
 
+set_option backward.isDefEq.respectTransparency false in
 open Filter Topology in
 lemma hasSum_single (x : c₀ E) :
     HasSum (fun i ↦ single i (x.1 i)) x := by

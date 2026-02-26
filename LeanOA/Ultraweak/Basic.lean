@@ -260,18 +260,22 @@ open scoped ComplexStarModule
 /-- The star module structure on `σ(M, P)` it inherits from `M`. -/
 scoped instance : StarModule ℂ σ(M, P) := inferInstanceAs (StarModule ℂ M)
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma ofUltraweak_realPart (a : σ(M, P)) :
     ofUltraweak (ℜ a : σ(M, P)) = ℜ (ofUltraweak a) := rfl
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma toUltraweak_realPart (a : M) :
     toUltraweak ℂ P (ℜ a : M) = ℜ (toUltraweak ℂ P a) := rfl
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma ofUltraweak_imaginaryPart (a : σ(M, P)) :
     ofUltraweak (ℑ a : σ(M, P)) = ℑ (ofUltraweak a) := rfl
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma toUltraweak_imaginaryPart (a : M) :
     toUltraweak ℂ P (ℑ a : M) = ℑ (toUltraweak ℂ P a) := rfl

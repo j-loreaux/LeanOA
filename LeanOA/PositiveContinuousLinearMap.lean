@@ -47,10 +47,12 @@ instance : StarHomClass (A₁ →ₚ[ℂ] A₂) A₁ A₂ where
     simp [φ.map_isSelfAdjoint (ℜ x).2, IsSelfAdjoint.star_eq,
       φ.map_isSelfAdjoint (ℑ x).2]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma map_realPart (φ : A₁ →ₚ[ℂ] A₂) (x : A₁) :
     φ (ℜ x) = ℜ (φ x) := by
   simp [realPart_apply_coe, map_star]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma map_imaginaryPart (φ : A₁ →ₚ[ℂ] A₂) (x : A₁) :
     φ (ℑ x) = ℑ (φ x) := by
   simp [imaginaryPart_apply_coe, map_star]
@@ -239,10 +241,12 @@ variable {A₁ A₂ : Type*} [AddCommGroup A₁] [Module ℂ A₁]
 instance : StarHomClass (A₁ →P[ℂ] A₂) A₁ A₂ where
   map_star f := map_star f.toPositiveLinearMap
 
+set_option backward.isDefEq.respectTransparency false in
 lemma map_realPart (φ : A₁ →P[ℂ] A₂) (x : A₁) :
     φ (ℜ x) = ℜ (φ x) := by
   simp [realPart_apply_coe, map_star]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma map_imaginaryPart (φ : A₁ →P[ℂ] A₂) (x : A₁) :
     φ (ℑ x) = ℑ (φ x) := by
   simp [imaginaryPart_apply_coe, map_star]

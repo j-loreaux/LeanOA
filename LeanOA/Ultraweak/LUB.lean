@@ -45,6 +45,7 @@ private instance : T2Space (WeakE M P) :=
 -- we're missing `WeakBilin` API
 private noncomputable def weakEEquiv : WeakE M P ≃ₗ[ℂ] M := .refl ℂ _
 
+set_option backward.isDefEq.respectTransparency false in
 open Filter in
 omit [StarOrderedRing M] [CompleteSpace P] in
 /-- A filter is cauchy relative to the `WeakE M P` topology if and only if
@@ -112,6 +113,7 @@ lemma cauchy_of_forall_posCLM_cauchy_map {l : Filter σ(M, P)} {r : ℝ}
 
 open scoped ComplexStarModule
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A set in a non-unital C⋆-algebra which is bounded above and below is
 bounded in norm. -/
 lemma isBounded_of_bddAbove_of_bddBelow {A : Type*}
