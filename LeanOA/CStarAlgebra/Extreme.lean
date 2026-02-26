@@ -249,39 +249,26 @@ open CStarAlgebra Unitization
 
 lemma weak_heredity {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
     a = e * a * e := by
-  let a' := inrNonUnitalStarAlgHom ℂ A a
-  let e' := inrNonUnitalStarAlgHom ℂ A e
-  have he' : IsStarProjection e' := he.inr
-  have hae' : a' ≤ e' := inr_le_iff (ha := LE.le.isSelfAdjoint h0a)
-    (hb := he.isSelfAdjoint) |>.mpr hae
-  have h0a' : 0 ≤ a' := inr_nonneg_iff.mpr h0a
-  suffices h1 : a' = e' * a' * e' by
-    rw [← map_mul, ← map_mul] at h1
-    exact inr_injective h1
-  suffices h : a' = a' * e' by
-    rwa [mul_assoc, ← h, ← he'.2, ← star_star a', ← star_mul, star_inj, LE.le.star_eq h0a']
-  have : star (1 - e') * e' * (1 - e') = 0 := by
-    rw [star_sub, star_one, sub_mul, one_mul, mul_sub, mul_one, he'.2, he'.1, sub_self,
-      zero_mul, zero_sub_zero]
-  have L : ‖(star (1 - e') * sqrt a') * (sqrt a' * (1 - e'))‖ = 0 := by
-    grind [CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a', ← norm_eq_zero,
-      le_antisymm (le_of_le_of_eq (star_left_conjugate_le_conjugate ..) _)
-        (star_left_conjugate_nonneg ..)]
-  nth_rw 1 [← (LE.le.star_eq <| sqrt_nonneg a')] at L
-  rw [← (LE.le.star_eq <| sqrt_nonneg a'), ← star_mul, CStarRing.norm_star_mul_self, mul_eq_zero,
-     norm_eq_zero, or_self, (LE.le.star_eq <| sqrt_nonneg _)] at L
-  apply  mul_eq_zero_of_right (sqrt _) at L
-  rwa [← mul_assoc, ← CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a', mul_sub,
-    mul_one, sub_eq_zero] at L
-
-lemma weak_heredity' {a e : A} (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e) :
-    a = e * a * e := by
   suffices h : a = a * e by
     rwa [mul_assoc, ← h, ← he.2, ← star_star a, ← star_mul, star_inj, LE.le.star_eq h0a]
-  suffices (a' e' : A⁺¹) (he' : IsStarProjection e') (h0a' : 0 ≤ a') (hae : a' ≤ e') : a' = a' * e' by
-    --exact mod_cast this a e he.inr (by rwa [inr_nonneg_iff a]) (by rwa [inr_le_inr a e])
-  --intro a e he h0a hae
-  sorry
-
+  suffices H : ∀ (a e : A⁺¹) (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e),
+      a = a * e by
+    simpa using inr_injective <| map_mul (inrNonUnitalStarAlgHom ℂ A) a e ▸ H
+      (inrNonUnitalStarAlgHom ℂ A a) (inrNonUnitalStarAlgHom ℂ A e) he.inr (inr_nonneg_iff.mpr h0a)
+        (inr_le_iff (ha := LE.le.isSelfAdjoint h0a) (hb := he.isSelfAdjoint) |>.mpr hae)
+  intro a e he h0a hae
+  have : star (1 - e) * e * (1 - e) = 0 := by
+    rw [star_sub, star_one, sub_mul, one_mul, mul_sub, mul_one, he.2, he.1, sub_self,
+      zero_mul, zero_sub_zero]
+  have L : ‖(star (1 - e) * sqrt a) * (sqrt a * (1 - e))‖ = 0 := by
+    grind [CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, ← norm_eq_zero,
+      le_antisymm (le_of_le_of_eq (star_left_conjugate_le_conjugate ..) _)
+        (star_left_conjugate_nonneg ..)]
+  nth_rw 1 [← (LE.le.star_eq <| sqrt_nonneg a)] at L
+  rw [← (LE.le.star_eq <| sqrt_nonneg a), ← star_mul, CStarRing.norm_star_mul_self, mul_eq_zero,
+     norm_eq_zero, or_self, (LE.le.star_eq <| sqrt_nonneg _)] at L
+  apply  mul_eq_zero_of_right (sqrt _) at L
+  rwa [← mul_assoc, ← CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, mul_sub,
+    mul_one, sub_eq_zero] at L
 
 end Positive
