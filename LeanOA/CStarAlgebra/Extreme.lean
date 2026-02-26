@@ -272,6 +272,9 @@ theorem IsStarProjection.norm_le {A : Type*} [NonUnitalNormedRing A] [StarRing A
   rw [mul_sub, ← CStarRing.norm_star_mul_self, he.isSelfAdjoint.star_eq, he.isIdempotentElem.eq]
   simp
 
+attribute [grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
+attribute [grind →] IsStarProjection.isIdempotentElem IsStarProjection.isSelfAdjoint
+
 theorem mem_extremePoints_nonneg_iff_isStarProjection {e : A} :
     e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} ↔ IsStarProjection e := by
   simp only [mem_closedBall, dist_zero_right]
@@ -291,9 +294,7 @@ theorem mem_extremePoints_nonneg_iff_isStarProjection {e : A} :
     rw [mul_smul_comm, smul_mul_assoc] at K
     have L : e * a * e = a :=
       IsUnit.smul_left_cancel (ne_of_lt h0t).symm.isUnit|>.mp K
-    have LL : e * a = a * e := by
-      rw [← L,← mul_assoc, ← mul_assoc, he.1, mul_assoc, mul_assoc, mul_assoc, he.1]
-    rw [← L] at P -- Is it weird that `grind` won't solve this? I'd expect it to easily do so.
+    have LL : e * a = a * e := by grind [mul_assoc]
     have : a * b = b * a := by
       grind [mul_smul_comm, smul_mul_assoc, mul_sub, sub_mul]
     /- Now we may require the function stuff. Perhaps take a short break and see if there
