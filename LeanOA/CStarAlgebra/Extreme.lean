@@ -10,6 +10,7 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import Mathlib.Algebra.Star.Subalgebra
 import Mathlib.Algebra.Algebra.Unitization
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
 
 open Set Metric Complex CFC
 open scoped ComplexStarModule
@@ -275,16 +276,21 @@ theorem IsStarProjection.norm_le {A : Type*} [NonUnitalNormedRing A] [StarRing A
 attribute [grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
 attribute [grind →] IsStarProjection.isIdempotentElem IsStarProjection.isSelfAdjoint
 
-theorem mem_extremePoints_nonneg_iff_isStarProjection {e : A} :
+theorem mem_extremePoints_nonneg_and_mem_closedUnitBall_iff_isStarProjection {e : A} :
     e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} ↔ IsStarProjection e := by
-  simp only [mem_closedBall, dist_zero_right]
+  simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq]
   constructor
-  · sorry
+  · refine fun ⟨⟨h1, h2⟩, h3⟩ ↦ ⟨?_, h1.isSelfAdjoint⟩
+    rw [isIdempotentElem_iff_quasispectrum_subset ℝ _ h1.isSelfAdjoint]
+    simp only [subset_def, mem_insert_iff, mem_singleton_iff]
+    intro x hx
+    rw [← sub_eq_zero (b := (1 : ℝ)), ← mul_eq_zero]
+    have := quasispectrum.norm_le_norm_of_mem e hx h1.isSelfAdjoint
+    grw [h2, Real.norm_of_nonneg (by grind)] at this
+    sorry
   · intro he
-    by_contra h
-    simp only [mem_extremePoints ,mem_setOf_eq, not_and, not_forall] at h
-    obtain ⟨a, ⟨ha, ha0⟩, b, ⟨hb, hb0⟩, ⟨t, s, h0t, h0s, hts, hlin⟩, habe⟩ :=
-      h ⟨he.nonneg, he.norm_le⟩
+    simp only [he.nonneg, he.norm_le, and_self, and_imp, true_and]
+    intro a ha ha0 b hb hb0 ⟨t, s, h0t, h0s, hts, hlin⟩
     have P : s⁻¹ • (e - t • a) = b := by
        grind [inv_smul_eq_iff₀, sub_eq_iff_eq_add, add_comm]
     have J : t • a ≤ e := by
