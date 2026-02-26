@@ -1,23 +1,8 @@
 import Mathlib.Topology.Algebra.Module.LinearMap
 import Mathlib.Algebra.Order.Star.Basic
 import Mathlib.Analysis.Complex.Basic
-import Mathlib.Algebra.Order.Module.PositiveLinearMap
+import LeanOA.Mathlib.Algebra.Order.Module.PositiveLinearMap
 
-/-- A class to encode that selfadjoint elements may be expressed as the
-difference of nonnegative elements. This is satisfied by types with a
-`NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint` instance.
-
-This allows us to show that `PositiveLinearMap` is a `StarHomClass`. -/
-class SelfAdjointDecompose (R : Type*) [AddGroup R] [Star R]
-    [PartialOrder R] where
-  /-- Every selfadjoint element is the difference of nonnegatives elements. -/
-  exists_nonneg_sub_nonnpos {a : R} (ha : IsSelfAdjoint a) :
-    ∃ (b c : R), 0 ≤ b ∧ 0 ≤ c ∧ a = b - c
-
-lemma IsSelfAdjoint.exists_nonneg_sub_nonpos {R : Type*} [AddGroup R] [Star R]
-    [PartialOrder R] [SelfAdjointDecompose R] {a : R} (ha : IsSelfAdjoint a) :
-    ∃ (b c : R), 0 ≤ b ∧ 0 ≤ c ∧ a = b - c :=
-  SelfAdjointDecompose.exists_nonneg_sub_nonnpos ha
 
 namespace PositiveLinearMap
 
@@ -80,7 +65,7 @@ namespace PositiveContinuousLinearMap
 
 section General
 
-variable {R E₁ E₂ : Type*} [Semiring R]
+variable {R E₁ E₂ E₃ : Type*} [Semiring R]
   [AddCommMonoid E₁] [PartialOrder E₁] [AddCommMonoid E₂] [PartialOrder E₂]
   [Module R E₁] [Module R E₂] [TopologicalSpace E₁] [TopologicalSpace E₂]
 
@@ -101,6 +86,8 @@ instance : ContinuousLinearMapClass (E₁ →P[R] E₂) R E₁ E₂ where
 instance : OrderHomClass (E₁ →P[R] E₂) E₁ E₂ where
   map_rel f := fun {_ _} hab => f.monotone' hab
 
+initialize_simps_projections PositiveContinuousLinearMap (toFun → apply)
+
 @[ext]
 lemma ext {f g : E₁ →P[R] E₂} (h : ∀ x, f x = g x) : f = g :=
   DFunLike.ext f g h
@@ -114,6 +101,18 @@ lemma map_smul_of_tower {S : Type*} [SMul S E₁] [SMul S E₂]
 @[aesop safe apply (rule_sets := [CStarAlgebra])]
 protected lemma map_nonneg (f : E₁ →P[R] E₂) {x : E₁} (hx : 0 ≤ x) : 0 ≤ f x :=
   _root_.map_nonneg f hx
+
+section Comp
+
+variable [AddCommMonoid E₃] [PartialOrder E₃] [Module R E₃] [TopologicalSpace E₃]
+
+/-- Composition of positive continuous linear maps. -/
+@[simps!]
+def comp (g : E₂ →P[R] E₃) (f : E₁ →P[R] E₂) : E₁ →P[R] E₃ where
+  toPositiveLinearMap := g.toPositiveLinearMap.comp f.toPositiveLinearMap
+  cont := g.cont.comp f.cont
+
+end Comp
 
 section ofClass
 

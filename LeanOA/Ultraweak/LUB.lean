@@ -4,44 +4,10 @@ import LeanOA.ComplexOrder
 import LeanOA.Mathlib.Algebra.Order.Star.Basic
 import LeanOA.Mathlib.Analysis.Complex.Basic
 import LeanOA.CFC
+import LeanOA.Ultraweak.ContinuousFunctionalCalculus
+import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
+import LeanOA.CStarAlgebra.PositiveLinearFunctional
 
-variable {R A : Type*} [CommSemiring R] [NonUnitalRing A] [Module R A]
-  [StarRing R] [StarRing A] [IsScalarTower R A A] [SMulCommClass R A A] [StarModule R A]
-
-class NonUnitalStarSubalgebra.IsMasa (B : NonUnitalStarSubalgebra R A) : Prop where
-  comm : ∀ a ∈ B, ∀ b ∈ B, a * b = b * a
-  maximal (C : NonUnitalStarSubalgebra R A) (hC : ∀ a ∈ C, ∀ b ∈ C, a * b = b * a)
-      (hBC : B ≤ C) : C ≤ B
-
-theorem exists_le_masa (B : {C : NonUnitalStarSubalgebra R A // (∀ x ∈ C, ∀ y ∈ C, x * y = y * x)}) :
-    ∃ (C : NonUnitalStarSubalgebra R A), B ≤ C ∧ C.IsMasa  := by
-  obtain ⟨C, hC⟩ := by
-    refine zorn_le (α := {C : NonUnitalStarSubalgebra R A // (∀ x ∈ C, ∀ y ∈ C, x * y = y * x) ∧ B ≤ C}) ?_
-    intro chain hchain
-    obtain (rfl | h) := chain.eq_empty_or_nonempty
-    · exact ⟨⟨B.val, B.prop, le_rfl⟩, by simp⟩
-    · have := h.to_subtype
-      have hdir : Directed (· ≤ ·) fun S : chain ↦ S.val.val :=
-        hchain.directedOn.directed_val.mono_comp _ (by simp)
-      let bound : NonUnitalStarSubalgebra R A := ⨆ S : chain, S
-      refine ⟨⟨bound, ?_, ?_⟩, ?_⟩
-      · simp only [bound]
-        intro a ha b hb
-        rw [← SetLike.mem_coe, NonUnitalStarSubalgebra.coe_iSup_of_directed hdir,
-          Set.mem_iUnion] at ha hb
-        obtain ⟨S, hS⟩ := ha
-        obtain ⟨T, hT⟩ := hb
-        obtain ⟨V, hV, hSV, hTV⟩ := hchain.directedOn _ S.prop _ T.prop
-        exact V.prop.1 _ (hSV hS) _ (hTV hT)
-      · exact Classical.arbitrary chain |>.val.prop.2 |>.trans <|
-          le_iSup (fun S : chain ↦ S.val.val) _
-      · intro S hS
-        lift S to chain using hS
-        exact le_iSup (fun S : chain ↦ S.val.val) _
-  exact ⟨C, C.prop.2, ⟨C.prop.1, fun S h_comm hCS ↦ @hC ⟨S, h_comm, C.prop.2.trans hCS⟩ hCS⟩⟩
-
-
-#exit
 namespace OrderIso
 
 variable {α β : Type*} [Preorder α] [Preorder β]
@@ -321,8 +287,6 @@ lemma cauchy_of_forall_posCLM_cauchy_map' {l : Filter σ(M, P)} {s : Set M}
 attribute [push] Filter.not_neBot
 attribute [push ←] Filter.neBot_iff
 
-#check tendsto_nhdsWithin_iff
-
 -- this proof is totally gross
 open Filter Topology in
 private lemma tendsto_of_forall_posCLM {α : Type*} [TopologicalSpace α]
@@ -469,33 +433,80 @@ lemma _root_.IsLUB.conjugate_star_right_of_isUnit' {R : Type*} [Ring R]
   exact (conjUnitsOrderIso r).isLUB_image'.mpr h
 
 open Filter
-lemma IsLUB.conjugate_star_right (a u : σ(M, P)) (s : Set σ(M, P))
-    (hd : DirectedOn (· ≤ ·) s) (hnon : s.Nonempty) (hbd : BddAbove s)
-    (h : IsLUB s u) : IsLUB (conjOrderHom a '' s) (a * u * star a) := by
-  have hd' : DirectedOn (· ≤ ·) (conjOrderHom a '' s) :=
-    RelHomClass.directedOn hd
-  have hnon' : (conjOrderHom a '' s).Nonempty := hnon.image _
-  have hbd' : BddAbove (conjOrderHom a '' s) := (conjOrderHom a).monotone.map_bddAbove hbd
-  have isLUB := hd'.isLUB_csSup hnon' hbd'
-  have := tendsto_atTop_isLUB (Subtype.mono_coe (conjOrderHom a '' s))
-    (Subtype.range_coe (s := conjOrderHom a '' s) ▸ isLUB)
-  simp only [Subtype.range_coe_subtype, Set.setOf_mem_eq] at this
-  have hnon'' := hnon'.to_subtype
-  have hd'' := directedOn_iff_isDirectedOrder.mp hd'
-  have neBot : (atTop : Filter (conjOrderHom a '' s)).NeBot := atTop_neBot
-  convert isLUB
-  refine tendsto_nhds_unique ?_ this
-
-  sorry
 
 -- on master this is about `Subtype t` ... gross.
 theorem _root_.Subtype.mono_coe' {α : Type*} [Preorder α] (t : Set α) : Monotone ((↑) : t → α) :=
   fun _ _ ↦ id
 
+/-- The map `toUltraweak` as a positive continuous linear map. -/
+@[simps]
+def toUltraweakPosCLM : M →P[ℂ] σ(M, P) where
+  toFun m := toUltraweak ℂ P m
+  map_add' := by simp
+  map_smul' := by simp
+  monotone' _ _ := id
+  cont := by fun_prop
+
+
+--- Notes: we should make `toUltraweak_le_toUltraweak_iff` and make a unidirectional version
+--- `gcongr`, same for `ofUltraweak`.
+--- also, it would be very nice if we could make `a ≤ b → c * a * star c ≤ c * b * star c` a
+--- `gcongr` lemma, but we can't right now because the head function is `HMul.hMul · c`, so we
+--- would have to bundle the conjugation operation into it's own function, and then it would
+--- work.
+
+open scoped Topology
+open Bornology in
+theorem foo.extracted_1_1 (M P : Type*) [inst : CStarAlgebra M]
+    [PartialOrder M] [StarOrderedRing M] [NormedAddCommGroup P] [NormedSpace ℂ P]
+    [Predual ℂ M P] (a u : σ(M, P)) (s : Set σ(M, P))
+    (hd : DirectedOn (· ≤ ·) s) (hnon : s.Nonempty) (h : IsLUB s u)
+    (h₁ : Tendsto (Subtype.val : s → σ(M, P)) atTop (𝓝 u))
+    (φ : σ(M, P) →P[ℂ] ℂ) :
+    Tendsto (fun x : s ↦ ‖φ (a * (u - x))‖) atTop (𝓝 0) := by
+  have : Nonempty s := hnon.to_subtype
+  have : IsDirectedOrder s := directedOn_iff_isDirectedOrder.mp hd
+  have h₁ : Tendsto (fun x : s ↦ u - x) atTop (𝓝 0) := by
+    simpa using (tendsto_sub_nhds_zero_iff.mpr h₁ |>.neg)
+  have h₂ : Tendsto (fun x : s ↦ √‖φ (u - x)‖) atTop (𝓝 0) := by
+    have := Real.continuous_sqrt.comp' continuous_norm |>.comp' (map_continuous φ)
+    simpa [- map_sub] using this.tendsto _ |>.comp <| h₁
+  obtain ⟨c, hcu⟩ : ∃ c, ∀ᶠ (x : s) in atTop, |√‖φ (a * (u - x) * star a)‖| ≤ c := by
+    have x₀ : s := Classical.arbitrary s
+    let φ' := (φ.comp (toUltraweakPosCLM M P)).toContinuousLinearMap
+    use |√(‖φ'‖ * ‖ofUltraweak (a * (u - x₀.val) * star a)‖)|
+    filter_upwards [Ici_mem_atTop x₀] with x (hx : x₀ ≤ x)
+    gcongr
+    calc
+      ‖φ (a * (u - x) * star a)‖ ≤ ‖φ (a * (u - x₀) * star a)‖ :=
+        CStarAlgebra.norm_le_norm_of_nonneg_of_le -- hitting a nail with a nuke
+          (map_nonneg φ <| star_right_conjugate_nonneg (by simpa using h.1 x.prop) a)
+          (OrderHomClass.mono φ <| star_right_conjugate_le_conjugate (by grw [hx]) a)
+      _ = ‖φ' (ofUltraweak (a * (u - ↑x₀) * star a))‖ := by simp [φ']
+      _ ≤ ‖φ'‖ * ‖ofUltraweak (a * (u - ↑x₀) * star a)‖ := φ'.le_opNorm _
+  have := bdd_le_mul_tendsto_zero' c hcu h₂
+  refine squeeze_zero (fun _ ↦ by positivity) (fun x ↦ ?_) this
+  have hux : 0 ≤ u - x := sub_nonneg.mpr <| h.1 x.prop
+  rw [← CFC.sqrt_mul_sqrt_self' (u - x)]
+  have := φ.toPositiveLinearMap.cauchy_schwarz_mul_star
+    (a * CFC.sqrt (u - x)) (star (CFC.sqrt (u - x)))
+  simpa [(CFC.sqrt_nonneg (u - x)).star_eq, mul_assoc]
+
+theorem foo.extracted_1_2 (M P : Type*) [inst : CStarAlgebra M]
+    [PartialOrder M] [StarOrderedRing M] [NormedAddCommGroup P] [NormedSpace ℂ P]
+    [Predual ℂ M P] (a u : σ(M, P)) (s : Set σ(M, P))
+    (hd : DirectedOn (· ≤ ·) s) (hnon : s.Nonempty) (h : IsLUB s u)
+    (h₁ : Tendsto (Subtype.val : s → σ(M, P)) atTop (𝓝 u))
+    (φ : σ(M, P) →P[ℂ] ℂ) :
+    Tendsto (fun x : s ↦ ‖φ ((u - x) * a)‖) atTop (𝓝 0) := by
+  apply foo.extracted_1_1 M P (star a) u s hd hnon h h₁ φ |>.congr fun x ↦ ?_
+  convert norm_star (φ ((u - x) * a))
+  rw [← map_star φ, star_mul, (sub_nonneg.mpr (h.1 x.prop)).star_eq]
+
 open Topology
-lemma foo (a u : σ(M, P)) (s : Set σ(M, P))
-    (hd : DirectedOn (· ≤ ·) s) (hnon : s.Nonempty) (hbd : BddAbove s)
-    (h : IsLUB s u) : IsLUB (conjOrderHom a '' s) (a * u * star a) := by
+lemma DirectedOn.isLUB_star_right_conjugate (a u : σ(M, P)) (s : Set σ(M, P))
+    (hd : DirectedOn (· ≤ ·) s) (hnon : s.Nonempty) (h : IsLUB s u) :
+    IsLUB (conjOrderHom a '' s) (a * u * star a) := by
   have : Nonempty s := hnon.to_subtype
   have : IsDirectedOrder s := directedOn_iff_isDirectedOrder.mp hd
   have h₁ : Tendsto (· : s → σ(M, P)) atTop (𝓝 u) :=
@@ -507,12 +518,50 @@ lemma foo (a u : σ(M, P)) (s : Set σ(M, P))
     ext
     simp
   suffices Tendsto (fun x : s ↦ a * x * star a) atTop (𝓝 (a * u * star a)) by
-    convert isLUB_of_tendsto_atTop' (conjOrderHom a |>.monotone.comp <| Subtype.mono_coe' s) this
+    convert isLUB_of_tendsto_atTop (conjOrderHom a |>.monotone.comp <| Subtype.mono_coe' s) this
     ext
     simp
-
-  sorry
-
-
+  obtain ⟨r, hr⟩ : ∃ r, Tendsto (fun x : s ↦ a * x * star a)
+      atTop (𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r)) := by
+    simp only [tendsto_principal]
+    have x₀ : s := Classical.arbitrary s
+    have hbd' : BddBelow ((ofUltraweak ∘ conjOrderHom a) '' (s ∩ Set.Ici x₀)) := by
+      use ofUltraweak (a * x₀.val * star a)
+      rintro - ⟨x, hx, rfl⟩
+      exact star_right_conjugate_le_conjugate hx.2 a
+    have hbd'' : BddAbove ((ofUltraweak ∘ conjOrderHom a) '' (s ∩ Set.Ici x₀)) := by
+      apply monotone_ofUltraweak.comp (conjOrderHom a).monotone |>.map_bddAbove ⟨u, h.1⟩ |>.mono
+      gcongr
+      simp
+    obtain ⟨r, hr⟩ := isBounded_of_bddAbove_of_bddBelow hbd'' hbd' |>.subset_closedBall 0
+    use r
+    filter_upwards [Ici_mem_atTop x₀] with x hx
+    exact hr ⟨x, ⟨x.prop, hx⟩, rfl⟩
+  refine tendsto_of_forall_posCLM M P (a * u * star a) hr fun φ ↦ ?_
+  have h₃ : Tendsto (fun x : s ↦ φ (a * x)) atTop (𝓝 (φ (a * u))) := by
+    rw [tendsto_iff_norm_sub_tendsto_zero]
+    conv =>
+      enter [1, x]
+      rw [norm_sub_rev, ← map_sub, ← mul_sub]
+    exact foo.extracted_1_1 M P a u s hd hnon h h₁ φ
+  have h₄ : Tendsto (fun x : s ↦ φ (x * star a)) atTop (𝓝 (φ (u * star a))) := by
+    rw [tendsto_iff_norm_sub_tendsto_zero]
+    conv =>
+      enter [1, x]
+      rw [norm_sub_rev, ← map_sub, ← sub_mul]
+    exact foo.extracted_1_2 M P (star a) u s hd hnon h h₁ φ
+  obtain ⟨z, hz⟩ : ∃ z : ℂ, IsUnit (algebraMap ℂ σ(M, P) z + a) := by
+    suffices spectrum ℂ (-a) ≠ Set.univ by simpa [Set.ne_univ_iff_exists_notMem, spectrum.mem_iff]
+    simpa using spectrum.isCompact (starAlgEquiv M P (-a)) |>.ne_univ
+  have key (x : σ(M, P)) :
+      φ (a * x * star a) =
+      φ ((algebraMap ℂ σ(M, P) z + a) * x * star (algebraMap ℂ σ(M, P) z + a)) -
+        (z * star z * φ x + star z * φ (a * x) + z * φ (x * star a)) := by
+    simp [Algebra.algebraMap_eq_smul_one, add_mul, mul_add]
+    ring
+  simp only [key]
+  apply_rules [Tendsto.sub, Tendsto.add, Tendsto.const_mul]
+  · exact (map_continuous φ).tendsto _ |>.comp <| h₂ _ hz
+  · exact (map_continuous φ).tendsto _ |>.comp <| h₁
 
 end Ultraweak
