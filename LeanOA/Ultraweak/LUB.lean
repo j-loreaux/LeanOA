@@ -15,14 +15,14 @@ variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P] [CompleteS
 
 namespace Ultraweak
 
-open scoped ComplexOrder
+open scoped ComplexOrder ComplexStarModule Topology
+open Filter Set Bornology StarOrderedRing
 
 variable (M P)
 
-open PositiveContinuousLinearMap in
 /-- Linear combinations of ultraweakly continuous positive linear functionals. -/
 private noncomputable def E : Submodule ℂ (StrongDual ℂ σ(M, P)) :=
-  Submodule.span ℂ (Set.range toContinuousLinearMap)
+  Submodule.span ℂ (Set.range PositiveContinuousLinearMap.toContinuousLinearMap)
 
 /-- The natural bilinear induced by the pairing of `M` with `E M P`. -/
 @[simps!]
@@ -49,8 +49,6 @@ private instance : T2Space (WeakE M P) :=
 -- we're missing `WeakBilin` API
 private noncomputable def weakEEquiv : WeakE M P ≃ₗ[ℂ] M := .refl ℂ _
 
-set_option backward.isDefEq.respectTransparency false in
-open Filter in
 omit [StarOrderedRing M] [CompleteSpace P] in
 /-- A filter is cauchy relative to the `WeakE M P` topology if and only if
 mapping it through `φ` is cauchy for every `φ : σ(M, P) →P[ℂ] ℂ`. -/
@@ -69,7 +67,6 @@ private lemma cauchy_weakE_iff_forall_posCLM {l : Filter (WeakE M P)} :
     simpa using (ihφ.prod ihψ).mono (tendsto_map.prodMk tendsto_map) |>.map uniformContinuous_add
   | smul a φ hφ ihφ => simpa using ihφ.map <| uniformContinuous_const_smul a
 
-open Filter Topology in
 private lemma tendsto_weakE_iff_forall_posCLM {α : Type*} [TopologicalSpace α]
     {l : Filter α} (x : WeakE M P) {f : α → WeakE M P} :
     Tendsto f l (𝓝 x) ↔ ∀ φ : σ(M, P) →P[ℂ] ℂ,
@@ -120,7 +117,6 @@ private lemma mapsTo_weakEEquiv_symm_comp_ofUltraweak_preimage_closedBall (r : �
       (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r)) :=
   fun x hx ↦ (weakEUniformEquiv M P r ⟨x, hx⟩).2
 
-open Filter in
 /-- A bounded filter `l` in `σ(M, P)` is cauchy if and only if `map φ l` is cauchy in `ℂ`
 for every positive continuous linear functional `φ`. -/
 lemma cauchy_of_forall_posCLM_cauchy_map {l : Filter σ(M, P)} {r : ℝ}
@@ -137,7 +133,6 @@ lemma cauchy_of_forall_posCLM_cauchy_map {l : Filter σ(M, P)} {r : ℝ}
   simpa using key.map_of_le
     (uniformContinuousOn_toUltraweak_comp_weakEEquiv M P r) hlr'
 
-open Filter in
 /-- A bounded filter `l` in `σ(M, P)` is cauchy if and only if `map φ l` is cauchy in `ℂ`
 for every positive continuous linear functional `φ`. -/
 lemma cauchy_of_forall_posCLM_cauchy_map' {l : Filter σ(M, P)} {s : Set M}
@@ -160,7 +155,6 @@ attribute [push] Filter.not_neBot
 attribute [push ←] Filter.neBot_iff
 
 -- this proof is totally gross
-open Filter Topology in
 private lemma tendsto_of_forall_posCLM {α : Type*} [TopologicalSpace α]
     {l : Filter α} (x : σ(M, P)) {f : α → σ(M, P)} {r : ℝ}
     (hfl : Tendsto f l (𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r)))
@@ -189,10 +183,6 @@ private lemma tendsto_of_forall_posCLM {α : Type*} [TopologicalSpace α]
     refine ⟨key, by simpa using hfl'⟩
   simpa using this.comp key2
 
-open scoped ComplexStarModule
-
-
-open Filter Topology Set in
 /-- An increasing net of elements which is bounded above in `σ(M, P)` converges
 to its least upper bound.
 
@@ -231,7 +221,7 @@ lemma DirectedOn.exists_isLUB (s : Set σ(M, P)) (hs : DirectedOn (· ≤ ·) s)
   have h_cauchy : Cauchy (map ((↑) : s → σ(M, P)) atTop) := by
     apply cauchy_of_forall_posCLM_cauchy_map M P h_map_le fun φ ↦ ?_
     have hφ := OrderHomClass.mono φ
-    exact Tendsto.cauchy_map <| tendsto_atTop_ciSup (hφ.comp (Subtype.mono_coe s)) <| by
+    exact Tendsto.cauchy_map <| tendsto_atTop_ciSup (hφ.comp (Subtype.mono_coe (· ∈ s))) <| by
       simpa [← Function.comp_def, Set.range_comp]
         using (OrderHomClass.mono φ |>.map_bddAbove hbd)
   /- Since the closed ball is compact (and therefore complete) and this cauchy net is
@@ -240,7 +230,7 @@ lemma DirectedOn.exists_isLUB (s : Set σ(M, P)) (hs : DirectedOn (· ≤ ·) s)
   refine ⟨x, ?_, hx⟩
   /- Since the net is increasing, and the topology on `σ(M, P)` is order closed, the
   limit is the least upper bound. -/
-  simpa [setOf] using isLUB_of_tendsto_atTop (β := s) (Subtype.mono_coe s) hx
+  simpa [setOf] using isLUB_of_tendsto_atTop (β := s) (Subtype.mono_coe (· ∈ s)) hx
 
 /-- `σ(M, P)` is a conditionally complete partial order. Since this is only dependent upon the
 order, not the topology, the same is true of `M`. -/
@@ -254,8 +244,6 @@ noncomputable instance : ConditionallyCompletePartialOrderSup σ(M, P) where
     rw [dif_pos (by grind)]
     exact (DirectedOn.exists_isLUB M P s h_dir h_non hbdd).choose_spec.1
 
-
-open Filter in
 /-- An increasing net of elements which is bounded above in `σ(M, P)` converges
 to its least upper bound. -/
 instance : SupConvergenceClass σ(M, P) where
@@ -272,19 +260,8 @@ instance : SupConvergenceClass σ(M, P) where
     obtain ⟨u, hu₁, hu₂⟩ := DirectedOn.exists_isLUB M P s h₂ h₁ ⟨_, hsa.1⟩
     exact hsa.unique hu₁ ▸ hu₂
 
-open StarOrderedRing
-lemma _root_.IsLUB.conjugate_star_right_of_isUnit' {R : Type*} [Ring R]
-      [StarRing R] [PartialOrder R] [StarOrderedRing R] {s : Set R} {x : R}
-      (h : IsLUB s x) (r : R) (hr : IsUnit r) :
-    IsLUB (conjOrderHom r '' s) (r * x * star r) := by
-  lift r to Rˣ using hr
-  exact (conjUnitsOrderIso r).isLUB_image'.mpr h
 
-open Filter
 
--- on master this is about `Subtype t` ... gross.
-theorem _root_.Subtype.mono_coe' {α : Type*} [Preorder α] (t : Set α) : Monotone ((↑) : t → α) :=
-  fun _ _ ↦ id
 
 /-- The map `toUltraweak` as a positive continuous linear map. -/
 @[simps]
@@ -303,8 +280,6 @@ def toUltraweakPosCLM : M →P[ℂ] σ(M, P) where
 --- would have to bundle the conjugation operation into it's own function, and then it would
 --- work.
 
-open scoped Topology
-open Bornology in
 theorem foo.extracted_1_1 (M P : Type*) [inst : CStarAlgebra M]
     [PartialOrder M] [StarOrderedRing M] [NormedAddCommGroup P] [NormedSpace ℂ P]
     [Predual ℂ M P] (a u : σ(M, P)) (s : Set σ(M, P))
@@ -358,15 +333,16 @@ lemma DirectedOn.isLUB_star_right_conjugate (a u : σ(M, P)) (s : Set σ(M, P))
   have : Nonempty s := hnon.to_subtype
   have : IsDirectedOrder s := directedOn_iff_isDirectedOrder.mp hd
   have h₁ : Tendsto (· : s → σ(M, P)) atTop (𝓝 u) :=
-    tendsto_atTop_isLUB (Subtype.mono_coe s) <| Subtype.range_coe ▸ h
+    tendsto_atTop_isLUB (Subtype.mono_coe (· ∈ s)) <| Subtype.range_coe ▸ h
   have h₂ (b : σ(M, P)) (hb : IsUnit b) :
       Tendsto (fun x : s ↦ b * x * star b) atTop (𝓝 (b * u * star b)) := by
-    refine tendsto_atTop_isLUB (conjOrderHom b |>.monotone.comp <| Subtype.mono_coe' s) ?_
-    convert h.conjugate_star_right_of_isUnit' b hb
+    refine tendsto_atTop_isLUB (conjOrderHom b |>.monotone.comp <| Subtype.mono_coe (· ∈ s)) ?_
+    convert h.conjugate_star_right_of_isUnit b hb
     ext
     simp
   suffices Tendsto (fun x : s ↦ a * x * star a) atTop (𝓝 (a * u * star a)) by
-    convert isLUB_of_tendsto_atTop (conjOrderHom a |>.monotone.comp <| Subtype.mono_coe' s) this
+    convert isLUB_of_tendsto_atTop (conjOrderHom a |>.monotone.comp <|
+      Subtype.mono_coe (· ∈ s)) this
     ext
     simp
   obtain ⟨r, hr⟩ : ∃ r, Tendsto (fun x : s ↦ a * x * star a)
