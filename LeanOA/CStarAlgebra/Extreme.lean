@@ -268,4 +268,34 @@ lemma mul_self_mul_of_isStarProjection_of_nonneg_of_le {a e : A} (he : IsStarPro
   rwa [← mul_assoc, ← CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, mul_sub,
     mul_one, sub_eq_zero] at L
 
+/- Now let's try to formalize the statement of the theorem. The proof ought to be reasonable using
+Jireh's mapping trick. -/
+
+theorem mem_extremePoints_nonneg_iff_isStarProjection {e : A} :
+    e ∈ extremePoints ℝ {x : A | 0 ≤ x} ↔ IsStarProjection e := by
+  constructor
+  · sorry
+  · intro he
+    by_contra h
+    simp only [mem_extremePoints ,mem_setOf_eq, not_and, not_forall] at h
+    obtain ⟨a , ha, b, hb, ⟨t, s, h0t, h0s, hts, hlin⟩ , habe⟩ := h he.nonneg
+    have P : s⁻¹ • (e - t • a) = b := by
+       grind [inv_smul_eq_iff₀, sub_eq_iff_eq_add, add_comm]
+    have J : t • a ≤ e := by
+      have K := le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b)
+      rwa [hlin] at K
+    have K := mul_self_mul_of_isStarProjection_of_nonneg_of_le (a := t • a) he (by positivity) J
+    rw [mul_smul_comm, smul_mul_assoc] at K
+    have L : e * a * e = a :=
+      IsUnit.smul_left_cancel (ne_of_lt h0t).symm.isUnit|>.mp K
+    have LL : e * a = a * e := by
+      rw [← L,← mul_assoc, ← mul_assoc, he.1, mul_assoc, mul_assoc, mul_assoc, he.1]
+    rw [← L] at P
+    have : a * b = b * a := by
+      grind [mul_smul_comm, smul_mul_assoc, mul_sub, sub_mul]
+    /- Now we may require the function stuff. Perhaps take a short break and see if there
+       is another way? -/
+    sorry
+
+
 end Positive
