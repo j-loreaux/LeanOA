@@ -266,14 +266,22 @@ lemma IsStarProjection.mul_self_mul_of_nonneg_of_le {a e : A} (he : IsStarProjec
 /- Now let's try to formalize the statement of the theorem. The proof ought to be reasonable using
 Jireh's mapping trick. -/
 
+theorem IsStarProjection.norm_le {A : Type*} [NonUnitalNormedRing A] [StarRing A] [CStarRing A]
+    (e : A) (he : IsStarProjection e) : ‖e‖ ≤ 1 := by
+  suffices ‖e‖ * (‖e‖ - 1) = 0 by grind [sub_eq_zero]
+  rw [mul_sub, ← CStarRing.norm_star_mul_self, he.isSelfAdjoint.star_eq, he.isIdempotentElem.eq]
+  simp
+
 theorem mem_extremePoints_nonneg_iff_isStarProjection {e : A} :
-    e ∈ extremePoints ℝ {x : A | 0 ≤ x} ↔ IsStarProjection e := by
+    e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} ↔ IsStarProjection e := by
+  simp only [mem_closedBall, dist_zero_right]
   constructor
   · sorry
   · intro he
     by_contra h
     simp only [mem_extremePoints ,mem_setOf_eq, not_and, not_forall] at h
-    obtain ⟨a , ha, b, hb, ⟨t, s, h0t, h0s, hts, hlin⟩ , habe⟩ := h he.nonneg
+    obtain ⟨a, ⟨ha, ha0⟩, b, ⟨hb, hb0⟩, ⟨t, s, h0t, h0s, hts, hlin⟩, habe⟩ :=
+      h ⟨he.nonneg, he.norm_le⟩
     have P : s⁻¹ • (e - t • a) = b := by
        grind [inv_smul_eq_iff₀, sub_eq_iff_eq_add, add_comm]
     have J : t • a ≤ e := by
