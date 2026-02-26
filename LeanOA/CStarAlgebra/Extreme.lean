@@ -281,22 +281,19 @@ theorem IsStarProjection.of_mem_extremePoints_nonneg_and_mem_closedUnitBall
     (he : e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1}) : IsStarProjection e := by
   simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq] at he
   obtain ⟨⟨h1, h2⟩, h3⟩ := he
-  have := (norm_le_one_iff_of_nonneg e).mp h2
   have := calc
     0 ≤ e * (2 - e) := by
-      apply commute_iff_mul_nonneg h1 (by grw [sub_nonneg, this, one_le_two]) |>.mp
+      apply commute_iff_mul_nonneg h1
+        (by grw [sub_nonneg, (norm_le_one_iff_of_nonneg e).mp h2, one_le_two]) |>.mp
       simp [commute_iff_eq, mul_sub, sub_mul, mul_two, two_mul]
     _ = (2 : ℝ) • e - e * e := by simp [mul_sub, two_smul, mul_two]
-  refine ⟨?_, h1.isSelfAdjoint⟩
-  apply h3 _ ⟨(commute_iff_mul_nonneg h1 h1).mp rfl, ?_⟩ ((2 : ℝ) • e - e * e) ⟨this, ?_⟩
-    ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← one_div, smul_smul]⟩
+  refine ⟨h3 _ ⟨(commute_iff_mul_nonneg h1 h1).mp rfl, ?_⟩ ((2 : ℝ) • e - e * e) ⟨this, ?_⟩
+    ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← one_div, smul_smul]⟩, h1.isSelfAdjoint⟩
   · nth_rw 1 [← h1.star_eq]
     grw [CStarRing.norm_star_mul_self, h2, one_mul]
   · rw [norm_le_one_iff_of_nonneg _ this, ← sub_nonneg]
     calc 0 ≤ star (1 - e) * (1 - e) := star_mul_self_nonneg _
-      _ = _ := by
-        simp [h1.star_eq, sub_mul, mul_sub, two_smul]
-        grind
+      _ = _ := by simp [h1.star_eq, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
 
 theorem mem_extremePoints_nonneg_and_mem_closedUnitBall_iff_isStarProjection {e : A} :
     e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} ↔ IsStarProjection e := by
