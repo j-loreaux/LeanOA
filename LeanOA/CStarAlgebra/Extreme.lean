@@ -247,26 +247,21 @@ variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing
 
 open CStarAlgebra Unitization
 
-lemma mul_self_mul_of_isStarProjection_of_nonneg_of_le {a e : A} (he : IsStarProjection e)
+lemma IsStarProjection.mul_self_mul_of_nonneg_of_le {a e : A} (he : IsStarProjection e)
     (h0a : 0 ≤ a) (hae : a ≤ e) : e * a * e = a := by
   suffices h : a * e = a by
-    rwa [mul_assoc, h, ← he.2, ← star_star a, ← star_mul, star_inj, LE.le.star_eq h0a]
-  suffices H : ∀ (a e : A⁺¹) (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e),
-      a = a * e by
+    rwa [mul_assoc, h, ← he.2, ← star_star a, ← star_mul, star_inj, h0a.star_eq]
+  suffices H : ∀ (a e : A⁺¹) (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e), a = a * e by
     simpa using inr_injective <| map_mul (inrNonUnitalStarAlgHom ℂ A) a e ▸ H
       (inrNonUnitalStarAlgHom ℂ A a) (inrNonUnitalStarAlgHom ℂ A e) he.inr (inr_nonneg_iff.mpr h0a)
-        (inr_le_iff (ha := LE.le.isSelfAdjoint h0a) (hb := he.isSelfAdjoint) |>.mpr hae) |>.symm
+        (inr_le_iff (ha := h0a.isSelfAdjoint) (hb := he.isSelfAdjoint) |>.mpr hae) |>.symm
   intro a e he h0a hae
-  have L : ‖(star (1 - e) * sqrt a) * (sqrt a * (1 - e))‖ = 0 := by
-    grind [CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, ← norm_eq_zero,
+  have L : ‖star (sqrt a * (1 - e)) * (sqrt a * (1 - e))‖ = 0 := by
+    grind [nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, ← norm_eq_zero, (sqrt_nonneg a).star_eq,
       le_antisymm (le_of_le_of_eq (star_left_conjugate_le_conjugate ..) _)
-        (star_left_conjugate_nonneg ..), mul_assoc, IsStarProjection.mul_one_sub_self]
-  nth_rw 1 [← (LE.le.star_eq <| sqrt_nonneg a)] at L
-  rw [← (LE.le.star_eq <| sqrt_nonneg a), ← star_mul, CStarRing.norm_star_mul_self, mul_eq_zero,
-     norm_eq_zero, or_self, (LE.le.star_eq <| sqrt_nonneg _)] at L
-  apply  mul_eq_zero_of_right (sqrt _) at L
-  rwa [← mul_assoc, ← CStarAlgebra.nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, mul_sub,
-    mul_one, sub_eq_zero] at L
+        (star_left_conjugate_nonneg ..), mul_assoc, IsStarProjection.mul_one_sub_self, star_mul]
+  rw [CStarRing.norm_star_mul_self, mul_eq_zero, norm_eq_zero, or_self, mul_sub, sub_eq_zero] at L
+  rw [nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, mul_assoc, ← L, mul_one]
 
 /- Now let's try to formalize the statement of the theorem. The proof ought to be reasonable using
 Jireh's mapping trick. -/
@@ -284,7 +279,7 @@ theorem mem_extremePoints_nonneg_iff_isStarProjection {e : A} :
     have J : t • a ≤ e := by
       have K := le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b)
       rwa [hlin] at K
-    have K := mul_self_mul_of_isStarProjection_of_nonneg_of_le (a := t • a) he (by positivity) J
+    have K := he.mul_self_mul_of_nonneg_of_le (a := t • a) (by positivity) J
     rw [mul_smul_comm, smul_mul_assoc] at K
     have L : e * a * e = a :=
       IsUnit.smul_left_cancel (ne_of_lt h0t).symm.isUnit|>.mp K
