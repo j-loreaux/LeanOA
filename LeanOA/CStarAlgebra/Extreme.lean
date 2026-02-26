@@ -290,7 +290,7 @@ theorem mem_extremePoints_nonneg_iff_isStarProjection {e : A} :
       IsUnit.smul_left_cancel (ne_of_lt h0t).symm.isUnit|>.mp K
     have LL : e * a = a * e := by
       rw [← L,← mul_assoc, ← mul_assoc, he.1, mul_assoc, mul_assoc, mul_assoc, he.1]
-    rw [← L] at P
+    rw [← L] at P -- Is it weird that `grind` won't solve this? I'd expect it to easily do so.
     have : a * b = b * a := by
       grind [mul_smul_comm, smul_mul_assoc, mul_sub, sub_mul]
     /- Now we may require the function stuff. Perhaps take a short break and see if there
