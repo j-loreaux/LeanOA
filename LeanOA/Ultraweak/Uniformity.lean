@@ -1,5 +1,7 @@
+import LeanOA.Ultraweak.Bornology
 import LeanOA.Ultraweak.SeparatingDual
 import LeanOA.WeakDual.UniformSpace
+import LeanOA.Mathlib.Topology.Bornology.Basic
 
 /-! # Properties of the uniformity and topology of `σ(M, P)`
 
@@ -36,6 +38,16 @@ namespace Ultraweak
 
 open scoped Topology ComplexOrder
 open Filter Set Bornology
+
+variable (P) in
+/-- The map `toUltraweak` as a positive continuous linear map. -/
+@[simps]
+def toUltraweakPosCLM : M →P[ℂ] σ(M, P) where
+  toFun m := toUltraweak ℂ P m
+  map_add' := by simp
+  map_smul' := by simp
+  monotone' _ _ := id
+  cont := by fun_prop
 
 variable (M P)
 
@@ -105,18 +117,18 @@ private lemma tendsto_weakE_iff_forall_posCLM {α : Type*} [TopologicalSpace α]
 -- we should get this out of tactic mode as a proof.
 private noncomputable def weakEUniformEquiv (r : ℝ) :
     (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r : Set σ(M, P)) ≃ᵤ
-      (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r)) := by
-  let e : (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r : Set σ(M, P)) ≃
+      (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r)) :=
+  letI e : (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r : Set σ(M, P)) ≃
       (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r)) :=
     { toFun := Subtype.map ((weakEEquiv M P).symm ∘ ofUltraweak) fun _ ↦ id
       invFun := Subtype.map (toUltraweak ℂ P ∘ weakEEquiv M P) (by simp)
       left_inv _ := by ext; simp
       right_inv _ := by ext; simp }
-  have := isCompact_iff_compactSpace.mp <| isCompact_closedBall ℂ P (0 : M) r
-  refine Continuous.uniformOfEquivCompactToT2 e ?_
-  rw [continuous_induced_rng, Function.comp_def]
-  refine WeakBilin.continuous_of_continuous_eval _ fun ⟨φ, hφ⟩ ↦ ?_
-  exact (map_continuous φ).comp continuous_subtype_val
+  haveI := isCompact_iff_compactSpace.mp <| isCompact_closedBall ℂ P (0 : M) r
+  Continuous.uniformOfEquivCompactToT2 e <| by
+    rw [continuous_induced_rng, Function.comp_def]
+    refine WeakBilin.continuous_of_continuous_eval _ fun ⟨φ, hφ⟩ ↦ ?_
+    exact (map_continuous φ).comp continuous_subtype_val
 
 private lemma isCompact_weakE_closedBall (r : ℝ) :
     IsCompact (weakEEquiv M P ⁻¹' Metric.closedBall (0 : M) r) := by
@@ -136,48 +148,49 @@ private lemma mapsTo_weakEEquiv_symm_comp_ofUltraweak_preimage_closedBall (r : �
       (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r)) :=
   fun x hx ↦ (weakEUniformEquiv M P r ⟨x, hx⟩).2
 
-/-- A bounded filter `l` in `σ(M, P)` is cauchy if and only if `map φ l` is cauchy in `ℂ`
-for every positive continuous linear functional `φ`. -/
-lemma cauchy_of_forall_posCLM_cauchy_map {l : Filter σ(M, P)} {r : ℝ}
-    (hlr : l ≤ 𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r))
-    (hl : ∀ φ : σ(M, P) →P[ℂ] ℂ, Cauchy (map φ l)) :
-    Cauchy l := by
-  have key : Cauchy (map ((weakEEquiv M P).symm ∘ ofUltraweak) l) := by
-    rw [cauchy_weakE_iff_forall_posCLM]
-    simpa [Function.comp_def]
-  have hlr' : map ((weakEEquiv M P).symm ∘ ofUltraweak) l ≤
-      𝓟 (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r)) :=
-    map_mono hlr |>.trans <|
-      mapsTo_weakEEquiv_symm_comp_ofUltraweak_preimage_closedBall M P r |>.tendsto
-  simpa using key.map_of_le
-    (uniformContinuousOn_toUltraweak_comp_weakEEquiv M P r) hlr'
+variable {M P}
 
 /-- A bounded filter `l` in `σ(M, P)` is cauchy if and only if `map φ l` is cauchy in `ℂ`
 for every positive continuous linear functional `φ`. -/
-lemma cauchy_of_forall_posCLM_cauchy_map' {l : Filter σ(M, P)} {s : Set M}
-    (hs : IsBounded s) (hlr : l ≤ 𝓟 (ofUltraweak ⁻¹' s))
-    (hl : ∀ φ : σ(M, P) →P[ℂ] ℂ, Cauchy (map φ l)) :
+lemma cauchy_of_forall_posCLM_of_eventually {l : Filter σ(M, P)} {r : ℝ}
+    (hlr : ∀ᶠ x in l, ‖ofUltraweak x‖ ≤ r) (hl : ∀ φ : σ(M, P) →P[ℂ] ℂ, Cauchy (map φ l)) :
     Cauchy l := by
-  obtain ⟨r, hr⟩ := hs |>.subset_closedBall 0
-  replace hlr : l ≤ 𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r) := hlr.trans <| by simpa
   have key : Cauchy (map ((weakEEquiv M P).symm ∘ ofUltraweak) l) := by
     rw [cauchy_weakE_iff_forall_posCLM]
     simpa [Function.comp_def]
+  replace hlr : l ≤ 𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r) := by
+    suffices {x | x ∈ ofUltraweak ⁻¹' Metric.closedBall (0 : M) r} ∈ l by
+      simpa only [le_principal_iff]
+    simpa
   have hlr' : map ((weakEEquiv M P).symm ∘ ofUltraweak) l ≤
       𝓟 (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r)) :=
     map_mono hlr |>.trans <|
       mapsTo_weakEEquiv_symm_comp_ofUltraweak_preimage_closedBall M P r |>.tendsto
-  simpa using key.map_of_le
-    (uniformContinuousOn_toUltraweak_comp_weakEEquiv M P r) hlr'
+  simpa using key.map_of_le (uniformContinuousOn_toUltraweak_comp_weakEEquiv M P r) hlr'
+
+/-- A bounded filter `l` in `σ(M, P)` is cauchy if and only if `map φ l` is cauchy in `ℂ`
+for every positive continuous linear functional `φ`. -/
+lemma cauchy_of_forall_posCLM_of_disjoint {l : Filter σ(M, P)}
+    (hl_bdd : Disjoint l (cobounded σ(M, P))) (hl : ∀ φ : σ(M, P) →P[ℂ] ℂ, Cauchy (map φ l)) :
+    Cauchy l := by
+  obtain ⟨s, hsl, hs⟩ := exists_isBounded_of_disjoint hl_bdd
+  obtain ⟨r, hr⟩ := isBounded_image_ofUltraweak.mpr hs |>.subset_closedBall 0
+  refine cauchy_of_forall_posCLM_of_eventually (r := r) ?_ hl
+  filter_upwards [mem_of_superset hsl (by simpa using hr)] using by simp
+
+variable {α : Type*} [TopologicalSpace α] {l : Filter α} {a : α} {s : Set α}
+  {x : σ(M, P)} {f : α → σ(M, P)}
 
 -- this proof is totally gross
-lemma tendsto_of_forall_posCLM {α : Type*} [TopologicalSpace α]
-    {l : Filter α} (x : σ(M, P)) {f : α → σ(M, P)} {r : ℝ}
-    (hfl : Tendsto f l (𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r)))
+/-- If `f : α → σ(M, P)` is eventually bounded along a filter `l`, and for every
+positive continuous linear functional `φ : σ(M, P) →P[ℂ] ℂ`, `φ ∘ f` converges to `φ x`,
+then `f` converges to `x`. -/
+lemma tendsto_of_forall_posCLM_of_eventually {r : ℝ} (hfl : ∀ᶠ x in l, ‖ofUltraweak (f x)‖ ≤ r)
     (hf : ∀ φ : σ(M, P) →P[ℂ] ℂ, Tendsto (fun m ↦ φ (f m)) l (𝓝 (φ x))) :
     Tendsto f l (𝓝 x) := by
   by_cases! h_bot : l = ⊥
   · simp [h_bot]
+  replace hfl : Tendsto f l (𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r)) := by simpa
   have key : Tendsto (fun m : α ↦ (weakEEquiv M P).symm (ofUltraweak (f m))) l
       (𝓝 ((weakEEquiv M P).symm (ofUltraweak x))) := by
     rw [tendsto_weakE_iff_forall_posCLM]
@@ -198,5 +211,56 @@ lemma tendsto_of_forall_posCLM {α : Type*} [TopologicalSpace α]
     rw [tendsto_nhdsWithin_iff]
     refine ⟨key, by simpa using hfl'⟩
   simpa using this.comp key2
+
+/-- If `f : α → σ(M, P)` is eventually bounded along a filter `l`, and for every
+positive continuous linear functional `φ : σ(M, P) →P[ℂ] ℂ`, `φ ∘ f` converges to `φ x`,
+then `f` converges to `x`. -/
+lemma tendsto_of_forall_posCLM_of_disjoint (hfl : Disjoint (map f l) (cobounded σ(M, P)))
+    (hf : ∀ φ : σ(M, P) →P[ℂ] ℂ, Tendsto (fun m ↦ φ (f m)) l (𝓝 (φ x))) :
+    Tendsto f l (𝓝 x) := by
+  obtain ⟨s, hsl, hs⟩ := exists_isBounded_of_disjoint hfl
+  obtain ⟨r, hr⟩ := isBounded_image_ofUltraweak.mpr hs |>.subset_closedBall 0
+  refine tendsto_of_forall_posCLM_of_eventually (r := r) ?_ hf
+  filter_upwards [mem_of_superset (mem_map.mp hsl) (preimage_mono <| by simpa using hr)]
+  simp
+
+/-- If `f : α → σ(M, P)` is eventually bounded along `𝓝[s] a`, and for every
+positive continuous linear functional `φ : σ(M, P) →P[ℂ] ℂ`, `φ ∘ f` is continuous at `a` within
+`s`, then `f` is continuous at `a` within `s`. -/
+lemma continuousWithinAt_of_forall_posCLM (hfl : Disjoint (map f (𝓝[s] a)) (cobounded σ(M, P)))
+    (hf : ∀ φ : σ(M, P) →P[ℂ] ℂ, ContinuousWithinAt (φ ∘ f) s a) :
+    ContinuousWithinAt f s a :=
+  tendsto_of_forall_posCLM_of_disjoint hfl hf
+
+/-- If `f : α → σ(M, P)` is eventually bounded along `𝓝 a`, and for every
+positive continuous linear functional `φ : σ(M, P) →P[ℂ] ℂ`, `φ ∘ f` is continuous at `a`,
+then `f` is continuous at `a`. -/
+lemma continuousAt_of_forall_posCLM (hfl : Disjoint (map f (𝓝 a)) (cobounded σ(M, P)))
+    (hf : ∀ φ : σ(M, P) →P[ℂ] ℂ, ContinuousAt (φ ∘ f) a) :
+    ContinuousAt f a :=
+  tendsto_of_forall_posCLM_of_disjoint hfl hf
+
+/-- If `f : α → σ(M, P)` is bounded on a set `s`, and for every positive continuous linear
+functional `φ : σ(M, P) →P[ℂ] ℂ`, `φ ∘ f` is continuous on `s`, then `f` is continuous on `s`.
+
+Note that this theorem is weaker than applying `continuousWithinAt_of_forall_posCLM` at each point
+of `s`. That theorem would work if `f` is only eventually bounded within each neighborhood
+`𝓝[s] x` for `x ∈ s`. -/
+lemma continuousOn_of_forall_posCLM (hfl : IsBounded (f '' s))
+    (hf : ∀ φ : σ(M, P) →P[ℂ] ℂ, ContinuousOn (φ ∘ f) s) :
+    ContinuousOn f s :=
+  fun x hx ↦ continuousWithinAt_of_forall_posCLM
+    (hfl.disjoint_cobounded_of_mem <| image_mem_map self_mem_nhdsWithin) (hf · x hx)
+
+/-- If `f : α → σ(M, P)` is bounded function, and for every positive continuous linear
+functional `φ : σ(M, P) →P[ℂ] ℂ`, `φ ∘ f` is continuous, then `f` is continuous.
+
+Note that this theorem is weaker than applying `continuousAt_of_forall_posCLM` at each point.
+That theorem would work if `f` is only eventually bounded within each neighborhood `𝓝 x`. -/
+lemma continuous_of_forall_posCLM (hfl : IsBounded (Set.range f))
+    (hf : ∀ φ : σ(M, P) →P[ℂ] ℂ, Continuous (φ ∘ f)) :
+    Continuous f := by
+  simp_rw [← continuousOn_univ] at hf ⊢
+  exact continuousOn_of_forall_posCLM (hfl.subset <| by simp) hf
 
 end Ultraweak

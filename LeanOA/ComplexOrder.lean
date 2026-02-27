@@ -87,6 +87,7 @@ lemma directedOn_of_bddAbove {s : Set ℂ} (hs : BddAbove s) : DirectedOn (· �
     · simp [h]
   exact ⟨max x.re y.re + x.im * I, by grind, by simp [le_def], by simp [le_def, key]⟩
 
+/-- `ℂ` is a conditionally complete partial order (with suprema). -/
 noncomputable abbrev instConditionallyCompletePartialOrderSup :
     ConditionallyCompletePartialOrderSup ℂ where
   isLUB_csSup_of_directed _ _ h_non h_bdd := ⟨Complex.le_sSup h_bdd, Complex.sSup_le h_non⟩
@@ -115,7 +116,8 @@ lemma IsLUB.image_re {s : Set ℂ} {x : ℂ} (h : IsLUB s x) : IsLUB (re '' s) (
   simpa
 
 open Filter Topology Complex
-abbrev instSupConvergenceClass : SupConvergenceClass ℂ where
+/-- Montone functions in `ℂ` converge to their suprema. -/
+lemma instSupConvergenceClass : SupConvergenceClass ℂ where
   tendsto_coe_atTop_isLUB z s h := by
     have h₁ : Tendsto (fun x : s ↦ re x) atTop (𝓝 (re z)) := by
       refine tendsto_atTop_isLUB (monotone_re.comp (Subtype.mono_coe s)) ?_

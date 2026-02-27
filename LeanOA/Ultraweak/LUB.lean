@@ -8,6 +8,19 @@ import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpo
 import LeanOA.CStarAlgebra.PositiveLinearFunctional
 import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
 
+/-! # `σ(M, P)` is a conditionally complete partial order
+
+This file establishes some nice order-theoretic properties of `σ(M, P)`.
+Since the order on `σ(M, P)` coincides with the order on `M`, these transfer.
+In particular, we show that it:
+
++ is a conditionally complete partial order (i.e. every nonempty directed set which is bounded above
+  has a least upper bound);
++ satisfies `SupConvergenceClass` (monotone functions converge to their supremum)
++ and conjugation preserves suprema
+
+-/
+
 
 variable {M P : Type*} [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M]
 variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P] [CompleteSpace P]
@@ -16,8 +29,6 @@ namespace Ultraweak
 
 open scoped ComplexOrder ComplexStarModule Topology
 open Filter Set Bornology StarOrderedRing
-
-variable (M P)
 
 /-- An increasing net of elements which is bounded above in `σ(M, P)` converges
 to its least upper bound.
@@ -55,7 +66,7 @@ lemma DirectedOn.exists_isLUB (s : Set σ(M, P)) (hs : DirectedOn (· ≤ ·) s)
   However, since this is a net in `ℂ` which is bounded above, it in fact converges,
   and is therefore cauchy. -/
   have h_cauchy : Cauchy (map ((↑) : s → σ(M, P)) atTop) := by
-    apply cauchy_of_forall_posCLM_cauchy_map M P h_map_le fun φ ↦ ?_
+    apply cauchy_of_forall_posCLM_of_eventually (by simpa using h_map_le) fun φ ↦ ?_
     have hφ := OrderHomClass.mono φ
     exact Tendsto.cauchy_map <| tendsto_atTop_ciSup (hφ.comp (Subtype.mono_coe (· ∈ s))) <| by
       simpa [← Function.comp_def, Set.range_comp]
@@ -74,11 +85,11 @@ noncomputable instance : ConditionallyCompletePartialOrderSup σ(M, P) where
   sSup s :=
     open Classical in
     if h : DirectedOn (· ≤ ·) s ∧ s.Nonempty ∧ BddAbove s
-    then (DirectedOn.exists_isLUB M P s h.1 h.2.1 h.2.2).choose
+    then (DirectedOn.exists_isLUB s h.1 h.2.1 h.2.2).choose
     else 0
   isLUB_csSup_of_directed s h_dir h_non hbdd := by
     rw [dif_pos (by grind)]
-    exact (DirectedOn.exists_isLUB M P s h_dir h_non hbdd).choose_spec.1
+    exact (DirectedOn.exists_isLUB s h_dir h_non hbdd).choose_spec.1
 
 /-- An increasing net of elements which is bounded above in `σ(M, P)` converges
 to its least upper bound. -/
@@ -93,46 +104,31 @@ instance : SupConvergenceClass σ(M, P) where
       rw [directedOn_iff_directed]
       obtain ⟨h₂⟩ := h₂
       exact h₂
-    obtain ⟨u, hu₁, hu₂⟩ := DirectedOn.exists_isLUB M P s h₂ h₁ ⟨_, hsa.1⟩
+    obtain ⟨u, hu₁, hu₂⟩ := DirectedOn.exists_isLUB s h₂ h₁ ⟨_, hsa.1⟩
     exact hsa.unique hu₁ ▸ hu₂
 
-
-
-
-/-- The map `toUltraweak` as a positive continuous linear map. -/
-@[simps]
-def toUltraweakPosCLM : M →P[ℂ] σ(M, P) where
-  toFun m := toUltraweak ℂ P m
-  map_add' := by simp
-  map_smul' := by simp
-  monotone' _ _ := id
-  cont := by fun_prop
-
-
---- Notes: we should make `toUltraweak_le_toUltraweak_iff` and make a unidirectional version
---- `gcongr`, same for `ofUltraweak`.
---- also, it would be very nice if we could make `a ≤ b → c * a * star c ≤ c * b * star c` a
---- `gcongr` lemma, but we can't right now because the head function is `HMul.hMul · c`, so we
---- would have to bundle the conjugation operation into it's own function, and then it would
---- work.
-
-theorem foo.extracted_1_1 (M P : Type*) [inst : CStarAlgebra M]
-    [PartialOrder M] [StarOrderedRing M] [NormedAddCommGroup P] [NormedSpace ℂ P]
-    [Predual ℂ M P] (a u : σ(M, P)) (s : Set σ(M, P))
-    (hd : DirectedOn (· ≤ ·) s) (hnon : s.Nonempty) (h : IsLUB s u)
+omit [CompleteSpace P] in
+private theorem isLUB_star_right_conjugate_aux (a u : σ(M, P)) (s : Set σ(M, P))
+    [IsDirectedOrder s] [Nonempty s] (h : IsLUB s u)
     (h₁ : Tendsto (Subtype.val : s → σ(M, P)) atTop (𝓝 u))
     (φ : σ(M, P) →P[ℂ] ℂ) :
-    Tendsto (fun x : s ↦ ‖φ (a * (u - x))‖) atTop (𝓝 0) := by
-  have : Nonempty s := hnon.to_subtype
-  have : IsDirectedOrder s := directedOn_iff_isDirectedOrder.mp hd
+    Tendsto (fun x : s ↦ φ (a * x)) atTop (𝓝 (φ (a * u))) := by
+  /- It clearly suffices to show `x ↦ ‖φ (a * (u - x))‖` tends to zero. -/
+  rw [tendsto_iff_norm_sub_tendsto_zero]
+  conv => enter [1, x]; rw [norm_sub_rev, ← map_sub, ← mul_sub]
+  /- `fun x ↦ u - ↑x` tends to zero since `Subtype.val` tends to `u`.
+  And since `φ` is continuous, `fun x ↦ √‖φ (u - x)‖` also tends to zero. -/
   have h₁ : Tendsto (fun x : s ↦ u - x) atTop (𝓝 0) := by
     simpa using (tendsto_sub_nhds_zero_iff.mpr h₁ |>.neg)
   have h₂ : Tendsto (fun x : s ↦ √‖φ (u - x)‖) atTop (𝓝 0) := by
     have := Real.continuous_sqrt.comp' continuous_norm |>.comp' (map_continuous φ)
     simpa [- map_sub] using this.tendsto _ |>.comp <| h₁
+  /- The map `x ↦ √‖φ (a * (u - x) * star a)‖` is eventually bounded because `φ` is norm
+  continuous (since it is ultraweakly continuous), and it argument is eventually smaller than the
+  nonnegative element `a * (u - x₀) * star a`, where `x₀ ∈ s` is arbitrary. -/
   obtain ⟨c, hcu⟩ : ∃ c, ∀ᶠ (x : s) in atTop, |√‖φ (a * (u - x) * star a)‖| ≤ c := by
     have x₀ : s := Classical.arbitrary s
-    let φ' := (φ.comp (toUltraweakPosCLM M P)).toContinuousLinearMap
+    let φ' := φ.comp (toUltraweakPosCLM P) |>.toContinuousLinearMap
     use |√(‖φ'‖ * ‖ofUltraweak (a * (u - x₀.val) * star a)‖)|
     filter_upwards [Ici_mem_atTop x₀] with x (hx : x₀ ≤ x)
     gcongr
@@ -143,29 +139,28 @@ theorem foo.extracted_1_1 (M P : Type*) [inst : CStarAlgebra M]
           (OrderHomClass.mono φ <| star_right_conjugate_le_conjugate (by grw [hx]) a)
       _ = ‖φ' (ofUltraweak (a * (u - ↑x₀) * star a))‖ := by simp [φ']
       _ ≤ ‖φ'‖ * ‖ofUltraweak (a * (u - ↑x₀) * star a)‖ := φ'.le_opNorm _
-  have := bdd_le_mul_tendsto_zero' c hcu h₂
-  refine squeeze_zero (fun _ ↦ by positivity) (fun x ↦ ?_) this
+  /- By the Cauchy-Schwarz inequality,
+    ‖φ (a * (u - x))‖ ≤ ‖φ (a * √(u - x) * √(u - x))‖
+    _ ≤ √‖φ (a * (u - x) * star a)‖ * √‖φ (u - x)‖.
+  Since the first factor is bounded and the latter tendsto to zero, the product tends to zero.
+  Hence `φ (a * (u - x))` tends to zero by the squeeze theorem. -/
+  refine squeeze_zero (fun _ ↦ by positivity) (fun x ↦ ?_) <| bdd_le_mul_tendsto_zero' c hcu h₂
   have hux : 0 ≤ u - x := sub_nonneg.mpr <| h.1 x.prop
   rw [← CFC.sqrt_mul_sqrt_self' (u - x)]
   have := φ.toPositiveLinearMap.cauchy_schwarz_mul_star
     (a * CFC.sqrt (u - x)) (star (CFC.sqrt (u - x)))
   simpa [(CFC.sqrt_nonneg (u - x)).star_eq, mul_assoc]
 
-theorem foo.extracted_1_2 (M P : Type*) [inst : CStarAlgebra M]
-    [PartialOrder M] [StarOrderedRing M] [NormedAddCommGroup P] [NormedSpace ℂ P]
-    [Predual ℂ M P] (a u : σ(M, P)) (s : Set σ(M, P))
-    (hd : DirectedOn (· ≤ ·) s) (hnon : s.Nonempty) (h : IsLUB s u)
-    (h₁ : Tendsto (Subtype.val : s → σ(M, P)) atTop (𝓝 u))
-    (φ : σ(M, P) →P[ℂ] ℂ) :
-    Tendsto (fun x : s ↦ ‖φ ((u - x) * a)‖) atTop (𝓝 0) := by
-  apply foo.extracted_1_1 M P (star a) u s hd hnon h h₁ φ |>.congr fun x ↦ ?_
-  convert norm_star (φ ((u - x) * a))
-  rw [← map_star φ, star_mul, (sub_nonneg.mpr (h.1 x.prop)).star_eq]
-
-open Topology
+/-- If `s` is a nonempty directed set which is bounded above with supremum `u`,
+then so is `(a * · * star a) '' s`, and its least upper bound is `a * u * star a`. -/
 lemma DirectedOn.isLUB_star_right_conjugate (a u : σ(M, P)) (s : Set σ(M, P))
     (hd : DirectedOn (· ≤ ·) s) (hnon : s.Nonempty) (h : IsLUB s u) :
     IsLUB (conjOrderHom a '' s) (a * u * star a) := by
+  /- Clearly `fun x : s ↦ ↑x` converges to `u`. For any invertible element `b`, since
+  `(b * · * star b)` is an order isomorphism, we find that `(b * · * star b) '' s` has
+  `b * u * star b` as its least upper bound, and hence `(b * · * star b)` tends to
+  `b * u * star b`. And since `(a * · * star a)` is monotone, it suffices to show that this
+  converges to `a * u * star a` (along `atTop : Filter ↥s`). -/
   have : Nonempty s := hnon.to_subtype
   have : IsDirectedOrder s := directedOn_iff_isDirectedOrder.mp hd
   have h₁ : Tendsto (· : s → σ(M, P)) atTop (𝓝 u) :=
@@ -181,42 +176,45 @@ lemma DirectedOn.isLUB_star_right_conjugate (a u : σ(M, P)) (s : Set σ(M, P))
       Subtype.mono_coe (· ∈ s)) this
     ext
     simp
-  obtain ⟨r, hr⟩ : ∃ r, Tendsto (fun x : s ↦ a * x * star a)
-      atTop (𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) r)) := by
-    simp only [tendsto_principal]
+  /- Since this function has eventually bounded range (eventually bounded below by `a * x₀ * star a`
+  for any fixed `x₀ ∈ s`, and bounded above by `a * u * star a`), it suffices to check that for
+  any positive continuous linear functional `φ : σ(M, P) →P[ℂ] ℂ` that `fun x ↦ φ (a * x * star a)`
+  tends to `φ (a * u * star a)`. -/
+  refine tendsto_of_forall_posCLM_of_disjoint ?hbdd fun φ ↦ ?htends
+  case hbdd =>
     have x₀ : s := Classical.arbitrary s
-    have hbd' : BddBelow ((ofUltraweak ∘ conjOrderHom a) '' (s ∩ Set.Ici x₀)) := by
-      use ofUltraweak (a * x₀.val * star a)
+    simp only [disjoint_cobounded_iff]
+    refine ⟨_, image_mem_map (Ici_mem_atTop x₀), ?_⟩
+    rw [← isBounded_image_ofUltraweak]
+    apply isBounded_of_bddAbove_of_bddBelow <;> simp only [image_image]
+    · refine monotone_ofUltraweak.comp (conjOrderHom a).monotone |>.map_bddAbove ⟨u, h.1⟩ |>.mono ?_
       rintro - ⟨x, hx, rfl⟩
-      exact star_right_conjugate_le_conjugate hx.2 a
-    have hbd'' : BddAbove ((ofUltraweak ∘ conjOrderHom a) '' (s ∩ Set.Ici x₀)) := by
-      apply monotone_ofUltraweak.comp (conjOrderHom a).monotone |>.map_bddAbove ⟨u, h.1⟩ |>.mono
-      gcongr
-      simp
-    obtain ⟨r, hr⟩ := isBounded_of_bddAbove_of_bddBelow hbd'' hbd' |>.subset_closedBall 0
-    use r
-    filter_upwards [Ici_mem_atTop x₀] with x hx
-    exact hr ⟨x, ⟨x.prop, hx⟩, rfl⟩
-  refine tendsto_of_forall_posCLM M P (a * u * star a) hr fun φ ↦ ?_
-  have h₃ : Tendsto (fun x : s ↦ φ (a * x)) atTop (𝓝 (φ (a * u))) := by
-    rw [tendsto_iff_norm_sub_tendsto_zero]
-    conv =>
-      enter [1, x]
-      rw [norm_sub_rev, ← map_sub, ← mul_sub]
-    exact foo.extracted_1_1 M P a u s hd hnon h h₁ φ
+      exact ⟨x.val, x.prop, rfl⟩
+    · exact monotone_ofUltraweak.comp (conjOrderHom a).monotone |>.comp (Subtype.mono_coe (· ∈ s))
+        |>.map_bddBelow ⟨x₀, fun _ ↦ id⟩
+  /- By the previous lemma `fun x ↦ φ (a * x)` and `fun x ↦ φ (x * star a)` tend to `φ (a * u)`
+  and `φ (u * star a)`, respectively. -/
+  have h₃ : Tendsto (fun x : s ↦ φ (a * x)) atTop (𝓝 (φ (a * u))) :=
+    isLUB_star_right_conjugate_aux a u s h h₁ φ
   have h₄ : Tendsto (fun x : s ↦ φ (x * star a)) atTop (𝓝 (φ (u * star a))) := by
-    rw [tendsto_iff_norm_sub_tendsto_zero]
-    conv =>
-      enter [1, x]
-      rw [norm_sub_rev, ← map_sub, ← sub_mul]
-    exact foo.extracted_1_2 M P (star a) u s hd hnon h h₁ φ
+    simp_rw +singlePass [tendsto_iff_norm_sub_tendsto_zero, norm_sub_rev,
+      ← map_sub, ← mul_sub, ← sub_mul] at h₃ ⊢
+    apply h₃.congr fun x ↦ ?_
+    convert norm_star (φ ((u - x) * star a))
+    rw [← map_star φ, star_mul, star_star, (sub_nonneg.mpr (h.1 x.prop)).star_eq]
+  /- Obviously there is some `z : ℂ` so that `z + a` is invertible.
+  So we note that `fun x ↦ φ ((z + a) * x * star (z + a))` tends to `(z + a) * u * star (z + a)`
+  (because `z + a` is invertible). But at the same time, by expanding the terms out, we see that
+  `fun x ↦ z * star z * φ x + star z * φ (a * x) + z * φ (x * star a) + φ (a * x * star a)`.
+  The first thre terms converge to `z * star z * φ u + star z * φ (a * u) + z * φ (u * star a)`
+  and since the entirety converges to `(z + a) * u * star (z + a)` we obtain the desired convergence
+  of `fun x ↦ φ (a * x * star a)` to `φ (a * u * star a)`. -/
   obtain ⟨z, hz⟩ : ∃ z : ℂ, IsUnit (algebraMap ℂ σ(M, P) z + a) := by
     suffices spectrum ℂ (-a) ≠ Set.univ by simpa [Set.ne_univ_iff_exists_notMem, spectrum.mem_iff]
     simpa using spectrum.isCompact (starAlgEquiv M P (-a)) |>.ne_univ
-  have key (x : σ(M, P)) :
-      φ (a * x * star a) =
+  have key (x : σ(M, P)) : φ (a * x * star a) =
       φ ((algebraMap ℂ σ(M, P) z + a) * x * star (algebraMap ℂ σ(M, P) z + a)) -
-        (z * star z * φ x + star z * φ (a * x) + z * φ (x * star a)) := by
+      (z * star z * φ x + star z * φ (a * x) + z * φ (x * star a)) := by
     simp [Algebra.algebraMap_eq_smul_one, add_mul, mul_add]
     ring
   simp only [key]
