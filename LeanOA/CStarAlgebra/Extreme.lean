@@ -261,51 +261,47 @@ lemma IsStarProjection.mul_self_mul_of_nonneg_of_le {a e : A} (he : IsStarProjec
   rw [CStarRing.norm_star_mul_self, mul_eq_zero, norm_eq_zero, or_self, mul_sub, sub_eq_zero] at L
   rw [nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, mul_assoc, ← L, mul_one]
 
-/- Now let's try to formalize the statement of the theorem. The proof ought to be reasonable using
-Jireh's mapping trick. -/
-
 theorem IsStarProjection.norm_le {A : Type*} [NonUnitalNormedRing A] [StarRing A] [CStarRing A]
     (e : A) (he : IsStarProjection e) : ‖e‖ ≤ 1 := by
   suffices ‖e‖ * (‖e‖ - 1) = 0 by grind [sub_eq_zero]
   rw [mul_sub, ← CStarRing.norm_star_mul_self, he.isSelfAdjoint.star_eq, he.isIdempotentElem.eq]
   simp
 
+/-- The set of star projections on a non-unital C⋆-algebra is exactly the extreme points of
+the nonnegative closed unit ball. -/
 theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall {e : A} :
     IsStarProjection e ↔ e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} := by
   simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq, and_imp]
   refine ⟨fun he ↦ ⟨⟨he.nonneg, he.norm_le⟩,
     fun a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩ ↦ ?_⟩, fun ⟨⟨h1, h2⟩, h3⟩ ↦ ?_⟩
-  · have I : t • (e * ((1 - a : A⁺¹) * e)) + s • (e * ((1 - b) * e)) =
+  · have : t • (e * ((1 - a : A⁺¹) * e)) + s • (e * ((1 - b) * e)) =
         (t + s) • e - e * (t • a + s • b) * e := by
       rw [← mul_smul_comm, ← smul_mul_assoc, ← mul_smul_comm, ← smul_mul_assoc, ← mul_assoc,
           ← mul_assoc, ← add_mul, ← mul_add, smul_sub, smul_sub, sub_add_eq_add_sub, add_sub,
           ← add_smul, sub_sub, add_comm (s • b : A⁺¹), mul_sub, sub_mul, mul_smul_comm,
           mul_one, smul_mul_assoc, he.inr.isIdempotentElem.eq]
-    have J : ((t + s) • e - e * (t • a + s • b) * e : A⁺¹) = 0 := by
+    have : ((t + s) • e - e * (t • a + s • b) * e : A⁺¹) = 0 := by
       simp only [← inr_smul, ← inr_add, ← inr_sub, ← inr_mul]
       rw [hts, one_smul, hlin, he.1, he.1, sub_self, inr_zero]
-    have le1 : (a : A⁺¹) ≤ 1 := (norm_le_one_iff_of_nonneg _ (by simpa)).mp (by simpa [norm_inr])
-    have K0 {q : ℝ} {c : A} (hq : 0 < q) (h0c : 0 ≤ c) (hc1 : ‖c‖ ≤ 1) :
+    have H {q : ℝ} {c : A} (hq : 0 < q) (h0c : 0 ≤ c) (hc1 : ‖c‖ ≤ 1) :
         0 ≤ q • (e * ((1 - c : A⁺¹) * e)) := by
       rw [← smul_zero q, smul_le_smul_iff_of_pos_left hq, ← mul_assoc]
       nth_rw 1 [← he.2, inr_star]
       exact star_left_conjugate_nonneg (sub_nonneg_of_le <|
         (norm_le_one_iff_of_nonneg (c : A⁺¹) (by simpa)).mp (by simpa [norm_inr])) (e : A⁺¹)
-    have M : t • (e * ((1 - a : A⁺¹) * e)) ≤ t • (e * ((1 - a) * e)) + s • (e * ((1 - b) * e)) :=
-      (le_add_iff_nonneg_right (t • (e * ((1 - a : A⁺¹) * e)))).mpr (K0 h0s hb hb1)
-    rw [I, J] at M
-    have N : e * ((1 - a : A⁺¹) * e) = 0 := by rw [← smul_eq_zero_iff_right h0t.ne']; grind
-    have JJ : t • a ≤ e := by
-      simpa [hlin] using le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b)
-    have LL := he.mul_self_mul_of_nonneg_of_le (a := t • a) (by positivity) JJ
-    rw [mul_smul_comm, smul_mul_assoc] at LL
-    have O : e * (e - a * e) = 0 := by
+    have : t • (e * ((1 - a : A⁺¹) * e)) ≤ t • (e * ((1 - a) * e)) + s • (e * ((1 - b) * e)) :=
+      (le_add_iff_nonneg_right (t • (e * ((1 - a : A⁺¹) * e)))).mpr (H h0s hb hb1)
+    have : e * ((1 - a : A⁺¹) * e) = 0 := by rw [← smul_eq_zero_iff_right h0t.ne']; grind
+    have := he.mul_self_mul_of_nonneg_of_le (a := t • a) (by positivity)
+      (by simpa [hlin] using le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b))
+    rw [mul_smul_comm, smul_mul_assoc] at this
+    have h : e * (e - a * e) = 0 := by
       rwa [← inr_injective (R := ℂ) |>.eq_iff, inr_mul, inr_sub, inr_mul, ← one_sub_mul, inr_zero]
     rwa [mul_sub, ← mul_assoc, he.1,
-      h0t.ne'.isUnit.smul_left_cancel.mp LL, sub_eq_zero, eq_comm] at O
+      h0t.ne'.isUnit.smul_left_cancel.mp this, sub_eq_zero, eq_comm] at h
   · have := calc
       0 ≤ (e : A⁺¹) * (2 - e) := by
-        -- this `have` could be a lemma
+        -- this `have` could be a lemma?
         have : (e : A⁺¹) ≤ 1 := by
           rwa [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ (by simpa)] at h2
         apply Commute.mul_nonneg (by simpa) (by grw [sub_nonneg, this, one_le_two])
