@@ -276,24 +276,25 @@ theorem IsStarProjection.norm_le {A : Type*} [NonUnitalNormedRing A] [StarRing A
 attribute [grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
 attribute [grind →] IsStarProjection.isIdempotentElem IsStarProjection.isSelfAdjoint
 
-theorem IsStarProjection.of_mem_extremePoints_nonneg_and_mem_closedUnitBall
-    {A} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {e : A}
+theorem IsStarProjection.of_mem_extremePoints_nonneg_and_mem_closedUnitBall {e : A}
     (he : e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1}) : IsStarProjection e := by
   simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq] at he
   obtain ⟨⟨h1, h2⟩, h3⟩ := he
   have := calc
-    0 ≤ e * (2 - e) := by
-      apply commute_iff_mul_nonneg h1
-        (by grw [sub_nonneg, (norm_le_one_iff_of_nonneg e).mp h2, one_le_two]) |>.mp
+    0 ≤ (e : A⁺¹) * (2 - e) := by
+      -- this `have` could be a lemma
+      have : (e : A⁺¹) ≤ 1 := by
+        rwa [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ (by simpa)] at h2
+      apply Commute.mul_nonneg (by simpa) (by grw [sub_nonneg, this, one_le_two])
       simp [commute_iff_eq, mul_sub, sub_mul, mul_two, two_mul]
-    _ = (2 : ℝ) • e - e * e := by simp [mul_sub, two_smul, mul_two]
-  refine ⟨h3 _ ⟨(commute_iff_mul_nonneg h1 h1).mp rfl, ?_⟩ ((2 : ℝ) • e - e * e) ⟨this, ?_⟩
+    _ = (((2 : ℝ) • e - e * e : A) : A⁺¹) := by simp [mul_sub, two_smul, mul_two]
+  refine ⟨h3 _ ⟨Commute.mul_nonneg h1 h1 rfl, ?_⟩ ((2 : ℝ) • e - e * e) ⟨inr_nonneg_iff.mp this, ?_⟩
     ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← one_div, smul_smul]⟩, h1.isSelfAdjoint⟩
   · nth_rw 1 [← h1.star_eq]
     grw [CStarRing.norm_star_mul_self, h2, one_mul]
-  · rw [norm_le_one_iff_of_nonneg _ this, ← sub_nonneg]
-    calc 0 ≤ star (1 - e) * (1 - e) := star_mul_self_nonneg _
-      _ = _ := by simp [h1.star_eq, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
+  · rw [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ this, ← sub_nonneg]
+    calc 0 ≤ star (1 - e : A⁺¹) * (1 - e) := star_mul_self_nonneg _
+      _ = _ := by simp [LE.le.star_eq, h1, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
 
 theorem mem_extremePoints_nonneg_and_mem_closedUnitBall_of_isStarProjection
     {A} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {e : A} (he : IsStarProjection e) :
@@ -333,14 +334,10 @@ theorem mem_extremePoints_nonneg_and_mem_closedUnitBall_of_isStarProjection
 
 theorem mem_extremePoints_nonneg_and_mem_closedUnitBall_iff_isStarProjection {e : A} :
     e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} ↔ IsStarProjection e := by
-  constructor
-  · suffices ∀ (e : A⁺¹) (he : e ∈ extremePoints ℝ {x | 0 ≤ x ∧ x ∈ closedBall 0 1}),
-        IsStarProjection e by
-      sorry
-    exact fun _ ↦ IsStarProjection.of_mem_extremePoints_nonneg_and_mem_closedUnitBall
-  · suffices ∀ (e : A⁺¹) (he : IsStarProjection e), e ∈ extremePoints ℝ
-        {x | 0 ≤ x ∧ x ∈ closedBall 0 1} by
-      sorry
-    exact fun _ ↦ mem_extremePoints_nonneg_and_mem_closedUnitBall_of_isStarProjection
+  refine ⟨IsStarProjection.of_mem_extremePoints_nonneg_and_mem_closedUnitBall, ?_⟩
+  suffices ∀ (e : A⁺¹) (he : IsStarProjection e), e ∈ extremePoints ℝ
+      {x | 0 ≤ x ∧ x ∈ closedBall 0 1} by
+    sorry
+  exact fun _ ↦ mem_extremePoints_nonneg_and_mem_closedUnitBall_of_isStarProjection
 
 end Positive
