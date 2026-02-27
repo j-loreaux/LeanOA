@@ -276,12 +276,11 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall {e 
   refine ⟨fun he ↦ ⟨⟨he.nonneg, he.norm_le⟩,
     fun a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩ ↦ ?_⟩, fun ⟨⟨h1, h2⟩, h3⟩ ↦ ?_⟩
   · have I : t • (e * ((1 - a : A⁺¹) * e)) + s • (e * ((1 - b) * e)) =
-      (t + s) • e - e * (t • a + s • b) * e := by
+        (t + s) • e - e * (t • a + s • b) * e := by
       rw [← mul_smul_comm, ← smul_mul_assoc, ← mul_smul_comm, ← smul_mul_assoc, ← mul_assoc,
           ← mul_assoc, ← add_mul, ← mul_add, smul_sub, smul_sub, sub_add_eq_add_sub, add_sub,
           ← add_smul, sub_sub, add_comm (s • b : A⁺¹), mul_sub, sub_mul, mul_smul_comm,
-          mul_one, smul_mul_assoc]
-      nth_rw 1 [he.inr.1]
+          mul_one, smul_mul_assoc, he.inr.isIdempotentElem.eq]
     have J : ((t + s) • e - e * (t • a + s • b) * e : A⁺¹) = 0 := by
       simp only [← inr_smul, ← inr_add, ← inr_sub, ← inr_mul]
       rw [hts, one_smul, hlin, he.1, he.1, sub_self, inr_zero]
@@ -295,17 +294,15 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall {e 
     have M : t • (e * ((1 - a : A⁺¹) * e)) ≤ t • (e * ((1 - a) * e)) + s • (e * ((1 - b) * e)) :=
       (le_add_iff_nonneg_right (t • (e * ((1 - a : A⁺¹) * e)))).mpr (K0 h0s hb hb1)
     rw [I, J] at M
-    have N : t • (e * ((1 - a : A⁺¹) * e)) = 0 := le_antisymm M (K0 h0t ha ha1)
+    have N : e * ((1 - a : A⁺¹) * e) = 0 := by rw [← smul_eq_zero_iff_right h0t.ne']; grind
     have JJ : t • a ≤ e := by
-      have KK := le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b)
-      rwa [hlin] at KK
+      simpa [hlin] using le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b)
     have LL := he.mul_self_mul_of_nonneg_of_le (a := t • a) (by positivity) JJ
     rw [mul_smul_comm, smul_mul_assoc] at LL
     have O : e * (e - a * e) = 0 := by
-      rw [← inr_injective (R := ℂ) |>.eq_iff, inr_mul, inr_sub, inr_mul, ← one_sub_mul]
-      rwa [smul_eq_zero_iff_right (by positivity)] at N
+      rwa [← inr_injective (R := ℂ) |>.eq_iff, inr_mul, inr_sub, inr_mul, ← one_sub_mul, inr_zero]
     rwa [mul_sub, ← mul_assoc, he.1,
-      IsUnit.smul_left_cancel h0t.ne'.isUnit|>.mp LL , sub_eq_zero, ← eq_comm] at O
+      h0t.ne'.isUnit.smul_left_cancel.mp LL, sub_eq_zero, eq_comm] at O
   · have := calc
       0 ≤ (e : A⁺¹) * (2 - e) := by
         -- this `have` could be a lemma
