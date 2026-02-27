@@ -34,3 +34,8 @@ lemma IsStarProjection.mul_eq_self_of_nonneg_of_le {a e : A} (he : IsStarProject
   apply le_antisymm (le_of_le_of_eq (star_left_conjugate_le_conjugate
     (inr_le_iff a e |>.mpr hae) _) _) (star_left_conjugate_nonneg (by simpa) _)
   simp [mul_assoc, (he.inr (R := ℂ)).mul_one_sub_self]
+
+lemma IsStarProjection.conjugate_of_nonneg_of_le {a e : A} (he : IsStarProjection e)
+    (h0a : 0 ≤ a) (hae : a ≤ e) : e * a * e = a := by
+  have := he.mul_eq_self_of_nonneg_of_le h0a hae
+  rwa [mul_assoc, this, ← he.2, ← star_star a, ← star_mul, star_inj, h0a.star_eq]
