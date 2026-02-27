@@ -1,7 +1,9 @@
 import LeanOA.Mathlib.Algebra.Star.StarProjection
 import LeanOA.Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+import LeanOA.Mathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import LeanOA.Mathlib.Misc
@@ -11,7 +13,6 @@ import Mathlib.Algebra.Group.Idempotent
 import Mathlib.Algebra.Star.Subalgebra
 import Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 
 open Set Metric Complex CFC CStarAlgebra Unitization
@@ -243,28 +244,6 @@ section Positive
 variable [PartialOrder A] [StarOrderedRing A]
 
 attribute [grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
-
-lemma IsStarProjection.mul_self_mul_of_nonneg_of_le {a e : A} (he : IsStarProjection e)
-    (h0a : 0 ≤ a) (hae : a ≤ e) : e * a * e = a := by
-  suffices h : a * e = a by
-    rwa [mul_assoc, h, ← he.2, ← star_star a, ← star_mul, star_inj, h0a.star_eq]
-  suffices H : ∀ (a e : A⁺¹) (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e), a = a * e by
-    simpa using inr_injective <| map_mul (inrNonUnitalStarAlgHom ℂ A) a e ▸ H
-      (inrNonUnitalStarAlgHom ℂ A a) (inrNonUnitalStarAlgHom ℂ A e) he.inr h0a.inr
-        (inr_le_iff a e |>.mpr hae) |>.symm
-  intro a e he h0a hae
-  have L : ‖star (sqrt a * (1 - e)) * (sqrt a * (1 - e))‖ = 0 := by
-    grind [nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, ← norm_eq_zero, (sqrt_nonneg a).star_eq,
-      le_antisymm (le_of_le_of_eq (star_left_conjugate_le_conjugate ..) _)
-        (star_left_conjugate_nonneg ..), mul_assoc, IsStarProjection.mul_one_sub_self, star_mul]
-  rw [CStarRing.norm_star_mul_self, mul_eq_zero, norm_eq_zero, or_self, mul_sub, sub_eq_zero] at L
-  rw [nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, mul_assoc, ← L, mul_one]
-
-theorem IsStarProjection.norm_le {A : Type*} [NonUnitalNormedRing A] [StarRing A] [CStarRing A]
-    (e : A) (he : IsStarProjection e) : ‖e‖ ≤ 1 := by
-  suffices ‖e‖ * (‖e‖ - 1) = 0 by grind [sub_eq_zero]
-  rw [mul_sub, ← CStarRing.norm_star_mul_self, he.isSelfAdjoint.star_eq, he.isIdempotentElem.eq]
-  simp
 
 /-- The set of star projections on a non-unital C⋆-algebra is exactly the extreme points of
 the nonnegative closed unit ball. -/
