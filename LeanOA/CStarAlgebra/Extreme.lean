@@ -12,7 +12,7 @@ import Mathlib.Algebra.Star.Subalgebra
 import Mathlib.Algebra.Algebra.Unitization
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
 
-open Set Metric Complex CFC
+open Set Metric Complex CFC CStarAlgebra Unitization
 open scoped ComplexStarModule
 
 /-! # Extreme points of the closed unit ball in C⋆-algebras
@@ -110,8 +110,8 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
     (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
   /- Suppose `a` is an extreme point of the closed unit ball. Then we want to show that
   `a * star a * a = a`. It suffices to show `a * |a| = a`. -/
-  let := CStarAlgebra.spectralOrder A
-  let := CStarAlgebra.spectralOrderedRing A
+  let := spectralOrder A
+  let := spectralOrderedRing A
   suffices a * abs a = a by rw [mul_assoc, ← abs_mul_abs, ← mul_assoc, this, this]
   obtain ⟨ha, h⟩ := ha
   simp only [mem_closedBall, dist_zero_right] at ha h
@@ -176,7 +176,7 @@ private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedU
   exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
     ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
 
-open CStarAlgebra Filter Topology in
+open Filter Topology in
 /-- When `x` is an extreme point of the closed unit ball in a non-unital C⋆-algebra,
 then `star x * x + x * star x - x * star x * star x * x` is a right identity.
 (See also `CStarAlgebra.ofExtremePtOne_mul` for the left identity.) -/
@@ -237,16 +237,13 @@ abbrev CStarAlgebra.ofExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBal
   __ := ringOfExtremePt hx
   __ := Algebra.ofModule smul_mul_assoc mul_smul_comm
 
-end nonUnital
-
 section Positive
+variable [PartialOrder A] [StarOrderedRing A]
 
-/- In this section we prove that the extreme points of the set of positive elements
-   in the unit ball of a `NonUnitalCStarAlgebra A` are precisely the projections in `A`. -/
-
-variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-
-open CStarAlgebra Unitization
+alias ⟨LE.le.of_inr, LE.le.inr⟩ := inr_nonneg_iff
+attribute [grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
+attribute [grind →, aesop safe forward]
+  IsStarProjection.isIdempotentElem IsStarProjection.isSelfAdjoint
 
 lemma IsStarProjection.mul_self_mul_of_nonneg_of_le {a e : A} (he : IsStarProjection e)
     (h0a : 0 ≤ a) (hae : a ≤ e) : e * a * e = a := by
@@ -254,8 +251,8 @@ lemma IsStarProjection.mul_self_mul_of_nonneg_of_le {a e : A} (he : IsStarProjec
     rwa [mul_assoc, h, ← he.2, ← star_star a, ← star_mul, star_inj, h0a.star_eq]
   suffices H : ∀ (a e : A⁺¹) (he : IsStarProjection e) (h0a : 0 ≤ a) (hae : a ≤ e), a = a * e by
     simpa using inr_injective <| map_mul (inrNonUnitalStarAlgHom ℂ A) a e ▸ H
-      (inrNonUnitalStarAlgHom ℂ A a) (inrNonUnitalStarAlgHom ℂ A e) he.inr (inr_nonneg_iff.mpr h0a)
-        (inr_le_iff (ha := h0a.isSelfAdjoint) (hb := he.isSelfAdjoint) |>.mpr hae) |>.symm
+      (inrNonUnitalStarAlgHom ℂ A a) (inrNonUnitalStarAlgHom ℂ A e) he.inr h0a.inr
+        (inr_le_iff a e |>.mpr hae) |>.symm
   intro a e he h0a hae
   have L : ‖star (sqrt a * (1 - e)) * (sqrt a * (1 - e))‖ = 0 := by
     grind [nonneg_iff_eq_sqrt_mul_sqrt.mp h0a, ← norm_eq_zero, (sqrt_nonneg a).star_eq,
@@ -273,71 +270,57 @@ theorem IsStarProjection.norm_le {A : Type*} [NonUnitalNormedRing A] [StarRing A
   rw [mul_sub, ← CStarRing.norm_star_mul_self, he.isSelfAdjoint.star_eq, he.isIdempotentElem.eq]
   simp
 
-attribute [grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
-attribute [grind →] IsStarProjection.isIdempotentElem IsStarProjection.isSelfAdjoint
-
-theorem IsStarProjection.of_mem_extremePoints_nonneg_and_mem_closedUnitBall {e : A}
-    (he : e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1}) : IsStarProjection e := by
-  simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq] at he
-  obtain ⟨⟨h1, h2⟩, h3⟩ := he
-  have := calc
-    0 ≤ (e : A⁺¹) * (2 - e) := by
-      -- this `have` could be a lemma
-      have : (e : A⁺¹) ≤ 1 := by
-        rwa [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ (by simpa)] at h2
-      apply Commute.mul_nonneg (by simpa) (by grw [sub_nonneg, this, one_le_two])
-      simp [commute_iff_eq, mul_sub, sub_mul, mul_two, two_mul]
-    _ = (((2 : ℝ) • e - e * e : A) : A⁺¹) := by simp [mul_sub, two_smul, mul_two]
-  refine ⟨h3 _ ⟨Commute.mul_nonneg h1 h1 rfl, ?_⟩ ((2 : ℝ) • e - e * e) ⟨inr_nonneg_iff.mp this, ?_⟩
-    ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← one_div, smul_smul]⟩, h1.isSelfAdjoint⟩
-  · nth_rw 1 [← h1.star_eq]
-    grw [CStarRing.norm_star_mul_self, h2, one_mul]
-  · rw [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ this, ← sub_nonneg]
-    calc 0 ≤ star (1 - e : A⁺¹) * (1 - e) := star_mul_self_nonneg _
-      _ = _ := by simp [LE.le.star_eq, h1, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
-
-theorem IsStarProjection.mem_extremePoints_nonneg_and_mem_closedUnitBall
-    {e : A} (he : IsStarProjection e) :
-    (e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1}) := by
-  simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq,
-    he.nonneg, he.norm_le, and_self, and_imp, true_and]
-  intro a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩
-  have I : t • (e * ((1 - a : A⁺¹) * e)) + s • (e * ((1 - b) * e)) =
+theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall {e : A} :
+    IsStarProjection e ↔ e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} := by
+  simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq, and_imp]
+  refine ⟨fun he ↦ ⟨⟨he.nonneg, he.norm_le⟩,
+    fun a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩ ↦ ?_⟩, fun ⟨⟨h1, h2⟩, h3⟩ ↦ ?_⟩
+  · have I : t • (e * ((1 - a : A⁺¹) * e)) + s • (e * ((1 - b) * e)) =
       (t + s) • e - e * (t • a + s • b) * e := by
-    rw [← mul_smul_comm, ← smul_mul_assoc, ← mul_smul_comm, ← smul_mul_assoc, ← mul_assoc,
-        ← mul_assoc, ← add_mul, ← mul_add, smul_sub, smul_sub, sub_add_eq_add_sub, add_sub,
-        ← add_smul, sub_sub, add_comm (s • b : A⁺¹) (t • a), mul_sub, sub_mul, mul_smul_comm,
-        mul_one, smul_mul_assoc]
-    nth_rw 1 [he.inr.1]
-  have J : (t + s) • e - e * (t • a + s • b) * e = 0 := by
-    rw [hts, one_smul, hlin, he.1, he.1, sub_self]
-  have J' : ((t + s) • e - e * (t • a + s • b) * e : A⁺¹) = 0 := by
-    simp [← inr_smul, ← inr_add, ← inr_sub, ← inr_mul, J]
-  have le1 : (a : A⁺¹) ≤ 1 := (norm_le_one_iff_of_nonneg _ (by simpa)).mp (by simpa [norm_inr])
-  have K0 {q : ℝ} {c : A} (hq : 0 < q) (h0c : 0 ≤ c) (hc1 : ‖c‖ ≤ 1) :
-      0 ≤ q • (e * ((1 - c : A⁺¹) * e)) := by
-    rw [← smul_zero q, smul_le_smul_iff_of_pos_left hq, ← mul_assoc]
-    nth_rw 1 [← he.2, inr_star]
-    exact star_left_conjugate_nonneg (sub_nonneg_of_le <|
-      (norm_le_one_iff_of_nonneg (c : A⁺¹) (by simpa)).mp (by simpa [norm_inr])) (e : A⁺¹)
-  have M : t • (e * ((1 - a : A⁺¹) * e)) ≤ t • (e * ((1 - a) * e)) + s • (e * ((1 - b) * e)) :=
-    (le_add_iff_nonneg_right (t • (e * ((1 - a : A⁺¹) * e)))).mpr (K0 h0s hb hb1)
-  rw [I, J'] at M
-  have N : t • (e * ((1 - a : A⁺¹) * e)) = 0 := le_antisymm M (K0 h0t ha ha1)
-  have JJ : t • a ≤ e := by
-    have KK := le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b)
-    rwa [hlin] at KK
-  have LL := he.mul_self_mul_of_nonneg_of_le (a := t • a) (by positivity) JJ
-  rw [mul_smul_comm, smul_mul_assoc] at LL
-  have O : e * (e - a * e) = 0 := by
-    rw [← inr_injective (R := ℂ) |>.eq_iff, inr_mul, inr_sub, inr_mul, ← one_sub_mul]
-    rwa [smul_eq_zero_iff_right (by positivity)] at N
-  rwa [mul_sub, ← mul_assoc, he.1,
-    IsUnit.smul_left_cancel h0t.ne'.isUnit|>.mp LL , sub_eq_zero, ← eq_comm] at O
-
-theorem mem_extremePoints_nonneg_and_mem_closedUnitBall_iff_isStarProjection {e : A} :
-    e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} ↔ IsStarProjection e := by
-  refine ⟨IsStarProjection.of_mem_extremePoints_nonneg_and_mem_closedUnitBall,
-    IsStarProjection.mem_extremePoints_nonneg_and_mem_closedUnitBall⟩
+      rw [← mul_smul_comm, ← smul_mul_assoc, ← mul_smul_comm, ← smul_mul_assoc, ← mul_assoc,
+          ← mul_assoc, ← add_mul, ← mul_add, smul_sub, smul_sub, sub_add_eq_add_sub, add_sub,
+          ← add_smul, sub_sub, add_comm (s • b : A⁺¹), mul_sub, sub_mul, mul_smul_comm,
+          mul_one, smul_mul_assoc]
+      nth_rw 1 [he.inr.1]
+    have J : ((t + s) • e - e * (t • a + s • b) * e : A⁺¹) = 0 := by
+      simp only [← inr_smul, ← inr_add, ← inr_sub, ← inr_mul]
+      rw [hts, one_smul, hlin, he.1, he.1, sub_self, inr_zero]
+    have le1 : (a : A⁺¹) ≤ 1 := (norm_le_one_iff_of_nonneg _ (by simpa)).mp (by simpa [norm_inr])
+    have K0 {q : ℝ} {c : A} (hq : 0 < q) (h0c : 0 ≤ c) (hc1 : ‖c‖ ≤ 1) :
+        0 ≤ q • (e * ((1 - c : A⁺¹) * e)) := by
+      rw [← smul_zero q, smul_le_smul_iff_of_pos_left hq, ← mul_assoc]
+      nth_rw 1 [← he.2, inr_star]
+      exact star_left_conjugate_nonneg (sub_nonneg_of_le <|
+        (norm_le_one_iff_of_nonneg (c : A⁺¹) (by simpa)).mp (by simpa [norm_inr])) (e : A⁺¹)
+    have M : t • (e * ((1 - a : A⁺¹) * e)) ≤ t • (e * ((1 - a) * e)) + s • (e * ((1 - b) * e)) :=
+      (le_add_iff_nonneg_right (t • (e * ((1 - a : A⁺¹) * e)))).mpr (K0 h0s hb hb1)
+    rw [I, J] at M
+    have N : t • (e * ((1 - a : A⁺¹) * e)) = 0 := le_antisymm M (K0 h0t ha ha1)
+    have JJ : t • a ≤ e := by
+      have KK := le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b)
+      rwa [hlin] at KK
+    have LL := he.mul_self_mul_of_nonneg_of_le (a := t • a) (by positivity) JJ
+    rw [mul_smul_comm, smul_mul_assoc] at LL
+    have O : e * (e - a * e) = 0 := by
+      rw [← inr_injective (R := ℂ) |>.eq_iff, inr_mul, inr_sub, inr_mul, ← one_sub_mul]
+      rwa [smul_eq_zero_iff_right (by positivity)] at N
+    rwa [mul_sub, ← mul_assoc, he.1,
+      IsUnit.smul_left_cancel h0t.ne'.isUnit|>.mp LL , sub_eq_zero, ← eq_comm] at O
+  · have := calc
+      0 ≤ (e : A⁺¹) * (2 - e) := by
+        -- this `have` could be a lemma
+        have : (e : A⁺¹) ≤ 1 := by
+          rwa [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ (by simpa)] at h2
+        apply Commute.mul_nonneg (by simpa) (by grw [sub_nonneg, this, one_le_two])
+        simp [commute_iff_eq, mul_sub, sub_mul, mul_two, two_mul]
+      _ = (((2 : ℝ) • e - e * e : A) : A⁺¹) := by simp [mul_sub, two_smul, mul_two]
+    refine ⟨h3 _ (Commute.mul_nonneg h1 h1 rfl) ?_ ((2 : ℝ) • e - e * e) this.of_inr ?_
+      ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← one_div, smul_smul]⟩, h1.isSelfAdjoint⟩
+    · nth_rw 1 [← h1.star_eq]
+      grw [CStarRing.norm_star_mul_self, h2, one_mul]
+    · rw [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ this, ← sub_nonneg]
+      calc 0 ≤ star (1 - e : A⁺¹) * (1 - e) := star_mul_self_nonneg _
+        _ = _ := by simp [LE.le.star_eq, h1, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
 
 end Positive
+end nonUnital
