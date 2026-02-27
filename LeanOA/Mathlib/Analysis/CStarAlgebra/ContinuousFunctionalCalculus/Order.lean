@@ -22,10 +22,8 @@ lemma CStarAlgebra.dominated_convergence {x y : ι → A} (hx : Summable x)
 alias ⟨LE.le.of_inr, LE.le.inr⟩ := Unitization.inr_nonneg_iff
 
 open CStarAlgebra Unitization CFC in
-lemma IsStarProjection.mul_self_mul_of_nonneg_of_le {a e : A} (he : IsStarProjection e)
-    (h0a : 0 ≤ a) (hae : a ≤ e) : e * a * e = a := by
-  suffices a * e = a by
-    rwa [mul_assoc, this, ← he.2, ← star_star a, ← star_mul, star_inj, h0a.star_eq]
+lemma IsStarProjection.mul_eq_self_of_nonneg_of_le {a e : A} (he : IsStarProjection e)
+    (h0a : 0 ≤ a) (hae : a ≤ e) : a * e = a := by
   suffices ‖star (sqrt a * (1 - e : A⁺¹)) * (sqrt a * (1 - e))‖ = 0 by
     rw [CStarRing.norm_star_mul_self, mul_eq_zero, norm_eq_zero, or_self, mul_sub, sub_eq_zero,
       mul_one, ← inr_mul, inr_injective.eq_iff] at this

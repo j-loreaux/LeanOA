@@ -270,8 +270,11 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall {e 
     have : t • (e * ((1 - a : A⁺¹) * e)) ≤ t • (e * ((1 - a) * e)) + s • (e * ((1 - b) * e)) :=
       (le_add_iff_nonneg_right (t • (e * ((1 - a : A⁺¹) * e)))).mpr (H h0s hb hb1)
     have : e * ((1 - a : A⁺¹) * e) = 0 := by rw [← smul_eq_zero_iff_right h0t.ne']; grind
-    have := he.mul_self_mul_of_nonneg_of_le (a := t • a) (by positivity)
-      (by simpa [hlin] using le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b))
+    have : e * t • a * e = t • a := by
+      have := he.mul_eq_self_of_nonneg_of_le (a := t • a) (by positivity)
+        (by simpa [hlin] using le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b))
+      rwa [mul_assoc, this, ← he.2, ← star_star (t • a), ← star_mul, star_inj, star_smul,
+        ha.star_eq]
     rw [mul_smul_comm, smul_mul_assoc] at this
     have h : e * (e - a * e) = 0 := by
       rwa [← inr_injective (R := ℂ) |>.eq_iff, inr_mul, inr_sub, inr_mul, ← one_sub_mul, inr_zero]
