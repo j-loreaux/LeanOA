@@ -17,3 +17,5 @@ lemma CStarAlgebra.dominated_convergence {x y : ι → A} (hx : Summable x)
   refine CStarAlgebra.norm_le_norm_of_nonneg_of_le (t.sum_nonneg fun i _ ↦ (hy_nonneg i)) ?_
   gcongr
   exact h_le _
+
+alias ⟨LE.le.of_inr, LE.le.inr⟩ := Unitization.inr_nonneg_iff

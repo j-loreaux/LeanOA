@@ -1,6 +1,6 @@
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.LinearAlgebra.Complex.Module
@@ -11,6 +11,7 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import Mathlib.Algebra.Star.Subalgebra
 import Mathlib.Algebra.Algebra.Unitization
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
+import LeanOA.Mathlib.Algebra.Star.StarProjection
 
 open Set Metric Complex CFC CStarAlgebra Unitization
 open scoped ComplexStarModule
@@ -240,10 +241,7 @@ abbrev CStarAlgebra.ofExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBal
 section Positive
 variable [PartialOrder A] [StarOrderedRing A]
 
-alias ⟨LE.le.of_inr, LE.le.inr⟩ := inr_nonneg_iff
 attribute [grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
-attribute [grind →, aesop safe forward]
-  IsStarProjection.isIdempotentElem IsStarProjection.isSelfAdjoint
 
 lemma IsStarProjection.mul_self_mul_of_nonneg_of_le {a e : A} (he : IsStarProjection e)
     (h0a : 0 ≤ a) (hae : a ≤ e) : e * a * e = a := by
