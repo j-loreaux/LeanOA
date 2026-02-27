@@ -295,6 +295,42 @@ theorem IsStarProjection.of_mem_extremePoints_nonneg_and_mem_closedUnitBall
     calc 0 ≤ star (1 - e) * (1 - e) := star_mul_self_nonneg _
       _ = _ := by simp [h1.star_eq, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
 
+theorem mem_extremePoints_nonneg_and_mem_closedUnitBall_of_isStarProjection
+    {A} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {e : A} (he : IsStarProjection e) :
+    (e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1}) := by
+  simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq,
+    he.nonneg, he.norm_le, and_self, and_imp, true_and]
+  intro a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩
+  have I : t • (e * ((1 - a) * e)) + s • (e * ((1 - b) * e)) =
+      (t + s) • e - e * (t • a + s • b) * e := by
+    rw [← mul_smul_comm, ← smul_mul_assoc, ← mul_smul_comm, ← smul_mul_assoc, ← mul_assoc,
+        ← mul_assoc, ← add_mul, ← mul_add, smul_sub, smul_sub, sub_add_eq_add_sub, add_sub,
+        ← add_smul, sub_sub, add_comm (s • b) (t • a), mul_sub, sub_mul, mul_smul_comm, mul_one,
+        smul_mul_assoc]
+    nth_rw 1 [he.1]
+  have J : (t + s) • e - e * (t • a + s • b) * e = 0 := by
+    rw [hts, one_smul, hlin, he.1, he.1, sub_self]
+  have le1 : a ≤ 1 := (nnnorm_le_one_iff_of_nonneg a ha).mp ha1
+  have K0 {q : ℝ} {c : A} (hq : 0 < q) (h0c : 0 ≤ c) (hc1 : ‖c‖ ≤ 1) : 0 ≤ q • (e * ((1 - c) * e))
+      := by
+    rw [← smul_zero q, smul_le_smul_iff_of_pos_left hq, ← mul_assoc]
+    nth_rw 1 [← he.2]
+    exact star_left_conjugate_nonneg (sub_nonneg_of_le <|
+      (nnnorm_le_one_iff_of_nonneg c h0c).mp hc1) e
+  have M : t • (e * ((1 - a) * e)) ≤ t • (e * ((1 - a) * e)) + s • (e * ((1 - b) * e)) :=
+    (le_add_iff_nonneg_right (t • (e * ((1 - a) * e)))).mpr (K0 h0s hb hb1)
+  rw [I, J] at M
+  have N : t • (e * ((1 - a) * e)) = 0 := le_antisymm M (K0 h0t ha ha1)
+  have JJ : t • a ≤ e := by
+    have KK := le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b)
+    rwa [hlin] at KK
+  have LL := he.mul_self_mul_of_nonneg_of_le (a := t • a) (by positivity) JJ
+  rw [mul_smul_comm, smul_mul_assoc] at LL
+  have O : (e * ((1 - a) * e)) = 0 := by
+    rwa [smul_eq_zero_iff_right (by positivity)] at N
+  rwa [sub_mul, mul_sub, one_mul, ← mul_assoc, he.1,
+    IsUnit.smul_left_cancel h0t.ne'.isUnit|>.mp LL , sub_eq_zero, ← eq_comm] at O
+
 theorem mem_extremePoints_nonneg_and_mem_closedUnitBall_iff_isStarProjection {e : A} :
     e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} ↔ IsStarProjection e := by
   constructor
@@ -302,25 +338,9 @@ theorem mem_extremePoints_nonneg_and_mem_closedUnitBall_iff_isStarProjection {e 
         IsStarProjection e by
       sorry
     exact fun _ ↦ IsStarProjection.of_mem_extremePoints_nonneg_and_mem_closedUnitBall
-  · simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq]
-    intro he
-    simp only [he.nonneg, he.norm_le, and_self, and_imp, true_and]
-    intro a ha ha0 b hb hb0 ⟨t, s, h0t, h0s, hts, hlin⟩
-    have P : s⁻¹ • (e - t • a) = b := by
-       grind [inv_smul_eq_iff₀, sub_eq_iff_eq_add, add_comm]
-    have J : t • a ≤ e := by
-      have K := le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b)
-      rwa [hlin] at K
-    have K := he.mul_self_mul_of_nonneg_of_le (a := t • a) (by positivity) J
-    rw [mul_smul_comm, smul_mul_assoc] at K
-    have L : e * a * e = a :=
-      IsUnit.smul_left_cancel (ne_of_lt h0t).symm.isUnit|>.mp K
-    have LL : e * a = a * e := by grind [mul_assoc]
-    have : a * b = b * a := by
-      grind [mul_smul_comm, smul_mul_assoc, mul_sub, sub_mul]
-    /- Now we may require the function stuff. Perhaps take a short break and see if there
-       is another way? -/
-    sorry
-
+  · suffices ∀ (e : A⁺¹) (he : IsStarProjection e), e ∈ extremePoints ℝ
+        {x | 0 ≤ x ∧ x ∈ closedBall 0 1} by
+      sorry
+    exact fun _ ↦ mem_extremePoints_nonneg_and_mem_closedUnitBall_of_isStarProjection
 
 end Positive
