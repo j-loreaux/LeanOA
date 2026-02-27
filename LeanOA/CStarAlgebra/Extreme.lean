@@ -240,14 +240,13 @@ abbrev CStarAlgebra.ofExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBal
   __ := ringOfExtremePt hx
   __ := Algebra.ofModule smul_mul_assoc mul_smul_comm
 
-section Positive
-variable [PartialOrder A] [StarOrderedRing A]
-
+-- `Mathlib.Algebra.Group.Idempotent`
 attribute [grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
 
 /-- The set of star projections on a non-unital C⋆-algebra is exactly the extreme points of
 the nonnegative closed unit ball. -/
-theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall {e : A} :
+theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
+    [PartialOrder A] [StarOrderedRing A] {e : A} :
     IsStarProjection e ↔ e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} := by
   simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq, and_imp]
   refine ⟨fun he ↦ ⟨⟨he.nonneg, he.norm_le⟩,
@@ -293,5 +292,4 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall {e 
       calc 0 ≤ star (1 - e : A⁺¹) * (1 - e) := star_mul_self_nonneg _
         _ = _ := by simp [LE.le.star_eq, h1, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
 
-end Positive
 end nonUnital
