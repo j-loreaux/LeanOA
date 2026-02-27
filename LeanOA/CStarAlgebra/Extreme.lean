@@ -1,17 +1,18 @@
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
-import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-import Mathlib.Analysis.Convex.Extreme
+import LeanOA.Mathlib.Algebra.Star.StarProjection
 import LeanOA.Mathlib.Analysis.Convex.Extreme
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
+import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import LeanOA.Mathlib.Misc
-import Mathlib.Algebra.Group.Idempotent
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
-import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
-import Mathlib.Algebra.Star.Subalgebra
+
 import Mathlib.Algebra.Algebra.Unitization
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
-import LeanOA.Mathlib.Algebra.Star.StarProjection
+import Mathlib.Algebra.Group.Idempotent
+import Mathlib.Algebra.Star.Subalgebra
+import Mathlib.Analysis.Convex.Extreme
+import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 
 open Set Metric Complex CFC CStarAlgebra Unitization
 open scoped ComplexStarModule
