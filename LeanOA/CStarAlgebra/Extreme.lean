@@ -253,21 +253,17 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
     fun a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩ ↦ ?_⟩, fun ⟨⟨h1, h2⟩, h3⟩ ↦ ?_⟩
   · have : t • (e * ((1 - a : A⁺¹) * e)) + s • (e * ((1 - b) * e)) =
         (t + s) • e - e * (t • a + s • b) * e := by
-      rw [← mul_smul_comm, ← smul_mul_assoc, ← mul_smul_comm, ← smul_mul_assoc, ← mul_assoc,
-          ← mul_assoc, ← add_mul, ← mul_add, smul_sub, smul_sub, sub_add_eq_add_sub, add_sub,
-          ← add_smul, sub_sub, add_comm (s • b : A⁺¹), mul_sub, sub_mul, mul_smul_comm,
-          mul_one, smul_mul_assoc, he.inr.isIdempotentElem.eq]
+      simp [smul_sub, sub_add_eq_add_sub, add_sub, ← add_smul, hts, sub_mul, mul_sub, he.inr.1.eq,
+        mul_add, add_mul, sub_sub, mul_assoc]
     have : ((t + s) • e - e * (t • a + s • b) * e : A⁺¹) = 0 := by
       simp only [← inr_smul, ← inr_add, ← inr_sub, ← inr_mul]
       rw [hts, one_smul, hlin, he.1, he.1, sub_self, inr_zero]
     have H {q : ℝ} {c : A} (hq : 0 < q) (h0c : 0 ≤ c) (hc1 : ‖c‖ ≤ 1) :
         0 ≤ q • (e * ((1 - c : A⁺¹) * e)) := by
       rw [← smul_zero q, smul_le_smul_iff_of_pos_left hq, ← mul_assoc]
-      nth_rw 1 [← he.2, inr_star]
-      exact star_left_conjugate_nonneg (sub_nonneg_of_le <|
-        (norm_le_one_iff_of_nonneg (c : A⁺¹) (by simpa)).mp (by simpa [norm_inr])) (e : A⁺¹)
-    have : t • (e * ((1 - a : A⁺¹) * e)) ≤ t • (e * ((1 - a) * e)) + s • (e * ((1 - b) * e)) :=
-      (le_add_iff_nonneg_right (t • (e * ((1 - a : A⁺¹) * e)))).mpr (H h0s hb hb1)
+      exact he.inr.isSelfAdjoint.conjugate_nonneg (sub_nonneg_of_le <|
+        (norm_le_one_iff_of_nonneg (c : A⁺¹) (by simpa)).mp (by simpa [norm_inr]))
+    have := le_add_iff_nonneg_right (t • (e * ((1 - a : A⁺¹) * e))) |>.mpr (H h0s hb hb1)
     have : e * ((1 - a : A⁺¹) * e) = 0 := by rw [← smul_eq_zero_iff_right h0t.ne']; grind
     have := he.conjugate_of_nonneg_of_le (a := t • a) (by positivity)
       (by simpa [hlin] using le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b))
