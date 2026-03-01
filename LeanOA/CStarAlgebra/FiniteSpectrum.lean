@@ -90,18 +90,8 @@ instance [NonUnitalRing A] [Module ℝ A] [StarRing A] [IsScalarTower ℝ A A] [
 instance [Ring A] [Algebra ℝ A] [Star A] [Subsingleton A] :
     CStarAlgebra.FiniteSpectrum A where fs := by simp [quasispectrum_eq_spectrum_union_zero]
 
-section totallySeparatedSpace
-variable [TotallySeparatedSpace A]
-
-theorem LocallyConstant.separatesPoints_map_toContinuousMapAlgHom_top (R : Type*)
-    [CommSemiring R] [Nontrivial Y] [Semiring Y] [Algebra R Y] [IsTopologicalSemiring Y] :
-    (Subalgebra.map (toContinuousMapAlgHom R : _ →ₐ[R] C(A, Y)) ⊤).SeparatesPoints := by
-  intro x y hxy
-  obtain ⟨U, hU, hxU, hyU : y ∉ U⟩ := exists_isClopen_of_totally_separated hxy
-  exact ⟨charFn Y hU, by simp_all [charFn]⟩
-
 open ContinuousMap LocallyConstant in
-instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
+instance [TotallySeparatedSpace A] [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
   CStarAlgebra.finiteSpectrum_iff_spectrum.mpr fun x hx ↦ by
     obtain ⟨y, rfl⟩ := range_realToRCLike_eq_isSelfAdjoint 𝕜 (A := A) ▸ hx
     have : realToRCLike 𝕜 '' {x : C(A, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} ⊆
@@ -112,9 +102,7 @@ instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
       fun _ ⟨f, hf⟩ ↦ by simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
     apply closure_mono this
     simpa using Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
-      (separatesPoints_map_toContinuousMapAlgHom_top ℝ)) y
-
-end totallySeparatedSpace
+      (separatesPoints_range_toContinuousMapAlgHom ℝ)) y
 
 variable [NonUnitalRing A] [StarRing A] [Module ℝ A] [IsScalarTower ℝ A A] [SMulCommClass ℝ A A]
   [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]

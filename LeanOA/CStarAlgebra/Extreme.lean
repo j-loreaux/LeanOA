@@ -1,15 +1,19 @@
+import LeanOA.Mathlib.Algebra.Star.StarProjection
+import LeanOA.Mathlib.Analysis.Convex.Extreme
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+import LeanOA.Mathlib.Analysis.CStarAlgebra.Basic
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
+import LeanOA.Mathlib.LinearAlgebra.Complex.Module
+
+import Mathlib.Algebra.Algebra.Unitization
+import Mathlib.Algebra.Group.Idempotent
+import Mathlib.Algebra.Star.Subalgebra
+import Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-import Mathlib.Analysis.Convex.Extreme
-import LeanOA.Mathlib.Analysis.Convex.Extreme
-import LeanOA.Mathlib.LinearAlgebra.Complex.Module
-import LeanOA.Mathlib.Misc
-import Mathlib.Algebra.Group.Idempotent
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
-import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 
-open Set Metric Complex CFC
+open Set Metric Complex CFC CStarAlgebra Unitization
 open scoped ComplexStarModule
 
 /-! # Extreme points of the closed unit ball in C⋆-algebras
@@ -107,8 +111,8 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
     (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
   /- Suppose `a` is an extreme point of the closed unit ball. Then we want to show that
   `a * star a * a = a`. It suffices to show `a * |a| = a`. -/
-  let := CStarAlgebra.spectralOrder A
-  let := CStarAlgebra.spectralOrderedRing A
+  let := spectralOrder A
+  let := spectralOrderedRing A
   suffices a * abs a = a by rw [mul_assoc, ← abs_mul_abs, ← mul_assoc, this, this]
   obtain ⟨ha, h⟩ := ha
   simp only [mem_closedBall, dist_zero_right] at ha h
@@ -173,7 +177,7 @@ private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedU
   exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
     ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
 
-open CStarAlgebra Filter Topology in
+open Filter Topology in
 /-- When `x` is an extreme point of the closed unit ball in a non-unital C⋆-algebra,
 then `star x * x + x * star x - x * star x * star x * x` is a right identity.
 (See also `CStarAlgebra.ofExtremePtOne_mul` for the left identity.) -/
@@ -233,5 +237,51 @@ abbrev CStarAlgebra.ofExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBal
   __ := ‹NonUnitalCStarAlgebra A›
   __ := ringOfExtremePt hx
   __ := Algebra.ofModule smul_mul_assoc mul_smul_comm
+
+-- `Mathlib.Algebra.Group.Idempotent`
+attribute [grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
+
+/-- The set of star projections on a non-unital C⋆-algebra is exactly the extreme points of
+the nonnegative closed unit ball. -/
+theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
+    [PartialOrder A] [StarOrderedRing A] {e : A} :
+    IsStarProjection e ↔ e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} := by
+  simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq, and_imp]
+  refine ⟨fun he ↦ ⟨⟨he.nonneg, he.norm_le⟩,
+    fun a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩ ↦ ?_⟩, fun ⟨⟨h1, h2⟩, h3⟩ ↦ ?_⟩
+  · have : t • (e * ((1 - a : A⁺¹) * e)) + s • (e * ((1 - b) * e)) =
+        (t + s) • e - e * (t • a + s • b) * e := by
+      simp [smul_sub, sub_add_eq_add_sub, add_sub, ← add_smul, hts, sub_mul, mul_sub, he.inr.1.eq,
+        mul_add, add_mul, sub_sub, mul_assoc]
+    have : ((t + s) • e - e * (t • a + s • b) * e : A⁺¹) = 0 := by
+      simp only [← inr_smul, ← inr_add, ← inr_sub, ← inr_mul]
+      rw [hts, one_smul, hlin, he.1, he.1, sub_self, inr_zero]
+    have H {q : ℝ} {c : A} (hq : 0 < q) (h0c : 0 ≤ c) (hc1 : ‖c‖ ≤ 1) :
+        0 ≤ q • (e * ((1 - c : A⁺¹) * e)) := by
+      rw [← smul_zero q, smul_le_smul_iff_of_pos_left hq, ← mul_assoc]
+      exact he.inr.isSelfAdjoint.conjugate_nonneg (sub_nonneg_of_le <|
+        (norm_le_one_iff_of_nonneg (c : A⁺¹) (by simpa)).mp (by simpa [norm_inr]))
+    have := le_add_iff_nonneg_right (t • (e * ((1 - a : A⁺¹) * e))) |>.mpr (H h0s hb hb1)
+    have : e * ((1 - a : A⁺¹) * e) = 0 := by rw [← smul_eq_zero_iff_right h0t.ne']; grind
+    have := he.conjugate_of_nonneg_of_le (a := t • a) (by positivity)
+      (by simpa [hlin] using le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b))
+    rw [mul_smul_comm, smul_mul_assoc] at this
+    have h : e * (e - a * e) = 0 := by
+      rwa [← inr_injective (R := ℂ) |>.eq_iff, inr_mul, inr_sub, inr_mul, ← one_sub_mul, inr_zero]
+    rwa [mul_sub, ← mul_assoc, he.1,
+      h0t.ne'.isUnit.smul_left_cancel.mp this, sub_eq_zero, eq_comm] at h
+  · have := calc
+      0 ≤ (e : A⁺¹) * (2 - e) := by
+        have : (e : A⁺¹) ≤ 1 := by
+          rwa [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ (by simpa)] at h2
+        apply Commute.mul_nonneg (by simpa) (by grw [sub_nonneg, this, one_le_two])
+        simp [commute_iff_eq, mul_sub, sub_mul, mul_two, two_mul]
+      _ = (((2 : ℝ) • e - e * e : A) : A⁺¹) := by simp [mul_sub, two_smul, mul_two]
+    refine ⟨h3 _ (Commute.mul_nonneg h1 h1 rfl) ?_ ((2 : ℝ) • e - e * e) this.of_inr ?_
+      ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← one_div, smul_smul]⟩, h1.isSelfAdjoint⟩
+    · grw [norm_mul_le, h2, one_mul]
+    · rw [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ this, ← sub_nonneg]
+      calc 0 ≤ star (1 - e : A⁺¹) * (1 - e) := star_mul_self_nonneg _
+        _ = _ := by simp [LE.le.star_eq, h1, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
 
 end nonUnital
