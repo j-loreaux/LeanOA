@@ -272,7 +272,6 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
       h0t.ne'.isUnit.smul_left_cancel.mp this, sub_eq_zero, eq_comm] at h
   · have := calc
       0 ≤ (e : A⁺¹) * (2 - e) := by
-        -- this `have` could be a lemma?
         have : (e : A⁺¹) ≤ 1 := by
           rwa [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ (by simpa)] at h2
         apply Commute.mul_nonneg (by simpa) (by grw [sub_nonneg, this, one_le_two])
@@ -280,8 +279,7 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
       _ = (((2 : ℝ) • e - e * e : A) : A⁺¹) := by simp [mul_sub, two_smul, mul_two]
     refine ⟨h3 _ (Commute.mul_nonneg h1 h1 rfl) ?_ ((2 : ℝ) • e - e * e) this.of_inr ?_
       ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← one_div, smul_smul]⟩, h1.isSelfAdjoint⟩
-    · nth_rw 1 [← h1.star_eq]
-      grw [CStarRing.norm_star_mul_self, h2, one_mul]
+    · grw [norm_mul_le, h2, one_mul]
     · rw [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ this, ← sub_nonneg]
       calc 0 ≤ star (1 - e : A⁺¹) * (1 - e) := star_mul_self_nonneg _
         _ = _ := by simp [LE.le.star_eq, h1, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
