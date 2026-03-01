@@ -141,7 +141,7 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
   \label{thm:cstar_unital_iff_extreme_Sak_1_6_1} (Sakai 1.6.1)
   \lean{CStarAlgebra.ofExtremePt, CStarAlgebra.one_mem_extremePoints_closedUnitBall}
   \leanok
-  \uses{lem:one_is_extreme,lem:extreme_partial_isom}
+  \uses{lem:one_is_extreme}
   A $C^{*}$--algebra is unital if and only if its closed unit ball has an extreme point.
 \end{theorem}
 
@@ -153,7 +153,6 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
   \label{prop:extr_pos_projs_Sak_1_6_2} (Sakai 1.6.2)
   \lean{isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall}
   \leanok
-  \uses{cor:nonunital_gelfand_Sak_1_2_2}
   Let $P$ be the set of positive elements in a $C^{*}$--algebra $\mathcal{A}$ with unit sphere $S$. Then the extreme
   points of $P\cap S$ are the projections of $\mathcal{A}$.
 \end{proposition}
