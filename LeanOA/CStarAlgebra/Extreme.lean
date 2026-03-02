@@ -345,7 +345,7 @@ theorem isSelfAdjoint_unitary_mem_extremePoints_isSelfAdjoint_inter_extremePoint
     [StarOrderedRing A] [Nontrivial A] {u : A} (hu : IsSelfAdjoint u ∧ u ∈ unitary A) :
     u ∈ Set.extremePoints ℝ ({x | IsSelfAdjoint x} ∩ Metric.closedBall 0 1) :=
   inter_extremePoints_subset_extremePoints_of_subset (inter_subset_right)
-    ⟨by aesop , by simpa using isSelfAdjoint_unitary_mem_extremePoints_closedUnitBall hu⟩
+    ⟨by aesop, by simpa using isSelfAdjoint_unitary_mem_extremePoints_closedUnitBall hu⟩
 
 /- This is for the second, more mathematically interesting, direction. -/
 lemma nonunital_part {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
