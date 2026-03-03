@@ -417,7 +417,61 @@ example {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
   have h2 := isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
   simp only [mul_sub, sub_mul, h2.isIdempotentElem.eq, negPart_mul_posPart, sub_zero,
     posPart_mul_negPart, h1.isIdempotentElem.eq, zero_sub, sub_neg_eq_add]
-  sorry
+  have is_proj : IsStarProjection (e⁺ + e⁻) := by
+    constructor
+    · dsimp [IsIdempotentElem]
+      simp only [mul_add, add_mul, negPart_mul_posPart, add_zero, posPart_mul_negPart, zero_add]
+      rw [h1.1, h2.1]
+    · exact IsSelfAdjoint.add (h2.isSelfAdjoint) (h1.isSelfAdjoint)
+  let q := 1 - (e⁺ + e⁻)
+  by_contra Squauk
+  have BEP : 0 ≤ q := IsStarProjection.one_sub_nonneg is_proj
+  have hO := IsSelfAdjoint.add he.1.1
+    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)
+  have hP := IsSelfAdjoint.sub he.1.1
+    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)
+  have PPfth : (1 / 2 : ℝ) •  (e + q) + (1 / 2 : ℝ) • (e - q) = e := by
+     simp only [one_div, smul_add, smul_sub, add_add_sub_cancel, ← add_smul]
+     ring_nf
+     rw [one_smul]
+  dsimp [extremePoints] at he
+  obtain ⟨one, two⟩ := he
+  have hQ : e * q = 0 := by
+    nth_rw 1 [← CFC.posPart_sub_negPart (ha := one.1) e]
+    rw [mul_sub, mul_add, mul_one, sub_mul, sub_mul]
+    simp only [negPart_mul_posPart, sub_zero, posPart_mul_negPart, zero_sub]
+    rw [h2.1, h1.1, Eq.symm (sub_eq_add_neg e⁺ e⁻), sub_self]
+  have Add := IsSelfAdjoint.norm_add_eq_max hQ (one.1)
+    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)
+  have Sub := IsSelfAdjoint.norm_sub_eq_max hQ (one.1)
+    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)
+  have Max : max ‖e‖ ‖q‖ ≤ 1 := by
+    simp only [sup_le_iff]
+    constructor
+    · simpa using one.2
+    · exact IsStarProjection.norm_le (1 - (e⁺ + e⁻)) (IsStarProjection.one_sub is_proj)
+  have Add' := le_of_eq_of_le Add Max
+  have Sub' := le_of_eq_of_le Sub Max
+  have GG := two ⟨hO, by simpa⟩ ⟨hP, by simpa⟩
+  have : e ∈ openSegment ℝ (e + (1 - (e⁺ + e⁻))) (e - (1 - (e⁺ + e⁻))) := by
+    use 1 / 2
+    use 1 / 2
+    simp only [one_div, inv_pos, Nat.ofNat_pos, smul_add, true_and]
+    constructor
+    · norm_num
+    · simpa [q] using PPfth
+  have BBBB := GG this
+  have TTTTT : q = 0 := left_eq_add.mp (id (Eq.symm BBBB))
+  simp only [q] at TTTTT
+  have :=
+    calc
+      e⁺ + e⁻ = e⁺ + e⁻ + 0 := by exact Eq.symm (AddMonoid.add_zero (e⁺ + e⁻))
+            _ = e⁺ + e⁻ + (1 - (e⁺ + e⁻)) := by exact (add_right_inj (e⁺ + e⁻)).mpr
+                                                         (id (Eq.symm TTTTT))
+            _ = e⁺ + e⁻ - (e⁺ + e⁻) + 1 := Eq.symm (add_comm_sub (e⁺ + e⁻) (e⁺ + e⁻) 1)
+            _ = 0 + 1 := by rw [sub_self]
+            _ = 1 := by rw [zero_add]
+  contradiction
 
 lemma norm_sub_le_one_of_nonneg_le_one_nonneg_le_one {A : Type*} [CStarAlgebra A] [PartialOrder A]
     [StarOrderedRing A] [Nontrivial A] {x y : A} (hx : 0 ≤ x ∧ x ≤ 1) (hy : 0 ≤ y ∧ y ≤ 1) :
@@ -425,52 +479,6 @@ lemma norm_sub_le_one_of_nonneg_le_one_nonneg_le_one {A : Type*} [CStarAlgebra A
   simpa [sub_eq_add_neg] using IsSelfAdjoint.norm_le_max_of_le_of_le (IsSelfAdjoint.neg
     (IsSelfAdjoint.one _)) (by simpa using add_le_add hx.1 (neg_le_neg_iff.mpr hy.2))
       (add_le_add hx.2 (by simpa using neg_le_neg hy.1 : -y ≤ 0))
-
-lemma PosPart_mem_extremePoints_of_mem_extremePoints {A : Type*} [CStarAlgebra A] [PartialOrder A]
-    [StarOrderedRing A] [Nontrivial A] {a : A}
-    (ha : a ∈ Set.extremePoints ℝ ({x | IsSelfAdjoint x} ∩ Metric.closedBall 0 1)) :
-    a⁺ ∈ Set.extremePoints ℝ ({x | 0 ≤ x} ∩ Metric.closedBall 0 1) := by
-  simp only [mem_extremePoints_iff_left, mem_inter_iff, mem_setOf_eq, mem_closedBall,
-    dist_zero_right, and_imp] at ha
-  obtain ⟨⟨hl_1, hl_2⟩, hr⟩ := ha
-  have hpsn := CFC.posPart_sub_negPart a
-  constructor
-  · simp only [mem_inter_iff, mem_setOf_eq, mem_closedBall, dist_zero_right]
-    constructor
-    · exact CFC.posPart_nonneg a
-    · exact le_trans (CStarAlgebra.norm_posPart_le a) hl_2
-  intro x hx y hy
-  simp only [mem_inter_iff, mem_setOf_eq, mem_closedBall, dist_zero_right] at hx hy
-  have h3 := hr x (IsSelfAdjoint.of_nonneg hx.1) hx.2 y (IsSelfAdjoint.of_nonneg hy.1) hy.2
-  intro h
-  obtain ⟨t, s, ht, hs, hts, H⟩ := h
-  have H1 : t • (x - a⁻) + s • (y - a⁻) = a := by
-    grind only [add_smul, ← smul_sub, sub_add_eq_sub_sub, add_sub_right_comm,
-      add_sub_assoc, (by rw [hts, one_smul] : a⁻ = (t + s) • a⁻)]
-  have xleone : x ≤ 1 := le_trans (IsSelfAdjoint.le_algebraMap_norm_self)
-       (by simpa [Algebra.algebraMap_eq_smul_one _] using
-         smul_le_of_le_one_left (zero_le_one (α := A)) (le_trans (hx.2) (Std.IsPreorder.le_refl 1)))
-  have anleone : a⁻ ≤ 1 := le_trans (IsSelfAdjoint.le_algebraMap_norm_self)
-       (by simpa [Algebra.algebraMap_eq_smul_one _] using
-         smul_le_of_le_one_left (zero_le_one (α := A)) (le_trans (norm_negPart_le _) hl_2))
-  have yleone : y ≤ 1 := le_trans (IsSelfAdjoint.le_algebraMap_norm_self)
-       (by simpa [Algebra.algebraMap_eq_smul_one _] using
-         smul_le_of_le_one_left (zero_le_one (α := A)) (le_trans (hy.2) (Std.IsPreorder.le_refl 1)))
-  have h_sqz_1 := norm_sub_le_one_of_nonneg_le_one_nonneg_le_one ⟨hx.1, xleone⟩
-    ⟨CFC.negPart_nonneg a, anleone⟩
-  have h_sqz_2 := norm_sub_le_one_of_nonneg_le_one_nonneg_le_one ⟨hy.1, yleone⟩
-    ⟨CFC.negPart_nonneg a, anleone⟩
-  have := hr (x - a⁻) (IsSelfAdjoint.sub (IsSelfAdjoint.of_nonneg hx.1)
-    ((IsSelfAdjoint.of_nonneg (CFC.negPart_nonneg a)))) h_sqz_1 (y - a⁻)
-      (IsSelfAdjoint.sub (IsSelfAdjoint.of_nonneg hy.1)
-        ((IsSelfAdjoint.of_nonneg (CFC.negPart_nonneg a)))) h_sqz_2
-  dsimp [openSegment] at this
-  have GG : (∃ (a_1 : ℝ) (b : ℝ), 0 < a_1 ∧ 0 < b ∧ a_1 + b = 1 ∧
-    a_1 • (x - a⁻) + b • (y - a⁻) = a) := by use t; use s
-  have GH := this GG
-  nth_rw 2 [← hpsn] at GH
-  simp at GH
-  assumption
 
 /- This is for the second, more mathematically interesting, direction. -/
 lemma nonunital_part {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
