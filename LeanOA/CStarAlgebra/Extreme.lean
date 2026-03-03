@@ -412,6 +412,59 @@ example {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     posPart_mul_negPart, h1.isIdempotentElem.eq, zero_sub, sub_neg_eq_add]
   sorry
 
+lemma norm_sub_le_one_of_nonneg_le_one_nonneg_le_one {A : Type*} [CStarAlgebra A] [PartialOrder A]
+    [StarOrderedRing A] [Nontrivial A] {x y : A} (hx : 0 ≤ x ∧ x ≤ 1) (hy : 0 ≤ y ∧ y ≤ 1) :
+    ‖x - y‖ ≤ 1 := by
+  simpa [sub_eq_add_neg] using IsSelfAdjoint.norm_le_max_of_le_of_le (IsSelfAdjoint.neg
+    (IsSelfAdjoint.one _)) (by simpa using add_le_add hx.1 (neg_le_neg_iff.mpr hy.2))
+      (add_le_add hx.2 (by simpa using neg_le_neg hy.1 : -y ≤ 0))
+
+lemma PosPart_mem_extremePoints_of_mem_extremePoints {A : Type*} [CStarAlgebra A] [PartialOrder A]
+    [StarOrderedRing A] [Nontrivial A] {a : A}
+    (ha : a ∈ Set.extremePoints ℝ ({x | IsSelfAdjoint x} ∩ Metric.closedBall 0 1)) :
+    a⁺ ∈ Set.extremePoints ℝ ({x | 0 ≤ x} ∩ Metric.closedBall 0 1) := by
+  simp only [mem_extremePoints_iff_left, mem_inter_iff, mem_setOf_eq, mem_closedBall,
+    dist_zero_right, and_imp] at ha
+  obtain ⟨⟨hl_1, hl_2⟩, hr⟩ := ha
+  have hpsn := CFC.posPart_sub_negPart a
+  constructor
+  · simp only [mem_inter_iff, mem_setOf_eq, mem_closedBall, dist_zero_right]
+    constructor
+    · exact CFC.posPart_nonneg a
+    · exact le_trans (CStarAlgebra.norm_posPart_le a) hl_2
+  intro x hx y hy
+  simp only [mem_inter_iff, mem_setOf_eq, mem_closedBall, dist_zero_right] at hx hy
+  have h3 := hr x (IsSelfAdjoint.of_nonneg hx.1) hx.2 y (IsSelfAdjoint.of_nonneg hy.1) hy.2
+  intro h
+  obtain ⟨t, s, ht, hs, hts, H⟩ := h
+  have H1 : t • (x - a⁻) + s • (y - a⁻) = a := by
+    grind only [add_smul, ← smul_sub, sub_add_eq_sub_sub, add_sub_right_comm,
+      add_sub_assoc, (by rw [hts, one_smul] : a⁻ = (t + s) • a⁻)]
+  have xleone : x ≤ 1 := le_trans (IsSelfAdjoint.le_algebraMap_norm_self)
+       (by simpa [Algebra.algebraMap_eq_smul_one _] using
+         smul_le_of_le_one_left (zero_le_one (α := A)) (le_trans (hx.2) (Std.IsPreorder.le_refl 1)))
+  have anleone : a⁻ ≤ 1 := le_trans (IsSelfAdjoint.le_algebraMap_norm_self)
+       (by simpa [Algebra.algebraMap_eq_smul_one _] using
+         smul_le_of_le_one_left (zero_le_one (α := A)) (le_trans (norm_negPart_le _) hl_2))
+  have yleone : y ≤ 1 := le_trans (IsSelfAdjoint.le_algebraMap_norm_self)
+       (by simpa [Algebra.algebraMap_eq_smul_one _] using
+         smul_le_of_le_one_left (zero_le_one (α := A)) (le_trans (hy.2) (Std.IsPreorder.le_refl 1)))
+  have h_sqz_1 := norm_sub_le_one_of_nonneg_le_one_nonneg_le_one ⟨hx.1, xleone⟩
+    ⟨CFC.negPart_nonneg a, anleone⟩
+  have h_sqz_2 := norm_sub_le_one_of_nonneg_le_one_nonneg_le_one ⟨hy.1, yleone⟩
+    ⟨CFC.negPart_nonneg a, anleone⟩
+  have := hr (x - a⁻) (IsSelfAdjoint.sub (IsSelfAdjoint.of_nonneg hx.1)
+    ((IsSelfAdjoint.of_nonneg (CFC.negPart_nonneg a)))) h_sqz_1 (y - a⁻)
+      (IsSelfAdjoint.sub (IsSelfAdjoint.of_nonneg hy.1)
+        ((IsSelfAdjoint.of_nonneg (CFC.negPart_nonneg a)))) h_sqz_2
+  dsimp [openSegment] at this
+  have GG : (∃ (a_1 : ℝ) (b : ℝ), 0 < a_1 ∧ 0 < b ∧ a_1 + b = 1 ∧
+    a_1 • (x - a⁻) + b • (y - a⁻) = a) := by use t; use s
+  have GH := this GG
+  nth_rw 2 [← hpsn] at GH
+  simp at GH
+  assumption
+
 /- This is for the second, more mathematically interesting, direction. -/
 lemma nonunital_part {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     {e : A} (he : e ∈ Set.extremePoints ℝ ({x | IsSelfAdjoint x} ∩ Metric.closedBall 0 1)) (x : A) :
