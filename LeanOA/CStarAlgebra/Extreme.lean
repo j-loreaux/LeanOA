@@ -388,7 +388,8 @@ theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
   refine this ⟨α, β, hα, hβ, hαβ, ?_⟩
   simp [smul_sub, sub_add_sub_comm, ← add_smul, hαβ, ← hpn, h]
 
-example {A : Type*} [CStarAlgebra A] [PartialOrder A]
+theorem IsSelfAdjoint_unitary_of_mem_extremePoints_of_IsSelfAdjoint_closedUnitBall
+     {A : Type*} [CStarAlgebra A] [PartialOrder A]
     [StarOrderedRing A]
     {e : A} (he : e ∈ Set.extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
     IsSelfAdjoint e ∧ e ∈ unitary A := by
@@ -447,7 +448,7 @@ example {A : Type*} [CStarAlgebra A] [PartialOrder A]
             _ = 1 := by rw [zero_add]
   contradiction
 
-/- This is for the second, more mathematically interesting, direction. -/
+/- We can use the following to reduce NonUnital to Unital . -/
 lemma nonunital_part {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     {e : A} (he : e ∈ Set.extremePoints ℝ ({x | IsSelfAdjoint x} ∩ Metric.closedBall 0 1)) (x : A) :
     CFC.abs e * x = x ∧ x * CFC.abs e = x := by
