@@ -286,38 +286,40 @@ end nonUnital
 
 section SelfAdjointUnitary
 
-noncomputable def Unitary.mulLeftLinearIsometryEquiv {A : Type*} [CStarAlgebra A] [PartialOrder A]
-    [StarOrderedRing A] (u : unitary A) : A ≃ₗᵢ[ℝ] A :=
-  { toLinearMap := LinearMap.mulLeft ℂ (u : A)
-    invFun := LinearMap.mulLeft ℂ (star u : A)
-    left_inv _ := by simp [← mul_assoc]
-    right_inv _ := by simp [← mul_assoc]
-    norm_map' _ := CStarRing.norm_coe_unitary_mul _ _ }
+namespace Unitary
+variable {A : Type*} (R : Type*) [NormedRing A] [StarRing A] [CStarRing A]
+  [Ring R] [Module R A] [SMulCommClass R A A]
 
-@[simp] lemma Unitary.mulLeftLinearIsometryEquiv_apply {A : Type*} [CStarAlgebra A] [PartialOrder A]
-    [StarOrderedRing A] (u : unitary A) (x : A) :
-    mulLeftLinearIsometryEquiv u x = u * x := rfl
+noncomputable def mulLeftLinearIsometryEquiv (u : unitary A) : A ≃ₗᵢ[R] A where
+  toLinearMap := LinearMap.mulLeft R (u : A)
+  invFun := LinearMap.mulLeft R (star u : A)
+  left_inv _ := by simp [← mul_assoc]
+  right_inv _ := by simp [← mul_assoc]
+  norm_map' _ := CStarRing.norm_coe_unitary_mul _ _
 
-lemma Unitary.symm_mulLeftLinearIsometryEquiv_apply {A : Type*} [CStarAlgebra A]
-    [PartialOrder A] [StarOrderedRing A] (u : unitary A) (x : A) :
-    (mulLeftLinearIsometryEquiv u).symm x = star u * x := rfl
+@[simp] lemma mulLeftLinearIsometryEquiv_apply (u : unitary A) (x : A) :
+    mulLeftLinearIsometryEquiv R u x = u * x := rfl
 
-@[simp] lemma Unitary.symm_mulLeftLinearIsometryEquiv {A : Type*} [CStarAlgebra A]
-    [PartialOrder A] [StarOrderedRing A] (u : unitary A) :
-    (mulLeftLinearIsometryEquiv u).symm = mulLeftLinearIsometryEquiv (star u) := by ext; rfl
+lemma symm_mulLeftLinearIsometryEquiv_apply (u : unitary A) (x : A) :
+    (mulLeftLinearIsometryEquiv R u).symm x = star u * x := rfl
 
-lemma Unitary.mulLeftLinearIsometryEquiv_image_extremePoints_closedUnitBall {A : Type*}
-    [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] (u : unitary A) :
-    (mulLeftLinearIsometryEquiv u) '' extremePoints ℝ (closedBall 0 1) =
-      extremePoints ℝ (closedBall 0 1) := by
+@[simp] lemma symm_mulLeftLinearIsometryEquiv (u : unitary A) :
+    (mulLeftLinearIsometryEquiv R u).symm = mulLeftLinearIsometryEquiv R (star u) := by ext; rfl
+
+lemma mulLeftLinearIsometryEquiv_image_extremePoints_closedUnitBall [PartialOrder R]
+    [IsOrderedRing R] (u : unitary A) :
+    (mulLeftLinearIsometryEquiv R u) '' extremePoints R (closedBall 0 1) =
+      extremePoints R (closedBall 0 1) := by
   rw [image_extremePoints, LinearIsometryEquiv.image_closedBall]
   simp
 
-lemma Unitary.coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A]
+lemma coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A]
     [PartialOrder A] [StarOrderedRing A] (u : unitary A) :
     (u : A) ∈ extremePoints ℝ (closedBall 0 1) := by
-  rw [← mulLeftLinearIsometryEquiv_image_extremePoints_closedUnitBall u]
+  rw [← mulLeftLinearIsometryEquiv_image_extremePoints_closedUnitBall ℝ u]
   exact ⟨1 , ⟨CStarAlgebra.one_mem_extremePoints_closedUnitBall, by simp⟩⟩
+
+end Unitary
 
 theorem isSelfAdjoint_unitary_mem_extremePoints_isSelfAdjoint_inter_extremePoints_closedUnitBall
     {A : Type*} [CStarAlgebra A] [PartialOrder A]
