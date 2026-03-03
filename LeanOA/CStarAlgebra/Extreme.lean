@@ -406,50 +406,42 @@ example {A : Type*} [CStarAlgebra A] [PartialOrder A]
       rw [h1.1, h2.1]
     · exact IsSelfAdjoint.add (h2.isSelfAdjoint) (h1.isSelfAdjoint)
   let q := 1 - (e⁺ + e⁻)
-  by_contra Squauk
-  have BEP : 0 ≤ q := IsStarProjection.one_sub_nonneg is_proj
-  have hO := IsSelfAdjoint.add he.1.1
-    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)
-  have hP := IsSelfAdjoint.sub he.1.1
-    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)
-  have PPfth : (1 / 2 : ℝ) •  (e + q) + (1 / 2 : ℝ) • (e - q) = e := by
+  by_contra
+  have convex_comb : (1 / 2 : ℝ) •  (e + q) + (1 / 2 : ℝ) • (e - q) = e := by
      simp only [one_div, smul_add, smul_sub, add_add_sub_cancel, ← add_smul]
      ring_nf
      rw [one_smul]
-  dsimp [extremePoints] at he
-  obtain ⟨one, two⟩ := he
   have hQ : e * q = 0 := by
-    nth_rw 1 [← CFC.posPart_sub_negPart (ha := one.1) e]
+    nth_rw 1 [← CFC.posPart_sub_negPart (ha := he.1.1) e]
     rw [mul_sub, mul_add, mul_one, sub_mul, sub_mul]
     simp only [negPart_mul_posPart, sub_zero, posPart_mul_negPart, zero_sub]
     rw [h2.1, h1.1, Eq.symm (sub_eq_add_neg e⁺ e⁻), sub_self]
-  have Add := IsSelfAdjoint.norm_add_eq_max hQ (one.1)
-    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)
-  have Sub := IsSelfAdjoint.norm_sub_eq_max hQ (one.1)
-    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)
   have Max : max ‖e‖ ‖q‖ ≤ 1 := by
     simp only [sup_le_iff]
     constructor
-    · simpa using one.2
-    · exact IsStarProjection.norm_le (1 - (e⁺ + e⁻)) (IsStarProjection.one_sub is_proj)
-  have Add' := le_of_eq_of_le Add Max
-  have Sub' := le_of_eq_of_le Sub Max
-  have GG := two ⟨hO, by simpa⟩ ⟨hP, by simpa⟩
-  have : e ∈ openSegment ℝ (e + (1 - (e⁺ + e⁻))) (e - (1 - (e⁺ + e⁻))) := by
+    · simpa using he.1.2
+    · exact IsStarProjection.norm_le q (IsStarProjection.one_sub is_proj)
+  have Add := le_of_eq_of_le (IsSelfAdjoint.norm_add_eq_max hQ (he.1.1)
+    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)) Max
+  have Sub := le_of_eq_of_le (IsSelfAdjoint.norm_sub_eq_max hQ (he.1.1)
+    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)) Max
+  have F := he.2 ⟨IsSelfAdjoint.add he.1.1
+    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj), by simpa⟩
+    ⟨IsSelfAdjoint.sub he.1.1 (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj),
+       by simpa⟩
+  have e_in_open : e ∈ openSegment ℝ (e + q) (e - q) := by
     use 1 / 2
     use 1 / 2
     simp only [one_div, inv_pos, Nat.ofNat_pos, smul_add, true_and]
     constructor
     · norm_num
-    · simpa [q] using PPfth
-  have BBBB := GG this
-  have TTTTT : q = 0 := left_eq_add.mp (id (Eq.symm BBBB))
-  simp only [q] at TTTTT
+    · simpa [q] using convex_comb
   have :=
     calc
-      e⁺ + e⁻ = e⁺ + e⁻ + 0 := by exact Eq.symm (AddMonoid.add_zero (e⁺ + e⁻))
-            _ = e⁺ + e⁻ + (1 - (e⁺ + e⁻)) := by exact (add_right_inj (e⁺ + e⁻)).mpr
-                                                         (id (Eq.symm TTTTT))
+      e⁺ + e⁻ = e⁺ + e⁻ + 0 := by rw [← Eq.symm (AddMonoid.add_zero (e⁺ + e⁻))]
+            _ = e⁺ + e⁻ + (1 - (e⁺ + e⁻)) := (add_right_inj (e⁺ + e⁻)).mpr
+                                                    (id (Eq.symm (left_eq_add.mp
+                                                      (id (Eq.symm <| F e_in_open)))))
             _ = e⁺ + e⁻ - (e⁺ + e⁻) + 1 := Eq.symm (add_comm_sub (e⁺ + e⁻) (e⁺ + e⁻) 1)
             _ = 0 + 1 := by rw [sub_self]
             _ = 1 := by rw [zero_add]
