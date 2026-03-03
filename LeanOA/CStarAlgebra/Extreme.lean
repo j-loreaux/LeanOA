@@ -6,6 +6,7 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import LeanOA.CFC
+
 import Mathlib.Algebra.Algebra.Unitization
 import Mathlib.Algebra.Group.Idempotent
 import Mathlib.Algebra.Star.Subalgebra
@@ -330,65 +331,86 @@ theorem isSelfAdjoint_unitary_mem_extremePoints_isSelfAdjoint_inter_extremePoint
   nontriviality A
   simp [hu]
 
-/- Let's get the unital version first. -/
+theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
+    {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+    {e : A} (he : e ∈ Set.extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
+    IsStarProjection (posPart e : A) := by
+  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
+  nontriviality A
+  refine ⟨⟨CFC.posPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
+  · grw [mem_closedBall_zero_iff, norm_posPart_le, mem_closedBall_zero_iff.mp he.1.2]
+  have hpn := by simpa [sub_eq_iff_eq_add] using posPart_sub_negPart e he.1.1
+  rw [hpn]
+  have := @he.2 (x - negPart e) ⟨?_, ?_⟩ (y - negPart e) ⟨?_, ?_⟩
+  · rw [sub_eq_iff_eq_add] at this
+    refine this ⟨α, β, hα, hβ, hαβ, ?_⟩
+    simp [smul_sub, sub_add_sub_comm, ← add_smul, hαβ, sub_eq_iff_eq_add, ← hpn, h]
+  · exact hx.1.isSelfAdjoint.sub (CFC.negPart_nonneg _).isSelfAdjoint
+  · simp only [mem_closedBall, dist_zero_right]
+    have h1 := calc x - e⁻ ≤ x := by simp [negPart_nonneg e]
+      _ ≤ 1 := by grw [← norm_le_one_iff_of_nonneg _ hx.1, mem_closedBall_zero_iff.mp hx.2]
+    have h2 := calc x - e⁻ ≥ -e⁻ := by simp [hx.1]
+      _ ≥ -1 := by
+        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (negPart_nonneg e)]
+        grw [norm_negPart_le, mem_closedBall_zero_iff.mp he.1.2]
+    simpa using IsSelfAdjoint.norm_le_max_of_le_of_le (by aesop) h2 h1
+  · exact hy.1.isSelfAdjoint.sub (CFC.negPart_nonneg _).isSelfAdjoint
+  · simp only [mem_closedBall, dist_zero_right]
+    have h1 := calc y - e⁻ ≤ y := by simp [negPart_nonneg e]
+      _ ≤ 1 := by grw [← norm_le_one_iff_of_nonneg _ hy.1, mem_closedBall_zero_iff.mp hy.2]
+    have h2 := calc y - e⁻ ≥ -e⁻ := by simp [hy.1]
+      _ ≥ -1 := by
+        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (negPart_nonneg e)]
+        grw [norm_negPart_le, mem_closedBall_zero_iff.mp he.1.2]
+    simpa using IsSelfAdjoint.norm_le_max_of_le_of_le (by aesop) h2 h1
 
-lemma norm_sub_le_one_of_nonneg_le_one_nonneg_le_one {A : Type*} [CStarAlgebra A] [PartialOrder A]
-    [StarOrderedRing A] [Nontrivial A] {x y : A} (hx : 0 ≤ x ∧ x ≤ 1) (hy : 0 ≤ y ∧ y ≤ 1) :
-    ‖x - y‖ ≤ 1 := by
-  simpa [sub_eq_add_neg] using IsSelfAdjoint.norm_le_max_of_le_of_le (IsSelfAdjoint.neg
-    (IsSelfAdjoint.one _)) (by simpa using add_le_add hx.1 (neg_le_neg_iff.mpr hy.2))
-      (add_le_add hx.2 (by simpa using neg_le_neg hy.1 : -y ≤ 0))
+theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
+    {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+    {e : A} (he : e ∈ Set.extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
+    IsStarProjection (negPart e : A) := by
+  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
+  nontriviality A
+  refine ⟨⟨CFC.negPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
+  · grw [mem_closedBall_zero_iff, norm_negPart_le, mem_closedBall_zero_iff.mp he.1.2]
+  have hpn := by simpa [sub_eq_iff_eq_add' (c := e), ← sub_eq_iff_eq_add] using
+    posPart_sub_negPart e he.1.1
+  rw [← hpn]
+  have := @he.2 (posPart e - x) ⟨?_, ?_⟩ (posPart e - y) ⟨?_, ?_⟩
+  · rw [sub_eq_iff_eq_add', ← sub_eq_iff_eq_add, eq_comm] at this
+    refine this ⟨α, β, hα, hβ, hαβ, ?_⟩
+    simp [smul_sub, sub_add_sub_comm, ← add_smul, hαβ, ← hpn, h]
+  · exact (CFC.posPart_nonneg _).isSelfAdjoint.sub hx.1.isSelfAdjoint
+  · simp only [mem_closedBall, dist_zero_right]
+    have h1 := calc x - e⁺ ≤ x := by simp [posPart_nonneg e]
+      _ ≤ 1 := by grw [← norm_le_one_iff_of_nonneg _ hx.1, mem_closedBall_zero_iff.mp hx.2]
+    have h2 := calc x - e⁺ ≥ -e⁺ := by simp [hx.1]
+      _ ≥ -1 := by
+        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (posPart_nonneg e)]
+        grw [norm_posPart_le, mem_closedBall_zero_iff.mp he.1.2]
+    rw [← norm_neg]
+    simpa using IsSelfAdjoint.norm_le_max_of_le_of_le (by aesop) h2 h1
+  · exact (CFC.posPart_nonneg _).isSelfAdjoint.sub hy.1.isSelfAdjoint
+  · simp only [mem_closedBall, dist_zero_right]
+    have h1 := calc y - e⁺ ≤ y := by simp [posPart_nonneg e]
+      _ ≤ 1 := by grw [← norm_le_one_iff_of_nonneg _ hy.1, mem_closedBall_zero_iff.mp hy.2]
+    have h2 := calc y - e⁺ ≥ -e⁺ := by simp [hy.1]
+      _ ≥ -1 := by
+        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (posPart_nonneg e)]
+        grw [norm_posPart_le, mem_closedBall_zero_iff.mp he.1.2]
+    rw [← norm_neg]
+    simpa using IsSelfAdjoint.norm_le_max_of_le_of_le (by aesop) h2 h1
 
-lemma PosPart_mem_extremePoints_of_mem_extremePoints {A : Type*} [CStarAlgebra A] [PartialOrder A]
-    [StarOrderedRing A] [Nontrivial A] {a : A}
-    (ha : a ∈ Set.extremePoints ℝ ({x | IsSelfAdjoint x} ∩ Metric.closedBall 0 1)) :
-    a⁺ ∈ Set.extremePoints ℝ ({x | 0 ≤ x} ∩ Metric.closedBall 0 1) := by
-  simp only [mem_extremePoints_iff_left, mem_inter_iff, mem_setOf_eq, mem_closedBall,
-    dist_zero_right, and_imp] at ha
-  obtain ⟨⟨hl_1, hl_2⟩, hr⟩ := ha
-  have hpsn := CFC.posPart_sub_negPart a
-  constructor
-  · simp only [mem_inter_iff, mem_setOf_eq, mem_closedBall, dist_zero_right]
-    constructor
-    · exact CFC.posPart_nonneg a
-    · exact le_trans (CStarAlgebra.norm_posPart_le a) hl_2
-  intro x hx y hy
-  simp only [mem_inter_iff, mem_setOf_eq, mem_closedBall, dist_zero_right] at hx hy
-  have h3 := hr x (IsSelfAdjoint.of_nonneg hx.1) hx.2 y (IsSelfAdjoint.of_nonneg hy.1) hy.2
-  intro h
-  obtain ⟨t, s, ht, hs, hts, H⟩ := h
-  have H1 : t • (x - a⁻) + s • (y - a⁻) = a := by
-    grind only [add_smul, ← smul_sub, sub_add_eq_sub_sub, add_sub_right_comm,
-      add_sub_assoc, (by rw [hts, one_smul] : a⁻ = (t + s) • a⁻)]
-  have xleone : x ≤ 1 := le_trans (IsSelfAdjoint.le_algebraMap_norm_self)
-       (by simpa [Algebra.algebraMap_eq_smul_one _] using
-         smul_le_of_le_one_left (zero_le_one (α := A)) (le_trans (hx.2) (Std.IsPreorder.le_refl 1)))
-  have anleone : a⁻ ≤ 1 := le_trans (IsSelfAdjoint.le_algebraMap_norm_self)
-       (by simpa [Algebra.algebraMap_eq_smul_one _] using
-         smul_le_of_le_one_left (zero_le_one (α := A)) (le_trans (norm_negPart_le _) hl_2))
-  have yleone : y ≤ 1 := le_trans (IsSelfAdjoint.le_algebraMap_norm_self)
-       (by simpa [Algebra.algebraMap_eq_smul_one _] using
-         smul_le_of_le_one_left (zero_le_one (α := A)) (le_trans (hy.2) (Std.IsPreorder.le_refl 1)))
-  have h_sqz_1 := norm_sub_le_one_of_nonneg_le_one_nonneg_le_one ⟨hx.1, xleone⟩
-    ⟨CFC.negPart_nonneg a, anleone⟩
-  have h_sqz_2 := norm_sub_le_one_of_nonneg_le_one_nonneg_le_one ⟨hy.1, yleone⟩
-    ⟨CFC.negPart_nonneg a, anleone⟩
-  have := hr (x - a⁻) (IsSelfAdjoint.sub (IsSelfAdjoint.of_nonneg hx.1)
-    ((IsSelfAdjoint.of_nonneg (CFC.negPart_nonneg a)))) h_sqz_1 (y - a⁻)
-      (IsSelfAdjoint.sub (IsSelfAdjoint.of_nonneg hy.1)
-        ((IsSelfAdjoint.of_nonneg (CFC.negPart_nonneg a)))) h_sqz_2
-  dsimp [openSegment] at this
-  have GG : (∃ (a_1 : ℝ) (b : ℝ), 0 < a_1 ∧ 0 < b ∧ a_1 + b = 1 ∧
-    a_1 • (x - a⁻) + b • (y - a⁻) = a) := by use t; use s
-  have GH := this GG
-  nth_rw 2 [← hpsn] at GH
-  simp at GH
-  assumption
-
-
-
-
-
+example {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+    {e : A} (he : e ∈ Set.extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
+    IsSelfAdjoint e ∧ e ∈ unitary A := by
+  refine ⟨he.1.1, ?_⟩
+  nontriviality A
+  rw [Unitary.mem_iff, he.1.1, and_self, ← posPart_sub_negPart e he.1.1]
+  have h1 := isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
+  have h2 := isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
+  simp only [mul_sub, sub_mul, h2.isIdempotentElem.eq, negPart_mul_posPart, sub_zero,
+    posPart_mul_negPart, h1.isIdempotentElem.eq, zero_sub, sub_neg_eq_add]
+  sorry
 
 /- This is for the second, more mathematically interesting, direction. -/
 lemma nonunital_part {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
