@@ -307,24 +307,26 @@ lemma Unitary.symm_mulLeftLinearIsometryEquiv_apply {A : Type*} [CStarAlgebra A]
     (mulLeftLinearIsometryEquiv u).symm = mulLeftLinearIsometryEquiv (star u) := by ext; rfl
 
 lemma Unitary.mulLeftLinearIsometryEquiv_image_extremePoints_closedUnitBall {A : Type*}
-    [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] [Nontrivial A] (u : unitary A) :
+    [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] (u : unitary A) :
     (mulLeftLinearIsometryEquiv u) '' extremePoints ℝ (closedBall 0 1) =
       extremePoints ℝ (closedBall 0 1) := by
   rw [image_extremePoints, LinearIsometryEquiv.image_closedBall]
   simp
 
 lemma Unitary.coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A]
-    [PartialOrder A] [StarOrderedRing A] [Nontrivial A] (u : unitary A) :
+    [PartialOrder A] [StarOrderedRing A] (u : unitary A) :
     (u : A) ∈ extremePoints ℝ (closedBall 0 1) := by
   rw [← mulLeftLinearIsometryEquiv_image_extremePoints_closedUnitBall u]
   exact ⟨1 , ⟨CStarAlgebra.one_mem_extremePoints_closedUnitBall, by simp⟩⟩
 
 theorem isSelfAdjoint_unitary_mem_extremePoints_isSelfAdjoint_inter_extremePoints_closedUnitBall
     {A : Type*} [CStarAlgebra A] [PartialOrder A]
-    [StarOrderedRing A] [Nontrivial A] {u : A} (hu : IsSelfAdjoint u ∧ u ∈ unitary A) :
-    u ∈ Set.extremePoints ℝ ({x | IsSelfAdjoint x} ∩ Metric.closedBall 0 1) :=
-  inter_extremePoints_subset_extremePoints_of_subset (inter_subset_right)
-    ⟨by aesop, by simpa using Unitary.coe_mem_extremePoints_closedUnitBall ⟨u, hu.2⟩⟩
+    [StarOrderedRing A] {u : A} (hu : IsSelfAdjoint u ∧ u ∈ unitary A) :
+    u ∈ Set.extremePoints ℝ ({x | IsSelfAdjoint x} ∩ Metric.closedBall 0 1) := by
+  refine inter_extremePoints_subset_extremePoints_of_subset (inter_subset_right)
+    ⟨⟨hu.1, ?_⟩, by simpa using Unitary.coe_mem_extremePoints_closedUnitBall ⟨u, hu.2⟩⟩
+  nontriviality A
+  simp [hu]
 
 /- This is for the second, more mathematically interesting, direction. -/
 lemma nonunital_part {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
