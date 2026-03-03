@@ -331,8 +331,9 @@ theorem isSelfAdjoint_unitary_mem_extremePoints_isSelfAdjoint_inter_extremePoint
   nontriviality A
   simp [hu]
 
+
 theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
-    {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+    {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     {e : A} (he : e ∈ Set.extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
     IsStarProjection (posPart e : A) := by
   rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
@@ -347,25 +348,29 @@ theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
     simp [smul_sub, sub_add_sub_comm, ← add_smul, hαβ, sub_eq_iff_eq_add, ← hpn, h]
   · exact hx.1.isSelfAdjoint.sub (CFC.negPart_nonneg _).isSelfAdjoint
   · simp only [mem_closedBall, dist_zero_right]
-    have h1 := calc x - e⁻ ≤ x := by simp [negPart_nonneg e]
-      _ ≤ 1 := by grw [← norm_le_one_iff_of_nonneg _ hx.1, mem_closedBall_zero_iff.mp hx.2]
-    have h2 := calc x - e⁻ ≥ -e⁻ := by simp [hx.1]
+    have h1 := calc (x - e⁻ : A⁺¹) ≤ x := by simp [negPart_nonneg e]
+      _ ≤ 1 := by
+        grw [← norm_le_one_iff_of_nonneg _ hx.1.inr, norm_inr, mem_closedBall_zero_iff.mp hx.2]
+    have h2 := calc (x - e⁻ : A⁺¹) ≥ -e⁻ := by simp [hx.1]
       _ ≥ -1 := by
-        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (negPart_nonneg e)]
-        grw [norm_negPart_le, mem_closedBall_zero_iff.mp he.1.2]
+        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (negPart_nonneg e).inr]
+        grw [norm_inr, norm_negPart_le, mem_closedBall_zero_iff.mp he.1.2]
+    rw [← norm_inr (𝕜 := ℂ), inr_sub]
     simpa using IsSelfAdjoint.norm_le_max_of_le_of_le (by aesop) h2 h1
   · exact hy.1.isSelfAdjoint.sub (CFC.negPart_nonneg _).isSelfAdjoint
   · simp only [mem_closedBall, dist_zero_right]
-    have h1 := calc y - e⁻ ≤ y := by simp [negPart_nonneg e]
-      _ ≤ 1 := by grw [← norm_le_one_iff_of_nonneg _ hy.1, mem_closedBall_zero_iff.mp hy.2]
-    have h2 := calc y - e⁻ ≥ -e⁻ := by simp [hy.1]
+    have h1 := calc (y - e⁻ : A⁺¹) ≤ y := by simp [negPart_nonneg e]
+      _ ≤ 1 := by
+        grw [← norm_le_one_iff_of_nonneg _ hy.1.inr, norm_inr, mem_closedBall_zero_iff.mp hy.2]
+    have h2 := calc (y - e⁻ : A⁺¹) ≥ -e⁻ := by simp [hy.1]
       _ ≥ -1 := by
-        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (negPart_nonneg e)]
-        grw [norm_negPart_le, mem_closedBall_zero_iff.mp he.1.2]
+        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (negPart_nonneg e).inr]
+        grw [norm_inr, norm_negPart_le, mem_closedBall_zero_iff.mp he.1.2]
+    rw [← norm_inr (𝕜 := ℂ), inr_sub]
     simpa using IsSelfAdjoint.norm_le_max_of_le_of_le (by aesop) h2 h1
 
 theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
-    {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+    {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     {e : A} (he : e ∈ Set.extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
     IsStarProjection (negPart e : A) := by
   rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
@@ -381,23 +386,25 @@ theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
     simp [smul_sub, sub_add_sub_comm, ← add_smul, hαβ, ← hpn, h]
   · exact (CFC.posPart_nonneg _).isSelfAdjoint.sub hx.1.isSelfAdjoint
   · simp only [mem_closedBall, dist_zero_right]
-    have h1 := calc x - e⁺ ≤ x := by simp [posPart_nonneg e]
-      _ ≤ 1 := by grw [← norm_le_one_iff_of_nonneg _ hx.1, mem_closedBall_zero_iff.mp hx.2]
-    have h2 := calc x - e⁺ ≥ -e⁺ := by simp [hx.1]
+    have h1 := calc (x - e⁺ : A⁺¹) ≤ x := by simp [posPart_nonneg e]
+      _ ≤ 1 := by
+        grw [← norm_le_one_iff_of_nonneg _ hx.1.inr, norm_inr, mem_closedBall_zero_iff.mp hx.2]
+    have h2 := calc (x - e⁺ : A⁺¹) ≥ -e⁺ := by simp [hx.1]
       _ ≥ -1 := by
-        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (posPart_nonneg e)]
-        grw [norm_posPart_le, mem_closedBall_zero_iff.mp he.1.2]
-    rw [← norm_neg]
+        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (posPart_nonneg e).inr]
+        grw [norm_inr, norm_posPart_le, mem_closedBall_zero_iff.mp he.1.2]
+    rw [← norm_inr (𝕜 := ℂ), ← norm_neg]
     simpa using IsSelfAdjoint.norm_le_max_of_le_of_le (by aesop) h2 h1
   · exact (CFC.posPart_nonneg _).isSelfAdjoint.sub hy.1.isSelfAdjoint
   · simp only [mem_closedBall, dist_zero_right]
-    have h1 := calc y - e⁺ ≤ y := by simp [posPart_nonneg e]
-      _ ≤ 1 := by grw [← norm_le_one_iff_of_nonneg _ hy.1, mem_closedBall_zero_iff.mp hy.2]
-    have h2 := calc y - e⁺ ≥ -e⁺ := by simp [hy.1]
+    have h1 := calc (y - e⁺ : A⁺¹) ≤ y := by simp [posPart_nonneg e]
+      _ ≤ 1 := by
+        grw [← norm_le_one_iff_of_nonneg _ hy.1.inr, norm_inr, mem_closedBall_zero_iff.mp hy.2]
+    have h2 := calc (y - e⁺ : A⁺¹) ≥ -e⁺ := by simp [hy.1]
       _ ≥ -1 := by
-        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (posPart_nonneg e)]
-        grw [norm_posPart_le, mem_closedBall_zero_iff.mp he.1.2]
-    rw [← norm_neg]
+        simp only [ge_iff_le, neg_le_neg_iff, ← norm_le_one_iff_of_nonneg _ (posPart_nonneg e).inr]
+        grw [norm_inr, norm_posPart_le, mem_closedBall_zero_iff.mp he.1.2]
+    rw [← norm_inr (𝕜 := ℂ), ← norm_neg]
     simpa using IsSelfAdjoint.norm_le_max_of_le_of_le (by aesop) h2 h1
 
 example {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
