@@ -181,7 +181,7 @@ variable {A : Type*} [NonUnitalCStarAlgebra A]
    shorthand used in paper proofs to make proofs more transparent, but it is
    nonsense to refer to `1`, and the notation means that everything should be
    considered as fully expanded. This is reflected in the statement below.
-   *The converse of the following result is Sakai 1.6.4.* -/
+   *The converse is Sakai 1.6.4.* -/
 private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
@@ -273,7 +273,7 @@ abbrev CStarAlgebra.ofExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBal
 -- `Mathlib.Algebra.Group.Idempotent`
 attribute [grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
 
-/-- The set of star projections on a non-unital C⋆-algebra is exactly the extreme points of
+/-- The star projections in a non-unital C⋆-algebra are exactly the extreme points of
 the nonnegative closed unit ball. -/
 theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
     [PartialOrder A] [StarOrderedRing A] {e : A} :
