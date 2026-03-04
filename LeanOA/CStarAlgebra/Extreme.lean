@@ -1,17 +1,9 @@
-import LeanOA.Mathlib.Algebra.Star.StarProjection
-import LeanOA.Mathlib.Analysis.Convex.Extreme
+import LeanOA.CFC
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
-import LeanOA.Mathlib.LinearAlgebra.Complex.Module
-import LeanOA.CFC
-
-import Mathlib.Algebra.Algebra.Unitization
-import Mathlib.Algebra.Group.Idempotent
-import Mathlib.Algebra.Star.Subalgebra
-import Mathlib.Analysis.Convex.Extreme
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+import LeanOA.Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 
 open Set Metric Complex CFC CStarAlgebra Unitization
