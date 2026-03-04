@@ -334,8 +334,6 @@ theorem mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint
     {A : Type*} [CStarAlgebra A] {e : A} :
     e ∈ extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1} ↔
       IsSelfAdjoint e ∧ e ∈ unitary A := by
-  let := spectralOrder A
-  let := spectralOrderedRing A
   refine ⟨fun he ↦ ⟨(mem_setOf_eq ▸ he.1).1, ?_⟩, fun he ↦ ?_⟩
   · have h1 := isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
     have h2 := isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
@@ -363,8 +361,7 @@ theorem mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint
 theorem selfAdjoint.mem_extremePoints_mem_closedUnitBall_iff_coe_mem_unitary
     {A : Type*} [CStarAlgebra A] {e : selfAdjoint A} :
     e ∈ extremePoints ℝ {x | x ∈ closedBall 0 1} ↔ (e : A) ∈ unitary A := by
-  have : (e : A) ∈ unitary A ↔ (IsSelfAdjoint (e : A) ∧ (e : A) ∈ unitary A) := by simp
-  rw [this,
+  rw [show (e : A) ∈ unitary A ↔ (IsSelfAdjoint (e : A) ∧ (e : A) ∈ unitary A) by simp,
     ← mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary]
   simp [mem_extremePoints, selfAdjoint.mem_iff, ← isSelfAdjoint_iff]
   simp [Subtype.ext_iff, openSegment]
