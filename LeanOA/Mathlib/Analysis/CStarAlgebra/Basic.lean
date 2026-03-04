@@ -10,6 +10,7 @@ namespace Unitary
 variable {A : Type*} (R : Type*) [NormedRing A] [StarRing A] [CStarRing A]
   [Ring R] [Module R A] [SMulCommClass R A A]
 
+/-- Left multiplication by a unitary as a linear isometric equivalence. -/
 noncomputable def mulLeftLinearIsometryEquiv (u : unitary A) : A ≃ₗᵢ[R] A where
   toLinearMap := LinearMap.mulLeft R (u : A)
   invFun := LinearMap.mulLeft R (star u : A)
