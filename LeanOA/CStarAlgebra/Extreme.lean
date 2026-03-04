@@ -12,8 +12,31 @@ open scoped ComplexStarModule
 /-! # Extreme points of the closed unit ball in C⋆-algebras
 
 This file contains results on the extreme points of the closed unit ball in (unital) C⋆-algebras.
-In particular, we show that a C⋆-algebra is unital if and only if there exists an extreme point
-of the closed unit ball.
+In particular, we show that in a C⋆-algebra :
+
+*  The extreme points of the closed unit ball are its partial isometries.
+   This is used to show that the C⋆-algebra is unital if and only if there exists an extreme point
+   of the closed unit ball.
+*  The extreme points of the closed unit ball of the positive elements are its
+   projections.
+*  The extreme points of the closed unit ball in the self-adjoint elements are its self-adjoint
+   unitaries.
+
+TO DO :
+
+* Extend the proof of the last bullet above to the `NonUnitalCStarAlgebra` setting by showing
+  that the existence of an extreme point in the closed unit ball of the self-adjoint elements
+  implies the algebra is unital.) Here is an outline from Jireh that will work:
+  Let b = a⁺ + a⁻, and let 0 ≤ c. Take x := c - b * c - c * b + c * b * c
+  (i.e., in the unitization x = (1 - b) * c * (1 - b)).
+  We will work in the unitization temporarily, but note that x itself lies in A.
+  Clearly x is nonnegative, and note that x * b = 0 = b * x.
+  Note that if x = 0, then √c * (1 - b) = 0 so c * (1 - b) = 0, so c * b = b.
+  Likewise b * c = b. So if b does not act as the identity on all positive elements, then
+  there is some c such that x ≠ 0. Then scale so that ‖x‖ ≤ 1, and a ± x form the elements of
+  our nontrivial convex combination.
+
+* Prove Sakai 1.6.4.
 
 ## References
 [Sakai], [Pedersen], [Takesaki], [Kadison], [Murphy]
