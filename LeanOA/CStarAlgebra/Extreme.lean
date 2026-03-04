@@ -391,22 +391,16 @@ theorem mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint
     have h2 := isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
     simp only [mul_sub, sub_mul, h2.isIdempotentElem.eq, negPart_mul_posPart, sub_zero,
       posPart_mul_negPart, h1.isIdempotentElem.eq, zero_sub, sub_neg_eq_add]
+    simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq] at he
     rw [eq_comm, ← sub_eq_zero]
     set x := 1 - (e⁺ + e⁻)
     have hx : IsStarProjection x := (h2.add h1 (by simp)).one_sub
-    refine add_eq_left.mp <| @he.2 (e + x) ⟨?_, ?_⟩ (e - x) ⟨?_, ?_⟩ ⟨2⁻¹, 2⁻¹, ?_⟩
-    · simp [IsSelfAdjoint, he.1.1.star_eq, x, LE.le.star_eq, posPart_nonneg e, negPart_nonneg e]
-    · grw [mem_closedBall_zero_iff, IsSelfAdjoint.norm_add_eq_max _ he.1.1 _,
-        mem_closedBall_zero_iff.mp he.1.2, hx.norm_le, max_self]
-      · rw [← posPart_sub_negPart e he.1.1]
-        simp [x, mul_add, h1.isIdempotentElem.eq, h2.isIdempotentElem.eq, sub_eq_add_neg, add_mul]
-      · exact IsSelfAdjoint.one _ |>.sub (h2.isSelfAdjoint.add h1.isSelfAdjoint)
-    · simp [IsSelfAdjoint, he.1.1.star_eq, x, LE.le.star_eq, posPart_nonneg e, negPart_nonneg e]
-    · grw [mem_closedBall_zero_iff, IsSelfAdjoint.norm_sub_eq_max _ he.1.1 _,
-        mem_closedBall_zero_iff.mp he.1.2, hx.norm_le, max_self]
-      · rw [← posPart_sub_negPart e he.1.1]
-        simp [x, mul_add, h1.isIdempotentElem.eq, h2.isIdempotentElem.eq, sub_eq_add_neg, add_mul]
-      · exact IsSelfAdjoint.one _ |>.sub (h2.isSelfAdjoint.add h1.isSelfAdjoint)
+    have : e * x = 0 := by
+      rw [← posPart_sub_negPart e he.1.1]
+      simp [x, mul_add, h1.isIdempotentElem.eq, h2.isIdempotentElem.eq, sub_eq_add_neg, add_mul]
+    refine add_eq_left.mp <| he.2 _ ⟨he.1.1.add hx.2, ?_⟩ _ ⟨he.1.1.sub hx.2, ?_⟩ ⟨2⁻¹, 2⁻¹, ?_⟩
+    · grw [he.1.1.norm_add_eq_max this hx.isSelfAdjoint, he.1.2, hx.norm_le, max_self]
+    · grw [he.1.1.norm_sub_eq_max this hx.isSelfAdjoint, he.1.2, hx.norm_le, max_self]
     simp [← one_div, smul_add, smul_sub, ← two_smul ℝ, smul_smul, mul_one_div_cancel]
   · refine inter_extremePoints_subset_extremePoints_of_subset inter_subset_right
       ⟨⟨he.1, ?_⟩, by simpa using Unitary.coe_mem_extremePoints_closedUnitBall ⟨e, he.2⟩⟩
