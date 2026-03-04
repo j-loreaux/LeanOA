@@ -178,7 +178,7 @@ variable {A : Type*} [NonUnitalCStarAlgebra A]
 /-- If `x` is an extreme point in the closed unit ball of a C⋆-algebra `A`,
    with initial projection `p = star x * x` and final projection `q = x * star x`,
    "`(1 - q) A (1 - p) = 0`". Note: This notation is a formal
-   shorthand used in paper proofs to make proofs more transparent, but it is
+   shorthand used in paper proofs to make them more transparent, but it is
    nonsense to refer to `1`, and the notation means that everything should be
    considered as fully expanded. This is reflected in the statement below.
    *The converse is Sakai 1.6.4.* -/
