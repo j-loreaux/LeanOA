@@ -162,9 +162,9 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
 attribute [local grind .] IsSelfAdjoint.star_mul_self IsIdempotentElem IsSelfAdjoint.mul_star_self
 attribute [local grind] IsStarProjection
 
-/- Every extreme point in the closed unit ball of a `NonUnitalCStarAlgebra` is a
-   partial isometry. -/
 
+/-- Every extreme point in the closed unit ball of a `NonUnitalCStarAlgebra` is a
+   partial isometry. -/
 theorem isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (star a * a) := by
   grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
@@ -175,15 +175,13 @@ theorem isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
-/- If `x` is an extreme point in the closed unit ball of a C⋆-algebra `A`,
+/-- If `x` is an extreme point in the closed unit ball of a C⋆-algebra `A`,
    with initial projection `p = star x * x` and final projection `q = x * star x`,
    "`(1 - q) A (1 - p) = 0`". Note: This notation is a formal
    shorthand used in paper proofs to make proofs more transparent, but it is
    nonsense to refer to `1`, and the notation means that everything should be
    considered as fully expanded. This is reflected in the statement below.
-   *The converse of the following result is Sakai 1.6.4.*
- -/
-
+   *The converse of the following result is Sakai 1.6.4.* -/
 private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
