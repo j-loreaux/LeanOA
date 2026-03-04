@@ -400,36 +400,31 @@ theorem IsSelfAdjoint_unitary_of_mem_extremePoints_of_IsSelfAdjoint_closedUnitBa
   have h2 := isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
   simp only [mul_sub, sub_mul, h2.isIdempotentElem.eq, negPart_mul_posPart, sub_zero,
     posPart_mul_negPart, h1.isIdempotentElem.eq, zero_sub, sub_neg_eq_add]
-  have is_proj : IsStarProjection (e⁺ + e⁻) := by
-    constructor
-    · dsimp [IsIdempotentElem]
-      simp only [mul_add, add_mul, negPart_mul_posPart, add_zero, posPart_mul_negPart, zero_add]
-      rw [h1.1, h2.1]
-    · exact IsSelfAdjoint.add (h2.isSelfAdjoint) (h1.isSelfAdjoint)
-  let q := 1 - (e⁺ + e⁻)
   by_contra
+  have is_proj : IsStarProjection (e⁺ + e⁻) :=
+    ⟨by dsimp [IsIdempotentElem]
+        simp only [mul_add, add_mul, negPart_mul_posPart, add_zero, posPart_mul_negPart, zero_add]
+        rw [h1.1, h2.1], by exact IsSelfAdjoint.add (h2.isSelfAdjoint) (h1.isSelfAdjoint)⟩
+  let q := 1 - (e⁺ + e⁻)
   have convex_comb : (1 / 2 : ℝ) •  (e + q) + (1 / 2 : ℝ) • (e - q) = e := by
-     simp only [one_div, smul_add, smul_sub, add_add_sub_cancel, ← add_smul]
-     ring_nf
-     rw [one_smul]
+    simp [← smul_add, add_add_sub_cancel, ← two_smul (R := ℝ) (M := A), ← smul_assoc, smul_eq_mul]
   have hQ : e * q = 0 := by
     nth_rw 1 [← CFC.posPart_sub_negPart (ha := he.1.1) e]
-    rw [mul_sub, mul_add, mul_one, sub_mul, sub_mul]
-    simp only [negPart_mul_posPart, sub_zero, posPart_mul_negPart, zero_sub]
-    rw [h2.1, h1.1, Eq.symm (sub_eq_add_neg e⁺ e⁻), sub_self]
+    rw [mul_sub, mul_add, mul_one, sub_mul, sub_mul, negPart_mul_posPart,
+         sub_zero, posPart_mul_negPart, zero_sub, h2.1, h1.1,
+           Eq.symm (sub_eq_add_neg e⁺ e⁻), sub_self]
   have Max : max ‖e‖ ‖q‖ ≤ 1 := by
     simp only [sup_le_iff]
     constructor
     · simpa using he.1.2
-    · exact IsStarProjection.norm_le q (IsStarProjection.one_sub is_proj)
-  have Add := le_of_eq_of_le (IsSelfAdjoint.norm_add_eq_max hQ (he.1.1)
-    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)) Max
-  have Sub := le_of_eq_of_le (IsSelfAdjoint.norm_sub_eq_max hQ (he.1.1)
-    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj)) Max
+    · exact IsStarProjection.norm_le q (is_proj.one_sub)
   have F := he.2 ⟨IsSelfAdjoint.add he.1.1
-    (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj), by simpa⟩
-    ⟨IsSelfAdjoint.sub he.1.1 (LE.le.isSelfAdjoint <| IsStarProjection.one_sub_nonneg is_proj),
-       by simpa⟩
+    (LE.le.isSelfAdjoint <| is_proj.one_sub_nonneg), by
+           simpa using le_of_eq_of_le (IsSelfAdjoint.norm_add_eq_max hQ (he.1.1)
+             (LE.le.isSelfAdjoint <| is_proj.one_sub_nonneg)) Max⟩
+    ⟨IsSelfAdjoint.sub he.1.1 (LE.le.isSelfAdjoint <| is_proj.one_sub_nonneg),
+       by simpa using le_of_eq_of_le (IsSelfAdjoint.norm_sub_eq_max hQ (he.1.1)
+    (LE.le.isSelfAdjoint <| is_proj.one_sub_nonneg)) Max⟩
   have e_in_open : e ∈ openSegment ℝ (e + q) (e - q) := by
     use 1 / 2
     use 1 / 2
