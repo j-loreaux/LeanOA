@@ -303,8 +303,7 @@ theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
   · grw [norm_posPart_le, he.1.2]
   have hpn := by simpa [sub_eq_iff_eq_add] using posPart_sub_negPart e he.1.1
   have (x : A) (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) : ‖x - e⁻‖ ≤ 1 := by
-    rw [← norm_inr (𝕜 := ℂ), inr_sub]
-    refine norm_sub_le_one_of_Icc ?_ ?_
+    grw [← norm_inr (𝕜 := ℂ), inr_sub, norm_sub_le_one_of_Icc]
     · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, hx0]
     · simp only [mem_Icc, inr_nonneg_iff, negPart_nonneg e, true_and]
       grw [← norm_le_one_iff_of_nonneg _ (negPart_nonneg e).inr, norm_inr, norm_negPart_le, he.1.2]
@@ -325,8 +324,7 @@ theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
   have hpn := by simpa [sub_eq_iff_eq_add' (c := e), ← sub_eq_iff_eq_add] using
     posPart_sub_negPart e he.1.1
   have (x : A) (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) : ‖e⁺ - x‖ ≤ 1 := by
-    rw [← norm_neg, neg_sub, ← norm_inr (𝕜 := ℂ), inr_sub]
-    refine norm_sub_le_one_of_Icc ?_ ?_
+    grw [← norm_neg, neg_sub, ← norm_inr (𝕜 := ℂ), inr_sub, norm_sub_le_one_of_Icc]
     · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, hx0]
     · simp only [mem_Icc, inr_nonneg_iff, posPart_nonneg e, true_and]
       grw [← norm_le_one_iff_of_nonneg _ (posPart_nonneg e).inr, norm_inr, norm_posPart_le, he.1.2]
