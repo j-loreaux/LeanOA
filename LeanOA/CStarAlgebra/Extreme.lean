@@ -14,19 +14,20 @@ open scoped ComplexStarModule
 This file contains results on the extreme points of the closed unit ball in (unital) C⋆-algebras.
 In particular, we show that in a C⋆-algebra :
 
-*  The extreme points of the closed unit ball are its partial isometries.
-   This is used to show that the C⋆-algebra is unital if and only if there exists an extreme point
-   of the closed unit ball.
-*  The extreme points of the closed unit ball of the positive elements are its
-   projections.
-*  The extreme points of the closed unit ball in the self-adjoint elements are its self-adjoint
-   unitaries.
+* `CStarAlgebra.one_mem_extremePoints_closedUnitBall`, `CStarAlgebra.ofExtremePt`:
+  A C⋆-algebra is unital if and only if there exists an extreme point of the closed unit ball.
+* `isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall`:
+  The extreme points of the nonnegative closed unit ball are its projections.
+* `mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary`:
+  The extreme points of the self-adjoint closed unit ball are its self-adjoint unitaries.
 
-TO DO :
+## TODO :
 
-* Extend the proof of the last bullet above to the `NonUnitalCStarAlgebra` setting by showing
-  that the existence of an extreme point in the closed unit ball of the self-adjoint elements
-  implies the algebra is unital.) Here is an outline from Jireh that will work:
+* Generalize
+  `mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary` to
+  non-unital by showing that the existence of an extreme point in the closed unit ball of the
+  self-adjoint elements implies the algebra is unital.)
+  Here is an outline from Jireh that will work:
   Let b = a⁺ + a⁻, and let 0 ≤ c. Take x := c - b * c - c * b + c * b * c
   (i.e., in the unitization x = (1 - b) * c * (1 - b)).
   We will work in the unitization temporarily, but note that x itself lies in A.
