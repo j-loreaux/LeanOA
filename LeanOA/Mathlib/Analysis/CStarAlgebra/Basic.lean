@@ -27,4 +27,12 @@ lemma symm_mulLeftLinearIsometryEquiv_apply (u : unitary A) (x : A) :
 @[simp] lemma symm_mulLeftLinearIsometryEquiv (u : unitary A) :
     (mulLeftLinearIsometryEquiv R u).symm = mulLeftLinearIsometryEquiv R (star u) := by ext; rfl
 
+lemma mulLeftLinearIsometryEquiv_mul (u v : unitary A) :
+    mulLeftLinearIsometryEquiv R (u * v) =
+      (mulLeftLinearIsometryEquiv R v).trans (mulLeftLinearIsometryEquiv R u) := by
+  ext; simp [mul_assoc]
+
+@[simp] lemma toLinearMap_mulLeftLinearIsometryEquiv (u : unitary A) :
+    (mulLeftLinearIsometryEquiv R u).toLinearMap = LinearMap.mulLeft R (u : A) := rfl
+
 end Unitary
