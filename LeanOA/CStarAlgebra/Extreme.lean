@@ -322,17 +322,10 @@ lemma coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A]
 
 end Unitary
 
-theorem isSelfAdjoint_unitary_mem_extremePoints_isSelfAdjoint_inter_extremePoints_closedUnitBall
-    {A : Type*} [CStarAlgebra A] [PartialOrder A]
-    [StarOrderedRing A] {u : A} (hu : IsSelfAdjoint u ∧ u ∈ unitary A) :
-    u ∈ Set.extremePoints ℝ ({x | IsSelfAdjoint x} ∩ Metric.closedBall 0 1) := by
-  refine inter_extremePoints_subset_extremePoints_of_subset (inter_subset_right)
-    ⟨⟨hu.1, ?_⟩, by simpa using Unitary.coe_mem_extremePoints_closedUnitBall ⟨u, hu.2⟩⟩
-  nontriviality A
-  simp [hu]
-
-lemma norm_sub_le_one_of_nonneg_le_one_nonneg_le_one {A : Type*} [CStarAlgebra A] [PartialOrder A]
-    [StarOrderedRing A] {x y : A} (hx : 0 ≤ x ∧ x ≤ 1) (hy : 0 ≤ y ∧ y ≤ 1) : ‖x - y‖ ≤ 1 := by
+-- not sure if this should be in terms of `x ∈ Icc 0 1` or `0 ≤ x ≤ 1`...
+-- maybe make private?
+lemma CStarAlgebra.norm_sub_le_one_of_Icc {A : Type*} [CStarAlgebra A] [PartialOrder A]
+    [StarOrderedRing A] {x y : A} (hx : x ∈ Icc 0 1) (hy : y ∈ Icc 0 1) : ‖x - y‖ ≤ 1 := by
   nontriviality A
   simpa [sub_eq_add_neg] using (IsSelfAdjoint.one _).neg.norm_le_max_of_le_of_le
     (by simpa using add_le_add hx.1 (neg_le_neg_iff.mpr hy.2))
@@ -350,9 +343,9 @@ theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
   have hpn := by simpa [sub_eq_iff_eq_add] using posPart_sub_negPart e he.1.1
   have (x : A) (hx : 0 ≤ x) (hx0 : x ∈ closedBall 0 1) : x - e⁻ ∈ closedBall 0 1 := by
     rw [mem_closedBall_zero_iff, ← norm_inr (𝕜 := ℂ), inr_sub]
-    refine norm_sub_le_one_of_nonneg_le_one_nonneg_le_one ?_ ?_
+    refine norm_sub_le_one_of_Icc ?_ ?_
     · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, mem_closedBall_zero_iff.mp hx0]
-    · simp only [inr_nonneg_iff, negPart_nonneg e, true_and]
+    · simp only [mem_Icc, inr_nonneg_iff, negPart_nonneg e, true_and]
       grw [← norm_le_one_iff_of_nonneg _ (negPart_nonneg e).inr, norm_inr, norm_negPart_le,
         mem_closedBall_zero_iff.mp he.1.2]
   have := he.2 ⟨hx.1.isSelfAdjoint.sub (negPart_nonneg e).isSelfAdjoint, this x hx.1 hx.2⟩
@@ -373,9 +366,9 @@ theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
     posPart_sub_negPart e he.1.1
   have (x : A) (hx : 0 ≤ x) (hx0 : x ∈ closedBall 0 1) : e⁺ - x ∈ closedBall 0 1 := by
     rw [mem_closedBall_zero_iff, ← norm_neg, neg_sub, ← norm_inr (𝕜 := ℂ), inr_sub]
-    refine norm_sub_le_one_of_nonneg_le_one_nonneg_le_one ?_ ?_
+    refine norm_sub_le_one_of_Icc ?_ ?_
     · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, mem_closedBall_zero_iff.mp hx0]
-    · simp only [inr_nonneg_iff, posPart_nonneg e, true_and]
+    · simp only [mem_Icc, inr_nonneg_iff, posPart_nonneg e, true_and]
       grw [← norm_le_one_iff_of_nonneg _ (posPart_nonneg e).inr, norm_inr, norm_posPart_le,
         mem_closedBall_zero_iff.mp he.1.2]
   have := he.2 ⟨(posPart_nonneg e).isSelfAdjoint.sub hx.1.isSelfAdjoint, this x hx.1 hx.2⟩
@@ -386,7 +379,7 @@ theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
 
 /-- The extreme points of the self-adjoint closed unit ball is exactly the set of self-adjoint
 unitaries. -/
-theorem mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_unitary
+theorem mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary
     {A : Type*} [CStarAlgebra A] {e : A} :
     e ∈ extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1} ↔
       IsSelfAdjoint e ∧ e ∈ unitary A := by
@@ -420,11 +413,15 @@ theorem mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint
     nontriviality A
     simp [he]
 
-/- We can use the following to reduce NonUnital to Unital . -/
-lemma nonunital_part {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-    {e : A} (he : e ∈ Set.extremePoints ℝ ({x | IsSelfAdjoint x} ∩ Metric.closedBall 0 1)) (x : A) :
-    CFC.abs e * x = x ∧ x * CFC.abs e = x := by
-  -- the earlier bits + my argument above
-  sorry
+/-- An alternate statement for
+`mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary`. -/
+theorem selfAdjoint.mem_extremePoints_mem_closedUnitBall_iff_coe_mem_unitary
+    {A : Type*} [CStarAlgebra A] {e : selfAdjoint A} :
+    e ∈ extremePoints ℝ {x | x ∈ closedBall 0 1} ↔ (e : A) ∈ unitary A := by
+  have : (e : A) ∈ unitary A ↔ (IsSelfAdjoint (e : A) ∧ (e : A) ∈ unitary A) := by simp
+  rw [this,
+    ← mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary]
+  simp [mem_extremePoints, selfAdjoint.mem_iff, ← isSelfAdjoint_iff]
+  simp [Subtype.ext_iff, openSegment]
 
 end SelfAdjointUnitary
