@@ -338,23 +338,11 @@ end nonUnital
 
 section SelfAdjointUnitary
 
-namespace Unitary
-variable {A : Type*} (R : Type*) [NormedRing A] [StarRing A] [CStarRing A]
-  [Ring R] [Module R A] [SMulCommClass R A A]
-
-lemma mulLeftLinearIsometryEquiv_image_extremePoints_closedUnitBall [PartialOrder R]
-    [IsOrderedRing R] (u : unitary A) :
-    (mulLeftLinearIsometryEquiv R u) '' extremePoints R (closedBall 0 1) =
-      extremePoints R (closedBall 0 1) := by
-  rw [image_extremePoints, LinearIsometryEquiv.image_closedBall]
-  simp
-
-lemma coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] (u : unitary A) :
+lemma Unitary.coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] (u : unitary A) :
     (u : A) ∈ extremePoints ℝ (closedBall 0 1) := by
-  rw [← mulLeftLinearIsometryEquiv_image_extremePoints_closedUnitBall ℝ u]
+  rw [← map_zero (mulLeftLinearIsometryEquiv ℝ u), ← LinearIsometryEquiv.image_closedBall,
+    ← image_extremePoints]
   exact ⟨1 , ⟨CStarAlgebra.one_mem_extremePoints_closedUnitBall, by simp⟩⟩
-
-end Unitary
 
 /-- The extreme points of the self-adjoint closed unit ball is exactly the set of self-adjoint
 unitaries. -/
