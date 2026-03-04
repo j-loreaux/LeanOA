@@ -281,21 +281,14 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
       calc 0 ≤ star (1 - e : A⁺¹) * (1 - e) := star_mul_self_nonneg _
         _ = _ := by simp [LE.le.star_eq, h1, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
 
--- not sure if this should be in terms of `x ∈ Icc 0 1` or `0 ≤ x ≤ 1`...
--- maybe make private?
-lemma CStarAlgebra.norm_sub_le_one_of_Icc {A : Type*} [CStarAlgebra A] [PartialOrder A]
-    [StarOrderedRing A] {x y : A} (hx : x ∈ Icc 0 1) (hy : y ∈ Icc 0 1) : ‖x - y‖ ≤ 1 := by
-  nontriviality A
+private lemma CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one [PartialOrder A]
+    [StarOrderedRing A] {x y : A} (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) (hy : 0 ≤ y) (hy0 : ‖y‖ ≤ 1) :
+    ‖x - y‖ ≤ 1 := by
+  rw [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _] at hx0 hy0
+  grw [← norm_inr (𝕜 := ℂ), inr_sub]
   simpa [sub_eq_add_neg] using (IsSelfAdjoint.one _).neg.norm_le_max_of_le_of_le
-    (by simpa using add_le_add hx.1 (neg_le_neg_iff.mpr hy.2))
-    (add_le_add hx.2 (by simpa using neg_le_neg hy.1 : -y ≤ 0))
-
-lemma CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one [PartialOrder A] [StarOrderedRing A]
-    {x y : A} (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) (hy : 0 ≤ y) (hy0 : ‖y‖ ≤ 1) : ‖x - y‖ ≤ 1 := by
-  grw [← norm_inr (𝕜 := ℂ), inr_sub, norm_sub_le_one_of_Icc]
-  · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, hx0]
-  · simp only [mem_Icc, inr_nonneg_iff, hy, true_and]
-    grw [← norm_le_one_iff_of_nonneg _ hy.inr, norm_inr, hy0]
+    (by simpa using add_le_add hx.inr (neg_le_neg_iff.mpr hy0))
+    (add_le_add hx0 (by simpa using neg_le_neg hy.inr : -(y : A⁺¹) ≤ 0))
 
 theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
     {e : A} (he : e ∈ extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
