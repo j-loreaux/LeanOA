@@ -127,7 +127,6 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
   \label{lem:extreme_partial_isom}
   \lean{isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall}
   \leanok
-  \uses{cor:nonunital_gelfand_Sak_1_2_2,lem:fake_approx_unit}
   If $x$ is an extreme point of the norm unit ball of a $C^{*}$--algebra $\mathcal{A}$, then $x^{*}x$ is a projection. I.e. $x$ is a partial
   isometry.
 \end{lemma}
@@ -141,7 +140,7 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
   \label{thm:cstar_unital_iff_extreme_Sak_1_6_1} (Sakai 1.6.1)
   \lean{CStarAlgebra.ofExtremePt, CStarAlgebra.one_mem_extremePoints_closedUnitBall}
   \leanok
-  \uses{lem:one_is_extreme}
+  \uses{lem:one_is_extreme, lem:extreme_partial_isom}
   A $C^{*}$--algebra is unital if and only if its closed unit ball has an extreme point.
 \end{theorem}
 
@@ -163,12 +162,15 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
 
 \begin{proposition}
   \label{prop:extr_sa_sa_unitaries_Sak_1_6_3} (Sakai 1.6.3)
+  \lean{mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary}
+  \leanok
   \uses{prop:extr_pos_projs_Sak_1_6_2}
   Let $\mathcal{A}^{s}$ be the set of self-adjoint elements in a $C^{*}$--algebra $\mathcal{A}$ with unit sphere $S$. Then
   the extreme points of $\mathcal{A}^{s}\cap S$ is the set of all self-adjoint unitary elements of $\mathcal{A}$.
 \end{proposition}
 
 \begin{proof}
+  \leanok
 \end{proof}
 
 \begin{definition}
