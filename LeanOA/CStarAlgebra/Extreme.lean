@@ -302,8 +302,7 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
       sub_eq_zero, eq_comm] at h
   · have := calc
       0 ≤ (e : A⁺¹) * (2 - e) := by
-        have : (e : A⁺¹) ≤ 1 := by
-          rwa [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ (by simpa)] at h2
+        have : (e : A⁺¹) ≤ 1 := norm_le_one_iff_of_nonneg _ (by simpa) |>.mp (by simpa [norm_inr])
         apply Commute.mul_nonneg (by simpa) (by grw [sub_nonneg, this, one_le_two])
         simp [commute_iff_eq, mul_sub, sub_mul, mul_two, two_mul]
       _ = (((2 : ℝ) • e - e * e : A) : A⁺¹) := by simp [mul_sub, two_smul, mul_two]
