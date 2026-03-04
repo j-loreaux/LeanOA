@@ -101,6 +101,12 @@ lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebr
   rw [← norm_eq_zero, ← sq_eq_zero_iff, ← IsSelfAdjoint.norm_mul_self (ℑ x).2, ← sq, norm_eq_zero]
   exact le_antisymm (by simpa using hx) (ℑ x).2.sq_nonneg
 
+lemma Unitary.coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] (u : unitary A) :
+    (u : A) ∈ extremePoints ℝ (closedBall 0 1) := by
+  rw [← map_zero (mulLeftLinearIsometryEquiv ℝ u), ← LinearIsometryEquiv.image_closedBall,
+    ← image_extremePoints]
+  exact ⟨1 , ⟨CStarAlgebra.one_mem_extremePoints_closedUnitBall, by simp⟩⟩
+
 section nonUnital
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
@@ -336,14 +342,6 @@ theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
 
 end nonUnital
 
-section SelfAdjointUnitary
-
-lemma Unitary.coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] (u : unitary A) :
-    (u : A) ∈ extremePoints ℝ (closedBall 0 1) := by
-  rw [← map_zero (mulLeftLinearIsometryEquiv ℝ u), ← LinearIsometryEquiv.image_closedBall,
-    ← image_extremePoints]
-  exact ⟨1 , ⟨CStarAlgebra.one_mem_extremePoints_closedUnitBall, by simp⟩⟩
-
 /-- The extreme points of the self-adjoint closed unit ball is exactly the set of self-adjoint
 unitaries. -/
 theorem mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary
@@ -384,5 +382,3 @@ theorem selfAdjoint.mem_extremePoints_mem_closedUnitBall_iff_coe_mem_unitary
     ← mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary]
   simp [mem_extremePoints, selfAdjoint.mem_iff, ← isSelfAdjoint_iff]
   simp [Subtype.ext_iff, openSegment]
-
-end SelfAdjointUnitary
