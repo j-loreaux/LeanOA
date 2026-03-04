@@ -351,8 +351,7 @@ lemma mulLeftLinearIsometryEquiv_image_extremePoints_closedUnitBall [PartialOrde
   rw [image_extremePoints, LinearIsometryEquiv.image_closedBall]
   simp
 
-lemma coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A]
-    [PartialOrder A] [StarOrderedRing A] (u : unitary A) :
+lemma coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] (u : unitary A) :
     (u : A) ∈ extremePoints ℝ (closedBall 0 1) := by
   rw [← mulLeftLinearIsometryEquiv_image_extremePoints_closedUnitBall ℝ u]
   exact ⟨1 , ⟨CStarAlgebra.one_mem_extremePoints_closedUnitBall, by simp⟩⟩
