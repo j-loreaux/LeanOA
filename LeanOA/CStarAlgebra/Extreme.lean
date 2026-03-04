@@ -283,6 +283,59 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
       calc 0 ≤ star (1 - e : A⁺¹) * (1 - e) := star_mul_self_nonneg _
         _ = _ := by simp [LE.le.star_eq, h1, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
 
+-- not sure if this should be in terms of `x ∈ Icc 0 1` or `0 ≤ x ≤ 1`...
+-- maybe make private?
+lemma CStarAlgebra.norm_sub_le_one_of_Icc {A : Type*} [CStarAlgebra A] [PartialOrder A]
+    [StarOrderedRing A] {x y : A} (hx : x ∈ Icc 0 1) (hy : y ∈ Icc 0 1) : ‖x - y‖ ≤ 1 := by
+  nontriviality A
+  simpa [sub_eq_add_neg] using (IsSelfAdjoint.one _).neg.norm_le_max_of_le_of_le
+    (by simpa using add_le_add hx.1 (neg_le_neg_iff.mpr hy.2))
+    (add_le_add hx.2 (by simpa using neg_le_neg hy.1 : -y ≤ 0))
+
+theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
+    {e : A} (he : e ∈ extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
+    IsStarProjection (e⁺ : A) := by
+  let := spectralOrder A
+  let := spectralOrderedRing A
+  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
+  refine ⟨⟨posPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
+  · grw [mem_closedBall_zero_iff, norm_posPart_le, mem_closedBall_zero_iff.mp he.1.2]
+  have hpn := by simpa [sub_eq_iff_eq_add] using posPart_sub_negPart e he.1.1
+  have (x : A) (hx : 0 ≤ x) (hx0 : x ∈ closedBall 0 1) : x - e⁻ ∈ closedBall 0 1 := by
+    rw [mem_closedBall_zero_iff, ← norm_inr (𝕜 := ℂ), inr_sub]
+    refine norm_sub_le_one_of_Icc ?_ ?_
+    · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, mem_closedBall_zero_iff.mp hx0]
+    · simp only [mem_Icc, inr_nonneg_iff, negPart_nonneg e, true_and]
+      grw [← norm_le_one_iff_of_nonneg _ (negPart_nonneg e).inr, norm_inr, norm_negPart_le,
+        mem_closedBall_zero_iff.mp he.1.2]
+  have := he.2 ⟨hx.1.isSelfAdjoint.sub (negPart_nonneg e).isSelfAdjoint, this x hx.1 hx.2⟩
+    ⟨hy.1.isSelfAdjoint.sub (negPart_nonneg e).isSelfAdjoint, this y hy.1 hy.2⟩
+  refine hpn ▸ sub_eq_iff_eq_add.mp <| this ⟨α, β, hα, hβ, hαβ, ?_⟩
+  simp [smul_sub, sub_add_sub_comm, ← add_smul, hαβ, sub_eq_iff_eq_add, ← hpn, h]
+
+theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
+    {e : A} (he : e ∈ Set.extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
+    IsStarProjection (e⁻ : A) := by
+  let := spectralOrder A
+  let := spectralOrderedRing A
+  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
+  refine ⟨⟨negPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
+  · grw [mem_closedBall_zero_iff, norm_negPart_le, mem_closedBall_zero_iff.mp he.1.2]
+  have hpn := by simpa [sub_eq_iff_eq_add' (c := e), ← sub_eq_iff_eq_add] using
+    posPart_sub_negPart e he.1.1
+  have (x : A) (hx : 0 ≤ x) (hx0 : x ∈ closedBall 0 1) : e⁺ - x ∈ closedBall 0 1 := by
+    rw [mem_closedBall_zero_iff, ← norm_neg, neg_sub, ← norm_inr (𝕜 := ℂ), inr_sub]
+    refine norm_sub_le_one_of_Icc ?_ ?_
+    · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, mem_closedBall_zero_iff.mp hx0]
+    · simp only [mem_Icc, inr_nonneg_iff, posPart_nonneg e, true_and]
+      grw [← norm_le_one_iff_of_nonneg _ (posPart_nonneg e).inr, norm_inr, norm_posPart_le,
+        mem_closedBall_zero_iff.mp he.1.2]
+  have := he.2 ⟨(posPart_nonneg e).isSelfAdjoint.sub hx.1.isSelfAdjoint, this x hx.1 hx.2⟩
+    ⟨(posPart_nonneg e).isSelfAdjoint.sub hy.1.isSelfAdjoint, this y hy.1 hy.2⟩
+  rw [sub_eq_iff_eq_add', ← sub_eq_iff_eq_add, eq_comm, hpn] at this
+  refine this ⟨α, β, hα, hβ, hαβ, ?_⟩
+  simp [smul_sub, sub_add_sub_comm, ← add_smul, hαβ, ← hpn, h]
+
 end nonUnital
 
 section SelfAdjointUnitary
@@ -305,61 +358,6 @@ lemma coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A]
   exact ⟨1 , ⟨CStarAlgebra.one_mem_extremePoints_closedUnitBall, by simp⟩⟩
 
 end Unitary
-
--- not sure if this should be in terms of `x ∈ Icc 0 1` or `0 ≤ x ≤ 1`...
--- maybe make private?
-lemma CStarAlgebra.norm_sub_le_one_of_Icc {A : Type*} [CStarAlgebra A] [PartialOrder A]
-    [StarOrderedRing A] {x y : A} (hx : x ∈ Icc 0 1) (hy : y ∈ Icc 0 1) : ‖x - y‖ ≤ 1 := by
-  nontriviality A
-  simpa [sub_eq_add_neg] using (IsSelfAdjoint.one _).neg.norm_le_max_of_le_of_le
-    (by simpa using add_le_add hx.1 (neg_le_neg_iff.mpr hy.2))
-    (add_le_add hx.2 (by simpa using neg_le_neg hy.1 : -y ≤ 0))
-
-theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
-    {A : Type*} [NonUnitalCStarAlgebra A]
-    {e : A} (he : e ∈ extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
-    IsStarProjection (e⁺ : A) := by
-  let := spectralOrder A
-  let := spectralOrderedRing A
-  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
-  refine ⟨⟨posPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
-  · grw [mem_closedBall_zero_iff, norm_posPart_le, mem_closedBall_zero_iff.mp he.1.2]
-  have hpn := by simpa [sub_eq_iff_eq_add] using posPart_sub_negPart e he.1.1
-  have (x : A) (hx : 0 ≤ x) (hx0 : x ∈ closedBall 0 1) : x - e⁻ ∈ closedBall 0 1 := by
-    rw [mem_closedBall_zero_iff, ← norm_inr (𝕜 := ℂ), inr_sub]
-    refine norm_sub_le_one_of_Icc ?_ ?_
-    · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, mem_closedBall_zero_iff.mp hx0]
-    · simp only [mem_Icc, inr_nonneg_iff, negPart_nonneg e, true_and]
-      grw [← norm_le_one_iff_of_nonneg _ (negPart_nonneg e).inr, norm_inr, norm_negPart_le,
-        mem_closedBall_zero_iff.mp he.1.2]
-  have := he.2 ⟨hx.1.isSelfAdjoint.sub (negPart_nonneg e).isSelfAdjoint, this x hx.1 hx.2⟩
-    ⟨hy.1.isSelfAdjoint.sub (negPart_nonneg e).isSelfAdjoint, this y hy.1 hy.2⟩
-  refine hpn ▸ sub_eq_iff_eq_add.mp <| this ⟨α, β, hα, hβ, hαβ, ?_⟩
-  simp [smul_sub, sub_add_sub_comm, ← add_smul, hαβ, sub_eq_iff_eq_add, ← hpn, h]
-
-theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
-    {A : Type*} [NonUnitalCStarAlgebra A]
-    {e : A} (he : e ∈ Set.extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
-    IsStarProjection (e⁻ : A) := by
-  let := spectralOrder A
-  let := spectralOrderedRing A
-  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
-  refine ⟨⟨negPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
-  · grw [mem_closedBall_zero_iff, norm_negPart_le, mem_closedBall_zero_iff.mp he.1.2]
-  have hpn := by simpa [sub_eq_iff_eq_add' (c := e), ← sub_eq_iff_eq_add] using
-    posPart_sub_negPart e he.1.1
-  have (x : A) (hx : 0 ≤ x) (hx0 : x ∈ closedBall 0 1) : e⁺ - x ∈ closedBall 0 1 := by
-    rw [mem_closedBall_zero_iff, ← norm_neg, neg_sub, ← norm_inr (𝕜 := ℂ), inr_sub]
-    refine norm_sub_le_one_of_Icc ?_ ?_
-    · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, mem_closedBall_zero_iff.mp hx0]
-    · simp only [mem_Icc, inr_nonneg_iff, posPart_nonneg e, true_and]
-      grw [← norm_le_one_iff_of_nonneg _ (posPart_nonneg e).inr, norm_inr, norm_posPart_le,
-        mem_closedBall_zero_iff.mp he.1.2]
-  have := he.2 ⟨(posPart_nonneg e).isSelfAdjoint.sub hx.1.isSelfAdjoint, this x hx.1 hx.2⟩
-    ⟨(posPart_nonneg e).isSelfAdjoint.sub hy.1.isSelfAdjoint, this y hy.1 hy.2⟩
-  rw [sub_eq_iff_eq_add', ← sub_eq_iff_eq_add, eq_comm, hpn] at this
-  refine this ⟨α, β, hα, hβ, hαβ, ?_⟩
-  simp [smul_sub, sub_add_sub_comm, ← add_smul, hαβ, ← hpn, h]
 
 /-- The extreme points of the self-adjoint closed unit ball is exactly the set of self-adjoint
 unitaries. -/
