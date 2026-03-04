@@ -298,6 +298,13 @@ lemma CStarAlgebra.norm_sub_le_one_of_Icc {A : Type*} [CStarAlgebra A] [PartialO
     (by simpa using add_le_add hx.1 (neg_le_neg_iff.mpr hy.2))
     (add_le_add hx.2 (by simpa using neg_le_neg hy.1 : -y ≤ 0))
 
+lemma CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one [PartialOrder A] [StarOrderedRing A]
+    {x y : A} (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) (hy : 0 ≤ y) (hy0 : ‖y‖ ≤ 1) : ‖x - y‖ ≤ 1 := by
+  grw [← norm_inr (𝕜 := ℂ), inr_sub, norm_sub_le_one_of_Icc]
+  · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, hx0]
+  · simp only [mem_Icc, inr_nonneg_iff, hy, true_and]
+    grw [← norm_le_one_iff_of_nonneg _ hy.inr, norm_inr, hy0]
+
 theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
     {e : A} (he : e ∈ extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
     IsStarProjection (e⁺ : A) := by
@@ -308,11 +315,8 @@ theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
   refine ⟨⟨posPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
   · grw [norm_posPart_le, he.1.2]
   have hpn := by simpa [sub_eq_iff_eq_add] using posPart_sub_negPart e he.1.1
-  have (x : A) (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) : ‖x - e⁻‖ ≤ 1 := by
-    grw [← norm_inr (𝕜 := ℂ), inr_sub, norm_sub_le_one_of_Icc]
-    · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, hx0]
-    · simp only [mem_Icc, inr_nonneg_iff, negPart_nonneg e, true_and]
-      grw [← norm_le_one_iff_of_nonneg _ (negPart_nonneg e).inr, norm_inr, norm_negPart_le, he.1.2]
+  have (x) (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) : ‖x - e⁻‖ ≤ 1 := norm_sub_le_one_of_nonneg_of_norm_le_one
+    hx hx0 (negPart_nonneg e) ((norm_negPart_le e).trans he.1.2)
   have := he.2 _ ⟨hx.1.isSelfAdjoint.sub (negPart_nonneg e).isSelfAdjoint, this x hx.1 hx.2⟩ _
     ⟨hy.1.isSelfAdjoint.sub (negPart_nonneg e).isSelfAdjoint, this y hy.1 hy.2⟩
   refine hpn ▸ sub_eq_iff_eq_add.mp <| this ⟨α, β, hα, hβ, hαβ, ?_⟩
@@ -329,11 +333,8 @@ theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
   · grw [norm_negPart_le, he.1.2]
   have hpn := by simpa [sub_eq_iff_eq_add' (c := e), ← sub_eq_iff_eq_add] using
     posPart_sub_negPart e he.1.1
-  have (x : A) (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) : ‖e⁺ - x‖ ≤ 1 := by
-    grw [← norm_neg, neg_sub, ← norm_inr (𝕜 := ℂ), inr_sub, norm_sub_le_one_of_Icc]
-    · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, hx0]
-    · simp only [mem_Icc, inr_nonneg_iff, posPart_nonneg e, true_and]
-      grw [← norm_le_one_iff_of_nonneg _ (posPart_nonneg e).inr, norm_inr, norm_posPart_le, he.1.2]
+  have (x) (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) : ‖e⁺ - x‖ ≤ 1 := norm_sub_le_one_of_nonneg_of_norm_le_one
+    (posPart_nonneg e) ((norm_posPart_le e).trans he.1.2) hx hx0
   have := he.2 _ ⟨(posPart_nonneg e).isSelfAdjoint.sub hx.1.isSelfAdjoint, this x hx.1 hx.2⟩ _
     ⟨(posPart_nonneg e).isSelfAdjoint.sub hy.1.isSelfAdjoint, this y hy.1 hy.2⟩
   rw [sub_eq_iff_eq_add', ← sub_eq_iff_eq_add, eq_comm, hpn] at this
