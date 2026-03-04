@@ -298,17 +298,17 @@ theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
   let := spectralOrder A
   let := spectralOrderedRing A
   rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
+  simp only [mem_closedBall_zero_iff, mem_extremePoints_iff_left, mem_setOf_eq] at he ⊢
   refine ⟨⟨posPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
-  · grw [mem_closedBall_zero_iff, norm_posPart_le, mem_closedBall_zero_iff.mp he.1.2]
+  · grw [norm_posPart_le, he.1.2]
   have hpn := by simpa [sub_eq_iff_eq_add] using posPart_sub_negPart e he.1.1
-  have (x : A) (hx : 0 ≤ x) (hx0 : x ∈ closedBall 0 1) : x - e⁻ ∈ closedBall 0 1 := by
-    rw [mem_closedBall_zero_iff, ← norm_inr (𝕜 := ℂ), inr_sub]
+  have (x : A) (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) : ‖x - e⁻‖ ≤ 1 := by
+    rw [← norm_inr (𝕜 := ℂ), inr_sub]
     refine norm_sub_le_one_of_Icc ?_ ?_
-    · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, mem_closedBall_zero_iff.mp hx0]
+    · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, hx0]
     · simp only [mem_Icc, inr_nonneg_iff, negPart_nonneg e, true_and]
-      grw [← norm_le_one_iff_of_nonneg _ (negPart_nonneg e).inr, norm_inr, norm_negPart_le,
-        mem_closedBall_zero_iff.mp he.1.2]
-  have := he.2 ⟨hx.1.isSelfAdjoint.sub (negPart_nonneg e).isSelfAdjoint, this x hx.1 hx.2⟩
+      grw [← norm_le_one_iff_of_nonneg _ (negPart_nonneg e).inr, norm_inr, norm_negPart_le, he.1.2]
+  have := he.2 _ ⟨hx.1.isSelfAdjoint.sub (negPart_nonneg e).isSelfAdjoint, this x hx.1 hx.2⟩ _
     ⟨hy.1.isSelfAdjoint.sub (negPart_nonneg e).isSelfAdjoint, this y hy.1 hy.2⟩
   refine hpn ▸ sub_eq_iff_eq_add.mp <| this ⟨α, β, hα, hβ, hαβ, ?_⟩
   simp [smul_sub, sub_add_sub_comm, ← add_smul, hαβ, sub_eq_iff_eq_add, ← hpn, h]
@@ -319,18 +319,18 @@ theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
   let := spectralOrder A
   let := spectralOrderedRing A
   rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
+  simp only [mem_closedBall_zero_iff, mem_extremePoints_iff_left, mem_setOf_eq] at he ⊢
   refine ⟨⟨negPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
-  · grw [mem_closedBall_zero_iff, norm_negPart_le, mem_closedBall_zero_iff.mp he.1.2]
+  · grw [norm_negPart_le, he.1.2]
   have hpn := by simpa [sub_eq_iff_eq_add' (c := e), ← sub_eq_iff_eq_add] using
     posPart_sub_negPart e he.1.1
-  have (x : A) (hx : 0 ≤ x) (hx0 : x ∈ closedBall 0 1) : e⁺ - x ∈ closedBall 0 1 := by
-    rw [mem_closedBall_zero_iff, ← norm_neg, neg_sub, ← norm_inr (𝕜 := ℂ), inr_sub]
+  have (x : A) (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) : ‖e⁺ - x‖ ≤ 1 := by
+    rw [← norm_neg, neg_sub, ← norm_inr (𝕜 := ℂ), inr_sub]
     refine norm_sub_le_one_of_Icc ?_ ?_
-    · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, mem_closedBall_zero_iff.mp hx0]
+    · simp [hx, ← norm_le_one_iff_of_nonneg (x : A⁺¹), norm_inr, hx0]
     · simp only [mem_Icc, inr_nonneg_iff, posPart_nonneg e, true_and]
-      grw [← norm_le_one_iff_of_nonneg _ (posPart_nonneg e).inr, norm_inr, norm_posPart_le,
-        mem_closedBall_zero_iff.mp he.1.2]
-  have := he.2 ⟨(posPart_nonneg e).isSelfAdjoint.sub hx.1.isSelfAdjoint, this x hx.1 hx.2⟩
+      grw [← norm_le_one_iff_of_nonneg _ (posPart_nonneg e).inr, norm_inr, norm_posPart_le, he.1.2]
+  have := he.2 _ ⟨(posPart_nonneg e).isSelfAdjoint.sub hx.1.isSelfAdjoint, this x hx.1 hx.2⟩ _
     ⟨(posPart_nonneg e).isSelfAdjoint.sub hy.1.isSelfAdjoint, this y hy.1 hy.2⟩
   rw [sub_eq_iff_eq_add', ← sub_eq_iff_eq_add, eq_comm, hpn] at this
   refine this ⟨α, β, hα, hβ, hαβ, ?_⟩
@@ -366,13 +366,13 @@ theorem mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint
       IsSelfAdjoint e ∧ e ∈ unitary A := by
   let := spectralOrder A
   let := spectralOrderedRing A
-  refine ⟨fun he ↦ ⟨he.1.1, ?_⟩, fun he ↦ ?_⟩
-  · rw [Unitary.mem_iff, he.1.1, and_self, ← posPart_sub_negPart e he.1.1]
-    have h1 := isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
+  refine ⟨fun he ↦ ⟨(mem_setOf_eq ▸ he.1).1, ?_⟩, fun he ↦ ?_⟩
+  · have h1 := isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
     have h2 := isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
+    simp only [mem_closedBall_zero_iff, mem_extremePoints_iff_left, mem_setOf_eq] at he
+    rw [Unitary.mem_iff, he.1.1, and_self, ← posPart_sub_negPart e he.1.1]
     simp only [mul_sub, sub_mul, h2.isIdempotentElem.eq, negPart_mul_posPart, sub_zero,
       posPart_mul_negPart, h1.isIdempotentElem.eq, zero_sub, sub_neg_eq_add]
-    simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq] at he
     rw [eq_comm, ← sub_eq_zero]
     set x := 1 - (e⁺ + e⁻)
     have hx : IsStarProjection x := (h2.add h1 (by simp)).one_sub
