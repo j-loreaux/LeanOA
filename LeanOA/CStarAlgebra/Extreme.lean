@@ -222,7 +222,7 @@ private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedU
     ⟨2⁻¹, 2⁻¹, by simp [smul_add, smul_sub, ← add_smul, ← one_div]⟩
 
 open Filter Topology in
-/-- When `x` is an extreme point of the closed unit ball in a non-unital C⋆-algebra,
+/-- When `x` is an extreme point of the closed unit ball in an a priori non-unital C⋆-algebra,
 then `star x * x + x * star x - x * star x * star x * x` is a right identity.
 (See also `CStarAlgebra.ofExtremePtOne_mul` for the left identity.) -/
 theorem CStarAlgebra.mul_ofExtremePtOne {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1))
@@ -254,7 +254,7 @@ theorem star_mem_extremePoints_closedBall_zero_iff {A : Type*} [NonUnitalSeminor
   apply @hx.2 _ (by simpa using hy) (star z) (by simpa using hz) ⟨star α, star β, ?_⟩
   simp [← hxyz, hα, hβ, hαβ]
 
-/-- When `x` is an extreme point of the closed unit ball in a non-unital C⋆-algebra,
+/-- When `x` is an extreme point of the closed unit ball in an a priori non-unital C⋆-algebra,
 then `star x * x + x * star x - x * star x * star x * x` is a left identity.
 (See also `CStarAlgebra.mul_ofExtremePtOne` for the right identity.) -/
 theorem CStarAlgebra.ofExtremePtOne_mul {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1))
