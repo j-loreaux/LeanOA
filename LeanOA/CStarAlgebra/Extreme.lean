@@ -18,7 +18,7 @@ In particular, we show that in a C⋆-algebra :
 * `mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary`:
   The extreme points of the self-adjoint closed unit ball are its self-adjoint unitaries.
 
-## TODO :
+## TODO
 
 * Generalize
   `mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary` to
@@ -293,18 +293,17 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
     fun a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩ ↦ ?_⟩, fun ⟨⟨h1, h2⟩, h3⟩ ↦ ?_⟩
   /- First note that if a convex combination `t • a + s • b = e`, then in the unitization
   `t • (e * a * e)) + s • (e * (1 - b) * e) = 0`. -/
-  · have : t • (e * ((1 - a : A⁺¹) * e)) + s • (e * ((1 - b) * e)) =
-        (t + s) • e - e * (t • a + s • b) * e := by
+  · have : t • (e * (1 - a : A⁺¹) * e) + s • (e * (1 - b) * e) = e - e * (t • a + s • b) * e := by
       simp [smul_sub, sub_add_eq_add_sub, add_sub, ← add_smul, hts, sub_mul, mul_sub,
         he.inr.isIdempotentElem.eq, mul_add, add_mul, sub_sub, mul_assoc]
-    have : ((t + s) • e - e * (t • a + s • b) * e : A⁺¹) = 0 := by
-      simp [← inr_smul, ← inr_add, ← inr_mul, hts, hlin, he.isIdempotentElem.eq]
+    have : (e - e * (t • a + s • b) * e : A⁺¹) = 0 := by
+      simp [← inr_smul, ← inr_add, ← inr_mul, hlin, he.isIdempotentElem.eq]
     have H {q : ℝ} {c : A} (hq : 0 < q) (h0c : 0 ≤ c) (hc1 : ‖c‖ ≤ 1) :
-        0 ≤ q • (e * ((1 - c : A⁺¹) * e)) := by
-      rw [← smul_zero q, smul_le_smul_iff_of_pos_left hq, ← mul_assoc]
+        0 ≤ q • (e * (1 - c : A⁺¹) * e) := by
+      rw [← smul_zero q, smul_le_smul_iff_of_pos_left hq]
       exact he.inr.isSelfAdjoint.conjugate_nonneg (sub_nonneg_of_le <|
         (norm_le_one_iff_of_nonneg (c : A⁺¹) (by simpa)).mp (by simpa [norm_inr]))
-    have := le_add_iff_nonneg_right (t • (e * ((1 - a : A⁺¹) * e))) |>.mpr (H h0s hb hb1)
+    have := le_add_iff_nonneg_right (t • (e * (1 - a : A⁺¹) * e)) |>.mpr (H h0s hb hb1)
     have : e * ((1 - a : A⁺¹) * e) = 0 := by rw [← smul_eq_zero_iff_right h0t.ne']; grind
     have := he.conjugate_of_nonneg_of_le (a := t • a) (by positivity)
       (by simpa [hlin] using le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b))
@@ -336,7 +335,7 @@ private lemma CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one [PartialOrde
     [StarOrderedRing A] {x y : A} (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) (hy : 0 ≤ y) (hy0 : ‖y‖ ≤ 1) :
     ‖x - y‖ ≤ 1 := by
   rw [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _] at hx0 hy0
-  grw [← norm_inr (𝕜 := ℂ), inr_sub]
+  rw [← norm_inr (𝕜 := ℂ), inr_sub]
   simpa [sub_eq_add_neg] using (IsSelfAdjoint.one _).neg.norm_le_max_of_le_of_le
     (by simpa using add_le_add hx.inr (neg_le_neg_iff.mpr hy0))
     (add_le_add hx0 (by simpa using neg_le_neg hy.inr : -(y : A⁺¹) ≤ 0))
@@ -409,9 +408,9 @@ theorem mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint
 
 /-- An alternate statement for
 `mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary`. -/
-theorem selfAdjoint.mem_extremePoints_mem_closedUnitBall_iff_coe_mem_unitary
+theorem selfAdjoint.mem_extremePoints_closedUnitBall_iff_coe_mem_unitary
     {A : Type*} [CStarAlgebra A] {e : selfAdjoint A} :
-    e ∈ extremePoints ℝ {x | x ∈ closedBall 0 1} ↔ (e : A) ∈ unitary A := by
+    e ∈ extremePoints ℝ (closedBall 0 1) ↔ (e : A) ∈ unitary A := by
   rw [show (e : A) ∈ unitary A ↔ (IsSelfAdjoint (e : A) ∧ (e : A) ∈ unitary A) by simp,
     ← mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary]
   simp [mem_extremePoints, selfAdjoint.mem_iff, ← isSelfAdjoint_iff]
