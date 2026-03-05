@@ -290,6 +290,8 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
   simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq, and_imp]
   refine ⟨fun he ↦ ⟨⟨he.nonneg, he.norm_le⟩,
     fun a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩ ↦ ?_⟩, fun ⟨⟨h1, h2⟩, h3⟩ ↦ ?_⟩
+  /- First note that if `t • a + s • b = e`, then in the unitization
+  `t • (e * a * e)) + s • (e * (1 - b) * e) = 0`. -/
   · have : t • (e * ((1 - a : A⁺¹) * e)) + s • (e * ((1 - b) * e)) =
         (t + s) • e - e * (t • a + s • b) * e := by
       simp [smul_sub, sub_add_eq_add_sub, add_sub, ← add_smul, hts, sub_mul, mul_sub,
