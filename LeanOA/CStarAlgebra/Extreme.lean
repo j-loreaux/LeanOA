@@ -207,7 +207,7 @@ private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedU
   have : star (x + a) * (x + a) = p + star a * a := by simp [hp, mul_add, add_mul, hax, hxa]
   -- This, the C⋆-identity and `hpa` obtain
   have : ‖p + star a * a‖ = ‖x + a‖ * ‖x + a‖ := by rw [← this, CStarRing.norm_star_mul_self]
-  /- The handy fact `norm_add_eq_max` gives that since `p` and `star a * a` are self-adjoint
+  /- Since `p` and `star a * a` are self-adjoint
   with product zero that the norm of their sum is the max of the norms of these contractions. -/
   have hmax : ‖p + star a * a‖ ≤ 1 := by
     rw [IsSelfAdjoint.star_mul_self x |>.norm_add_eq_max hpa (.star_mul_self a), sup_le_iff, hp]
