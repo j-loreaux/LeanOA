@@ -113,7 +113,7 @@ lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebr
   we conclude that it is zero, and hence so also `ℑ x = 0`, as desired. -/
   rw [← sq_le_one_iff₀ (by positivity), sq, ← CStarRing.norm_star_mul_self,
     star_mul_self_eq_realPart_sq_add_imaginaryPart_sq, ← ha', mul_one, ← sq,
-    CStarAlgebra.norm_le_one_iff_of_nonneg _ (add_nonneg zero_le_one (ℑ x).2.sq_nonneg)] at hx
+    norm_le_one_iff_of_nonneg _ (add_nonneg zero_le_one (ℑ x).2.sq_nonneg)] at hx
   rw [← norm_eq_zero, ← sq_eq_zero_iff, ← IsSelfAdjoint.norm_mul_self (ℑ x).2, ← sq, norm_eq_zero]
   exact le_antisymm (by simpa using hx) (ℑ x).2.sq_nonneg
 
@@ -121,7 +121,7 @@ lemma Unitary.coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] 
     (u : A) ∈ extremePoints ℝ (closedBall 0 1) := by
   rw [← map_zero (mulLeftLinearIsometryEquiv ℝ A u), ← LinearIsometryEquiv.image_closedBall,
     ← image_extremePoints]
-  exact ⟨1 , ⟨CStarAlgebra.one_mem_extremePoints_closedUnitBall, by simp⟩⟩
+  exact ⟨1 , ⟨one_mem_extremePoints_closedUnitBall, by simp⟩⟩
 
 section nonUnital
 variable {A : Type*} [NonUnitalCStarAlgebra A]
@@ -281,9 +281,6 @@ abbrev CStarAlgebra.ofExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBal
   __ := ‹NonUnitalCStarAlgebra A›
   __ := ringOfExtremePt hx
   __ := Algebra.ofModule smul_mul_assoc mul_smul_comm
-
--- `Mathlib.Algebra.Group.Idempotent`
-attribute [grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
 
 /-- The star projections in a non-unital C⋆-algebra are exactly the extreme points of
 the nonnegative closed unit ball. -/
