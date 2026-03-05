@@ -119,7 +119,7 @@ lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebr
 
 lemma Unitary.coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] (u : unitary A) :
     (u : A) ∈ extremePoints ℝ (closedBall 0 1) := by
-  rw [← map_zero (mulLeftLinearIsometryEquiv ℝ u), ← LinearIsometryEquiv.image_closedBall,
+  rw [← map_zero (mulLeftLinearIsometryEquiv ℝ A u), ← LinearIsometryEquiv.image_closedBall,
     ← image_extremePoints]
   exact ⟨1 , ⟨CStarAlgebra.one_mem_extremePoints_closedUnitBall, by simp⟩⟩
 
