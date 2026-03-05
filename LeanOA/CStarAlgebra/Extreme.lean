@@ -190,21 +190,32 @@ private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedU
   have hP := isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx
   have hQ := isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall hx
   set p := star x * x with hp
+  /- Notice that `x=qxp`, and `star x = p star x q` formally yield
+  `star x * (1-q) * b * (1-p) = 0` with the above abusive notation. By substituting for `a` in
+  `‖(star a) * x * (star x) * a‖` and expanding, we obtain this, and its adjoint, rigorously. -/
   have hxa : star x * a = 0 := by
     rw [← norm_eq_zero, ← mul_self_eq_zero, ← CStarRing.norm_star_mul_self]
     simp [hb, mul_add, mul_sub, add_mul, sub_mul]
     grind
   have hax : star a * x = 0 := by simpa [star_mul] using congr(star $hxa)
+  /- Similarly, guided by the formal `star a = (1 - p) * star b * (1 - q)`, we obtain
+  the following by substitution and expansion. -/
   have hpa : p * (star a * a) = 0 := by
     simp only [hb, mul_add, mul_sub, star_add, star_sub, star_mul, add_mul, sub_mul]
     grind [star_star_mul x x]
+  -- The facts `hxa` and `hax` yield that cross terms vanish.
   have : star (x + a) * (x + a) = p + star a * a := by simp [hp, mul_add, add_mul, hax, hxa]
+  -- This, the C⋆-identity and `hpa` obtain
   have : ‖p + star a * a‖ = ‖x + a‖ * ‖x + a‖ := by rw [← this, CStarRing.norm_star_mul_self]
+  /- The handy fact `norm_add_eq_max` gives that since `p` and `star a * a` are self-adjoint
+  with product zero that the norm of their sum is the max of the norms of these contractions. -/
   have hmax : ‖p + star a * a‖ ≤ 1 := by
     rw [IsSelfAdjoint.star_mul_self x |>.norm_add_eq_max hpa (.star_mul_self a), sup_le_iff, hp]
     simp only [CStarRing.norm_star_mul_self]
     grw [mem_closedBall_zero_iff.mp hx.1, mem_closedBall_zero_iff.mp ha, one_mul, and_self]
   have : ‖x + a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp <| by grind
+  /- Using `hxa` and `hax`, cross terms vanish and we have
+  `‖x - a‖ * ‖x - a‖ = ‖p + star a * a‖ ≤ 1`. -/
   have : ‖x - a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp <| by
     simp [sq, ← CStarRing.norm_star_mul_self, sub_mul, mul_sub, hax, hxa, ← hp, hmax]
   exact add_eq_left.mp <| @hx.2 (x + a) (by simpa) (x - a) (by simpa)
