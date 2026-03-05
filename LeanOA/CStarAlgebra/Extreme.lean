@@ -163,13 +163,14 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
 attribute [local grind .] IsSelfAdjoint.star_mul_self IsIdempotentElem IsSelfAdjoint.mul_star_self
 attribute [local grind] IsStarProjection
 
-
 /-- Every extreme point in the closed unit ball of a `NonUnitalCStarAlgebra` is a
-   partial isometry. -/
+partial isometry (in other words, `star a * a` is a projection). -/
 theorem isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (star a * a) := by
   grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
 
+/-- Every extreme point in the closed unit ball of a `NonUnitalCStarAlgebra` is a
+partial isometry (in other words, `a * star a` is a projection). -/
 theorem isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (a * star a) := by
   grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
@@ -177,12 +178,12 @@ theorem isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
 /-- If `x` is an extreme point in the closed unit ball of a C⋆-algebra `A`,
-   with initial projection `p = star x * x` and final projection `q = x * star x`,
-   "`(1 - q) A (1 - p) = 0`". Note: This notation is a formal
-   shorthand used in paper proofs to make them more transparent, but it is
-   nonsense to refer to `1`, and the notation means that everything should be
-   considered as fully expanded. This is reflected in the statement below.
-   *The converse is Sakai 1.6.4.* -/
+with initial projection `p = star x * x` and final projection `q = x * star x`,
+"`(1 - q) A (1 - p) = 0`". Note: This notation is an informal
+shorthand used in paper proofs to make them more transparent, but it is
+nonsense to refer to `1`, and the notation means that everything should be
+considered as fully expanded. This is reflected in the statement below.
+*The converse is Sakai 1.6.4.* -/
 private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
     {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
@@ -311,7 +312,14 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
     have h : e * (e - a * e) = 0 := by rw [← (inr_injective (R := ℂ)).eq_iff]; simpa [← one_sub_mul]
     rwa [mul_sub, ← mul_assoc, he.isIdempotentElem, h0t.ne'.isUnit.smul_left_cancel.mp this,
       sub_eq_zero, eq_comm] at h
-  · have := calc
+  · /- Now suppose `e` is an extreme point of the nonnegative closed unit ball.
+    So then it is self-adjoint, and so we only need to show `e * e = e`.
+    Note that since `0 ≤ e ≤ 1` in the unitization, we also get `0 ≤ e * (2 - e) = 2 • e - e * e`,
+    and `0 ≤ star (1 - e) * (1 - e) = 1 - 2 • e - e * e` which means `2 • e - e * e` is in the
+    closed unit ball. So `2 • e - e * e` is in the nonnegative closed unit ball.
+    Then using the extremity of `e`, we get `e * e = e` since `e * e` is obviously in the
+    nonnegative closed unit ball, and `e = 2⁻¹ • e * e + 2⁻¹ • (2 • e - e * e)`. -/
+    have := calc
       0 ≤ (e : A⁺¹) * (2 - e) := by
         have : (e : A⁺¹) ≤ 1 := norm_le_one_iff_of_nonneg _ (by simpa) |>.mp (by simpa [norm_inr])
         apply Commute.mul_nonneg (by simpa) (by grw [sub_nonneg, this, one_le_two])
