@@ -293,11 +293,11 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
     fun a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩ ↦ ?_⟩, fun ⟨⟨h1, h2⟩, h3⟩ ↦ ?_⟩
   /- First note that if a convex combination `t • a + s • b = e`, then in the unitization
   `t • (e * a * e)) + s • (e * (1 - b) * e) = 0`. -/
-  · have : t • (e * (1 - a : A⁺¹) * e) + s • (e * (1 - b) * e) = e - e * (t • a + s • b) * e := by
-      simp [smul_sub, sub_add_eq_add_sub, add_sub, ← add_smul, hts, sub_mul, mul_sub,
-        he.inr.isIdempotentElem.eq, mul_add, add_mul, sub_sub, mul_assoc]
-    have : (e - e * (t • a + s • b) * e : A⁺¹) = 0 := by
-      simp [← inr_smul, ← inr_add, ← inr_mul, hlin, he.isIdempotentElem.eq]
+  · have := calc
+      t • (e * (1 - a : A⁺¹) * e) + s • (e * (1 - b) * e) = e - e * (t • a + s • b) * e := by
+        simp [smul_sub, sub_add_eq_add_sub, add_sub, ← add_smul, hts, sub_mul, mul_sub,
+          he.inr.isIdempotentElem.eq, mul_add, add_mul, sub_sub, mul_assoc]
+      _ = 0 := by simp [← inr_smul, ← inr_add, hlin, ← inr_mul, he.isIdempotentElem.eq]
     have H {q : ℝ} {c : A} (hq : 0 < q) (h0c : 0 ≤ c) (hc1 : ‖c‖ ≤ 1) :
         0 ≤ q • (e * (1 - c : A⁺¹) * e) := by
       rw [← smul_zero q, smul_le_smul_iff_of_pos_left hq]
