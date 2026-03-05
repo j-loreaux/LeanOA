@@ -14,6 +14,7 @@ import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
 import LeanOA.Mathlib.Algebra.Star.StarAlgHom
 import LeanOA.Mathlib.Algebra.Star.StarProjection
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+import LeanOA.Mathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
@@ -22,11 +23,11 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
 import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
-import LeanOA.Mathlib.Analysis.CStarAlgebra.Projection
 import LeanOA.Mathlib.Analysis.Complex.Basic
 import LeanOA.Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.Analysis.InnerProductSpace.Basic
 import LeanOA.Mathlib.Analysis.Normed.Extreme
+import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
 import LeanOA.Mathlib.Analysis.RCLike.Extend
 import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 import LeanOA.Mathlib.LinearAlgebra.Complex.Module

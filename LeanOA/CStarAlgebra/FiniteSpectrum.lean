@@ -1,4 +1,6 @@
 import LeanOA.Mathlib.Algebra.Star.StarProjection
+import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
+import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import Mathlib.Topology.ContinuousMap.LocallyConstant
 import Mathlib.Topology.ExtremallyDisconnected
@@ -6,19 +8,6 @@ import Mathlib.Topology.ExtremallyDisconnected
 variable {A Y 𝕜 : Type*} [RCLike 𝕜] [TopologicalSpace A] [TopologicalSpace Y]
 
 namespace ContinuousMapZero
-
-/-- A version of `Pi.single` as an element in `C(A, Y)₀` where `single i x 0 = 0`. -/
-noncomputable abbrev single [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A] (i : A)
-    (x : Y) : C(A, Y)₀ where
-  toFun j := if j = 0 then 0 else (Pi.single i x : A → Y) j
-  map_zero' := by simp
-
-lemma single_def [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
-    (i : A) (x : Y) (j : A) :
-    single i x j = if j = 0 then 0 else (Pi.single i x : A → Y) j := rfl
-
-@[simp] lemma single_apply_of_ne_zero [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
-    (i : A) (x : Y) {j : A} (hj : j ≠ 0) : single i x j = (Pi.single i x : A → Y) j := by simp_all
 
 @[simp] lemma mem_span_isStarProjection_of_finite [DiscreteTopology A] [Finite A] [Zero A]
     (f : C(A, 𝕜)₀) : f ∈ Submodule.span 𝕜 {p : C(A, 𝕜)₀ | IsStarProjection p} := by
@@ -29,46 +18,6 @@ lemma single_def [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
     (by constructor <;> ext <;> simp_all [Pi.single_apply, apply_ite])
 
 end ContinuousMapZero
-
-namespace ContinuousMap
-
-variable (𝕜) in
-/-- Lifting `C(A, ℝ)` to `C(A, 𝕜)` using `RCLike.ofReal`. -/
-@[simps] def realToRCLike (f : C(A, ℝ)) : C(A, 𝕜) where toFun x := RCLike.ofReal (f x)
-
-@[simp] lemma isSelfAdjoint_realToRCLike {f : C(A, ℝ)} : IsSelfAdjoint (f.realToRCLike 𝕜) := by
-  ext; simp
-
-@[simp] lemma spectrum_realToRCLike (f : C(A, ℝ)) :
-    spectrum ℝ (f.realToRCLike 𝕜) = spectrum ℝ f := by
-  ext; simp [spectrum.mem_iff, isUnit_iff_forall_isUnit, RCLike.ext_iff (K := 𝕜), Algebra.smul_def]
-
-/-- Mapping `C(A, 𝕜)` to `C(A, ℝ)` using `RCLike.re`. -/
-@[simps] def rclikeToReal (f : C(A, 𝕜)) : C(A, ℝ) where toFun x := RCLike.re (f x)
-
-@[simp] theorem rclikeToReal_realToRCLike (f : C(A, ℝ)) :
-    (f.realToRCLike 𝕜).rclikeToReal = f := by ext; simp
-
-theorem IsSelfAdjoint.realToRCLike_rclikeToReal {f : C(A, 𝕜)} (hf : IsSelfAdjoint f) :
-    f.rclikeToReal.realToRCLike 𝕜 = f := by
-  ext
-  simp only [realToRCLike_apply, rclikeToReal_apply, ← RCLike.conj_eq_iff_re]
-  conv_rhs => rw [← hf.star_eq]
-  simp
-
-variable (𝕜) in
-open ContinuousMap in
-theorem range_realToRCLike_eq_isSelfAdjoint :
-    .range (realToRCLike 𝕜) = {f : C(A, 𝕜) | IsSelfAdjoint f} :=
-  le_antisymm (fun _ ⟨_, h⟩ ↦ by simp [← h]) fun f hf ↦
-    ⟨f.rclikeToReal, hf.realToRCLike_rclikeToReal⟩
-
-set_option backward.isDefEq.respectTransparency false in
-variable (𝕜) in
-@[simp] theorem isometry_realToRCLike [CompactSpace A] : Isometry (realToRCLike 𝕜 (A := A)) :=
-  .of_dist_eq fun f g ↦ by simp [dist_eq_norm, norm_eq_iSup_norm, ← map_sub]
-
-end ContinuousMap
 
 variable (A) in
 /-- A C⋆-algebra is **FS (Finite Spectrum)** if the set of self-adjoint elements has a dense subset
@@ -90,18 +39,8 @@ instance [NonUnitalRing A] [Module ℝ A] [StarRing A] [IsScalarTower ℝ A A] [
 instance [Ring A] [Algebra ℝ A] [Star A] [Subsingleton A] :
     CStarAlgebra.FiniteSpectrum A where fs := by simp [quasispectrum_eq_spectrum_union_zero]
 
-section totallySeparatedSpace
-variable [TotallySeparatedSpace A]
-
-theorem LocallyConstant.separatesPoints_map_toContinuousMapAlgHom_top (R : Type*)
-    [CommSemiring R] [Nontrivial Y] [Semiring Y] [Algebra R Y] [IsTopologicalSemiring Y] :
-    (Subalgebra.map (toContinuousMapAlgHom R : _ →ₐ[R] C(A, Y)) ⊤).SeparatesPoints := by
-  intro x y hxy
-  obtain ⟨U, hU, hxU, hyU : y ∉ U⟩ := exists_isClopen_of_totally_separated hxy
-  exact ⟨charFn Y hU, by simp_all [charFn]⟩
-
 open ContinuousMap LocallyConstant in
-instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
+instance [TotallySeparatedSpace A] [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
   CStarAlgebra.finiteSpectrum_iff_spectrum.mpr fun x hx ↦ by
     obtain ⟨y, rfl⟩ := range_realToRCLike_eq_isSelfAdjoint 𝕜 (A := A) ▸ hx
     have : realToRCLike 𝕜 '' {x : C(A, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} ⊆
@@ -112,9 +51,7 @@ instance [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
       fun _ ⟨f, hf⟩ ↦ by simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
     apply closure_mono this
     simpa using Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
-      (separatesPoints_map_toContinuousMapAlgHom_top ℝ)) y
-
-end totallySeparatedSpace
+      (separatesPoints_range_toContinuousMapAlgHom ℝ)) y
 
 variable [NonUnitalRing A] [StarRing A] [Module ℝ A] [IsScalarTower ℝ A A] [SMulCommClass ℝ A A]
   [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
