@@ -6,9 +6,6 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import LeanOA.Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 
-open Set Metric Complex CFC CStarAlgebra Unitization
-open scoped ComplexStarModule
-
 /-! # Extreme points of the closed unit ball in C⋆-algebras
 
 This file contains results on the extreme points of the closed unit ball in (unital) C⋆-algebras.
@@ -43,6 +40,8 @@ In particular, we show that in a C⋆-algebra :
 [Sakai], [Pedersen], [Takesaki], [Kadison], [Murphy]
 -/
 
+open Set Metric CFC CStarAlgebra Unitization
+
 -- move to...?
 @[simp]
 lemma Set.extremePoints_Icc {a b : ℝ} (hab : a ≤ b) :
@@ -59,6 +58,7 @@ lemma Set.extremePoints_Icc {a b : ℝ} (hab : a ≤ b) :
     · simpa using ⟨hab, convex_Ioc ..⟩
     · simpa using ⟨hab, convex_Ico ..⟩
 
+open scoped ComplexStarModule in
 lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] :
     1 ∈ extremePoints ℝ (closedBall (0 : A) 1) := by
   nontriviality A
