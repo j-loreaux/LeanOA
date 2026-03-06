@@ -112,12 +112,9 @@ lemma IsMasa_of_comm_StarSubalg_le (B : StarSubalgebra R A)
       simp only [one_mul, mul_one]
     · sorry
 
-
-
-
 lemma StarSubalgebra.exists_le_isMasa (B : StarSubalgebra R A)
     (hB : ∀ x ∈ B, ∀ y ∈ B, x * y = y * x) : ∃ (C : StarSubalgebra R A), B ≤ C ∧ C.IsMasa := by
-  obtain ⟨C , hC⟩ := exists_isMasa_ge (B.toNonUnitalStarSubalgebra) hB
+  obtain ⟨C , hC⟩ := NonUnitalStarSubalgebra.exists_le_isMasa (B.toNonUnitalStarSubalgebra) hB
   use NonUnitalStarSubalgebra.toStarSubalgebra _ (NonUnitalStarSubalgebra.mem_carrier.mp
       (hC.1 (StarSubalgebra.one_mem_toNonUnitalStarSubalgebra _)))
   exact And.comm.mp (id (And.symm hC))
