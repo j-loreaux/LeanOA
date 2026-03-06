@@ -14,8 +14,17 @@ class NonUnitalStarSubalgebra.IsMasa (B : NonUnitalStarSubalgebra R A) : Prop wh
   maximal (C : NonUnitalStarSubalgebra R A) (hC : ∀ a ∈ C, ∀ b ∈ C, a * b = b * a)
       (hBC : B ≤ C) : C ≤ B
 
-theorem exists_isMasa_ge (B : NonUnitalStarSubalgebra R A) (hB : ∀ x ∈ B, ∀ y ∈ B, x * y = y * x) :
-    ∃ (C : NonUnitalStarSubalgebra R A), B ≤ C ∧ C.IsMasa := by
+omit [StarRing R] [IsScalarTower R A A] [SMulCommClass R A A] [StarModule R A] in
+/-- To check that a commutative `NonUnitalStarSubalgebra` is a masa, it suffices to show that
+it contains every commutative `NonUnitalStarSubalgebra`. -/
+lemma IsMasa_of_comm_NonUnitalStarSubalg_le (B : NonUnitalStarSubalgebra R A)
+    (hB : ∀ a ∈ B, ∀ b ∈ B, a * b = b * a)
+    (hC : ∀ C : NonUnitalStarSubalgebra R A, (∀ a ∈ C, ∀ b ∈ C, a * b = b * a) → C ≤ B) :
+    NonUnitalStarSubalgebra.IsMasa B := ⟨hB, fun _ hC1 _ ↦ hC _ hC1⟩
+
+theorem NonUnitalStarSubalgebra.exists_le_isMasa (B : NonUnitalStarSubalgebra R A)
+    (hB : ∀ x ∈ B, ∀ y ∈ B, x * y = y * x) :
+      ∃ (C : NonUnitalStarSubalgebra R A), B ≤ C ∧ C.IsMasa := by
   obtain ⟨C, hC⟩ := by
     apply zorn_le (α := {C : NonUnitalStarSubalgebra R A //
       (∀ x ∈ C, ∀ y ∈ C, x * y = y * x) ∧ B ≤ C})
@@ -67,4 +76,50 @@ instance [NonUnitalCStarAlgebra A] {B : NonUnitalStarSubalgebra ℂ A} [hB : B.I
     (h_closed := NonUnitalStarSubalgebra.IsMasa.isClosed B hB) with
     mul_comm := by simpa using hB.comm }
 
+
+variable {R A : Type*} [CommSemiring R] [NonUnitalSemiring A] [Module R A]
+variable [StarRing R] [StarRing A] [IsScalarTower R A A] [SMulCommClass R A A] [StarModule R A]
+
 end NonUnitalCStarAlgebra
+
+section Unital
+
+variable {R A : Type*} [CommSemiring R] [Semiring A]
+variable [StarRing R] [StarRing A] [Algebra R A] [StarModule R A]
+
+/-- Unital version as abbrev. -/
+abbrev StarSubalgebra.IsMasa (B : StarSubalgebra R A) : Prop :=
+  NonUnitalStarSubalgebra.IsMasa B.toNonUnitalStarSubalgebra
+
+--omit [StarRing R] [StarModule R A] in
+lemma IsMasa_of_comm_StarSubalg_le (B : StarSubalgebra R A)
+    (hB : ∀ a ∈ B, ∀ b ∈ B, a * b = b * a)
+    (hC : ∀ C : StarSubalgebra R A, (∀ a ∈ C, ∀ b ∈ C, a * b = b * a) → C ≤ B) :
+    StarSubalgebra.IsMasa B := by
+  refine IsMasa_of_comm_NonUnitalStarSubalg_le B.toNonUnitalStarSubalgebra hB ?_
+  intro C hCcomm
+  set C' := NonUnitalStarSubalgebra.toStarSubalgebra _ (StarSubalgebra.one_mem_toNonUnitalStarSubalgebra
+        (StarAlgebra.adjoin (R := R) {x : A | x ∈ C ∨ x = 1}))
+  have : C ≤ C'.toNonUnitalStarSubalgebra := by
+    grw [← NonUnitalStarSubalgebra.toStarSubalgebra_toNonUnitalStarSubalgebra C]
+    congr!
+  have : C'.toNonUnitalStarSubalgebra ≤ B.toNonUnitalStarSubalgebra := by
+    apply hC
+    intro a
+    by_cases hh : a = 1
+    · rw [hh]
+      intro hh1 b hb
+      simp only [one_mul, mul_one]
+    · sorry
+
+
+
+
+lemma StarSubalgebra.exists_le_isMasa (B : StarSubalgebra R A)
+    (hB : ∀ x ∈ B, ∀ y ∈ B, x * y = y * x) : ∃ (C : StarSubalgebra R A), B ≤ C ∧ C.IsMasa := by
+  obtain ⟨C , hC⟩ := exists_isMasa_ge (B.toNonUnitalStarSubalgebra) hB
+  use NonUnitalStarSubalgebra.toStarSubalgebra _ (NonUnitalStarSubalgebra.mem_carrier.mp
+      (hC.1 (StarSubalgebra.one_mem_toNonUnitalStarSubalgebra _)))
+  exact And.comm.mp (id (And.symm hC))
+
+end Unital
