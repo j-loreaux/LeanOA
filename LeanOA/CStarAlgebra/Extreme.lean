@@ -191,9 +191,9 @@ private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedU
   have hP := isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx
   have hQ := isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall hx
   set p := star x * x with hp
-  /- Notice that `x=qxp`, and `star x = p star x q` formally yield
-  `star x * (1-q) * b * (1-p) = 0` with the above abusive notation. By substituting for `a` in
-  `‖(star a) * x * (star x) * a‖` and expanding, we obtain this, and its adjoint, rigorously. -/
+  /- Notice that `x = q * x * p`, and `star x = p * star x * q` formally yield
+  `star x * (1 - q) * b * (1 - p) = 0` with the above abusive notation. By substituting for `a` in
+  `‖star a * x * star x * a‖` and expanding, we obtain this, and its adjoint, rigorously. -/
   have hxa : star x * a = 0 := by
     rw [← norm_eq_zero, ← mul_self_eq_zero, ← CStarRing.norm_star_mul_self]
     simp [hb, mul_add, mul_sub, add_mul, sub_mul]
@@ -291,9 +291,9 @@ theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
   simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq, and_imp]
   refine ⟨fun he ↦ ⟨⟨he.nonneg, he.norm_le⟩,
     fun a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩ ↦ ?_⟩, fun ⟨⟨h1, h2⟩, h3⟩ ↦ ?_⟩
-  /- Note that if a convex combination `t • a + s • b = e`, then in the unitization
-  `t • (e * a * e)) + s • (e * (1 - b) * e) = 0`. -/
-  · have := calc
+  · /- Note that if a convex combination `t • a + s • b = e`, then in the unitization
+    `t • (e * a * e)) + s • (e * (1 - b) * e) = 0`. -/
+    have := calc
       t • (e * (1 - a : A⁺¹) * e) + s • (e * (1 - b) * e) = e - e * (t • a + s • b) * e := by
         simp [smul_sub, sub_add_eq_add_sub, add_sub, ← add_smul, hts, sub_mul, mul_sub,
           he.inr.isIdempotentElem.eq, mul_add, add_mul, sub_sub, mul_assoc]
