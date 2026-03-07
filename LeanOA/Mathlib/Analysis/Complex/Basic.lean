@@ -3,6 +3,7 @@ import Mathlib.Analysis.Complex.Basic
 namespace Complex
 
 open Metric in
+set_option backward.isDefEq.respectTransparency false in
 /-- A subset of circle centered at the origin in `ℂ` of radius `r` is a subset of
 the `slitPlane` if it does not contain `-r`. -/
 lemma subset_slitPlane_of_subset_sphere {r : ℝ} {s : Set ℂ} (hs : s ⊆ sphere 0 r)
@@ -34,6 +35,7 @@ lemma nonneg_iff_realPart_imaginaryPart {a : A} :
   · rw [← realPart_add_I_smul_imaginaryPart a, h.2]
     simpa using h.1
 
+set_option backward.isDefEq.respectTransparency false in
 lemma le_iff_realPart_imaginaryPart {A : Type*}
     [NonUnitalRing A] [StarRing A] [PartialOrder A] [StarOrderedRing A]
     [Module ℂ A] [StarModule ℂ A] {a b : A} :

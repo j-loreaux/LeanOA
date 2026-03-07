@@ -8,6 +8,7 @@ namespace WeakDual
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [CompleteSpace E]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A linear map from the weak dual of a Banach space to itself is continuous if
 it is continuous on the closed unit ball. -/
 lemma continuous_of_continuousOn (f : WeakDual 𝕜 E →ₗ[𝕜] WeakDual 𝕜 E)
@@ -20,6 +21,7 @@ lemma continuous_of_continuousOn (f : WeakDual 𝕜 E →ₗ[𝕜] WeakDual 𝕜
   exact eval_continuous x |>.comp_continuousOn hf |>.preimage_isClosed_of_isClosed
     (isClosed_closedBall 0 1) isClosed_singleton
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A *real* linear man from the weak dual of a Banach space to itself is continuous
 if it is continuous on the closed unit ball. -/
 lemma continuous_of_continuousOn_of_real (f : WeakDual 𝕜 E →ₗ[ℝ] WeakDual 𝕜 E)
@@ -59,6 +61,7 @@ lemma continuous_of_continuousOn (f : σ(M, P)_𝕜 →ₗ[𝕜] σ(M, P)_𝕜)
   simpa using hx
 
 variable [Module ℝ M] [IsScalarTower ℝ 𝕜 M]
+set_option backward.isDefEq.respectTransparency false in
 lemma continuous_of_continuousOn_of_real (f : σ(M, P)_𝕜 →ₗ[ℝ] σ(M, P)_𝕜)
     (hf : ContinuousOn f (ofUltraweak ⁻¹' Metric.closedBall 0 1)) :
     Continuous f := by
@@ -79,6 +82,7 @@ variable {M P : Type*} [CStarAlgebra M]
   [NormedAddCommGroup P] [NormedSpace ℂ P]
   [Predual ℂ M P] [CompleteSpace P]
 
+set_option backward.isDefEq.respectTransparency false in
 open Filter Complex in
 open scoped Pointwise ComplexStarModule in
 instance : ContinuousStar σ(M, P) where
@@ -128,7 +132,8 @@ instance : ContinuousStar σ(M, P) where
         .of_forall fun m ↦ by
           nth_rewrite 1 [← realPart_add_I_smul_imaginaryPart m]
           simp
-    simpa [hz.imaginaryPart, hy.coe_realPart, eq_comm (a := y), sub_eq_zero]
+    simpa only [eq_comm (a := y), map_sub, AddSubgroupClass.coe_sub, hy.coe_realPart,
+      realPart_I_smul, hz.imaginaryPart, neg_zero, ZeroMemClass.coe_zero, sub_eq_zero]
       using congr((ℜ $hxyz : σ(M, P))).symm
 
 end Ultraweak

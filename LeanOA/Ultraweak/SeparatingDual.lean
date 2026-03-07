@@ -22,6 +22,7 @@ instance : StarHomClass (σ(M, P) →ₚ[ℂ] ℂ) σ(M, P) ℂ :=
   inferInstanceAs (StarHomClass (M →ₚ[ℂ] ℂ) M ℂ)
 
 open Complex
+set_option backward.isDefEq.respectTransparency false in
 /-- If `a : σ(M, P)` is a selfadjoint element which is not nonnegative, then there is some
 positive continuous linear functional which takes a negative value at `a`.
 
@@ -52,7 +53,10 @@ lemma exists_positiveCLM_apply_lt_zero (a : σ(M, P)) (ha₁ : IsSelfAdjoint a) 
   have hφ (x : σ(M, P)) : φ x = f (ℜ x) + I • f (ℑ x) := by
     conv_lhs =>
       rw [← realPart_add_I_smul_imaginaryPart x, map_add, map_smul]
-      simp [φ, StrongDual.extendRCLike_apply, hfg, ← smul_eq_mul]
+      -- had to squeeze this because of an instance timeout
+      simp only [StrongDual.extendRCLike_apply, hfg, selfAdjoint.realPart_coe, coe_algebraMap,
+        RCLike.I_to_complex, realPart_I_smul, selfAdjoint.imaginaryPart_coe, neg_zero,
+        ZeroMemClass.coe_zero, map_zero, ofReal_zero, ← smul_eq_mul, smul_zero, sub_zero, φ]
   have hφ_sa {x : σ(M, P)} (hx : IsSelfAdjoint x) : φ x = f x := by
     simp [hφ, hx.imaginaryPart, hx.coe_realPart]
   /- Since `f` is nonnegative and coincides with `φ` on selfadjoint elements,
@@ -66,6 +70,7 @@ instance : SelfAdjointDecompose σ(M, P) where
     replace key := by simpa using congr(toUltraweak ℂ P $key)
     exact ⟨_, _, by simpa, by simpa, key⟩
 
+set_option backward.isDefEq.respectTransparency false in
 lemma eq_zero_of_forall_positiveCLM (a : σ(M, P))
     (ha : ∀ φ : σ(M, P) →P[ℂ] ℂ, φ a = 0) :
     a = 0 := by
@@ -80,6 +85,7 @@ lemma eq_zero_of_forall_positiveCLM (a : σ(M, P))
   refine le_antisymm (h₂ ?_) (h₁ ?_)
   all_goals simp [h]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma ext_positiveCLM {a b : σ(M, P)} (h : ∀ φ : σ(M, P) →P[ℂ] ℂ, φ a = φ b) :
     a = b :=
   sub_eq_zero.mp <| eq_zero_of_forall_positiveCLM _ fun φ ↦ by simp [h]

@@ -1,4 +1,6 @@
 import LeanOA.Mathlib.Algebra.Order.Star.Basic
+import LeanOA.Mathlib.Analysis.Complex.Basic
+import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart.Isometric
 
@@ -89,3 +91,28 @@ theorem IsSelfAdjoint.norm_le_max_of_le_of_le {A : Type*} [NonUnitalCStarAlgebra
     _ ≤ max ‖a⁻‖ ‖c⁺‖ := max_le_max (CStarAlgebra.norm_posPart_anti hab ha)
       (CStarAlgebra.norm_posPart_mono hbc hb)
     _ ≤ max ‖a‖ ‖c‖ := max_le_max (by simp) (by simp)
+
+open scoped ComplexStarModule in
+/-- A set in a non-unital C⋆-algebra which is bounded above and below is
+bounded in norm. -/
+lemma isBounded_of_bddAbove_of_bddBelow {A : Type*}
+    [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+    {s : Set A} (hbd : BddAbove s) (hbd' : BddBelow s) :
+    Bornology.IsBounded s := by
+  obtain (rfl | hs) := s.eq_empty_or_nonempty
+  · simp
+  obtain ⟨x₀, hx₀⟩ := hs
+  rw [Metric.isBounded_iff_subset_closedBall x₀]
+  obtain ⟨a, ha⟩ := hbd'
+  obtain ⟨b, hb⟩ := hbd
+  use max ‖ℜ (a - x₀)‖ ‖ℜ (b - x₀)‖
+  intro x hx
+  have : IsSelfAdjoint (x - x₀) := by
+    simp only [← imaginaryPart_eq_zero_iff, map_sub, sub_eq_zero]
+    rw [imaginaryPart_eq_of_le (hb hx),
+      imaginaryPart_eq_of_le (hb hx₀)]
+  simp only [Metric.mem_closedBall, dist_eq_norm]
+  rw [← this.coe_realPart]
+  simp only [map_sub, AddSubgroupClass.coe_norm, AddSubgroupClass.coe_sub]
+  apply IsSelfAdjoint.norm_le_max_of_le_of_le (by cfc_tac)
+  all_goals simpa using realPart_mono (by aesop)
