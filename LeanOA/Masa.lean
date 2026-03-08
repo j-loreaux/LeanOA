@@ -1,6 +1,7 @@
 import Mathlib.Algebra.Star.Subalgebra
 import Mathlib.Topology.Algebra.Ring.Basic
 import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
+import Mathlib.Algebra.Algebra.Subalgebra.Directed
 import Mathlib.Analysis.CStarAlgebra.Classes
 
 section IsMulCommutative
@@ -209,19 +210,6 @@ theorem NonUnitalStarSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemirin
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
     NonUnitalSubsemiring.coe_iSup_of_directed dir]
 
-theorem Subalgebra.coe_iSup_of_directed {R A : Type*} [CommSemiring R]
-    [Semiring A] [Algebra R A] {ι : Type*} [Nonempty ι] {S : ι → Subalgebra R A}
-    (dir : Directed (· ≤ ·) S) : ↑(iSup S) = ⋃ i, (S i : Set A) :=
-  let K : Subalgebra R A :=
-    { __ := NonUnitalSubalgebra.copy _ _ (NonUnitalSubalgebra.coe_iSup_of_directed
-        (S := fun i ↦ (S i).toNonUnitalSubalgebra) dir).symm
-      algebraMap_mem' x :=
-        let ⟨i⟩ := ‹Nonempty ι›
-        Set.mem_iUnion.2 ⟨i, algebraMap_mem (S i) x⟩ }
-  have : iSup S = K := le_antisymm (iSup_le fun i ↦ le_iSup (fun i ↦ (S i : Set A)) i)
-    (Set.iUnion_subset fun _ ↦ le_iSup S _)
-  this.symm ▸ rfl
-
 theorem StarSubalgebra.coe_iSup_of_directed {R A : Type*} [CommSemiring R]
     [Semiring A] [StarRing A] [Algebra R A] {ι : Type*} [StarRing R]
     [StarModule R A] [Nonempty ι] {S : ι → StarSubalgebra R A}
@@ -231,7 +219,7 @@ theorem StarSubalgebra.coe_iSup_of_directed {R A : Type*} [CommSemiring R]
         (S := fun i ↦ (S i).toNonUnitalStarSubalgebra) dir).symm
       algebraMap_mem' x :=
         let ⟨i⟩ := ‹Nonempty ι›
-        Set.mem_iUnion.2 ⟨i, algebraMap_mem (S i) x⟩ }
+        Set.mem_iUnion.mpr ⟨i, algebraMap_mem (S i) x⟩ }
   have : iSup S = K := le_antisymm (iSup_le fun i ↦ le_iSup (fun i ↦ (S i : Set A)) i)
     (Set.iUnion_subset fun _ ↦ le_iSup S _)
   this.symm ▸ rfl
