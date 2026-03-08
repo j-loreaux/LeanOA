@@ -128,7 +128,7 @@ instance Subalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
 
 instance StarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
     [CommSemiring R] [StarRing R] [TopologicalSpace A] [Semiring A] [StarRing A] [Algebra R A]
-    [StarModule R A] [IsTopologicalSemiring A] [ContinuousStar A] [ContinuousConstSMul R A]
+    [StarModule R A] [IsTopologicalSemiring A] [ContinuousStar A]
     [T2Space A] (s : StarSubalgebra R A) [hs : IsMulCommutative s] :
     IsMulCommutative s.topologicalClosure :=
   let := s.commSemiringTopologicalClosure hs.mul_comm
