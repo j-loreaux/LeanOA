@@ -8,15 +8,19 @@ section IsMulCommutative
 
 variable {S M : Type*} [SetLike S M] [Mul M] [MulMemClass S M]
 
+@[to_additive]
 lemma isMulCommutative_iff : IsMulCommutative M ↔ ∀ a b : M, a * b = b * a := by
   grind [IsMulCommutative, Std.Commutative]
 
+@[to_additive]
 alias ⟨IsMulCommutative.mul_comm, IsMulCommutative.of_forall_comm⟩ := isMulCommutative_iff
 
+@[to_additive]
 lemma isMulCommutative_iff_of_setLike {s : S} :
     IsMulCommutative s ↔ ∀ a ∈ s, ∀ b ∈ s, a * b = b * a := by
   simp [isMulCommutative_iff]
 
+@[to_additive]
 alias ⟨IsMulCommutative.setLike_mul_comm, IsMulCommutative.of_setLike_mul_comm⟩ :=
   isMulCommutative_iff_of_setLike
 
@@ -61,6 +65,7 @@ instance StarSubalgebra.instIsMulCommutativeToNonUnitalStarSubalgebra {R A : Typ
     IsMulCommutative S.toNonUnitalStarSubalgebra :=
   hS
 
+@[to_additive]
 instance Subsemigroup.instIsMulCommutativeTopologicalClosure {A : Type*}
     [TopologicalSpace A] [Semigroup A] [ContinuousMul A] [T2Space A]
     (s : Subsemigroup A) [hs : IsMulCommutative s] :
@@ -68,6 +73,7 @@ instance Subsemigroup.instIsMulCommutativeTopologicalClosure {A : Type*}
   let := s.commSemigroupTopologicalClosure hs.mul_comm
   ⟨⟨mul_comm⟩⟩
 
+@[to_additive]
 instance Submonoid.instIsMulCommutativeTopologicalClosure {A : Type*}
     [TopologicalSpace A] [Monoid A] [ContinuousMul A] [T2Space A]
     (s : Submonoid A) [hs : IsMulCommutative s] :
@@ -135,6 +141,7 @@ instance StarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
   let := s.commSemiringTopologicalClosure hs.mul_comm
   ⟨⟨mul_comm⟩⟩
 
+@[to_additive]
 theorem Subsemigroup.isMulCommutative_iSup {A : Type*} [Semigroup A] {ι : Type*}
     {S : ι → Subsemigroup A} [hS : ∀ i, IsMulCommutative (S i)]
     (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subsemigroup A) := by
@@ -145,6 +152,7 @@ theorem Subsemigroup.isMulCommutative_iSup {A : Type*} [Semigroup A] {ι : Type*
   obtain ⟨k, hik, hjk⟩ := dir i j
   exact (hS k).setLike_mul_comm a (hik ha) b (hjk hb)
 
+@[to_additive]
 theorem Subgroup.isMulCommutative_iSup {A : Type*} [Group A] {ι : Type*} [Nonempty ι]
     {S : ι → Subgroup A} [hS : ∀ i, IsMulCommutative (S i)]
     (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subgroup A) := by
@@ -152,6 +160,7 @@ theorem Subgroup.isMulCommutative_iSup {A : Type*} [Group A] {ι : Type*} [Nonem
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
     Subsemigroup.coe_iSup_of_directed dir]
 
+@[to_additive]
 theorem Submonoid.isMulCommutative_iSup {A : Type*} [Monoid A] {ι : Type*} [Nonempty ι]
     {S : ι → Submonoid A} [hS : ∀ i, IsMulCommutative (S i)]
     (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Submonoid A) := by
@@ -242,6 +251,78 @@ theorem StarSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
   have := NonUnitalSubalgebra.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir'
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
     NonUnitalSubalgebra.coe_iSup_of_directed dir']
+
+@[to_additive]
+instance Subsemigroup.instIsMulCommutative_iSup {A : Type*}
+    [Semigroup A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    {S : ι →o Subsemigroup A} [hS : ∀ i, IsMulCommutative (S i)] :
+    IsMulCommutative (⨆ i, S i : Subsemigroup A) :=
+  Subsemigroup.isMulCommutative_iSup S.monotone.directed_le
+
+@[to_additive]
+instance Submonoid.instIsMulCommutative_iSup {A : Type*}
+    [Monoid A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    {S : ι →o Submonoid A} [hS : ∀ i, IsMulCommutative (S i)] :
+    IsMulCommutative (⨆ i, S i : Submonoid A) :=
+  Submonoid.isMulCommutative_iSup S.monotone.directed_le
+
+@[to_additive]
+instance Subgroup.instIsMulCommutative_iSup {A : Type*}
+    [Group A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    {S : ι →o Subgroup A} [hS : ∀ i, IsMulCommutative (S i)] :
+    IsMulCommutative (⨆ i, S i : Subgroup A) :=
+  Subgroup.isMulCommutative_iSup S.monotone.directed_le
+
+instance NonUnitalSubsemiring.instIsMulCommutative_iSup {A : Type*}
+    [NonUnitalSemiring A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    {S : ι →o NonUnitalSubsemiring A} [hS : ∀ i, IsMulCommutative (S i)] :
+    IsMulCommutative (⨆ i, S i : NonUnitalSubsemiring A) :=
+  NonUnitalSubsemiring.isMulCommutative_iSup S.monotone.directed_le
+
+instance NonUnitalSubring.instIsMulCommutative_iSup {A : Type*}
+    [NonUnitalRing A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    {S : ι →o NonUnitalSubring A} [hS : ∀ i, IsMulCommutative (S i)] :
+    IsMulCommutative (⨆ i, S i : NonUnitalSubring A) :=
+  NonUnitalSubring.isMulCommutative_iSup S.monotone.directed_le
+
+instance Subsemiring.instIsMulCommutative_iSup {A : Type*}
+    [Semiring A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    {S : ι →o Subsemiring A} [hS : ∀ i, IsMulCommutative (S i)] :
+    IsMulCommutative (⨆ i, S i : Subsemiring A) :=
+  Subsemiring.isMulCommutative_iSup S.monotone.directed_le
+
+instance Subring.instIsMulCommutative_iSup {A : Type*}
+    [Ring A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    {S : ι →o Subring A} [hS : ∀ i, IsMulCommutative (S i)] :
+    IsMulCommutative (⨆ i, S i : Subring A) :=
+  Subring.isMulCommutative_iSup S.monotone.directed_le
+
+instance NonUnitalSubalgebra.instIsMulCommutative_iSup {R A : Type*} [CommSemiring R]
+    [NonUnitalSemiring A] [Module R A] {ι : Type*} [IsScalarTower R A A]
+    [SMulCommClass R A A] [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    {S : ι →o NonUnitalSubalgebra R A} [hS : ∀ i, IsMulCommutative (S i)] :
+    IsMulCommutative (⨆ i, S i : NonUnitalSubalgebra R A) :=
+  NonUnitalSubalgebra.isMulCommutative_iSup S.monotone.directed_le
+
+theorem NonUnitalStarSubalgebra.instIsMulCommutative_iSup {R A : Type*} [CommSemiring R]
+    [NonUnitalSemiring A] [StarRing A] [Module R A] {ι : Type*} [StarRing R] [IsScalarTower R A A]
+    [SMulCommClass R A A] [StarModule R A] [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    {S : ι →o NonUnitalStarSubalgebra R A} [hS : ∀ i, IsMulCommutative (S i)] :
+    IsMulCommutative (⨆ i, S i : NonUnitalStarSubalgebra R A) :=
+  NonUnitalStarSubalgebra.isMulCommutative_iSup S.monotone.directed_le
+
+instance Subalgebra.instIsMulCommutative_iSup {R A : Type*} [CommSemiring R]
+    [Semiring A] [Algebra R A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    {S : ι →o Subalgebra R A} [hS : ∀ i, IsMulCommutative (S i)] :
+    IsMulCommutative (⨆ i, S i : Subalgebra R A) :=
+  Subalgebra.isMulCommutative_iSup S.monotone.directed_le
+
+theorem StarSubalgebra.instIsMulCommutative_iSup {R A : Type*} [CommSemiring R]
+    [Semiring A] [StarRing A] [Algebra R A] {ι : Type*} [StarRing R]
+    [StarModule R A] [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    {S : ι →o StarSubalgebra R A} [hS : ∀ i, IsMulCommutative (S i)] :
+    IsMulCommutative (⨆ i, S i : StarSubalgebra R A) :=
+  StarSubalgebra.isMulCommutative_iSup S.monotone.directed_le
 
 namespace IsMulCommutative
 
