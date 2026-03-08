@@ -156,17 +156,15 @@ theorem Subsemigroup.isMulCommutative_iSup {A : Type*} [Semigroup A] {ι : Type*
 theorem Subgroup.isMulCommutative_iSup {A : Type*} [Group A] {ι : Type*} [Nonempty ι]
     {S : ι → Subgroup A} [hS : ∀ i, IsMulCommutative (S i)]
     (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subgroup A) := by
-  have := Subsemigroup.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    Subsemigroup.coe_iSup_of_directed dir]
+    Subsemigroup.coe_iSup_of_directed dir] using Subsemigroup.isMulCommutative_iSup dir
 
 @[to_additive]
 theorem Submonoid.isMulCommutative_iSup {A : Type*} [Monoid A] {ι : Type*} [Nonempty ι]
     {S : ι → Submonoid A} [hS : ∀ i, IsMulCommutative (S i)]
     (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Submonoid A) := by
-  have := Subsemigroup.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    Subsemigroup.coe_iSup_of_directed dir]
+    Subsemigroup.coe_iSup_of_directed dir] using Subsemigroup.isMulCommutative_iSup dir
 
 theorem NonUnitalSubsemiring.isMulCommutative_iSup {A : Type*} [NonUnitalSemiring A]
     {ι : Type*} [Nonempty ι] {S : ι → NonUnitalSubsemiring A} [hS : ∀ i, IsMulCommutative (S i)]
@@ -182,31 +180,29 @@ theorem NonUnitalSubsemiring.isMulCommutative_iSup {A : Type*} [NonUnitalSemirin
 theorem Subsemiring.isMulCommutative_iSup {A : Type*} [Semiring A] {ι : Type*} [Nonempty ι]
     {S : ι → Subsemiring A} [hS : ∀ i, IsMulCommutative (S i)]
     (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subsemiring A) := by
-  have := Subsemigroup.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    Subsemigroup.coe_iSup_of_directed dir]
+    Subsemigroup.coe_iSup_of_directed dir] using Subsemigroup.isMulCommutative_iSup dir
 
 theorem NonUnitalSubring.isMulCommutative_iSup {A : Type*}
     [NonUnitalRing A] {ι : Type*} [Nonempty ι] {S : ι → NonUnitalSubring A}
     [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
     IsMulCommutative (⨆ i, S i : NonUnitalSubring A) := by
-  have := NonUnitalSubsemiring.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
+  have := NonUnitalSubsemiring.isMulCommutative_iSup dir
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
     NonUnitalSubsemiring.coe_iSup_of_directed dir]
 
 theorem Subring.isMulCommutative_iSup {A : Type*} [Ring A] {ι : Type*} [Nonempty ι]
     {S : ι → Subring A} [hS : ∀ i, IsMulCommutative (S i)]
     (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subring A) := by
-  have := Subsemigroup.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    Subsemigroup.coe_iSup_of_directed dir]
+    Subsemigroup.coe_iSup_of_directed dir] using Subsemigroup.isMulCommutative_iSup dir
 
 theorem NonUnitalSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
     [NonUnitalSemiring A] [Module R A] {ι : Type*} [IsScalarTower R A A]
     [SMulCommClass R A A] [Nonempty ι] {S : ι → NonUnitalSubalgebra R A}
     [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
     IsMulCommutative (⨆ i, S i : NonUnitalSubalgebra R A) := by
-  have := NonUnitalSubsemiring.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
+  have := NonUnitalSubsemiring.isMulCommutative_iSup dir
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
     NonUnitalSubsemiring.coe_iSup_of_directed dir]
 
@@ -215,7 +211,7 @@ theorem NonUnitalStarSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemirin
     [SMulCommClass R A A] [StarModule R A] [Nonempty ι] {S : ι → NonUnitalStarSubalgebra R A}
     [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
     IsMulCommutative (⨆ i, S i : NonUnitalStarSubalgebra R A) := by
-  have := NonUnitalSubsemiring.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
+  have := NonUnitalSubsemiring.isMulCommutative_iSup dir
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
     NonUnitalSubsemiring.coe_iSup_of_directed dir]
 
@@ -238,7 +234,7 @@ theorem Subalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
     [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
     IsMulCommutative (⨆ i, S i : Subalgebra R A) := by
   have dir' : Directed (fun x1 x2 ↦ x1 ≤ x2) (fun i ↦ (S i).toNonUnitalSubalgebra) := dir
-  have := NonUnitalSubalgebra.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir'
+  have := NonUnitalSubalgebra.isMulCommutative_iSup dir'
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
     NonUnitalSubalgebra.coe_iSup_of_directed dir']
 
@@ -248,7 +244,7 @@ theorem StarSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
     [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
     IsMulCommutative (⨆ i, S i : StarSubalgebra R A) := by
   have dir' : Directed (fun x1 x2 ↦ x1 ≤ x2) (fun i ↦ (S i).toNonUnitalSubalgebra) := dir
-  have := NonUnitalSubalgebra.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir'
+  have := NonUnitalSubalgebra.isMulCommutative_iSup dir'
   simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
     NonUnitalSubalgebra.coe_iSup_of_directed dir']
 
