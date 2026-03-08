@@ -157,33 +157,46 @@ instance (priority := 100) [Mul R] [Subsingleton R] : IsMulCommutative R where
 
 -- I think these instances should be scoped.
 
+/-- A multiplicative type with commutative multiplication is a commutative multiplicative magma. -/
 scoped instance (priority := 50) [Mul R] [IsMulCommutative R] : CommMagma R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
-scoped instance (priority := 50) [Semiring R] [IsMulCommutative R] : CommSemiring R where
-
-scoped instance (priority := 50) [Ring R] [IsMulCommutative R] : CommRing R where
-
+/-- A nonunital semiring with commutative multiplication is a commutative non-unital semiring. -/
 scoped instance (priority := 50) [NonUnitalSemiring R] [IsMulCommutative R] :
     NonUnitalCommSemiring R where
 
+/-- A semiring with commutative multiplication is a commutative semiring. -/
+scoped instance (priority := 50) [Semiring R] [IsMulCommutative R] : CommSemiring R where
+
+/-- A nonunital ring with commutative multiplication is a commutative nonunital ring. -/
 scoped instance (priority := 50) [NonUnitalRing R] [IsMulCommutative R] : NonUnitalCommRing R where
 
-scoped instance (priority := 50) [SeminormedRing R] [IsMulCommutative R] :
-    SeminormedCommRing R where
+/-- A ring with commutative multiplication is a commutative ring. -/
+scoped instance (priority := 50) [Ring R] [IsMulCommutative R] : CommRing R where
 
+/-- A nonunital seminiormed ring with commutative multiplication is a commutative nonunital
+seminormed ring. -/
 scoped instance (priority := 50) [NonUnitalSeminormedRing R] [IsMulCommutative R] :
     NonUnitalSeminormedCommRing R where
 
-scoped instance (priority := 50) [NormedRing R] [IsMulCommutative R] : NormedCommRing R where
+/-- A seminormed ring with commutative multiplication is a commutative seminormed ring. -/
+scoped instance (priority := 50) [SeminormedRing R] [IsMulCommutative R] :
+    SeminormedCommRing R where
 
+/-- A nonunital normed ring with commutative multiplication is a commutative nonunital normed
+ring. -/
 scoped instance (priority := 50) [NonUnitalNormedRing R] [IsMulCommutative R] :
     NonUnitalNormedCommRing R where
 
-scoped instance (priority := 50) [CStarAlgebra R] [IsMulCommutative R] : CommCStarAlgebra R where
+/-- A normed ring with commutative multiplication is a commutative normed ring. -/
+scoped instance (priority := 50) [NormedRing R] [IsMulCommutative R] : NormedCommRing R where
 
+/-- A nonunital C⋆-algebra with commutative multiplication is a commutative nonunital C⋆-algebra. -/
 scoped instance (priority := 50) [NonUnitalCStarAlgebra R] [IsMulCommutative R] :
     NonUnitalCommCStarAlgebra R where
+
+/-- A C⋆-algebra with commutative multiplication is a commutative C⋆-algebra. -/
+scoped instance (priority := 50) [CStarAlgebra R] [IsMulCommutative R] : CommCStarAlgebra R where
 
 end IsMulCommutative
 
