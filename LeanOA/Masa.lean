@@ -1,8 +1,8 @@
-import Mathlib.Algebra.Star.Subalgebra
-import Mathlib.Topology.Algebra.Ring.Basic
-import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
 import Mathlib.Algebra.Algebra.Subalgebra.Directed
+import Mathlib.Algebra.Star.Subalgebra
 import Mathlib.Analysis.CStarAlgebra.Classes
+import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
+import Mathlib.Topology.Algebra.Ring.Basic
 
 section IsMulCommutative
 
@@ -337,6 +337,7 @@ theorem NonUnitalStarSubalgebra.exists_le_isMasa (B : NonUnitalStarSubalgebra R 
   exact ⟨fun S hS hCS ↦ @hC ⟨S, hS, C.prop.2.trans hCS⟩ hCS⟩
 
 end NonUnitalStarSubalgebra
+
 section TopologicalAlgebra
 
 variable {R A : Type*} [CommSemiring R] [NonUnitalSemiring A] [Module R A]
@@ -393,9 +394,9 @@ protected lemma StarSubalgebra.IsMasa.maximal {B : StarSubalgebra R A} [hB : B.I
 
 /-- Every commutative star subalgebra is contained in a masa. -/
 lemma StarSubalgebra.exists_le_isMasa (B : StarSubalgebra R A) [hB : IsMulCommutative B] :
-    ∃ (C : StarSubalgebra R A), B ≤ C ∧ C.IsMasa := by
-  obtain ⟨C, hC⟩ := B.toNonUnitalStarSubalgebra.exists_le_isMasa
-  exact ⟨C.toStarSubalgebra hC.2.one_mem, hC⟩
+    ∃ (C : StarSubalgebra R A), B ≤ C ∧ C.IsMasa :=
+  have ⟨C, hC⟩ := B.toNonUnitalStarSubalgebra.exists_le_isMasa
+  ⟨C.toStarSubalgebra hC.2.one_mem, hC⟩
 
 /-- A masa in a topological star algebra is closed. -/
 instance StarSubalgebra.IsMasa.isClosed [TopologicalSpace A] [IsTopologicalSemiring A]
