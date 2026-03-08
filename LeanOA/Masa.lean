@@ -157,41 +157,33 @@ instance (priority := 100) [Mul R] [Subsingleton R] : IsMulCommutative R where
 
 -- I think these instances should be scoped.
 
-scoped instance (priority := 50) [Semiring R]
-    [IsMulCommutative R] : CommSemiring R where
+scoped instance (priority := 50) [Mul R] [IsMulCommutative R] : CommMagma R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
+scoped instance (priority := 50) [Semiring R] [IsMulCommutative R] : CommSemiring R where
+
 scoped instance (priority := 50) [Ring R] [IsMulCommutative R] : CommRing R where
-  mul_comm := IsMulCommutative.mul_comm inferInstance
 
 scoped instance (priority := 50) [NonUnitalSemiring R] [IsMulCommutative R] :
     NonUnitalCommSemiring R where
-  mul_comm := IsMulCommutative.mul_comm inferInstance
 
 scoped instance (priority := 50) [NonUnitalRing R] [IsMulCommutative R] : NonUnitalCommRing R where
-  mul_comm := IsMulCommutative.mul_comm inferInstance
 
 scoped instance (priority := 50) [SeminormedRing R] [IsMulCommutative R] :
     SeminormedCommRing R where
-  mul_comm := IsMulCommutative.mul_comm inferInstance
 
 scoped instance (priority := 50) [NonUnitalSeminormedRing R] [IsMulCommutative R] :
     NonUnitalSeminormedCommRing R where
-  mul_comm := IsMulCommutative.mul_comm inferInstance
 
 scoped instance (priority := 50) [NormedRing R] [IsMulCommutative R] : NormedCommRing R where
-  mul_comm := IsMulCommutative.mul_comm inferInstance
 
 scoped instance (priority := 50) [NonUnitalNormedRing R] [IsMulCommutative R] :
     NonUnitalNormedCommRing R where
-  mul_comm := IsMulCommutative.mul_comm inferInstance
 
 scoped instance (priority := 50) [CStarAlgebra R] [IsMulCommutative R] : CommCStarAlgebra R where
-  mul_comm := IsMulCommutative.mul_comm inferInstance
 
 scoped instance (priority := 50) [NonUnitalCStarAlgebra R] [IsMulCommutative R] :
     NonUnitalCommCStarAlgebra R where
-  mul_comm := IsMulCommutative.mul_comm inferInstance
 
 end IsMulCommutative
 
@@ -298,7 +290,7 @@ lemma StarSubalgebra.exists_le_isMasa (B : StarSubalgebra R A) [hB : IsMulCommut
 
 /-- A masa in a topological star algebra is closed. -/
 instance StarSubalgebra.IsMasa.isClosed [TopologicalSpace A] [IsTopologicalSemiring A]
-    [ContinuousConstSMul R A] [ContinuousStar A] [T2Space A] (B : StarSubalgebra R A)
+    [ContinuousStar A] [T2Space A] (B : StarSubalgebra R A)
     [hB : B.IsMasa] : IsClosed (B : Set A) :=
   closure_subset_iff_isClosed.mp <| hB.maximal _ B.le_topologicalClosure
 
