@@ -134,18 +134,81 @@ instance StarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
   let := s.commSemiringTopologicalClosure hs.mul_comm
   ⟨⟨mul_comm⟩⟩
 
+theorem Subsemigroup.isMulCommutative_iSup {A : Type*} [Semigroup A] {ι : Type*} [Nonempty ι]
+    {S : ι → Subsemigroup A} [hS : ∀ i, IsMulCommutative (S i)]
+    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subsemigroup A) := by
+  refine .of_setLike_mul_comm ?_
+  simp_rw [← SetLike.mem_coe, coe_iSup_of_directed dir, Set.mem_iUnion,
+    SetLike.mem_coe, forall_exists_index]
+  intro a i ha b j hb
+  obtain ⟨k, hik, hjk⟩ := dir i j
+  exact (hS k).setLike_mul_comm a (hik ha) b (hjk hb)
+
+theorem Subgroup.isMulCommutative_iSup {A : Type*} [Group A] {ι : Type*} [Nonempty ι]
+    {S : ι → Subgroup A} [hS : ∀ i, IsMulCommutative (S i)]
+    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subgroup A) := by
+  have := Subsemigroup.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
+  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
+    Subsemigroup.coe_iSup_of_directed dir]
+
+theorem Submonoid.isMulCommutative_iSup {A : Type*} [Monoid A] {ι : Type*} [Nonempty ι]
+    {S : ι → Submonoid A} [hS : ∀ i, IsMulCommutative (S i)]
+    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Submonoid A) := by
+  have := Subsemigroup.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
+  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
+    Subsemigroup.coe_iSup_of_directed dir]
+
+theorem NonUnitalSubsemiring.isMulCommutative_iSup {A : Type*} [NonUnitalSemiring A]
+    {ι : Type*} [Nonempty ι] {S : ι → NonUnitalSubsemiring A} [hS : ∀ i, IsMulCommutative (S i)]
+    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
+    IsMulCommutative (⨆ i, S i : NonUnitalSubsemiring A) := by
+  refine .of_setLike_mul_comm ?_
+  simp_rw [← SetLike.mem_coe, coe_iSup_of_directed dir, Set.mem_iUnion,
+    SetLike.mem_coe, forall_exists_index]
+  intro a i ha b j hb
+  obtain ⟨k, hik, hjk⟩ := dir i j
+  exact (hS k).setLike_mul_comm a (hik ha) b (hjk hb)
+
+theorem Subsemiring.isMulCommutative_iSup {A : Type*} [Semiring A] {ι : Type*} [Nonempty ι]
+    {S : ι → Subsemiring A} [hS : ∀ i, IsMulCommutative (S i)]
+    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subsemiring A) := by
+  have := Subsemigroup.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
+  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
+    Subsemigroup.coe_iSup_of_directed dir]
+
+theorem NonUnitalSubring.isMulCommutative_iSup {A : Type*}
+    [NonUnitalRing A] {ι : Type*} [Nonempty ι] {S : ι → NonUnitalSubring A}
+    [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
+    IsMulCommutative (⨆ i, S i : NonUnitalSubring A) := by
+  have := NonUnitalSubsemiring.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
+  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
+    NonUnitalSubsemiring.coe_iSup_of_directed dir]
+
+theorem Subring.isMulCommutative_iSup {A : Type*} [Ring A] {ι : Type*} [Nonempty ι]
+    {S : ι → Subring A} [hS : ∀ i, IsMulCommutative (S i)]
+    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subring A) := by
+  have := Subsemigroup.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
+  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
+    Subsemigroup.coe_iSup_of_directed dir]
+
+theorem NonUnitalSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
+    [NonUnitalSemiring A] [Module R A] {ι : Type*} [IsScalarTower R A A]
+    [SMulCommClass R A A] [Nonempty ι] {S : ι → NonUnitalSubalgebra R A}
+    [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
+    IsMulCommutative (⨆ i, S i : NonUnitalSubalgebra R A) := by
+  have := NonUnitalSubsemiring.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
+  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
+    NonUnitalSubsemiring.coe_iSup_of_directed dir]
+
 -- we should have non-star and also unital versions of this, as well as for other subobjects.
 theorem NonUnitalStarSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
     [NonUnitalSemiring A] [StarRing A] [Module R A] {ι : Type*} [StarRing R] [IsScalarTower R A A]
     [SMulCommClass R A A] [StarModule R A] [Nonempty ι] {S : ι → NonUnitalStarSubalgebra R A}
     [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
     IsMulCommutative (⨆ i, S i : NonUnitalStarSubalgebra R A) := by
-  refine .of_setLike_mul_comm ?_
-  simp_rw [← SetLike.mem_coe, NonUnitalStarSubalgebra.coe_iSup_of_directed dir, Set.mem_iUnion,
-    SetLike.mem_coe, forall_exists_index]
-  intro a i ha b j hb
-  obtain ⟨k, hik, hjk⟩ := dir i j
-  exact (hS k).setLike_mul_comm a (hik ha) b (hjk hb)
+  have := NonUnitalSubsemiring.isMulCommutative_iSup (hS := by exact_mod_cast hS) dir
+  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
+    NonUnitalSubsemiring.coe_iSup_of_directed dir]
 
 namespace IsMulCommutative
 
