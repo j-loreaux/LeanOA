@@ -7,8 +7,8 @@ section IsMulCommutative
 
 variable {S M : Type*} [SetLike S M] [Mul M] [MulMemClass S M]
 
-lemma isMulCommutative_iff : IsMulCommutative M ↔ ∀ a b : M, a * b = b * a :=
-  ⟨fun ⟨⟨h⟩⟩ ↦ h, fun h ↦ ⟨⟨h⟩⟩⟩
+lemma isMulCommutative_iff : IsMulCommutative M ↔ ∀ a b : M, a * b = b * a := by
+  grind [IsMulCommutative, Std.Commutative]
 
 alias ⟨IsMulCommutative.mul_comm, IsMulCommutative.of_forall_comm⟩ := isMulCommutative_iff
 
@@ -21,33 +21,33 @@ alias ⟨IsMulCommutative.setLike_mul_comm, IsMulCommutative.of_setLike_mul_comm
 
 instance Algebra.instIsMulCommutativeAdjoin {S R A : Type*} [CommSemiring R]
     [Semiring A] [Algebra R A] [SetLike S A] [MulMemClass S A] (s : S) [hs : IsMulCommutative s] :
-    IsMulCommutative (adjoin R (s : Set A)) := by
+    IsMulCommutative (adjoin R (s : Set A)) :=
   let := adjoinCommSemiringOfComm R hs.setLike_mul_comm
-  exact ⟨⟨mul_comm⟩⟩
+  ⟨⟨mul_comm⟩⟩
 
 instance NonUnitalAlgebra.instIsMulCommutativeAdjoin {S R A : Type*} [CommSemiring R]
     [NonUnitalSemiring A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
     [SetLike S A] [MulMemClass S A] (s : S) [hs : IsMulCommutative s] :
-    IsMulCommutative (adjoin R (s : Set A)) := by
+    IsMulCommutative (adjoin R (s : Set A)) :=
   let := adjoinNonUnitalCommSemiringOfComm R hs.setLike_mul_comm
-  exact ⟨⟨mul_comm⟩⟩
+  ⟨⟨mul_comm⟩⟩
 
 instance NonUnitalStarAlgebra.instIsMulCommutativeAdjoin {S R A : Type*} [CommSemiring R]
     [NonUnitalSemiring A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
     [StarRing A] [StarRing R] [StarModule R A]
     [SetLike S A] [MulMemClass S A] [StarMemClass S A] (s : S) [hs : IsMulCommutative s] :
-    IsMulCommutative (adjoin R (s : Set A)) := by
+    IsMulCommutative (adjoin R (s : Set A)) :=
   let := adjoinNonUnitalCommSemiringOfComm R hs.setLike_mul_comm
     (fun a ha b hb ↦ hs.setLike_mul_comm a ha (star b) (star_mem hb))
-  exact ⟨⟨mul_comm⟩⟩
+  ⟨⟨mul_comm⟩⟩
 
 instance StarAlgebra.instIsMulCommutativeAdjoin {S R A : Type*} [CommSemiring R]
     [Semiring A] [Algebra R A] [StarRing A] [StarRing R] [StarModule R A]
     [SetLike S A] [MulMemClass S A] [StarMemClass S A] (s : S) [hs : IsMulCommutative s] :
-    IsMulCommutative (adjoin R (s : Set A)) := by
+    IsMulCommutative (adjoin R (s : Set A)) :=
   let := adjoinCommSemiringOfComm R hs.setLike_mul_comm
     (fun a ha b hb ↦ hs.setLike_mul_comm a ha (star b) (star_mem hb))
-  exact ⟨⟨mul_comm⟩⟩
+  ⟨⟨mul_comm⟩⟩
 
 instance Subalgebra.instIsMulCommutativeToNonUnitalSubalgebra {R A : Type*} [CommSemiring R]
     [Semiring A] [Algebra R A] (S : Subalgebra R A) [hS : IsMulCommutative S] :
@@ -60,23 +60,79 @@ instance StarSubalgebra.instIsMulCommutativeToNonUnitalStarSubalgebra {R A : Typ
     IsMulCommutative S.toNonUnitalStarSubalgebra :=
   hS
 
--- we should have more of these for the other closure operations.
+instance Subsemigroup.instIsMulCommutativeTopologicalClosure {A : Type*}
+    [TopologicalSpace A] [Semigroup A] [ContinuousMul A] [T2Space A]
+    (s : Subsemigroup A) [hs : IsMulCommutative s] :
+    IsMulCommutative s.topologicalClosure :=
+  let := s.commSemigroupTopologicalClosure hs.mul_comm
+  ⟨⟨mul_comm⟩⟩
+
+instance Submonoid.instIsMulCommutativeTopologicalClosure {A : Type*}
+    [TopologicalSpace A] [Monoid A] [ContinuousMul A] [T2Space A]
+    (s : Submonoid A) [hs : IsMulCommutative s] :
+    IsMulCommutative s.topologicalClosure :=
+  let := s.commMonoidTopologicalClosure hs.mul_comm
+  ⟨⟨mul_comm⟩⟩
+
+instance NonUnitalSubsemiring.instIsMulCommutativeTopologicalClosure {A : Type*}
+    [TopologicalSpace A] [NonUnitalSemiring A] [IsTopologicalSemiring A] [T2Space A]
+    (s : NonUnitalSubsemiring A) [hs : IsMulCommutative s] :
+    IsMulCommutative s.topologicalClosure :=
+  let := s.nonUnitalCommSemiringTopologicalClosure hs.mul_comm
+  ⟨⟨mul_comm⟩⟩
+
+instance Subsemiring.instIsMulCommutativeTopologicalClosure {A : Type*}
+    [TopologicalSpace A] [Semiring A] [IsTopologicalSemiring A] [T2Space A]
+    (s : Subsemiring A) [hs : IsMulCommutative s] :
+    IsMulCommutative s.topologicalClosure :=
+  let := s.commSemiringTopologicalClosure hs.mul_comm
+  ⟨⟨mul_comm⟩⟩
+
+instance NonUnitalSubring.instIsMulCommutativeTopologicalClosure {A : Type*}
+    [TopologicalSpace A] [NonUnitalRing A] [IsTopologicalRing A] [T2Space A]
+    (s : NonUnitalSubring A) [hs : IsMulCommutative s] :
+    IsMulCommutative s.topologicalClosure :=
+  let := s.nonUnitalCommRingTopologicalClosure hs.mul_comm
+  ⟨⟨mul_comm⟩⟩
+
+instance Subring.instIsMulCommutativeTopologicalClosure {A : Type*}
+    [TopologicalSpace A] [Ring A] [IsTopologicalRing A] [T2Space A]
+    (s : Subring A) [hs : IsMulCommutative s] :
+    IsMulCommutative s.topologicalClosure :=
+  let := s.commRingTopologicalClosure hs.mul_comm
+  ⟨⟨mul_comm⟩⟩
+
 instance NonUnitalStarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
     [CommSemiring R] [TopologicalSpace A] [Star A] [NonUnitalSemiring A] [Module R A]
     [IsTopologicalSemiring A] [ContinuousStar A] [ContinuousConstSMul R A] [T2Space A]
     (s : NonUnitalStarSubalgebra R A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure := by
+    IsMulCommutative s.topologicalClosure :=
   let := s.nonUnitalCommSemiringTopologicalClosure hs.mul_comm
-  exact ⟨⟨mul_comm⟩⟩
+  ⟨⟨mul_comm⟩⟩
 
--- we should have more of these for the other closure operations.
+instance NonUnitalSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
+    [CommSemiring R] [TopologicalSpace A] [NonUnitalSemiring A] [Module R A]
+    [IsTopologicalSemiring A] [ContinuousConstSMul R A] [T2Space A]
+    (s : NonUnitalSubalgebra R A) [hs : IsMulCommutative s] :
+    IsMulCommutative s.topologicalClosure :=
+  let := s.nonUnitalCommSemiringTopologicalClosure hs.mul_comm
+  ⟨⟨mul_comm⟩⟩
+
+instance Subalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
+    [CommSemiring R] [TopologicalSpace A] [Semiring A] [Algebra R A]
+    [IsTopologicalSemiring A] [T2Space A]
+    (s : Subalgebra R A) [hs : IsMulCommutative s] :
+    IsMulCommutative s.topologicalClosure :=
+  let := s.commSemiringTopologicalClosure hs.mul_comm
+  ⟨⟨mul_comm⟩⟩
+
 instance StarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
     [CommSemiring R] [StarRing R] [TopologicalSpace A] [Semiring A] [StarRing A] [Algebra R A]
     [StarModule R A] [IsTopologicalSemiring A] [ContinuousStar A] [ContinuousConstSMul R A]
     [T2Space A] (s : StarSubalgebra R A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure := by
+    IsMulCommutative s.topologicalClosure :=
   let := s.commSemiringTopologicalClosure hs.mul_comm
-  exact ⟨⟨mul_comm⟩⟩
+  ⟨⟨mul_comm⟩⟩
 
 -- we should have non-star and also unital versions of this, as well as for other subobjects.
 theorem NonUnitalStarSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
@@ -101,37 +157,39 @@ instance (priority := 100) [Mul R] [Subsingleton R] : IsMulCommutative R where
 
 -- I think these instances should be scoped.
 
-instance (priority := 50) [Semiring R]
+scoped instance (priority := 50) [Semiring R]
     [IsMulCommutative R] : CommSemiring R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
-instance (priority := 50) [Ring R] [IsMulCommutative R] : CommRing R where
+scoped instance (priority := 50) [Ring R] [IsMulCommutative R] : CommRing R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
-instance (priority := 50) [NonUnitalSemiring R] [IsMulCommutative R] : NonUnitalCommSemiring R where
+scoped instance (priority := 50) [NonUnitalSemiring R] [IsMulCommutative R] :
+    NonUnitalCommSemiring R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
-instance (priority := 50) [NonUnitalRing R] [IsMulCommutative R] : NonUnitalCommRing R where
+scoped instance (priority := 50) [NonUnitalRing R] [IsMulCommutative R] : NonUnitalCommRing R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
-instance (priority := 50) [SeminormedRing R] [IsMulCommutative R] : SeminormedCommRing R where
+scoped instance (priority := 50) [SeminormedRing R] [IsMulCommutative R] :
+    SeminormedCommRing R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
-instance (priority := 50) [NonUnitalSeminormedRing R] [IsMulCommutative R] :
+scoped instance (priority := 50) [NonUnitalSeminormedRing R] [IsMulCommutative R] :
     NonUnitalSeminormedCommRing R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
-instance (priority := 50) [NormedRing R] [IsMulCommutative R] : NormedCommRing R where
+scoped instance (priority := 50) [NormedRing R] [IsMulCommutative R] : NormedCommRing R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
-instance (priority := 50) [NonUnitalNormedRing R] [IsMulCommutative R] :
+scoped instance (priority := 50) [NonUnitalNormedRing R] [IsMulCommutative R] :
     NonUnitalNormedCommRing R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
-instance (priority := 50) [CStarAlgebra R] [IsMulCommutative R] : CommCStarAlgebra R where
+scoped instance (priority := 50) [CStarAlgebra R] [IsMulCommutative R] : CommCStarAlgebra R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
-instance (priority := 50) [NonUnitalCStarAlgebra R] [IsMulCommutative R] :
+scoped instance (priority := 50) [NonUnitalCStarAlgebra R] [IsMulCommutative R] :
     NonUnitalCommCStarAlgebra R where
   mul_comm := IsMulCommutative.mul_comm inferInstance
 
