@@ -134,7 +134,7 @@ instance StarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
   let := s.commSemiringTopologicalClosure hs.mul_comm
   ⟨⟨mul_comm⟩⟩
 
-theorem Subsemigroup.isMulCommutative_iSup {A : Type*} [Semigroup A] {ι : Type*} [Nonempty ι]
+theorem Subsemigroup.isMulCommutative_iSup {A : Type*} [Semigroup A] {ι : Type*}
     {S : ι → Subsemigroup A} [hS : ∀ i, IsMulCommutative (S i)]
     (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subsemigroup A) := by
   refine .of_setLike_mul_comm ?_
