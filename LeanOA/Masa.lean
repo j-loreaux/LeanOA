@@ -250,7 +250,7 @@ theorem StarSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
 
 @[to_additive]
 instance Subsemigroup.instIsMulCommutative_iSup {A : Type*}
-    [Semigroup A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
+    [Semigroup A] {ι : Type*} [Preorder ι] [IsDirectedOrder ι]
     {S : ι →o Subsemigroup A} [hS : ∀ i, IsMulCommutative (S i)] :
     IsMulCommutative (⨆ i, S i : Subsemigroup A) :=
   Subsemigroup.isMulCommutative_iSup S.monotone.directed_le
@@ -327,8 +327,6 @@ variable {R : Type*}
 @[to_additive]
 instance (priority := 100) [Mul R] [Subsingleton R] : IsMulCommutative R where
   is_comm := ⟨fun _ _ ↦ Subsingleton.elim ..⟩
-
--- I think these instances should be scoped.
 
 /-- A multiplicative type with commutative multiplication is a commutative multiplicative magma. -/
 scoped instance (priority := 50) [Mul R] [IsMulCommutative R] : CommMagma R where
