@@ -7,5 +7,6 @@ variable {K} [TopologicalSpace K] [T2Space K] [CompactSpace K]
 open ContinuousFunctions NNReal
 
 theorem ExtremallyDisconnected_of_ConditionallyCompletePartialOrderSup
-    : ConditionallyCompletePartialOrderSup C(K, ℝ≥0) → ExtremallyDisconnected K :=
+    : ∀ s : Set C(K, ℝ≥0), DirectedOn (· ≤ ·) s → s.Nonempty → BddAbove s →
+    ExtremallyDisconnected K :=
   by sorry
