@@ -52,7 +52,7 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
     · exact fun y hy ↦ map_continuousWithinAt g U y
     · exact ht
   have hclsub : (closure U)ᶜ ⊆ Uᶜ := Set.compl_subset_compl_of_subset <| subset_closure
-  have heqonc : Set.EqOn (⇑w) 0 (closure U)ᶜ :=
+  have heqonc : Set.EqOn w 0 (closure U)ᶜ :=
     Set.EqOn.symm (Set.EqOn.symm fun ⦃x⦄ a ↦ hw0 (hclsub a))
   have : ¬ IsClosed (closure U)ᶜ := by simpa [isClosed_compl_iff]
   rw [hw1, Pi.one_apply] at hRLe
