@@ -30,5 +30,31 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
     exact Set.mem_setOf.mpr hwIcc
   have hBA : BddAbove {f : C(K, ℝ) | ∀ (x : K), 0 ≤ f x ∧ f x ≤ 1} :=
     ⟨1, fun f Hf x ↦ (Hf x).2⟩
-  have hT := H1 {f : C(K, ℝ) | ∀ x, 0 ≤ f x ∧ f x ≤ 1} hR hNE hBA
+  obtain ⟨g, hg⟩ := H1 {f : C(K, ℝ) | ∀ x, 0 ≤ f x ∧ f x ≤ 1} hR hNE hBA
+  have : w t ≤ g t := (hg.1 <| Set.mem_setOf.mpr hwIcc) t
+  rw [hw1, Pi.one_apply] at this
+  have hle : ∀ r ∈ U, 1 ≤ g r := by
+    intro r hR
+    obtain ⟨w, hw0, hw1, hwIcc⟩ := exists_continuous_zero_one_of_isClosed
+      (X := K) (t := {r}) (s := Uᶜ) (by aesop) (by aesop) (by aesop)
+    have : w r ≤ g r := (hg.1 <| Set.mem_setOf.mpr hwIcc) r
+    rwa [hw1, Pi.one_apply] at this
+    exact Set.mem_singleton r
+  have heq: ∀ r ∈ U , 1 = g r := by
+    intro r hrU
+    apply le_antisymm
+    · exact hle r hrU
+    · have : (1 : C(K, ℝ)) ∈ upperBounds {f | ∀ (x : K), 0 ≤ f x ∧ f x ≤ 1} :=
+        fun a ha ↦ fun x ↦ ((fun a ↦ (ha x).2) ∘ U) t
+      exact RCLike.ofReal_le_ofReal.mp (hg.2 this r)
+  have ht : Set.EqOn g (fun x => 1) U := Set.EqOn.symm heq
+  have heqonclos: ∀ x ∈ closure U, Set.EqOn g (fun x => 1) (closure U) := by
+    intro x hx
+    apply ContinuousWithinAt.eqOn_const_closure (X := K) (Y := ℝ) (c := 1) (s := U) (f := g)
+    · exact fun y hy ↦ map_continuousWithinAt g U y
+    · exact ht
+
+
+
+
   sorry
