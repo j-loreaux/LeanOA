@@ -6,9 +6,10 @@ variable {K} [TopologicalSpace K] [T2Space K] [CompactSpace K]
 
 open ContinuousFunctions NNReal
 
+/- Temporarily removed ℝ≥0 everywhere in order to access Urysohn from Mathlib. -/
 theorem ExtremallyDisconnected_of_notSureWhatYet
-    : (∀ s : Set C(K, ℝ≥0), DirectedOn (· ≤ ·) s → s.Nonempty → BddAbove s →
-    ∃ (f : C(K, ℝ≥0)), IsLUB s f) → ExtremallyDisconnected K :=
+    : (∀ s : Set C(K, ℝ), DirectedOn (· ≤ ·) s → s.Nonempty → BddAbove s →
+    ∃ (g : C(K, ℝ)), IsLUB s g) → ExtremallyDisconnected K :=
   by
   intro H1
   constructor
@@ -21,6 +22,14 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
     rw [this, closure_empty] at H2
     simp only [isOpen_empty, not_true_eq_false] at H2
   obtain ⟨t, ht⟩ := hne
-  have hR : DirectedOn (· ≤ ·) {f : C(K, ℝ≥0) | ∀ x, 0 ≤ f x ∧ f x ≤ 1} := by sorry
-  have hT := H1 {f : C(K, ℝ≥0) | ∀ x, 0 ≤ f x ∧ f x ≤ 1} hR
+  have hR : DirectedOn (· ≤ ·) {f : C(K, ℝ) | ∀ x, 0 ≤ f x ∧ f x ≤ 1} := by sorry
+  have Ury := exists_continuous_zero_one_of_isClosed
+      (X := K) (t := {t}) (s := Uᶜ) (by aesop) (by aesop) (by aesop)
+  obtain ⟨w, hw0, hw1, hwIcc⟩ := Ury
+  have hNE : {f : C(K, ℝ) | ∀ (x : K), 0 ≤ f x ∧ f x ≤ 1}.Nonempty := by
+    use w
+    exact Set.mem_setOf.mpr hwIcc
+  have hBA : BddAbove {f : C(K, ℝ) | ∀ (x : K), 0 ≤ f x ∧ f x ≤ 1} :=
+    ⟨1, fun f Hf x ↦ (Hf x).2⟩
+  have hT := H1 {f : C(K, ℝ) | ∀ x, 0 ≤ f x ∧ f x ≤ 1} hR hNE hBA
   sorry
