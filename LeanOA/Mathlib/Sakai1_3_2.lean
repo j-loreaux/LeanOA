@@ -6,7 +6,6 @@ variable {K} [TopologicalSpace K] [T2Space K] [CompactSpace K]
 
 open ContinuousFunctions
 
-theorem ExtremallyDisconnected_of_Monotone_ConditionallyCompletePartialOrderSup
-    : (∀ I [PartialOrder I] [IsDirectedOrder I], ∀ x : I → C(K, ℝ),
-      Monotone x → ConditionallyCompletePartialOrderSup {x i | i : I}) → ExtremallyDisconnected K :=
+theorem ExtremallyDisconnected_of_ConditionallyCompletePartialOrderSup
+    : ConditionallyCompletePartialOrderSup C(K, ℂ) → ExtremallyDisconnected K :=
   by sorry
