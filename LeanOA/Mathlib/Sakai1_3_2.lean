@@ -7,5 +7,6 @@ variable {K} [TopologicalSpace K] [T2Space K] [CompactSpace K]
 open ContinuousFunctions
 
 theorem ExtremallyDisconnected_of_ConditionallyCompletePartialOrderSup
-    : ConditionallyCompletePartialOrderSup C(K, ℂ) → ExtremallyDisconnected K :=
+    : ConditionallyCompletePartialOrderSup {f : C(K, ℝ) | ∀ x, 0 ≤ f x} →
+    ExtremallyDisconnected K :=
   by sorry
