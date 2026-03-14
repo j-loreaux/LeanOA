@@ -25,18 +25,16 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
   have hR : DirectedOn (· ≤ ·) {f : C(K, ℝ) | ∀ x, 0 ≤ f x ∧ f x ≤ 1} := by sorry
   obtain ⟨w, hw0, hw1, hwIcc⟩ := exists_continuous_zero_one_of_isClosed
       (X := K) (t := {t}) (s := Uᶜ) (by aesop) (by aesop) (by aesop)
-  have hNE : {f : C(K, ℝ) | ∀ (x : K), 0 ≤ f x ∧ f x ≤ 1}.Nonempty := by
-    use w
-    exact Set.mem_setOf.mpr hwIcc
+  have hNE : {f : C(K, ℝ) | ∀ (x : K), 0 ≤ f x ∧ f x ≤ 1}.Nonempty :=
+    ⟨w, Set.mem_setOf.mpr hwIcc⟩
   have hBA : BddAbove {f : C(K, ℝ) | ∀ (x : K), 0 ≤ f x ∧ f x ≤ 1} :=
     ⟨1, fun f Hf x ↦ (Hf x).2⟩
   obtain ⟨g, hg⟩ := H1 {f : C(K, ℝ) | ∀ x, 0 ≤ f x ∧ f x ≤ 1} hR hNE hBA
-  have : w t ≤ g t := (hg.1 <| Set.mem_setOf.mpr hwIcc) t
-  rw [hw1, Pi.one_apply] at this
+  have hRLe: w t ≤ g t := (hg.1 <| Set.mem_setOf.mpr hwIcc) t
   have hle : ∀ r ∈ U, 1 ≤ g r := by
     intro r hR
     obtain ⟨w, hw0, hw1, hwIcc⟩ := exists_continuous_zero_one_of_isClosed
-      (X := K) (t := {r}) (s := Uᶜ) (by aesop) (by aesop) (by aesop)
+        (X := K) (t := {r}) (s := Uᶜ) (by aesop) (by aesop) (by aesop)
     have : w r ≤ g r := (hg.1 <| Set.mem_setOf.mpr hwIcc) r
     rwa [hw1, Pi.one_apply] at this
     exact Set.mem_singleton r
@@ -53,8 +51,10 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
     apply ContinuousWithinAt.eqOn_const_closure (X := K) (Y := ℝ) (c := 1) (s := U) (f := g)
     · exact fun y hy ↦ map_continuousWithinAt g U y
     · exact ht
-
-
-
-
-  sorry
+  have hclsub : (closure U)ᶜ ⊆ Uᶜ := Set.compl_subset_compl_of_subset <| subset_closure
+  have heqonc : Set.EqOn (⇑w) 0 (closure U)ᶜ :=
+    Set.EqOn.symm (Set.EqOn.symm fun ⦃x⦄ a ↦ hw0 (hclsub a))
+  have : ¬ IsClosed (closure U)ᶜ := by simpa [isClosed_compl_iff]
+  rw [hw1, Pi.one_apply] at hRLe
+  ·  sorry
+  · exact Set.mem_singleton t
