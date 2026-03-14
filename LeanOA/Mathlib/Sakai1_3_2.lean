@@ -23,9 +23,8 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
     simp only [isOpen_empty, not_true_eq_false] at H2
   obtain ⟨t, ht⟩ := hne
   have hR : DirectedOn (· ≤ ·) {f : C(K, ℝ) | ∀ x, 0 ≤ f x ∧ f x ≤ 1} := by sorry
-  have Ury := exists_continuous_zero_one_of_isClosed
+  obtain ⟨w, hw0, hw1, hwIcc⟩ := exists_continuous_zero_one_of_isClosed
       (X := K) (t := {t}) (s := Uᶜ) (by aesop) (by aesop) (by aesop)
-  obtain ⟨w, hw0, hw1, hwIcc⟩ := Ury
   have hNE : {f : C(K, ℝ) | ∀ (x : K), 0 ≤ f x ∧ f x ≤ 1}.Nonempty := by
     use w
     exact Set.mem_setOf.mpr hwIcc
