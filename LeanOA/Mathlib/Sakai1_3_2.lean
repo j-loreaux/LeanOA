@@ -4,9 +4,8 @@ import Mathlib.Topology.Category.Stonean.Basic
 
 variable {K} [TopologicalSpace K] [T2Space K] [CompactSpace K]
 
-open ContinuousFunctions
+open ContinuousFunctions NNReal
 
 theorem ExtremallyDisconnected_of_ConditionallyCompletePartialOrderSup
-    : ConditionallyCompletePartialOrderSup {f : C(K, ℝ) | ∀ x, 0 ≤ f x} →
-    ExtremallyDisconnected K :=
+    : ConditionallyCompletePartialOrderSup C(K, ℝ≥0) → ExtremallyDisconnected K :=
   by sorry
