@@ -1,9 +1,12 @@
 import Mathlib.Analysis.Normed.Order.Lattice
 import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Topology.ContinuousMap.Ordered
+import Mathlib.Topology.ContinuousMap.StarOrdered
 import Mathlib.Topology.ExtremallyDisconnected
 import Mathlib.Topology.GDelta.MetrizableSpace
+import Mathlib.Topology.ContinuousMap.ContinuousSqrt
 import Mathlib.Topology.UrysohnsLemma
+import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
+import LeanOA.Mathlib.Algebra.Order.Star.Basic
 
 open Set Function
 
@@ -59,15 +62,9 @@ theorem ExtremallyDisconnected.ofConditionallyCompletePartialOrderSupContinuousM
     (h : ∀ s : Set C(K, 𝕜), DirectedOn (· ≤ ·) s → s.Nonempty → BddAbove s → ∃ g, IsLUB s g) :
     ExtremallyDisconnected K := by
   refine .ofConditionallyCompletePartialOrderSupContinuousMap (fun s hs hsn hb ↦ ?_)
-  let coe : C(ℝ, 𝕜) := ⟨ofReal, continuous_ofReal⟩
-  let coeComp : C(K, ℝ) → C(K, 𝕜) := coe.comp
-  have coe_mono : Monotone coeComp := fun f g hfg x ↦ by simpa [coeComp, coe] using hfg x
+  have coe_mono : Monotone (realToRCLike (A := K) 𝕜) := fun f g hfg x ↦ by simpa using hfg x
   obtain ⟨g', hg⟩ := h _ (hs.mono_comp coe_mono) (hsn.image _) (coe_mono.map_bddAbove hb)
-  let reCM : C(𝕜, ℝ) := ⟨re, continuous_re⟩
-  obtain ⟨g, rfl⟩ : ∃ g, coeComp g = g' := by
-    use reCM.comp g'
-    ext x
-    obtain ⟨-, h_im⟩ : _ ∧ 0 = im (g' x) := by
-      simpa [le_iff_re_im (K := 𝕜), coeComp, coe] using hg.1 ⟨_, hsn.some_mem, rfl⟩ x
-    simpa [coeComp, coe, reCM, ← conj_eq_iff_re, conj_eq_iff_im] using h_im.symm
-  exact ⟨g, hg.of_image <| by simp [ContinuousMap.le_def, coeComp, coe]⟩
+  obtain ⟨g, rfl⟩ : g' ∈ range (realToRCLike 𝕜) := by
+    simpa [range_realToRCLike_eq_isSelfAdjoint] using
+      isSelfAdjoint_realToRCLike.of_ge <| hg.1 ⟨_, hsn.some_mem, rfl⟩
+  exact ⟨g, hg.of_image <| by simp [le_def]⟩
