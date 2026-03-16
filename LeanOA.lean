@@ -5,6 +5,7 @@ import LeanOA.CStarAlgebra.FiniteSpectrum
 import LeanOA.CStarAlgebra.PositiveLinearFunctional
 import LeanOA.CStarModule.Standard
 import LeanOA.ComplexOrder
+import LeanOA.ExtremallyDiconnected
 import LeanOA.KreinSmulian
 import LeanOA.Lp.Holder
 import LeanOA.Lp.lpSpace
