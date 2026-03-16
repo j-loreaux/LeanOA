@@ -39,10 +39,12 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
     hR ⟨w, Set.mem_setOf.mpr hwsupportmem⟩
     ⟨1, fun f Hf x ↦ (Hf.1 x).2⟩
   have h_support : Set.EqOn g 0 (closure U)ᶜ := by --grind needs this below
+    intro z hz
+    simp only [Pi.zero_apply]
     have Bga := hg.2
     dsimp [lowerBounds, upperBounds] at Bga
     simp only [Set.mem_compl_iff, and_imp] at Bga
-    have := Bga (a := (0 : C(K, ℝ)))
+    have Bgb := Bga (a := (0 : C(K, ℝ)))
     sorry
   have heqonclos: ∀ x ∈ closure U, Set.EqOn g (fun x => 1) (closure U) := fun x hx ↦ by
     apply ContinuousWithinAt.eqOn_const_closure (X := K) (Y := ℝ) (c := 1) (s := U) (f := g)
