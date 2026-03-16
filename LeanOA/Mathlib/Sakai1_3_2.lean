@@ -6,6 +6,10 @@ variable {K} [TopologicalSpace K] [T2Space K] [CompactSpace K]
 
 open ContinuousFunctions NNReal
 
+-- This can work inline.
+example {A : Set K} : IsClosed A ↔ closure A ∩ Aᶜ = ∅ :=
+  ⟨fun _ ↦ by simp, fun H ↦ closure_subset_iff_isClosed.mp <| Set.diff_eq_empty.mp H⟩
+
 /- Temporarily removed ℝ≥0 everywhere in order to access Urysohn from Mathlib. -/
 theorem ExtremallyDisconnected_of_notSureWhatYet
     : (∀ s : Set C(K, ℝ), DirectedOn (· ≤ ·) s → s.Nonempty → BddAbove s →
@@ -56,5 +60,6 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
     Set.EqOn.symm (Set.EqOn.symm fun ⦃x⦄ a ↦ hw0 (hclsub a))
   have : ¬ IsClosed (closure U)ᶜ := by simpa [isClosed_compl_iff]
   rw [hw1, Pi.one_apply] at hRLe
-  ·  sorry
+  · --adapt above exercise and use this to get contra.
+    sorry
   · exact Set.mem_singleton t
