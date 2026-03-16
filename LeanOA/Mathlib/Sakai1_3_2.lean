@@ -15,7 +15,8 @@ lemma aux {A : Set K} : ¬ IsClosed A ↔ closure A ∩ Aᶜ ≠ ∅ := by
 
 variable [T2Space K] [CompactSpace K]
 
-/- Temporarily removed ℝ≥0 everywhere in order to access Urysohn from Mathlib. -/
+
+/- Super ugly. Will need to think about reorganizing this. -/
 theorem ExtremallyDisconnected_of_notSureWhatYet
     : (∀ s : Set C(K, ℝ), DirectedOn (· ≤ ·) s → s.Nonempty → BddAbove s →
     ∃ (g : C(K, ℝ)), IsLUB s g) → ExtremallyDisconnected K := fun H1 ↦ by
@@ -37,7 +38,7 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
   obtain ⟨g, hg⟩ := H1 {f : C(K, ℝ) | (∀ x, 0 ≤ f x ∧ f x ≤ 1) ∧ (∀ x ∈ Uᶜ, f x = 0)}
     hR ⟨w, Set.mem_setOf.mpr hwsupportmem⟩
     ⟨1, fun f Hf x ↦ (Hf.1 x).2⟩
-  have Last : Set.EqOn g 0 (closure U)ᶜ := by
+  have h_support : Set.EqOn g 0 (closure U)ᶜ := by --grind needs this below
     have Bga := hg.2
     dsimp [lowerBounds, upperBounds] at Bga
     simp only [Set.mem_compl_iff, and_imp] at Bga
@@ -94,6 +95,6 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
       simp only [Set.finite_singleton, Set.Finite.isClosed, IsClosed.closure_eq,
         Set.subset_singleton_iff, Set.mem_image, forall_exists_index, and_imp,
         forall_apply_eq_imp_iff₂] at st
-      have := Eq.trans one_eq ((fun {x} ↦ EReal.coe_eq_zero.mp) (congrArg Real.toEReal (st s hs.1)))
-      simpa
+      simpa using Eq.trans one_eq ((fun {x} ↦ EReal.coe_eq_zero.mp)
+         (congrArg Real.toEReal (st s hs.1)))
   · exact Set.mem_singleton t
