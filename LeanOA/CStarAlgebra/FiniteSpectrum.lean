@@ -1,4 +1,3 @@
-import LeanOA.Mathlib.Algebra.Star.StarProjection
 import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
 import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic

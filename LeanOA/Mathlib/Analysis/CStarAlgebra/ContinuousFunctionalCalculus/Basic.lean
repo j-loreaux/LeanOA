@@ -1,5 +1,4 @@
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
 
 open Complex ComplexStarModule
 
@@ -37,9 +36,3 @@ lemma cfc_im_id (a : A) (hp : p a := by cfc_tac) :
     cfc (im · : ℂ → ℂ) a = ℑ a := by rw [← cfcₙ_eq_cfc, cfcₙ_im_id a]
 
 end unital
-
-theorem isIdempotentElem_star_mul_self_iff_isIdempotentElem_self_mul_star {A : Type*}
-    [TopologicalSpace A] [NonUnitalRing A] [StarRing A] [Module ℝ A] [IsScalarTower ℝ A A]
-    [SMulCommClass ℝ A A] [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
-    {x : A} : IsIdempotentElem (star x * x) ↔ IsIdempotentElem (x * star x) := by
-  simp [isIdempotentElem_iff_quasispectrum_subset ℝ, quasispectrum.mul_comm]
