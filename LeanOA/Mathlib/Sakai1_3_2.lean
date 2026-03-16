@@ -88,7 +88,6 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
           contrapose
           simp only [Set.mem_compl_iff, not_not]
           apply subset_closure (X := K)
-        simp only [Set.mem_singleton_iff]
         have : g i = 0 := by grind [(Set.mem_compl_iff (closure U) i).mpr hi.1]
         rwa [← hi.2]
       have st := subset_trans cont_clos (closure_mono haux)
