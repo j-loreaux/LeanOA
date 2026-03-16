@@ -182,7 +182,7 @@ noncomputable def lp.evalCLM [Fact (1 ≤ p)] (i : ι) : lp E p →L[𝕜] E i :
 noncomputable def lp.zeroBasis : Module.Basis ι 𝕜 ℓ^0(ι, 𝕜) where
   repr :=
     { toFun x := .ofSupportFinite ⇑x <| memℓp_zero_iff.mp x.2
-      invFun x := ⟨⇑x, memℓp_zero_iff.mpr x.finite_support⟩
+      invFun x := ⟨⇑x, memℓp_zero_iff.mpr x.hasFiniteSupport⟩
       map_add' _ _ := Finsupp.ext fun _ ↦ rfl
       map_smul' _ _ := Finsupp.ext fun _ ↦ rfl
       left_inv _ := rfl

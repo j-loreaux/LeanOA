@@ -1,6 +1,5 @@
 import LeanOA.Mathlib.Algebra.Order.Star.Basic
 import LeanOA.Mathlib.Analysis.Complex.Basic
-import LeanOA.Mathlib.LinearAlgebra.Complex.Module
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart.Isometric
 
