@@ -73,13 +73,13 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
     · push_neg at hTra
       obtain ⟨s, hs⟩ := hTra
       simp only [Set.mem_inter_iff] at hs
-      have FUBAR : g '' (closure (closure U)ᶜ) ⊆ closure (g '' ((closure U)ᶜ)) := by
+      have cont_clos : g '' (closure (closure U)ᶜ) ⊆ closure (g '' ((closure U)ᶜ)) := by
           have : Continuous g := ContinuousMap.continuous g
           rw [continuous_iff_image_closure_subset_closure_image (f := g)] at this
           exact LE.le.subset (this (closure U)ᶜ)
-      have FU : 1 = g s :=
+      have one_eq : 1 = g s :=
         Eq.symm ((fun {x} ↦ EReal.coe_eq_one.mp) (congrArg Real.toEReal (heqonclos s hs.2 hs.2)))
-      have Jim : g '' (closure U)ᶜ ⊆ {0} := by
+      have haux : g '' (closure U)ᶜ ⊆ {0} := by
         intro y hy
         simp only [Set.mem_image, Set.mem_compl_iff] at hy
         obtain ⟨i, hi⟩ := hy
@@ -90,10 +90,10 @@ theorem ExtremallyDisconnected_of_notSureWhatYet
         simp only [Set.mem_singleton_iff]
         have : g i = 0 := by grind [(Set.mem_compl_iff (closure U) i).mpr hi.1]
         rwa [← hi.2]
-      have st := subset_trans FUBAR (closure_mono Jim)
+      have st := subset_trans cont_clos (closure_mono haux)
       simp only [Set.finite_singleton, Set.Finite.isClosed, IsClosed.closure_eq,
         Set.subset_singleton_iff, Set.mem_image, forall_exists_index, and_imp,
         forall_apply_eq_imp_iff₂] at st
-      have := Eq.trans FU ((fun {x} ↦ EReal.coe_eq_zero.mp) (congrArg Real.toEReal (st s hs.1)))
+      have := Eq.trans one_eq ((fun {x} ↦ EReal.coe_eq_zero.mp) (congrArg Real.toEReal (st s hs.1)))
       simpa
   · exact Set.mem_singleton t
