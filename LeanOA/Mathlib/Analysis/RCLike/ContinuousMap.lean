@@ -48,5 +48,3 @@ variable (𝕜) in
   .of_dist_eq fun f g ↦ by simp [dist_eq_norm, norm_eq_iSup_norm, ← map_sub]
 
 end ContinuousMap
-
-#min_imports
