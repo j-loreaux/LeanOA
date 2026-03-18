@@ -235,7 +235,7 @@ We state the following without proof, as it is available in Mathlib.
 \end{proof}
 
 \begin{lemma}
-  \label{lem:cut_down_sigma_closed_cts} (Sakai 1.7.6)
+  \label{lem:cut_down_sigma_closed_cts_Sak_1_7_6} (Sakai 1.7.6)
   \uses{def:sigma_top}
   Let $p$ be any projection in $M$. Then the subalgebra $pMp$ is $\sigma$--closed and the mapping $x\mapsto pxp$ is $\sigma$--continuous.
 \end{lemma}
@@ -259,7 +259,7 @@ We state the following without proof, as it is available in Mathlib.
 
 \begin{lemma}
   \label{lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7} (Sak 1.7.7)
-  \uses{def:sigma_top}
+  \uses{def:sigma_top,lem:cut_down_sigma_closed_cts_Sak_1_7_6}
   If $p$ is any projection of $M$, then the mappings $x\mapsto px$ and
   $x\mapsto xp$ are $\sigma$--continuous.
 \end{lemma}
@@ -269,7 +269,7 @@ We state the following without proof, as it is available in Mathlib.
 
 \begin{lemma}
   \label{lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8} (Sak 1.7.8)
-  \uses{def:sigma_top,lem:fin_lin_approx_of_stonean_Sak_1_3_1,lem:spec_masa_wstar_stonean_Sak_1_7_5}
+  \uses{def:sigma_top,lem:fin_lin_approx_of_stonean_Sak_1_3_1,lem:spec_masa_wstar_stonean_Sak_1_7_5,lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7}
   The mappings $x\mapsto x^{*},ax$, and $xa$ are $\sigma$--continuous for
   $x,a \in M$.
 \end{lemma}
