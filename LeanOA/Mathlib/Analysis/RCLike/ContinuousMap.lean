@@ -1,5 +1,6 @@
 import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Topology.ContinuousMap.Compact
+import Mathlib.Topology.ContinuousMap.Ordered
 import Mathlib.Topology.ContinuousMap.Units
 
 variable {A Y 𝕜 : Type*} [RCLike 𝕜] [TopologicalSpace A] [TopologicalSpace Y]
@@ -16,6 +17,11 @@ variable (𝕜) in
 @[simp] lemma spectrum_realToRCLike (f : C(A, ℝ)) :
     spectrum ℝ (f.realToRCLike 𝕜) = spectrum ℝ f := by
   ext; simp [spectrum.mem_iff, isUnit_iff_forall_isUnit, RCLike.ext_iff (K := 𝕜), Algebra.smul_def]
+
+variable (A 𝕜) in
+open ComplexOrder in
+lemma monotone_realToRCLike : Monotone (realToRCLike (A := A) 𝕜) :=
+  fun f g hfg x ↦ by simpa using hfg x
 
 /-- Mapping `C(A, 𝕜)` to `C(A, ℝ)` using `RCLike.re`. -/
 @[simps] def rclikeToReal (f : C(A, 𝕜)) : C(A, ℝ) where toFun x := RCLike.re (f x)
