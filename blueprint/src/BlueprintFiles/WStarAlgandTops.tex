@@ -226,10 +226,13 @@ We state the following without proof, as it is available in Mathlib.
 \begin{lemma}
   \label{lem:wstar_unital}
   \uses{thm:cstar_unital_iff_extreme_Sak_1_6_1}
+  \leanok
+  \lean{IsCompact.extremePoints_nonempty,CStarAlgebra.ofExtremePt}
   Every $W^{*}$--algebra is unital.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   The norm unit ball of $M=(M_{*})^{*}$ is closed in the $\sigma$--topology, is convex, and so has an extreme point by the Krein-Milman Theorem.
   By Theorem \ref{thm:cstar_unital_iff_extreme_Sak_1_6_1}, the result follows.
 \end{proof}
