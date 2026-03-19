@@ -249,14 +249,14 @@ We state the following without proof, as it is available in Mathlib.
 \begin{lemma}
   \label{lem:cut_down_of_wstar}
   \uses{def:sigma_top}
-  \uses{lem:cut_down_sigma_closed_cts,lem:sigma_closed_star_subalg_wstar}
+  \uses{lem:cut_down_sigma_closed_cts,lem:sigma_closed_star_subalg_wstar_Sak_1_1_4}
   If $p\in M$ is a projection, $pMp$ is also a $W^{*}$--algebra with identity $p$.
 \end{lemma}
 
 \begin{proof}
   It is clear that $eMe$ is an algebra, since any sum or product of elements preserves the pre- and post- multiplication by $e$.
   It is also clear that $e$ is the multiplicative identity of this algebra. The product reversing property of $*$ and the fact that
-  $e$ is a self-adjoint projection implies that $eMe$ is a $*$--algebra. By Lemma \ref{lem:sigma_closed_star_subalg_wstar}, if this
+  $e$ is a self-adjoint projection implies that $eMe$ is a $*$--algebra. By Lemma \ref{lem:sigma_closed_star_subalg_wstar_Sak_1_1_4}, if this
   $*$--subalgebra is $\sigma$--closed, then it is a $W^{*}$--subalgebra of $M$. But this is the result of \ref{lem:cut_down_sigma_closed_cts}.
 \end{proof}
 
@@ -291,7 +291,7 @@ We state the following without proof, as it is available in Mathlib.
 
 \begin{lemma}
   \label{lem:wstar_of_masa}
-  \uses{cor:sig_clos_of_cstar_is_wstar_Sak_1_7_9,lem:sigma_closed_star_subalg_wstar}
+  \uses{cor:sig_clos_of_cstar_is_wstar_Sak_1_7_9,lem:sigma_closed_star_subalg_wstar_Sak_1_1_4}
   A maximal abelian $*$--subalgebra $\mathcal{A}$ of a $W^{*}$--algebra $M$ is also a $W^{*}$--algebra.
 \end{lemma}
 
