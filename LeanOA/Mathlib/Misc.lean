@@ -19,12 +19,6 @@ lemma ContinuousLinearMap.norm_postcomp_le {𝕜₁ 𝕜₂ 𝕜₃ : Type*} [No
     ‖L.postcomp (σ := σ) E‖ ≤ ‖L‖ :=
   L.postcomp (σ := σ) E |>.opNorm_le_bound (by positivity) <| opNorm_comp_le L
 
-@[to_additive]
-theorem Subgroup.topologicalClosure_mono {G : Type*} [TopologicalSpace G] [Group G]
-    [IsTopologicalGroup G] {s t : Subgroup G} (h : s ≤ t) :
-    s.topologicalClosure ≤ t.topologicalClosure :=
-  _root_.closure_mono h
-
 -- I think this instance is not terribly crazy.
 instance {𝕜 A : Type*} [RCLike 𝕜] [Norm A] [MulAction 𝕜 A] [SMul ℤ A]
     [IsScalarTower ℤ 𝕜 A] [NormSMulClass 𝕜 A] :
@@ -60,19 +54,6 @@ lemma DirectedOn.inter {α : Type*} {r : α → α → Prop} {s : Set α}
   rintro y ⟨hy, y₁⟩ z ⟨hz, h₂⟩
   obtain ⟨w, hw, hyw, hzw⟩ := hs y hy z hz
   exact ⟨w, ⟨hw, trans y₁ hyw⟩ , ⟨hyw, hzw⟩⟩
-
-open Filter in
--- `Cauchy.map` should be protected.
-lemma _root_.Cauchy.map_of_le {α β : Type*} [UniformSpace α] [UniformSpace β]
-    {l : Filter α} {f : α → β} (hl : Cauchy l) {s : Set α}
-    (hf : UniformContinuousOn f s) (hls : l ≤ 𝓟 s) :
-    Cauchy (map f l) := by
-  rw [uniformContinuousOn_iff_restrict] at hf
-  have hl' : Cauchy (comap (Subtype.val : s → α) l) := by
-    apply hl.comap' ?_ (comap_coe_neBot_of_le_principal (h := hl.1) hls)
-    exact le_def.mpr fun x a ↦ a
-  simpa [Set.restrict_def, ← Function.comp_def, ← map_map,
-    subtype_coe_map_comap, inf_eq_left.mpr hls] using hl'.map hf
 
 section UniformEquiv
 
