@@ -1,7 +1,7 @@
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 import LeanOA.PositiveContinuousLinearMap
 import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
-import Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 
 open scoped ComplexOrder
 
@@ -91,28 +91,17 @@ end CauchySchwarz
 
 end PositiveLinearMap
 
-open ComplexOrder Complex Filter Topology Unitization in
+open Complex Filter Topology Unitization in
 theorem PositiveLinearMap.tendsto_norm_isIncreasingApproximateUnit_nhds_opNorm
     {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     (f : A →ₚ[ℂ] ℂ) {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
     l.Tendsto (‖f ·‖) (𝓝 ‖f.toContinuousLinearMap‖) := by
   refine Metric.tendsto_nhds.mpr fun ε hε ↦ ?_
-  sorry
+  have h : ∀ᶠ x in l, ‖f x‖ ≤ ‖f.toContinuousLinearMap‖ + ε / 2 := sorry
+  have h2 : ∀ᶠ x in l, ‖f.toContinuousLinearMap‖ - ε / 2 < ‖f x‖ := sorry
+  filter_upwards [h, h2] using by grind [Real.dist_eq]
 
-section unital
-variable {A} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-
-variable (A) in
-theorem Filter.IsIncreasingApproximateUnit.pure_one :
-    (pure 1 : Filter A).IsIncreasingApproximateUnit where
-  toIsApproximateUnit := .pure_one A
-  eventually_nonneg := by simp
-  eventually_norm := by nontriviality A; simp
-
-open ComplexOrder in
-theorem PositiveLinearMap.opNorm_eq_norm_map_one
-    (f : A →ₚ[ℂ] ℂ) : ‖f.toContinuousLinearMap‖ = ‖f 1‖ :=
+theorem PositiveLinearMap.opNorm_eq_norm_map_one {A} [CStarAlgebra A] [PartialOrder A]
+    [StarOrderedRing A] (f : A →ₚ[ℂ] ℂ) : ‖f.toContinuousLinearMap‖ = ‖f 1‖ :=
   tendsto_nhds_unique (f.tendsto_norm_isIncreasingApproximateUnit_nhds_opNorm (.pure_one A))
     (tendsto_pure_nhds _ _)
-
-end unital

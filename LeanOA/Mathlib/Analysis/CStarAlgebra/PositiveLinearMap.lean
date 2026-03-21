@@ -8,7 +8,7 @@ variable {A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra
 def toContinuousLinearMap : A₁ →L[ℂ] A₂ := { f with cont := map_continuous f }
 
 @[simp] theorem toContinuousLinearMap_apply (x : A₁) : f.toContinuousLinearMap x = f x := rfl
-
+@[simp] theorem toContinuousLinearMap_zero : (0 : A₁ →ₚ[ℂ] A₂).toContinuousLinearMap = 0 := rfl
 @[simp] theorem toLinearMap_toContinuousLinearMap :
     f.toContinuousLinearMap.toLinearMap = f.toLinearMap := rfl
 
