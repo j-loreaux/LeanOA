@@ -91,13 +91,16 @@ end CauchySchwarz
 
 end PositiveLinearMap
 
-open Complex Filter Topology Unitization in
+open Topology in
 theorem PositiveLinearMap.tendsto_norm_isIncreasingApproximateUnit_nhds_opNorm
     {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     (f : A →ₚ[ℂ] ℂ) {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
     l.Tendsto (‖f ·‖) (𝓝 ‖f.toContinuousLinearMap‖) := by
   refine Metric.tendsto_nhds.mpr fun ε hε ↦ ?_
-  have h : ∀ᶠ x in l, ‖f x‖ ≤ ‖f.toContinuousLinearMap‖ + ε / 2 := sorry
+  have h : ∀ᶠ x in l, ‖f x‖ ≤ ‖f.toContinuousLinearMap‖ + ε / 2 := by
+    filter_upwards [hl.eventually_norm] with x hx
+    grw [← f.toContinuousLinearMap_apply, ContinuousLinearMap.le_opNorm, hx, mul_one]
+    grind
   have h2 : ∀ᶠ x in l, ‖f.toContinuousLinearMap‖ - ε / 2 < ‖f x‖ := sorry
   filter_upwards [h, h2] using by grind [Real.dist_eq]
 
