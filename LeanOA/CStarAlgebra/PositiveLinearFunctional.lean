@@ -96,7 +96,7 @@ theorem norm_apply_le_sqrt_opNorm_mul {A : Type*} [NonUnitalCStarAlgebra A] [Par
   refine le_of_tendsto ((ContinuousAt.tendsto (by fun_prop)).comp (hl.tendsto_mul_right _)).norm ?_
   filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with e he1 he2
   grw [← he1.star_eq, Function.comp_apply, cauchy_schwarz_star_mul,
-    show f (star e * e) = (f : A →L[ℂ] ℂ) _ by rfl, ContinuousLinearMap.le_opNorm,
+    ← f.toContinuousLinearMap_apply (star e * e), ContinuousLinearMap.le_opNorm,
     CStarRing.norm_star_mul_self, he2, one_mul, mul_one]
 
 end CauchySchwarz
@@ -108,7 +108,7 @@ theorem tendsto_isIncreasingApproximateUnit_nhds_opNorm {A : Type*} [NonUnitalCS
   refine Metric.tendsto_nhds.mpr fun ε hε ↦ ?_
   have h : ∀ᶠ x in l, ‖f x‖ ≤ ‖(f : A →L[ℂ] ℂ)‖ + ε / 2 := by
     filter_upwards [hl.eventually_norm] with x hx
-    grw [show f x = (f : A →L[ℂ] ℂ) x by rfl, ContinuousLinearMap.le_opNorm, hx, mul_one]
+    grw [← f.toContinuousLinearMap_apply, ContinuousLinearMap.le_opNorm, hx, mul_one]
     grind
   have h2 : ∀ᶠ x in l, ‖(f : A →L[ℂ] ℂ)‖ - ε / 2 < ‖f x‖ := by
     obtain ⟨_, ⟨a, ha1, rfl⟩, ha2⟩ := exists_lt_of_lt_csSup (b := ‖(f : A →L[ℂ] ℂ)‖ - ε / 4)
@@ -121,7 +121,7 @@ theorem tendsto_isIncreasingApproximateUnit_nhds_opNorm {A : Type*} [NonUnitalCS
         exact f.mono <| hx1.star_eq.symm ▸ CStarAlgebra.mul_self_le_of_nonneg_of_norm_le_one hx1 hx2
       conv_lhs => rw [← hx1.star_eq]
       grw [cauchy_schwarz_star_mul f x a, mul_pow, Real.sq_sqrt (norm_nonneg _),
-        Real.sq_sqrt (norm_nonneg _), this, show f (star a * a) = (f : A →L[ℂ] ℂ) _ by rfl,
+        Real.sq_sqrt (norm_nonneg _), this, ← f.toContinuousLinearMap_apply (star _ * _),
         ContinuousLinearMap.le_opNorm, CStarRing.norm_star_mul_self, ← mul_assoc]
       refine mul_le_of_le_one_right (by positivity) ?_
       grw [mem_closedBall_zero_iff.mp ha1, one_mul]

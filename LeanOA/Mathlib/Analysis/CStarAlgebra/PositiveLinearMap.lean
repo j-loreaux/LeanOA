@@ -18,6 +18,7 @@ def toPositiveContinuousLinearMap : A₁ →P[ℂ] A₂ where __ := f
 /-- Lift a positive linear map between C⋆-algebras to a continuous linear map. -/
 abbrev toContinuousLinearMap : A₁ →L[ℂ] A₂ := f.toPositiveContinuousLinearMap.toContinuousLinearMap
 
+theorem toContinuousLinearMap_apply (x : A₁) : f.toContinuousLinearMap x = f x := rfl
 @[simp] theorem toContinuousLinearMap_zero : (0 : A₁ →ₚ[ℂ] A₂).toContinuousLinearMap = 0 := rfl
 @[simp] theorem toLinearMap_toContinuousLinearMap :
     f.toContinuousLinearMap.toLinearMap = f.toLinearMap := rfl
