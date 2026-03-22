@@ -128,7 +128,7 @@ lemma coe_ofClass (f : F) : ⇑(ofClass f) = f := rfl
 
 end ofClass
 
-instance : CoeTC (E₁ →P[R] E₂) (E₁ →L[R] E₂) := ⟨toContinuousLinearMap⟩
+instance : Coe (E₁ →P[R] E₂) (E₁ →L[R] E₂) := ⟨toContinuousLinearMap⟩
 
 @[simp]
 lemma coe_toPositiveLinearMap (f : E₁ →P[R] E₂) :
