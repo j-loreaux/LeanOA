@@ -25,6 +25,4 @@ theorem toContinuousLinearMap_apply (x : A₁) : f.toContinuousLinearMap x = f x
 @[simp] lemma toContinuousLinearMap_id :
     (PositiveLinearMap.id ℂ A₁).toContinuousLinearMap = .id ℂ A₁ := rfl
 
-instance : CoeTC (A₁ →ₚ[ℂ] A₂) (A₁ →L[ℂ] A₂) := ⟨toContinuousLinearMap⟩
-
 end PositiveLinearMap
