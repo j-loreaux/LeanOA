@@ -12,4 +12,6 @@ def toContinuousLinearMap : A₁ →L[ℂ] A₂ := { f with cont := map_continuo
 @[simp] theorem toLinearMap_toContinuousLinearMap :
     f.toContinuousLinearMap.toLinearMap = f.toLinearMap := rfl
 
+instance : CoeTC (A₁ →ₚ[ℂ] A₂) (A₁ →L[ℂ] A₂) := ⟨toContinuousLinearMap⟩
+
 end PositiveLinearMap

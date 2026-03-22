@@ -17,3 +17,13 @@ lemma CStarAlgebra.dominated_convergence {x y : ι → A} (hx : Summable x)
   refine CStarAlgebra.norm_le_norm_of_nonneg_of_le (t.sum_nonneg fun i _ ↦ (hy_nonneg i)) ?_
   gcongr
   exact h_le _
+
+open Unitization in
+/-- If `e` is an element of the nonnegative closed unit ball, then `e * e ≤ e`, with equality
+if `e` is an extreme point
+(see `isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall`). -/
+lemma CStarAlgebra.mul_self_le_of_nonneg_of_norm_le_one {e : A} (he0 : 0 ≤ e) (he1 : ‖e‖ ≤ 1) :
+    e * e ≤ e := by
+  rw [← inr_le_iff (e * e) e, inr_mul, ← sub_nonneg, ← mul_one_sub]
+  exact ((Commute.one_right _).sub_right (.refl _)).mul_nonneg he0.inr
+    (sub_nonneg.mpr (CStarAlgebra.inr_mem_Icc_iff_norm_le.mpr ⟨he0, he1⟩).2)
