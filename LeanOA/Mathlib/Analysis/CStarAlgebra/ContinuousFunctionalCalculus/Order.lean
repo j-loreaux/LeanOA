@@ -18,17 +18,20 @@ lemma CStarAlgebra.dominated_convergence {x y : ι → A} (hx : Summable x)
   gcongr
   exact h_le _
 
+-- `Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Isometric`
+alias quasispectrum.norm_le_norm_of_mem :=
+  NonUnitalIsometricContinuousFunctionalCalculus.norm_quasispectrum_le
+
 open Unitization NNReal CStarAlgebra in
 lemma CStarAlgebra.nnrpow_le_self_of_nonneg_of_norm_le_one {e : A} (he0 : 0 ≤ e) (he1 : ‖e‖ ≤ 1)
     {n : ℝ≥0} (hn : 1 ≤ n) : e ^ n ≤ e := by
   have : n ≠ 0 := by aesop
-  rw [← inr_le_iff (e ^ _) e, CFC.nnrpow_eq_cfcₙ_real e, cfcₙ_eq_cfc_inr isSelfAdjoint_inr ..]
-  conv_rhs => rw [← cfc_id' ℝ (e : A⁺¹)]
-  rw [← sub_nonneg, ← cfc_sub ..]
-  refine cfc_nonneg fun x hx ↦ sub_nonneg.mpr ?_
-  have := spectrum.norm_le_norm_of_mem hx
-  grw [norm_inr, he1, Real.norm_eq_abs] at this
-  exact Real.rpow_le_self_of_le_one (spectrum_nonneg_of_nonneg he0.inr hx) (by grind) hn
+  conv_rhs => rw [← cfcₙ_id' ℝ e]
+  rw [CFC.nnrpow_eq_cfcₙ_real e, ← sub_nonneg, ← cfcₙ_sub ..]
+  refine cfcₙ_nonneg fun x hx ↦ sub_nonneg.mpr ?_
+  have := quasispectrum.norm_le_norm_of_mem _ hx
+  grw [he1, Real.norm_eq_abs] at this
+  exact Real.rpow_le_self_of_le_one (quasispectrum_nonneg_of_nonneg _ he0 _ hx) (by grind) hn
 
 /-- If `e` is an element of the nonnegative closed unit ball, then `e * e ≤ e`, with equality
 if `e` is an extreme point
@@ -39,13 +42,12 @@ lemma CStarAlgebra.mul_self_le_of_nonneg_of_norm_le_one {e : A} (he0 : 0 ≤ e) 
 open Unitization NNReal CStarAlgebra in
 lemma CStarAlgebra.self_le_nnrpow_of_nonneg_of_norm_le_one {e : A} (he0 : 0 ≤ e) (he1 : ‖e‖ ≤ 1)
     {n : ℝ≥0} (hn0 : n ≠ 0) (hn : n ≤ 1) : e ≤ e ^ n := by
-  rw [← inr_le_iff e (e ^ _), CFC.nnrpow_eq_cfcₙ_real e, cfcₙ_eq_cfc_inr isSelfAdjoint_inr ..]
-  conv_lhs => rw [← cfc_id' ℝ (e : A⁺¹)]
-  rw [← sub_nonneg, ← cfc_sub ..]
-  refine cfc_nonneg fun x hx ↦ sub_nonneg.mpr ?_
-  have := spectrum.norm_le_norm_of_mem hx
-  grw [norm_inr, he1, Real.norm_eq_abs] at this
-  exact Real.self_le_rpow_of_le_one (spectrum_nonneg_of_nonneg he0.inr hx) (by grind) hn
+  conv_lhs => rw [← cfcₙ_id' ℝ e]
+  rw [CFC.nnrpow_eq_cfcₙ_real e, ← sub_nonneg, ← cfcₙ_sub ..]
+  refine cfcₙ_nonneg fun x hx ↦ sub_nonneg.mpr ?_
+  have := quasispectrum.norm_le_norm_of_mem _ hx
+  grw [he1, Real.norm_eq_abs] at this
+  exact Real.self_le_rpow_of_le_one (quasispectrum_nonneg_of_nonneg _ he0 _ hx) (by grind) hn
 
 lemma CStarAlgebra.self_le_sqrt_of_nonneg_of_norm_le_one {e : A} (he0 : 0 ≤ e) (he1 : ‖e‖ ≤ 1) :
     e ≤ CFC.sqrt e :=
