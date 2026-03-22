@@ -43,6 +43,13 @@ protected def unop : Eᵐᵒᵖ →ₚ[R] E where
 @[simp]
 lemma unop_apply (x : Eᵐᵒᵖ) : PositiveLinearMap.unop (R := R) x = unop x := rfl
 
+variable (R E) in
+@[simps!] protected def id : E →ₚ[R] E where
+  __ := LinearMap.id
+  monotone' _ _ h := h
+
+@[simp] lemma toLinearMap_id : (PositiveLinearMap.id R E).toLinearMap = .id := rfl
+
 end MulOpposite
 
 section Comp

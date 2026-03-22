@@ -162,6 +162,14 @@ lemma toContinuousLinearMap_zero : (0 : E₁ →P[R] E₂).toContinuousLinearMap
 lemma zero_apply (x : E₁) : (0 : E₁ →P[R] E₂) x = 0 :=
   rfl
 
+variable (R E₁) in
+@[simps!] protected def id : E₁ →P[R] E₁ where __ := PositiveLinearMap.id R E₁
+
+@[simp] lemma toContinuousLinearMap_id :
+    (PositiveContinuousLinearMap.id R E₁).toContinuousLinearMap = .id R E₁ := rfl
+@[simp] lemma toPositiveLinearMap_id :
+    (PositiveContinuousLinearMap.id R E₁).toPositiveLinearMap = .id R E₁ := rfl
+
 variable [IsOrderedAddMonoid E₂] [ContinuousAdd E₂]
 
 instance : Add (E₁ →P[R] E₂) where
