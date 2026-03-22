@@ -101,7 +101,7 @@ theorem PositiveLinearMap.tendsto_norm_isIncreasingApproximateUnit_nhds_opNorm
   refine Metric.tendsto_nhds.mpr fun ε hε ↦ ?_
   have h : ∀ᶠ x in l, ‖f x‖ ≤ ‖(f : A →L[ℂ] ℂ)‖ + ε / 2 := by
     filter_upwards [hl.eventually_norm] with x hx
-    grw [← f.toContinuousLinearMap_apply, ContinuousLinearMap.le_opNorm, hx, mul_one]
+    grw [show f x = (f : A →L[ℂ] ℂ) x by rfl, ContinuousLinearMap.le_opNorm, hx, mul_one]
     grind
   have h2 : ∀ᶠ x in l, ‖(f : A →L[ℂ] ℂ)‖ - ε / 2 < ‖f x‖ := by
     obtain ⟨_, ⟨a, ha1, rfl⟩, ha2⟩ := exists_lt_of_lt_csSup (b := ‖(f : A →L[ℂ] ℂ)‖ - ε / 4)
@@ -114,7 +114,7 @@ theorem PositiveLinearMap.tendsto_norm_isIncreasingApproximateUnit_nhds_opNorm
         exact f.mono <| hx1.star_eq.symm ▸ CStarAlgebra.mul_self_le_of_nonneg_of_norm_le_one hx1 hx2
       conv_lhs => rw [← hx1.star_eq]
       grw [cauchy_schwarz_star_mul f x a, mul_pow, Real.sq_sqrt (norm_nonneg _),
-        Real.sq_sqrt (norm_nonneg _), this, ← f.toContinuousLinearMap_apply (star a * a),
+        Real.sq_sqrt (norm_nonneg _), this, show f (star a * a) = (f : A →L[ℂ] ℂ) _ by rfl,
         ContinuousLinearMap.le_opNorm, CStarRing.norm_star_mul_self, ← mul_assoc]
       refine mul_le_of_le_one_right (by positivity) ?_
       grw [mem_closedBall_zero_iff.mp ha1, one_mul]
