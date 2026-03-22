@@ -124,6 +124,16 @@ theorem PositiveLinearMap.tendsto_norm_isIncreasingApproximateUnit_nhds_opNorm
     filter_upwards [h3, h4] with x _ _ using by nlinarith [norm_nonneg (f x)]
   filter_upwards [h, h2] using by grind [Real.dist_eq]
 
+theorem PositiveLinearMap.norm_apply_le_sqrt_opNorm_mul {A : Type*} [NonUnitalCStarAlgebra A]
+    [PartialOrder A] [StarOrderedRing A] (f : A →ₚ[ℂ] ℂ) (x : A) :
+    ‖f x‖ ≤ √‖f.toContinuousLinearMap‖ * √‖f (star x * x)‖ := by
+  have hl := CStarAlgebra.increasingApproximateUnit A
+  refine le_of_tendsto ((ContinuousAt.tendsto (by fun_prop)).comp (hl.tendsto_mul_right _)).norm ?_
+  filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with e he1 he2
+  grw [← he1.star_eq, Function.comp_apply, cauchy_schwarz_star_mul,
+    show f (star e * e) = (f : A →L[ℂ] ℂ) _ by rfl, ContinuousLinearMap.le_opNorm,
+    CStarRing.norm_star_mul_self, he2, one_mul, mul_one]
+
 theorem PositiveLinearMap.opNorm_eq_norm_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A]
     [StarOrderedRing A] (f : A →ₚ[ℂ] ℂ) : ‖(f : A →L[ℂ] ℂ)‖ = ‖f 1‖ :=
   tendsto_nhds_unique (f.tendsto_norm_isIncreasingApproximateUnit_nhds_opNorm (.pure_one A))
