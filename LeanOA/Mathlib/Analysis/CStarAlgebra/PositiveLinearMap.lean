@@ -15,8 +15,6 @@ def toPositiveContinuousLinearMap : A₁ →P[ℂ] A₂ where __ := f
 @[simp] lemma toPositiveContinuousLinearMap_id :
     (PositiveLinearMap.id ℂ A₁).toPositiveContinuousLinearMap = .id ℂ A₁ := rfl
 
-instance : CoeTC (A₁ →ₚ[ℂ] A₂) (A₁ →P[ℂ] A₂) := ⟨toPositiveContinuousLinearMap⟩
-
 /-- Lift a positive linear map between C⋆-algebras to a continuous linear map. -/
 abbrev toContinuousLinearMap : A₁ →L[ℂ] A₂ := f.toPositiveContinuousLinearMap.toContinuousLinearMap
 
