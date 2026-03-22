@@ -99,16 +99,15 @@ theorem PositiveLinearMap.tendsto_norm_isIncreasingApproximateUnit_nhds_opNorm
     (f : A →ₚ[ℂ] ℂ) {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
     l.Tendsto (‖f ·‖) (𝓝 ‖(f : A →L[ℂ] ℂ)‖) := by
   refine Metric.tendsto_nhds.mpr fun ε hε ↦ ?_
-  have h : ∀ᶠ x in l, ‖f x‖ ≤ ‖f.toContinuousLinearMap‖ + ε / 2 := by
+  have h : ∀ᶠ x in l, ‖f x‖ ≤ ‖(f : A →L[ℂ] ℂ)‖ + ε / 2 := by
     filter_upwards [hl.eventually_norm] with x hx
     grw [← f.toContinuousLinearMap_apply, ContinuousLinearMap.le_opNorm, hx, mul_one]
     grind
-  have h2 : ∀ᶠ x in l, ‖f.toContinuousLinearMap‖ - ε / 2 < ‖f x‖ := by
-    set δ : ℝ := ‖f.toContinuousLinearMap‖ - ε / 4 with _
-    obtain ⟨_, ⟨a, ha1, rfl⟩, ha2⟩ := exists_lt_of_lt_csSup (b := δ)
+  have h2 : ∀ᶠ x in l, ‖(f : A →L[ℂ] ℂ)‖ - ε / 2 < ‖f x‖ := by
+    obtain ⟨_, ⟨a, ha1, rfl⟩, ha2⟩ := exists_lt_of_lt_csSup (b := ‖(f : A →L[ℂ] ℂ)‖ - ε / 4)
       ((Metric.nonempty_closedBall (x := 0).mpr zero_le_one).image (‖f ·‖))
       (by grind [f.toContinuousLinearMap.sSup_unitClosedBall_eq_norm])
-    have h3 : ∀ᶠ x in l, ‖f (x * a)‖ ^ 2 ≤ ‖f x‖ * ‖f.toContinuousLinearMap‖ := by
+    have h3 : ∀ᶠ x in l, ‖f (x * a)‖ ^ 2 ≤ ‖f x‖ * ‖(f : A →L[ℂ] ℂ)‖ := by
       filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with x hx1 hx2
       have : ‖f (star x * x)‖ ≤ ‖f x‖ := by
         refine CStarAlgebra.norm_le_norm_of_nonneg_of_le (f.map_nonneg (star_mul_self_nonneg _)) ?_
@@ -119,7 +118,7 @@ theorem PositiveLinearMap.tendsto_norm_isIncreasingApproximateUnit_nhds_opNorm
         ContinuousLinearMap.le_opNorm, CStarRing.norm_star_mul_self, ← mul_assoc]
       refine mul_le_of_le_one_right (by positivity) ?_
       grw [mem_closedBall_zero_iff.mp ha1, one_mul]
-    have h4 : ∀ᶠ x in l, δ < ‖f (x * a)‖ := by
+    have h4 : ∀ᶠ x in l, ‖(f : A →L[ℂ] ℂ)‖ - ε / 4 < ‖f (x * a)‖ := by
       refine (Filter.Tendsto.norm ?_).eventually (lt_mem_nhds ha2)
       exact (ContinuousAt.tendsto (by fun_prop)).comp (hl.tendsto_mul_right a)
     filter_upwards [h3, h4] with x _ _ using by nlinarith [norm_nonneg (f x)]
