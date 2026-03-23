@@ -47,9 +47,10 @@ variable (R E) in
 /-- The identity as a positive linear map. -/
 @[simps!] protected def id : E →ₚ[R] E where
   __ := LinearMap.id
-  monotone' _ _ h := h
+  __ := OrderHom.id
 
 @[simp] lemma toLinearMap_id : (PositiveLinearMap.id R E).toLinearMap = .id := rfl
+@[simp] lemma toOrderHom_id : (PositiveLinearMap.id R E).toOrderHom = .id := rfl
 
 end MulOpposite
 
