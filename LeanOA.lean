@@ -18,6 +18,7 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Transfer
 import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
@@ -44,6 +45,7 @@ import LeanOA.Ultraweak.Bornology
 import LeanOA.Ultraweak.ContinuousFunctionalCalculus
 import LeanOA.Ultraweak.ContinuousStar
 import LeanOA.Ultraweak.LUB
+import LeanOA.Ultraweak.Masa
 import LeanOA.Ultraweak.OrderClosed
 import LeanOA.Ultraweak.SeparatingDual
 import LeanOA.Ultraweak.Uniformity
