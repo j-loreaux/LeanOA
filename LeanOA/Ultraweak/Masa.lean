@@ -195,7 +195,7 @@ lemma IsMasa.extremallyDisconnected_characterSpace (S : StarSubalgebra ℂ M) [h
   Since `M` is monotone complete, this set has a supremum `u`, which is selfadjoint because
   the elements of `f '' s` are. -/
   let _ := WStarAlgebra.instCCPO M P
-  refine .ofConditionallyCompletePartialOrderSupContinuousMapRCLike
+  refine .ofConditionallyCompletePartialOrderSupContinuousMap
     (𝕜 := ℝ) fun s hs hnon hbdd ↦ ?_
   let e := gelfandStarTransform S
   let o : S ≃o C(characterSpace ℂ S, ℂ) := OrderIsoClass.toOrderIso e
