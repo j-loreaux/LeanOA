@@ -1,21 +1,22 @@
-import Mathlib.Analysis.Normed.Order.Lattice
-import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Topology.ContinuousMap.StarOrdered
+import LeanOA.Mathlib.Algebra.Order.Star.Basic
+import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
+import Mathlib.Topology.ContinuousMap.ContinuousSqrt
 import Mathlib.Topology.ExtremallyDisconnected
 import Mathlib.Topology.GDelta.MetrizableSpace
-import Mathlib.Topology.ContinuousMap.ContinuousSqrt
 import Mathlib.Topology.UrysohnsLemma
-import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
-import LeanOA.Mathlib.Algebra.Order.Star.Basic
 
-open Set Function
+open Set Function ContinuousMap RCLike
+open scoped ComplexOrder
 
-variable {K : Type*} [TopologicalSpace K] [LocallyCompactSpace K] [R1Space K]
+variable {K 𝕜 : Type*} [TopologicalSpace K] [LocallyCompactSpace K] [R1Space K] [RCLike 𝕜]
 
+/-- If `C(K, 𝕜)` is a conditionally complete partial order for `RCLike 𝕜`, then
+`K` is extremally disconnected. -/
 theorem ExtremallyDisconnected.ofConditionallyCompletePartialOrderSupContinuousMap
-    (h : ∀ s : Set C(K, ℝ), DirectedOn (· ≤ ·) s → s.Nonempty → BddAbove s → ∃ g, IsLUB s g) :
-    ExtremallyDisconnected K where
-  open_closure u hu := by
+    (h : ∀ s : Set C(K, 𝕜), DirectedOn (· ≤ ·) s → s.Nonempty → BddAbove s → ∃ g, IsLUB s g) :
+    ExtremallyDisconnected K := by
+  refine { open_closure u hu := ?_ }
+  suffices h : ∀ s : Set C(K, ℝ), DirectedOn (· ≤ ·) s → s.Nonempty → BddAbove s → ∃ g, IsLUB s g by
     let s : Set C(K, ℝ) := {f | support f ⊆ u ∧ ∀ x, f x ∈ Icc 0 1}
     have hs_one : 1 ∈ upperBounds s := fun f hf x ↦ (hf.2 x).2
     have hs_zero : 0 ∈ s := by simp [s]
@@ -31,40 +32,26 @@ theorem ExtremallyDisconnected.ofConditionallyCompletePartialOrderSupContinuousM
         (isCompact_singleton (x := x)) hu (by simpa)
       have := @hf.1 g ⟨by grw [subset_tsupport, hg_supp], hg⟩ x
       simp_all
-    have hf0 x : 0 ≤ f x := hf.1 hs_zero x
-    have h0 : EqOn f 0 (closure u)ᶜ := by
-      intro x hx
+    have h0 : EqOn f 0 (closure u)ᶜ := fun x hx ↦ by
       obtain ⟨g, hg0, hg_eqOn, hg⟩ := exists_continuous_zero_one_of_isCompact
         (isCompact_singleton (x := x)) (t := closure u) isClosed_closure (by aesop)
-      apply le_antisymm
-      · trans f x * g x
-        · refine @hf.2 (f * g) (fun j hj y ↦ ?_) x
-          by_cases hy : j y = 0
-          · simpa [hy] using mul_nonneg (hf0 y) (hg y).1
-          · replace hy := subset_closure <| hj.1 <| mem_support.mpr hy
-            aesop
-        · simp_all
-      · exact hf.1 hs_zero x
+      refine le_antisymm ?_ (hf.1 hs_zero x)
+      trans f x * g x
+      · refine @hf.2 (f * g) (fun j hj y ↦ ?_) x
+        by_cases hy : j y = 0
+        · simpa [hy] using mul_nonneg (hf.1 hs_zero y) (hg y).1
+        · replace hy := subset_closure <| hj.1 <| mem_support.mpr hy
+          aesop
+      · simp_all
     have key : (closure u)ᶜ = f ⁻¹' {0} := by
       ext x
       refine ⟨@h0 x, fun hx ↦ ?_⟩
       contrapose! hx
       simp [h1 (by simpa using hx)]
     simpa [← isClosed_compl_iff, key] using isClosed_singleton.preimage (map_continuous f)
-
-open scoped ComplexOrder
-
-open ContinuousMap RCLike in
-/-- If `C(K, 𝕜)` is a conditionally complete partial order for `RCLike 𝕜`, then
-`K` is extremally disconnected. -/
-theorem ExtremallyDisconnected.ofConditionallyCompletePartialOrderSupContinuousMapRCLike
-    {𝕜 : Type*} [RCLike 𝕜]
-    (h : ∀ s : Set C(K, 𝕜), DirectedOn (· ≤ ·) s → s.Nonempty → BddAbove s → ∃ g, IsLUB s g) :
-    ExtremallyDisconnected K := by
-  refine .ofConditionallyCompletePartialOrderSupContinuousMap (fun s hs hsn hb ↦ ?_)
-  have coe_mono : Monotone (realToRCLike (A := K) 𝕜) := fun f g hfg x ↦ by simpa using hfg x
-  obtain ⟨g', hg⟩ := h _ (hs.mono_comp coe_mono) (hsn.image _) (coe_mono.map_bddAbove hb)
-  obtain ⟨g, rfl⟩ : g' ∈ range (realToRCLike 𝕜) := by
-    simpa [range_realToRCLike_eq_isSelfAdjoint] using
-      isSelfAdjoint_realToRCLike.of_ge <| hg.1 ⟨_, hsn.some_mem, rfl⟩
-  exact ⟨g, hg.of_image <| by simp [le_def]⟩
+  intro s hs hsn hb
+  obtain ⟨g', hg⟩ := h _ (hs.mono_comp (monotone_realToRCLike K 𝕜)) (hsn.image _)
+    ((monotone_realToRCLike K 𝕜).map_bddAbove hb)
+  rw [← isSelfAdjoint_realToRCLike.of_ge (hg.1 ⟨_, hsn.some_mem, rfl⟩)
+    |>.realToRCLike_rclikeToReal] at hg
+  exact ⟨_, hg.of_image <| by simp [le_def]⟩
