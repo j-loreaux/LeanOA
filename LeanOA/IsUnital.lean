@@ -13,8 +13,7 @@ noncomputable abbrev IsUnital.toMulOneClass {A : Type*} [Mul A] [h : IsUnital A]
   one_mul a := (h.isUnital.choose_spec a).1
   mul_one a := (h.isUnital.choose_spec a).2
 
-/-- A `MulOneClass` is unital. -/
-abbrev MulOneClass.isUnital [MulOneClass A] : IsUnital A where
+lemma MulOneClass.isUnital [MulOneClass A] : IsUnital A where
   isUnital := ⟨1, fun x ↦ ⟨one_mul x, mul_one x⟩⟩
 
 attribute [local instance] IsUnital.toMulOneClass
