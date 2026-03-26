@@ -12,7 +12,7 @@ import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 This file contains results on the extreme points of the closed unit ball in (unital) C⋆-algebras.
 In particular, we show that in a C⋆-algebra :
 
-* `CStarAlgebra.one_mem_extremePoints_unitClosedBall`, `CStarAlgebra.ofExtremePt`:
+* `CStarAlgebra.isUnital_iff`:
   A C⋆-algebra is unital if and only if there exists an extreme point of the closed unit ball.
 * `isStarProjection_iff_mem_extremePoints_nonneg_and_mem_unitClosedBall`:
   The extreme points of the nonnegative closed unit ball are its projections.
@@ -260,32 +260,13 @@ theorem CStarAlgebra.ofExtremePtOne_mul {x : A} (hx : x ∈ extremePoints ℝ (c
   simpa [add_comm] using congr(star $(mul_ofExtremePtOne (x := star x) (by simpa) (star a)))
 
 attribute [local instance] IsUnital.toCStarAlgebra in
-/-- A C⋆-algebra is unital iff there exists an extreme point of the closed unit ball. -/
+/-- A C⋆-algebra is unital iff there exists an extreme point of the closed unit ball.
+
+To upgrade a non-unital C⋆-algebra to a unital one, use `IsUnital.toCStarAlgebra`. -/
 theorem CStarAlgebra.isUnital_iff :
     IsUnital A ↔ ∃ x : A, x ∈ extremePoints ℝ (closedBall (0 : A) 1) := by
   refine ⟨fun h ↦ ⟨1, one_mem_extremePoints_unitClosedBall⟩, fun ⟨x, hx⟩ ↦ ?_⟩
   exact ⟨_, fun y ↦ ⟨ofExtremePtOne_mul hx y, mul_ofExtremePtOne hx y⟩⟩
-
-/-- The ring structure given an extreme point of the closed unit ball on a non-unital
-C⋆-algebra. Only an implementation for `CStarAlgebra.ofExtremePt`. -/
-abbrev CStarAlgebra.ringOfExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
-    Ring A where
-  one := star x * x + x * star x - x * star x * (star x * x)
-  one_mul y := ofExtremePtOne_mul hx y
-  mul_one y := mul_ofExtremePtOne hx y
-
-lemma CStarAlgebra.ofExtremePt_one_def {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
-    letI := CStarAlgebra.ringOfExtremePt hx
-    1 = star x * x + x * star x - x * star x * (star x * x) :=
-  rfl
-
-/-- Upgrade a non-unital C⋆-algebra to a unital C⋆-algebra, given there exists an
-extreme point of the closed unit ball. -/
-abbrev CStarAlgebra.ofExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) :
-    CStarAlgebra A where
-  __ := ‹NonUnitalCStarAlgebra A›
-  __ := ringOfExtremePt hx
-  __ := Algebra.ofModule smul_mul_assoc mul_smul_comm
 
 /-- The star projections in a non-unital C⋆-algebra are exactly the extreme points of
 the nonnegative closed unit ball. -/
