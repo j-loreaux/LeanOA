@@ -12,17 +12,17 @@ import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 This file contains results on the extreme points of the closed unit ball in (unital) C⋆-algebras.
 In particular, we show that in a C⋆-algebra :
 
-* `CStarAlgebra.one_mem_extremePoints_closedUnitBall`, `CStarAlgebra.ofExtremePt`:
+* `CStarAlgebra.one_mem_extremePoints_unitClosedBall`, `CStarAlgebra.ofExtremePt`:
   A C⋆-algebra is unital if and only if there exists an extreme point of the closed unit ball.
-* `isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall`:
+* `isStarProjection_iff_mem_extremePoints_nonneg_and_mem_unitClosedBall`:
   The extreme points of the nonnegative closed unit ball are its projections.
-* `mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary`:
+* `mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall_iff_isSelfAdjoint_and_mem_unitary`:
   The extreme points of the self-adjoint closed unit ball are its self-adjoint unitaries.
 
 ## TODO
 
 * Generalize
-  `mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary` to
+  `mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall_iff_isSelfAdjoint_and_mem_unitary` to
   non-unital by showing that the existence of an extreme point in the closed unit ball of the
   self-adjoint elements implies the algebra is unital.)
   Here is an outline from Jireh that will work:
@@ -60,7 +60,7 @@ lemma Set.extremePoints_Icc {a b : ℝ} (hab : a ≤ b) :
     · simpa using ⟨hab, convex_Ico ..⟩
 
 open scoped ComplexStarModule in
-lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] :
+lemma CStarAlgebra.one_mem_extremePoints_unitClosedBall {A : Type*} [CStarAlgebra A] :
     1 ∈ extremePoints ℝ (closedBall (0 : A) 1) := by
   nontriviality A
   /- Suppose that `1` is a convex combination of `x` and `y`. Then, since `1` is self
@@ -118,16 +118,16 @@ lemma CStarAlgebra.one_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebr
   rw [← norm_eq_zero, ← sq_eq_zero_iff, ← IsSelfAdjoint.norm_mul_self (ℑ x).2, ← sq, norm_eq_zero]
   exact le_antisymm (by simpa using hx) (ℑ x).2.sq_nonneg
 
-lemma Unitary.coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] (u : unitary A) :
+lemma Unitary.coe_mem_extremePoints_unitClosedBall {A : Type*} [CStarAlgebra A] (u : unitary A) :
     (u : A) ∈ extremePoints ℝ (closedBall 0 1) := by
   rw [← map_zero (mulLeftLinearIsometryEquiv ℝ A u), ← LinearIsometryEquiv.image_closedBall,
     ← image_extremePoints]
-  exact ⟨1 , ⟨one_mem_extremePoints_closedUnitBall, by simp⟩⟩
+  exact ⟨1 , ⟨one_mem_extremePoints_unitClosedBall, by simp⟩⟩
 
 section nonUnital
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
-theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
+theorem star_self_conjugate_eq_self_of_mem_extremePoints_unitClosedBall {a : A}
     (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
   /- Suppose `a` is an extreme point of the closed unit ball. Then we want to show that
   `a * star a * a = a`. It suffices to show `a * |a| = a`. -/
@@ -162,15 +162,15 @@ attribute [local grind] IsStarProjection
 
 /-- Every extreme point in the closed unit ball of a `NonUnitalCStarAlgebra` is a
 partial isometry (in other words, `star a * a` is a projection). -/
-theorem isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall
+theorem isStarProjection_star_mul_self_of_mem_extremePoints_unitClosedBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (star a * a) := by
-  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
+  grind [star_self_conjugate_eq_self_of_mem_extremePoints_unitClosedBall ha]
 
 /-- Every extreme point in the closed unit ball of a `NonUnitalCStarAlgebra` is a
 partial isometry (in other words, `a * star a` is a projection). -/
-theorem isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall
+theorem isStarProjection_self_mul_star_of_mem_extremePoints_unitClosedBall
     {a : A} (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : IsStarProjection (a * star a) := by
-  grind [star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall ha]
+  grind [star_self_conjugate_eq_self_of_mem_extremePoints_unitClosedBall ha]
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
@@ -181,12 +181,12 @@ shorthand used in paper proofs to make them more transparent, but it is
 nonsense to refer to `1`, and the notation means that everything should be
 considered as fully expanded. This is reflected in the statement below.
 *The converse is Sakai 1.6.4.* -/
-private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
+private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_unitClosedBall
     {x a b : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1)) (ha : a ∈ closedBall 0 1)
     (hb : a = b - b * (star x * x) - (x * star x) * b + (x * star x) * b * (star x * x)) :
     a = 0 := by
-  have hP := isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall hx
-  have hQ := isStarProjection_self_mul_star_of_mem_extremePoints_closedUnitBall hx
+  have hP := isStarProjection_star_mul_self_of_mem_extremePoints_unitClosedBall hx
+  have hQ := isStarProjection_self_mul_star_of_mem_extremePoints_unitClosedBall hx
   set p := star x * x with hp
   /- Notice that `x = q * x * p`, and `star x = p * star x * q` formally yield
   `star x * (1 - q) * b * (1 - p) = 0` with the above abusive notation. By substituting for `a` in
@@ -231,7 +231,7 @@ theorem CStarAlgebra.mul_ofExtremePtOne {x : A} (hx : x ∈ extremePoints ℝ (c
   let hu := increasingApproximateUnit A
   let f (t : A) : A := t - t * (star x * x) - x * star x * t + x * star x * t * (star x * x)
   have h (t : A) : f t = 0 := by
-    simpa using eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_closedUnitBall
+    simpa using eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_unitClosedBall
       hx (inv_norm_smul_mem_unitClosedBall (f t)) (b := ‖f t‖⁻¹ • t)
       (by simp [← mul_assoc, smul_mul_assoc, mul_smul_comm, sub_sub, ← smul_sub, ← smul_add, f])
   have h_tendsto : Tendsto (fun t ↦ a * f t) u
@@ -260,11 +260,11 @@ theorem CStarAlgebra.ofExtremePtOne_mul {x : A} (hx : x ∈ extremePoints ℝ (c
   simpa [add_comm] using congr(star $(mul_ofExtremePtOne (x := star x) (by simpa) (star a)))
 
 attribute [local instance] IsUnital.toCStarAlgebra in
+/-- A C⋆-algebra is unital iff there exists an extreme point of the closed unit ball. -/
 theorem CStarAlgebra.isUnital_iff :
     IsUnital A ↔ ∃ x : A, x ∈ extremePoints ℝ (closedBall (0 : A) 1) := by
-  refine ⟨fun h ↦ ⟨1, one_mem_extremePoints_closedUnitBall⟩, fun ⟨x, hx⟩ ↦ ?_⟩
-  exact ⟨star x * x + x * star x - x * star x * (star x * x),
-    fun y ↦ ⟨ofExtremePtOne_mul hx y, mul_ofExtremePtOne hx y⟩⟩
+  refine ⟨fun h ↦ ⟨1, one_mem_extremePoints_unitClosedBall⟩, fun ⟨x, hx⟩ ↦ ?_⟩
+  exact ⟨_, fun y ↦ ⟨ofExtremePtOne_mul hx y, mul_ofExtremePtOne hx y⟩⟩
 
 /-- The ring structure given an extreme point of the closed unit ball on a non-unital
 C⋆-algebra. Only an implementation for `CStarAlgebra.ofExtremePt`. -/
@@ -289,7 +289,7 @@ abbrev CStarAlgebra.ofExtremePt {x : A} (hx : x ∈ extremePoints ℝ (closedBal
 
 /-- The star projections in a non-unital C⋆-algebra are exactly the extreme points of
 the nonnegative closed unit ball. -/
-theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall
+theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_unitClosedBall
     [PartialOrder A] [StarOrderedRing A] {e : A} :
     IsStarProjection e ↔ e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} := by
   simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq, and_imp]
@@ -344,12 +344,12 @@ private lemma CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one [PartialOrde
     (by simpa using add_le_add hx.inr (neg_le_neg_iff.mpr hy0))
     (add_le_add hx0 (by simpa using neg_le_neg hy.inr : -(y : A⁺¹) ≤ 0))
 
-theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
+theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall
     {e : A} (he : e ∈ extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
     IsStarProjection (e⁺ : A) := by
   let := spectralOrder A
   let := spectralOrderedRing A
-  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
+  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_unitClosedBall]
   simp only [mem_closedBall_zero_iff, mem_extremePoints_iff_left, mem_setOf_eq] at he ⊢
   refine ⟨⟨posPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
   · grw [norm_posPart_le, he.1.2]
@@ -361,12 +361,12 @@ theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_clos
   refine hpn ▸ sub_eq_iff_eq_add.mp <| this ⟨α, β, hα, hβ, hαβ, ?_⟩
   simp [smul_sub, sub_add_sub_comm, ← add_smul, hαβ, sub_eq_iff_eq_add, ← hpn, h]
 
-theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall
+theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall
     {e : A} (he : e ∈ Set.extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
     IsStarProjection (e⁻ : A) := by
   let := spectralOrder A
   let := spectralOrderedRing A
-  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall]
+  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_unitClosedBall]
   simp only [mem_closedBall_zero_iff, mem_extremePoints_iff_left, mem_setOf_eq] at he ⊢
   refine ⟨⟨negPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
   · grw [norm_negPart_le, he.1.2]
@@ -384,13 +384,13 @@ end nonUnital
 
 /-- The extreme points of the self-adjoint closed unit ball is exactly the set of self-adjoint
 unitaries. -/
-theorem mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary
+theorem mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall_iff_isSelfAdjoint_and_mem_unitary
     {A : Type*} [CStarAlgebra A] {e : A} :
     e ∈ extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1} ↔
       IsSelfAdjoint e ∧ e ∈ unitary A := by
   refine ⟨fun he ↦ ⟨(mem_setOf_eq ▸ he.1).1, ?_⟩, fun he ↦ ?_⟩
-  · have h1 := isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
-    have h2 := isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall he
+  · have h1 := isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall he
+    have h2 := isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall he
     simp only [mem_closedBall_zero_iff, mem_extremePoints_iff_left, mem_setOf_eq] at he
     rw [Unitary.mem_iff, he.1.1, and_self, ← posPart_sub_negPart e he.1.1]
     simp only [mul_sub, sub_mul, h2.isIdempotentElem.eq, negPart_mul_posPart, sub_zero,
@@ -406,16 +406,16 @@ theorem mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint
     · grw [he.1.1.norm_sub_eq_max this hx.isSelfAdjoint, he.1.2, hx.norm_le, max_self]
     simp [← one_div, smul_add, smul_sub, ← two_smul ℝ, smul_smul, mul_one_div_cancel]
   · refine inter_extremePoints_subset_extremePoints_of_subset inter_subset_right
-      ⟨⟨he.1, ?_⟩, by simpa using Unitary.coe_mem_extremePoints_closedUnitBall ⟨e, he.2⟩⟩
+      ⟨⟨he.1, ?_⟩, by simpa using Unitary.coe_mem_extremePoints_unitClosedBall ⟨e, he.2⟩⟩
     nontriviality A
     simp [he]
 
 /-- An alternate statement for
-`mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary`. -/
-theorem selfAdjoint.mem_extremePoints_closedUnitBall_iff_coe_mem_unitary
+`mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall_iff_isSelfAdjoint_and_mem_unitary`. -/
+theorem selfAdjoint.mem_extremePoints_unitClosedBall_iff_coe_mem_unitary
     {A : Type*} [CStarAlgebra A] {e : selfAdjoint A} :
     e ∈ extremePoints ℝ (closedBall 0 1) ↔ (e : A) ∈ unitary A := by
   rw [show (e : A) ∈ unitary A ↔ (IsSelfAdjoint (e : A) ∧ (e : A) ∈ unitary A) by simp,
-    ← mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary]
+    ← mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall_iff_isSelfAdjoint_and_mem_unitary]
   simp [mem_extremePoints, selfAdjoint.mem_iff, ← isSelfAdjoint_iff]
   simp [Subtype.ext_iff, openSegment]
