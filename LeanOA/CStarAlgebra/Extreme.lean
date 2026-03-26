@@ -1,4 +1,5 @@
 import LeanOA.CFC
+import LeanOA.IsUnital
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
@@ -257,6 +258,13 @@ then `star x * x + x * star x - x * star x * star x * x` is a left identity.
 theorem CStarAlgebra.ofExtremePtOne_mul {x : A} (hx : x ∈ extremePoints ℝ (closedBall 0 1))
     (a : A) : (star x * x + x * star x - x * star x * (star x * x)) * a = a := by
   simpa [add_comm] using congr(star $(mul_ofExtremePtOne (x := star x) (by simpa) (star a)))
+
+attribute [local instance] IsUnital.toCStarAlgebra in
+theorem CStarAlgebra.isUnital_iff :
+    IsUnital A ↔ ∃ x : A, x ∈ extremePoints ℝ (closedBall (0 : A) 1) := by
+  refine ⟨fun h ↦ ⟨1, one_mem_extremePoints_closedUnitBall⟩, fun ⟨x, hx⟩ ↦ ?_⟩
+  exact ⟨star x * x + x * star x - x * star x * (star x * x),
+    fun y ↦ ⟨ofExtremePtOne_mul hx y, mul_ofExtremePtOne hx y⟩⟩
 
 /-- The ring structure given an extreme point of the closed unit ball on a non-unital
 C⋆-algebra. Only an implementation for `CStarAlgebra.ofExtremePt`. -/
