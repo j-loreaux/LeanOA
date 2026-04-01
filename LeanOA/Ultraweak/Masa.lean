@@ -5,7 +5,7 @@ import Mathlib.Algebra.Order.Monoid.Submonoid -- it makes no sense that this imp
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 import Mathlib.Analysis.CStarAlgebra.Unitary.Span
 
-section
+section IsSelfAdjoint
 
 variable {A : Type*} [NonUnitalRing A] [StarRing A]
   [Module ℝ A] [IsScalarTower ℝ A A] [SMulCommClass ℝ A A]
@@ -15,7 +15,7 @@ variable {A : Type*} [NonUnitalRing A] [StarRing A]
 
 -- should we lower the priority here and make specialized instances for `NonUnitalStarSubalgebra`s
 -- and `StarSubalgebra`s so that Lean doesn't have to hunt for the `SetLike` instances?
-instance foo {S : Type*} [SetLike S A] [NonUnitalSubringClass S A] [SMulMemClass S ℝ A]
+instance {S : Type*} [SetLike S A] [NonUnitalSubringClass S A] [SMulMemClass S ℝ A]
     [StarMemClass S A] (s : S) [IsClosed (s : Set A)] :
     StarOrderedRing s := by
   refine .of_nonneg_iff' add_le_add_right fun x ↦ ⟨fun hx ↦ ?_, ?_⟩
@@ -28,9 +28,9 @@ instance foo {S : Type*} [SetLike S A] [NonUnitalSubringClass S A] [SMulMemClass
   · rintro ⟨x, rfl⟩
     exact star_mul_self_nonneg (x : A)
 
-end
+end IsSelfAdjoint
 
-section
+section IsStarNormal
 
 variable {A : Type*} [NonUnitalRing A] [StarRing A]
   [Module ℂ A] [IsScalarTower ℂ A A] [SMulCommClass ℂ A A]
@@ -42,7 +42,7 @@ variable {A : Type*} [NonUnitalRing A] [StarRing A]
 -- given that we need to use `CFC.sqrt`.
 -- should we lower the priority here and make specialized instances for `NonUnitalStarSubalgebra`s
 -- and `StarSubalgebra`s so that Lean doesn't have to hunt for the `SetLike` instances?
-instance bar {S : Type*} [SetLike S A] [NonUnitalSubringClass S A] [SMulMemClass S ℂ A]
+instance {S : Type*} [SetLike S A] [NonUnitalSubringClass S A] [SMulMemClass S ℂ A]
     [StarMemClass S A] (s : S) [IsClosed (s : Set A)] :
     StarOrderedRing s := by
   have : SMulMemClass S ℝ A := ⟨fun r _ h ↦ SMulMemClass.smul_mem (r : ℂ) h⟩
@@ -50,7 +50,7 @@ instance bar {S : Type*} [SetLike S A] [NonUnitalSubringClass S A] [SMulMemClass
     Topology.IsInducing.id.continuousConstSMul Complex.ofReal (by simp)
   infer_instance
 
-end
+end IsStarNormal
 
 section
 
@@ -65,43 +65,6 @@ noncomputable abbrev WStarAlgebra.instCCPO : ConditionallyCompletePartialOrderSu
 
 open WeakDual ContinuousMap
 open scoped ComplexOrder
-
-namespace ContinuousMap
-
-variable {α : Type*} (𝕜 : Type*) [TopologicalSpace α] [RCLike 𝕜]
-
-/-- `ContinuousMap.realToRCLike` as an order embedding. -/
-def realToRCLikeOrderEmbedding :
-    C(α, ℝ) ↪o C(α, 𝕜) where
-  toFun := realToRCLike 𝕜
-  inj' f g hfg := by ext x; simpa using congr($hfg x)
-  map_rel_iff' := by simp [le_def]
-
-lemma realToRCLike_monotone : Monotone (realToRCLike (A := α) 𝕜) :=
-  realToRCLikeOrderEmbedding 𝕜 |>.monotone
-
-lemma realToRCLike_strictMono : StrictMono (realToRCLike (A := α) 𝕜) :=
-  realToRCLikeOrderEmbedding 𝕜 |>.strictMono
-
-@[simp]
-lemma realToRCLike_injective : (realToRCLike (A := α) 𝕜).Injective :=
-  realToRCLikeOrderEmbedding 𝕜 |>.injective
-
-@[simp]
-lemma realToRCLike_inj {f g : C(α, ℝ)} : realToRCLike 𝕜 f = realToRCLike 𝕜 g ↔ f = g :=
-  realToRCLikeOrderEmbedding 𝕜 |>.eq_iff_eq
-
-@[simp]
-lemma realToRCLike_le_realToRCLike_iff {f g : C(α, ℝ)} :
-    realToRCLike 𝕜 f ≤ realToRCLike 𝕜 g ↔ f ≤ g :=
-  realToRCLikeOrderEmbedding 𝕜 |>.le_iff_le
-
-@[simp]
-lemma realToRCLike_lt_realToRCLike_iff {f g : C(α, ℝ)} :
-    realToRCLike 𝕜 f < realToRCLike 𝕜 g ↔ f < g :=
-  realToRCLikeOrderEmbedding 𝕜 |>.lt_iff_lt
-
-end ContinuousMap
 
 section Unitary
 
