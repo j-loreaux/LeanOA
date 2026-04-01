@@ -64,7 +64,6 @@ noncomputable abbrev WStarAlgebra.instCCPO : ConditionallyCompletePartialOrderSu
   inferInstanceAs (ConditionallyCompletePartialOrderSup σ(M, P))
 
 open WeakDual ContinuousMap
-open scoped ComplexOrder
 
 section StarMemClass
 
