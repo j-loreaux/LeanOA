@@ -58,7 +58,8 @@ def realToRCLikeOrderEmbedding :
   inj' f g hfg := by ext x; simpa using congr($hfg x)
   map_rel_iff' := by simp [le_def]
 
-lemma realToRCLike_monotone' : Monotone (realToRCLike (A := A) 𝕜) :=
+variable (A) in
+lemma monotone_realToRCLike : Monotone (realToRCLike (A := A) 𝕜) :=
   realToRCLikeOrderEmbedding 𝕜 |>.monotone
 
 lemma realToRCLike_strictMono : StrictMono (realToRCLike (A := A) 𝕜) :=
