@@ -14,6 +14,7 @@ import LeanOA.Mathlib.Algebra.Order.Module.PositiveLinearMap
 import LeanOA.Mathlib.Algebra.Order.Star.Basic
 import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
 import LeanOA.Mathlib.Algebra.Star.StarAlgHom
+import LeanOA.Mathlib.Algebra.Star.Unitary
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
