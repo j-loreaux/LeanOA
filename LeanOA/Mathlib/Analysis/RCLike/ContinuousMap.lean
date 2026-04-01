@@ -54,7 +54,7 @@ def realToRCLikeOrderEmbedding :
   map_rel_iff' := by simp [le_def]
 
 variable (A) in
-lemma realToRCLike_monotone' : Monotone (realToRCLike (A := A) 𝕜) :=
+lemma realToRCLike_monotone : Monotone (realToRCLike (A := A) 𝕜) :=
   realToRCLikeOrderEmbedding 𝕜 |>.monotone
 
 lemma realToRCLike_strictMono : StrictMono (realToRCLike (A := A) 𝕜) :=
