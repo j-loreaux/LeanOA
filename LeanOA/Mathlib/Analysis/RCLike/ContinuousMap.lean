@@ -18,11 +18,6 @@ variable (𝕜) in
     spectrum ℝ (f.realToRCLike 𝕜) = spectrum ℝ f := by
   ext; simp [spectrum.mem_iff, isUnit_iff_forall_isUnit, RCLike.ext_iff (K := 𝕜), Algebra.smul_def]
 
-variable (A 𝕜) in
-open ComplexOrder in
-lemma monotone_realToRCLike : Monotone (realToRCLike (A := A) 𝕜) :=
-  fun f g hfg x ↦ by simpa using hfg x
-
 /-- Mapping `C(A, 𝕜)` to `C(A, ℝ)` using `RCLike.re`. -/
 @[simps] def rclikeToReal (f : C(A, 𝕜)) : C(A, ℝ) where toFun x := RCLike.re (f x)
 
@@ -59,7 +54,7 @@ def realToRCLikeOrderEmbedding :
   map_rel_iff' := by simp [le_def]
 
 variable (A) in
-lemma monotone_realToRCLike : Monotone (realToRCLike (A := A) 𝕜) :=
+lemma realToRCLike_monotone' : Monotone (realToRCLike (A := A) 𝕜) :=
   realToRCLikeOrderEmbedding 𝕜 |>.monotone
 
 lemma realToRCLike_strictMono : StrictMono (realToRCLike (A := A) 𝕜) :=
