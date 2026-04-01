@@ -1,6 +1,7 @@
 import LeanOA.ExtremallyDisconnected
 import LeanOA.Masa
 import LeanOA.Ultraweak.LUB
+import LeanOA.Mathlib.Algebra.Star.Unitary
 import Mathlib.Algebra.Order.Monoid.Submonoid -- it makes no sense that this import is necessary
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 import Mathlib.Analysis.CStarAlgebra.Unitary.Span
@@ -52,8 +53,6 @@ instance {S : Type*} [SetLike S A] [NonUnitalSubringClass S A] [SMulMemClass S �
 
 end IsStarNormal
 
-section
-
 variable {M P : Type*} [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M]
   [NormedAddCommGroup P] [NormedSpace ℂ P] [CompleteSpace P] [Predual ℂ M P]
 
@@ -88,7 +87,6 @@ theorem Commute.span_right {s : Set M} {x : M} (h : ∀ y ∈ s, Commute x y) :
     ∀ y ∈ Submodule.span R s, Commute x y := by
   simp only [Commute.symm_iff (a := x)] at *
   exact Commute.span_left h
-
 
 end CommuteSpan
 
@@ -180,5 +178,3 @@ lemma IsMasa.extremallyDisconnected_characterSpace (S : StarSubalgebra ℂ M) [h
   exact ⟨_, (this.realToRCLike_rclikeToReal ▸ hu).of_image <| by simp⟩
 
 end StarSubalgebra
-
-end
