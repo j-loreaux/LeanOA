@@ -1,6 +1,5 @@
 module
 
-public import Mathlib.GroupTheory.GroupAction.Ring
 public import Mathlib.LinearAlgebra.Span.Defs
 
 public section CommuteSpan
