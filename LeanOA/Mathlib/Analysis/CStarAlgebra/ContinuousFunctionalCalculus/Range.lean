@@ -12,12 +12,6 @@ public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 
 public section
 
-open Topology
-
-open scoped CStarAlgebra
-
-section Bar
-
 section Unital
 
 section RCLike
@@ -88,8 +82,6 @@ lemma range_cfc_nnreal' (a : A) (ha : 0 ≤ a) :
   exact Set.image_mono fun _ ↦ cfc_nonneg
 
 end Unital
-
-end Bar
 
 section NonUnital
 
