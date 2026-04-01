@@ -93,7 +93,7 @@ end CommuteSpan
 section StarMemClass
 
 @[simp]
-lemma Subtype.isSelfAdjoint_iff {S R : Type*} [Star R] [SetLike S R] [StarMemClass S R]
+lemma SetLike.isSelfAdjoint_iff {S R : Type*} [Star R] [SetLike S R] [StarMemClass S R]
     {s : S} {x : s} : IsSelfAdjoint (x : R) ↔ IsSelfAdjoint x := by
   simp [IsSelfAdjoint, Subtype.ext_iff]
 
