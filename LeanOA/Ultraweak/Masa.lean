@@ -59,7 +59,9 @@ variable {M P : Type*} [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M]
 
 open scoped Ultraweak
 
+
 variable (M P) in
+/-- Instance of `ConditionallyCompletePartialOrderSup`. -/
 noncomputable abbrev WStarAlgebra.instCCPO : ConditionallyCompletePartialOrderSup M :=
   inferInstanceAs (ConditionallyCompletePartialOrderSup σ(M, P))
 
