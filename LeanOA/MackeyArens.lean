@@ -1,47 +1,63 @@
-import Mathlib.Analysis.Normed.Module.WeakDual
+module
 
-/-
-Now I have to put together some variables for this. We want an abstract
-dual set up. What precisely does this mean?
+public import Mathlib.Analysis.Normed.Module.WeakDual
+public import Mathlib.Analysis.LocallyConvex.ContinuousOfBounded
 
-If we have a pair of vector spaces over a field, and a bilinear form
-that separates the points of V. What would it mean to say that a linear
-topology on V "has dual space F"? Would it mean that there is a linear
-equivalence between F and `V →L[𝕜] 𝕜`? I'm not even sure what that would mean.
-There would, perhaps, have to be a coercion of this from continuous linear
-maps...forgetting down to a linear space of linear maps. Or maybe there
-is already an obvious 𝕜-linear space structure on the whole thing.
+public section
 
-Let's try to figure out what is meant by this here...keeping local convexity at
-bay as long as possible.
--/
+open Set Topology WeakDual Metric
 
-variable {𝕜 V : Type*} [NontriviallyNormedField 𝕜] [AddCommMonoid V] [Module 𝕜 V]
-variable [TopologicalSpace V]
+variable {𝕜 V F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup V]
+    [Module 𝕜 V] [AddCommGroup F] [Module 𝕜 F]
 
-#check V →ₗ[𝕜] 𝕜
-#synth AddCommGroup (V →ₗ[𝕜] 𝕜)
-#synth Module 𝕜 (V →ₗ[𝕜] 𝕜)
-#check V →L[𝕜] 𝕜
-#synth AddCommMonoid (V →L[𝕜] 𝕜)
-#synth Module 𝕜 (V →L[𝕜] 𝕜)
+def seminorm_point_on_F (v : V) (b : F →ₗ[𝕜] V →ₗ[𝕜] 𝕜) : Seminorm 𝕜 F :=
+    Seminorm.comp (normSeminorm 𝕜 𝕜) (b.flip v)
 
-/-
-So, it seems there is a natural vector space structure on this. It seems
-that this has already incorporated the topology. Let's try to make up the dual
-space.
--/
+def seminorm_point_on_V (f : F) (b : F →ₗ[𝕜] V →ₗ[𝕜] 𝕜) : Seminorm 𝕜 V :=
+    Seminorm.comp (normSeminorm 𝕜 𝕜) (b f)
 
-variable {F : Type*} [AddCommMonoid F] [Module 𝕜 F] (b : F →ₗ[𝕜] V →ₗ[𝕜] 𝕜)
+/- I think this is already in Mathlib as `polar` associated to `b`. -/
+def nhd_polar (U : Set V) (b : F →ₗ[𝕜] V →ₗ[𝕜] 𝕜) : Set F :=
+  {f | ∀ v ∈ U, (seminorm_point_on_F v b) f ≤ 1}
 
-def Φ : F → (V →ₗ[𝕜] 𝕜) := fun f ↦ b f
+variable [TopologicalSpace V] [ContinuousSMul 𝕜 V]
 
-/-
-This is kind of funny. There is an easy way to make a linear function on V from an
-element of f, given a bilinear form. This thing isn't any sort of equivalence.
-We can assume there is a linear equivalence from `F` onto `V →L[𝕜] 𝕜`. So somehow
-this gives us a map from the continuous dual into the algebraic dual. Note, it isn't
-onto by any means. We may have it injective if the points are separated by F.
+variable (U : Set V) (b : F →ₗ[𝕜] V →ₗ[𝕜] 𝕜) (U_nhds : U ∈ 𝓝 (0 : V))
 
-Maybe this is essential...
--/
+def s := {p | ∃ f ∈ nhd_polar U b, p = seminorm_point_on_V f b}
+
+lemma absorbing (v : V) : ∃ t : 𝕜, t ≠ 0 ∧ t • v ∈ U := by sorry
+
+/- This should be generalized, and furthermore ought to already exist! -/
+lemma pointwise_bound (v : V) : ∃ M, ∀ p ∈ s U b, p v ≤ M := by
+  obtain ⟨t , htnz, ht⟩ := absorbing (𝕜 := 𝕜) U v
+  use ‖t‖⁻¹
+  have h : 0 < ‖t‖ := by aesop
+  intro p hp
+  obtain ⟨f, hfmem, hdef⟩ := hp
+  rw [hdef]
+  dsimp [seminorm_point_on_V]
+  have A := LinearMap.polar_mem b (fun x ↦ ‖(b x) (t • v)‖ ≤ 1)
+     (t • v) (fun x a ↦ a) f (hfmem (t • v) ht)
+  grw [LinearMap.map_smul (b f) t v, norm_smul t ((b f) v)] at A
+  have F : ‖t‖ * ‖t‖⁻¹ = 1 := by aesop
+  have D : ‖t‖ * ‖(b f) v‖ ≤ ‖t‖ * ‖t‖⁻¹ := le_of_le_of_eq A (id (Eq.symm F))
+  exact (mul_le_mul_iff_of_pos_left h).mp D
+
+theorem correct_bddness : BddAbove ((↑)'' (s U b) : Set (V → ℝ)) := by
+  choose g hg using pointwise_bound U b
+  refine ⟨g, ?_⟩
+  intro f hf
+  rcases hf with ⟨p, hp, rfl⟩
+  intro v
+  exact hg v p hp
+
+/- It seems that `Seminorm 𝕜 F` is a SupSet, i.e. one can define
+   `sSup s` for any `s : Set (Seminorm 𝕜 F)`. The `SupSet` instance
+   gives a conditional, though, and so if there isn't a proof that the
+   family of seminorms is pointwise bounded as functions, then `sSup s = ⊥`.
+   So it seems the way to work with this is to supply `correct_bddness` above
+   as an argument to `Seminorm.sSup_apply` to ensure that the right formula is used
+   for the Mackey-Arens Seminorm. -/
+
+end
