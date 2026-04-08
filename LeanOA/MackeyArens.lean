@@ -34,8 +34,7 @@ lemma absorbing (hnhd : U ∈ 𝓝 (0 : F)) (v : F) : ∃ t : 𝕜, t ≠ 0 ∧ 
   use r
   constructor
   · exact norm_pos_iff.mp hr
-  · have : r ∈ ball 0 ε := by exact mem_ball_zero_iff.mpr hr1
-    exact mem_preimage.mp (h this)
+  · exact mem_preimage.mp (h <| mem_ball_zero_iff.mpr hr1)
 
 /- This should be generalized, and furthermore ought to already exist! -/
 lemma pointwise_bound (hnhd : U ∈ 𝓝 (0 : F)) (v : F) : ∃ M, ∀ p ∈ s U B, p v ≤ M := by
