@@ -30,12 +30,11 @@ instance Algebra.instIsMulCommutativeAdjoin {S R A : Type*} [CommSemiring R]
   let := adjoinCommSemiringOfComm R hs.setLike_mul_comm
   ⟨⟨mul_comm⟩⟩
 
-instance NonUnitalAlgebra.instIsMulCommutativeAdjoin {S R A : Type*} [CommSemiring R]
-    [NonUnitalSemiring A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
-    [SetLike S A] [MulMemClass S A] (s : S) [hs : IsMulCommutative s] :
-    IsMulCommutative (adjoin R (s : Set A)) :=
-  let := adjoinNonUnitalCommSemiringOfComm R hs.setLike_mul_comm
-  ⟨⟨mul_comm⟩⟩
+lemma setLike_mul_comm_star {S A : Type*}
+    [Semigroup A] [StarMul A] [SetLike S A] [MulMemClass S A] [StarMemClass S A]
+    {s : S} [hs : IsMulCommutative s] ⦃a b : A⦄ (ha : a ∈ s) (hb : b ∈ s) :
+    a * star b = star b * a :=
+  IsMulCommutative.setLike_mul_comm inferInstance a ha (star b) (star_mem hb)
 
 instance NonUnitalStarAlgebra.instIsMulCommutativeAdjoin {S R A : Type*} [CommSemiring R]
     [NonUnitalSemiring A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
@@ -411,6 +410,42 @@ theorem NonUnitalStarSubalgebra.exists_le_isMasa (B : NonUnitalStarSubalgebra R 
   have hC' := C.prop.1
   exact ⟨fun S hS hCS ↦ @hC ⟨S, hS, C.prop.2.trans hCS⟩ hCS⟩
 
+/-- If all elements of `s : Set A` commute pairwise and with elements of `star s`, then `adjoin R s`
+is commutative. -/
+theorem NonUnitalStarAlgebra.isMulCommutative_adjoin (R : Type*) {A : Type*} [CommSemiring R]
+    [StarRing R] [NonUnitalSemiring A] [StarRing A] [Module R A] [IsScalarTower R A A]
+    [SMulCommClass R A A] [StarModule R A] {s : Set A} (hcomm : ∀ x ∈ s, ∀ y ∈ s, x * y = y * x)
+    (hcomm_star : ∀ a ∈ s, ∀ b ∈ s, a * star b = star b * a) :
+    IsMulCommutative (adjoin R s) := by
+  have := adjoin_le_centralizer_centralizer R s
+  refine .of_setLike_mul_comm fun _ h₁ _ h₂ ↦ ?_
+  have hcomm : ∀ a ∈ s ∪ star s, ∀ b ∈ s ∪ star s, a * b = b * a := fun a ha b hb ↦
+    Set.union_star_self_comm (fun _ ha _ hb ↦ hcomm _ hb _ ha)
+      (fun _ ha _ hb ↦ hcomm_star _ hb _ ha) b hb a ha
+  apply this at h₁
+  apply this at h₂
+  rw [← SetLike.mem_coe, NonUnitalStarSubalgebra.coe_centralizer_centralizer] at h₁ h₂
+  exact Set.centralizer_centralizer_comm_of_comm hcomm _ h₁ _ h₂
+
+attribute [grind →] Commute.eq star_comm_self
+
+open NonUnitalStarAlgebra in
+/-- A normal element which commutes with every element of a masa is itself in the masa. -/
+theorem NonUnitalStarSubalgebra.IsMasa.mem_of_commute (B : NonUnitalStarSubalgebra R A)
+    [hB : IsMasa B] {x : A} [IsStarNormal x] (hx : ∀ y ∈ B, Commute x y) : x ∈ B := by
+  let S : NonUnitalStarSubalgebra R A := adjoin R ({x} ∪ B)
+  suffices IsMulCommutative S by
+    replace hx : x ∈ S := subset_adjoin R _ <| by simp
+    exact hB.maximal S (fun y hy ↦ subset_adjoin R _ (by aesop)) hx
+  have hx₀ : star x * x = x * star x := star_comm_self' x
+  have hx₁ : ∀ y : B, Commute x (star y) := by
+    rw [star_involutive.surjective.forall]; simpa using hx
+  have hx₂ : ∀ y : B, Commute (star x) y := by simpa [commute_star_comm] using hx₁
+  have hB₀ : ∀ a ∈ B, ∀ b ∈ B, a * b = b * a := IsMulCommutative.setLike_mul_comm inferInstance
+  have hB₁ := setLike_mul_comm_star (s := B)
+  refine isMulCommutative_adjoin R ?_ ?_
+  all_goals simp [commute_iff_eq] at *; grind
+
 end NonUnitalStarSubalgebra
 
 section TopologicalAlgebra
@@ -472,6 +507,12 @@ lemma StarSubalgebra.exists_le_isMasa (B : StarSubalgebra R A) [hB : IsMulCommut
     ∃ (C : StarSubalgebra R A), B ≤ C ∧ C.IsMasa :=
   have ⟨C, hC⟩ := B.toNonUnitalStarSubalgebra.exists_le_isMasa
   ⟨C.toStarSubalgebra hC.2.one_mem, hC⟩
+
+/-- A normal element which commutes with every element of a masa is itself in the masa. -/
+theorem StarSubalgebra.IsMasa.mem_of_commute (B : StarSubalgebra R A)
+    [hB : IsMasa B] {x : A} [IsStarNormal x] (hx : ∀ y ∈ B, Commute x y) : x ∈ B := by
+  rw [← mem_toNonUnitalStarSubalgebra]
+  exact NonUnitalStarSubalgebra.IsMasa.mem_of_commute B.toNonUnitalStarSubalgebra hx
 
 /-- A masa in a topological star algebra is closed. -/
 instance StarSubalgebra.IsMasa.isClosed [TopologicalSpace A] [IsTopologicalSemiring A]
