@@ -1,4 +1,5 @@
 import Mathlib.Topology.Algebra.StarSubalgebra
+import Mathlib.Algebra.Star.StarProjection
 
 open Set
 
@@ -42,7 +43,5 @@ variable (R) in
 lemma IsSelfAdjoint.mem_corner {a : A} (ha : IsSelfAdjoint a) (x : A) :
     a * x * a ∈ corner R a := by
   simpa [ha.star_eq] using NonUnitalStarSubalgebra.mem_corner R a x
-
-
 
 end NonUnitalStarSubalgebra
