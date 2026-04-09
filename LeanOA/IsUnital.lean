@@ -1,8 +1,18 @@
 import Mathlib.Analysis.CStarAlgebra.Classes
 
 /-- A multiplicative magma is **unital** if there exists a unit. -/
-class IsUnital (A : Type*) [Mul A] : Prop where
+@[mk_iff] class IsUnital (A : Type*) [Mul A] : Prop where
   isUnital : ∃ u : A, ∀ x : A, u * x = x ∧ x * u = x
+
+/-- A multiplicative magma is **not-unital** if there does not exist a unit. -/
+@[mk_iff] class IsNotUnital (A : Type*) [Mul A] : Prop where
+  isNotUnital : ∀ u : A, ∃ x : A, u * x ≠ x ∨ x * u ≠ x
+
+@[simp] lemma not_isUnital_iff_isNotUnital {A : Type*} [Mul A] : ¬ IsUnital A ↔ IsNotUnital A := by
+  simp [isUnital_iff, isNotUnital_iff, -not_and, not_and_or]
+
+@[simp] lemma not_isNotUnital_iff_isUnital {A : Type*} [Mul A] : ¬ IsNotUnital A ↔ IsUnital A := by
+  grind [not_isUnital_iff_isNotUnital]
 
 variable (A : Type*)
 
@@ -16,34 +26,57 @@ noncomputable abbrev IsUnital.toMulOneClass {A : Type*} [Mul A] [h : IsUnital A]
 lemma MulOneClass.isUnital [MulOneClass A] : IsUnital A where
   isUnital := ⟨1, fun x ↦ ⟨one_mul x, mul_one x⟩⟩
 
+namespace IsUnital
+
 attribute [local instance] IsUnital.toMulOneClass
 
 /-- A unital semigroup is a monoid. -/
-noncomputable abbrev IsUnital.toMonoid [Semigroup A] [h : IsUnital A] : Monoid A where
+noncomputable abbrev toMonoid [Semigroup A] [h : IsUnital A] : Monoid A where
 
 /-- A unital non-associative semiring is a non-associative semiring. -/
-noncomputable abbrev IsUnital.toNonAssocSemiring [NonUnitalNonAssocSemiring A] [IsUnital A] :
+noncomputable abbrev toNonAssocSemiring [NonUnitalNonAssocSemiring A] [IsUnital A] :
     NonAssocSemiring A where
 
+/-- A unital non-unital non-associative commutative semiring is a non-associative
+commutative semiring. -/
+noncomputable abbrev toNonAssocCommSemiring [NonUnitalNonAssocCommSemiring A] [IsUnital A] :
+    NonAssocCommSemiring A where
+
 /-- A unital non-unital semiring is a semiring. -/
-noncomputable abbrev IsUnital.toSemiring [NonUnitalSemiring A] [IsUnital A] : Semiring A where
+noncomputable abbrev toSemiring [NonUnitalSemiring A] [IsUnital A] : Semiring A where
 
 /-- A unital non-unital commutative semiring is a commutative semiring. -/
-noncomputable abbrev IsUnital.toCommSemiring [NonUnitalCommSemiring A] [IsUnital A] :
-    CommSemiring A where
+noncomputable abbrev toCommSemiring [NonUnitalCommSemiring A] [IsUnital A] : CommSemiring A where
+
+/-- A unital non-unital non-associative ring is a non-associative ring. -/
+noncomputable abbrev toNonAssocRing [NonUnitalNonAssocRing A] [IsUnital A] : NonAssocRing A where
+
+/-- A unital non-unital non-associative commutative ring is a non-associative commutative ring. -/
+noncomputable abbrev toNonAssocCommRing [NonUnitalNonAssocCommRing A] [IsUnital A] :
+    NonAssocCommRing A where
 
 /-- A unital non-unital ring is a ring. -/
-noncomputable abbrev IsUnital.toNonUnitalRing [NonUnitalRing A] [IsUnital A] : Ring A where
+noncomputable abbrev toRing [NonUnitalRing A] [IsUnital A] : Ring A where
+
+/-- A unital non-unital commutative ring is a commutative ring. -/
+noncomputable abbrev toCommRing [NonUnitalCommRing A] [IsUnital A] : CommRing A where
 
 attribute [local instance] IsUnital.toSemiring in
 /-- A unital non-unital algebra is an algebra. -/
-noncomputable abbrev IsUnital.toAlgebra {R} [CommSemiring R] [NonUnitalSemiring A] [Module R A]
+noncomputable abbrev toAlgebra {R} [CommSemiring R] [NonUnitalSemiring A] [Module R A]
     [IsScalarTower R A A] [SMulCommClass R A A] [IsUnital A] : Algebra R A :=
   .ofModule smul_mul_assoc mul_smul_comm
 
 /-- A unital non-unital C⋆-algebra is a C⋆-algebra. -/
-noncomputable abbrev IsUnital.toCStarAlgebra [NonUnitalCStarAlgebra A] [h : IsUnital A] :
+noncomputable abbrev toCStarAlgebra [NonUnitalCStarAlgebra A] [h : IsUnital A] :
     CStarAlgebra A where
   __ := ‹NonUnitalCStarAlgebra A›
   __ := h.toSemiring
   __ := h.toAlgebra
+
+attribute [local instance] IsUnital.toCStarAlgebra in
+/-- A unital non-unital commutative C⋆-algebra is a commutative C⋆-algebra. -/
+noncomputable abbrev toCommCStarAlgebra [NonUnitalCommCStarAlgebra A] [h : IsUnital A] :
+    CommCStarAlgebra A where
+
+end IsUnital
