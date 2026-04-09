@@ -5,6 +5,44 @@ public import Mathlib.Analysis.LocallyConvex.ContinuousOfBounded
 
 public section
 
+variable {𝕜 V F : Type*} [NontriviallyNormedField 𝕜] [AddCommMonoid V] [Module 𝕜 V]
+    [TopologicalSpace V] [AddCommMonoid F] [Module 𝕜 F]
+
+class IsCompatible (b : F →ₗ[𝕜] V →ₗ[𝕜] 𝕜) : Prop where
+  range_eq_range : b.range = (ContinuousLinearMap.coeLM 𝕜).range
+  injective : Function.Injective b
+
+lemma IsCompatible.continuous (b : F →ₗ[𝕜] V →ₗ[𝕜] 𝕜) [h : IsCompatible b]
+    (x : F) : Continuous (b x) :=
+  have ⟨y, hy⟩ := Submodule.ext_iff.mp h.range_eq_range (b x) |>.mp (b.mem_range_self x)
+  hy ▸ y.continuous
+
+noncomputable def IsCompatible.equiv (b : F →ₗ[𝕜] V →ₗ[𝕜] 𝕜) [h : IsCompatible b] :
+    F ≃ₗ[𝕜] StrongDual 𝕜 V :=
+  .ofBijective
+    { toFun x := ⟨b x, h.continuous b x⟩,
+      map_add' _ _ := by ext; simp,
+      map_smul' _ _ := by ext; simp }
+    ⟨fun _ _ ↦ by simp [h.injective.eq_iff], fun x ↦
+      have ⟨y, hy⟩ := h.range_eq_range ▸ LinearMap.mem_range_self _ x
+      ⟨y, ContinuousLinearMap.ext fun _ ↦ congr($hy _)⟩⟩
+end
+
+section
+
+variable {𝕜 V F : Type*} [NontriviallyNormedField 𝕜] [AddCommMonoid V] [Module 𝕜 V]
+    [TopologicalSpace V] [AddCommMonoid F] [Module 𝕜 F]
+
+lemma IsCompatible.equiv_apply (b : F →ₗ[𝕜] V →ₗ[𝕜] 𝕜) [h : IsCompatible b]
+    (x : F) : h.equiv b x = ⟨b x, h.continuous b x⟩ := rfl
+
+@[simp] lemma IsCompatible.equiv_apply_apply (b : F →ₗ[𝕜] V →ₗ[𝕜] 𝕜) [h : IsCompatible b]
+    (x : F) (y : V) : h.equiv b x y = b x y := rfl
+
+end
+
+public section
+
 open Set Topology Metric LinearMap
 
 /- There may be reasons to switch all of this to `WeakDual.polar`, but I don't know yet. -/
@@ -80,5 +118,18 @@ noncomputable def Assoc_Top := WithSeminorms (MA_family B)
 
 /- We haven't actually built a topology here, but just are asserting that the topology on `F`
 came from these seminorms. -/
+
+theorem bulk_of_Mackey_Arens : IsCompatible B ↔ WithSeminorms (MA_family B) := by
+  constructor
+  · intro h
+    have h1 := h.1
+    have h2 := h.2
+    sorry
+  · sorry
+
+/- Once we get this in the right form, in the end we need to show that taking
+suprema over arbitrary w*-compact subsets of functionals (to define the purported Mackey Top)
+reduces via an equicontinuity argument using the compactness and absorption to considering
+polars. -/
 
 end
