@@ -126,10 +126,6 @@ lemma Unitary.coe_mem_extremePoints_closedUnitBall {A : Type*} [CStarAlgebra A] 
 section nonUnital
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
--- `Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Isometric`
-alias quasispectrum.norm_le_norm_of_mem :=
-  NonUnitalIsometricContinuousFunctionalCalculus.norm_quasispectrum_le
-
 theorem star_self_conjugate_eq_self_of_mem_extremePoints_closedUnitBall {a : A}
     (ha : a ∈ extremePoints ℝ (closedBall 0 1)) : a * star a * a = a := by
   /- Suppose `a` is an extreme point of the closed unit ball. Then we want to show that

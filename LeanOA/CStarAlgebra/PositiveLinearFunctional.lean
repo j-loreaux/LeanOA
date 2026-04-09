@@ -1,5 +1,8 @@
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 import LeanOA.PositiveContinuousLinearMap
+import LeanOA.Ultraweak.SeparatingDual
 import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 
 open scoped ComplexOrder
@@ -87,34 +90,54 @@ lemma cauchy_schwarz_mul_star (f : A →ₚ[ℂ] ℂ) (x y : A) :
   simpa using cauchy_schwarz_star_mul f (star x) (star y)
 
 end CauchySchwarz
-
 end PositiveLinearMap
 
-variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+namespace PositiveContinuousLinearMap
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
-set_option backward.isDefEq.respectTransparency false in
-lemma PositiveLinearMap.norm_apply_le (f : A →ₚ[ℂ] ℂ) (x : A) : ‖f x‖ ≤ (f 1).re * ‖x‖ := by
-  have := by simpa [f.preGNS_norm_def, f.preGNS_inner_def] using
-    norm_inner_le_norm (𝕜 := ℂ) (f.toPreGNS 1) (f.toPreGNS x)
-  have hf := Complex.nonneg_iff.mp (f.map_nonneg zero_le_one) |>.1
-  grw [this, ← sq_le_sq₀ (by positivity) (mul_nonneg hf (by positivity))]
-  simp_rw [mul_pow, Real.sq_sqrt hf, sq, mul_assoc, ← sq, Real.sq_sqrt
-    (Complex.nonneg_iff.mp (f.map_nonneg (star_mul_self_nonneg _))).1]
-  refine mul_le_mul_of_nonneg_left ?_ hf
-  have := by simpa [CStarRing.norm_star_mul_self, Algebra.algebraMap_eq_smul_one, ← sq] using
-    f.apply_le_of_isSelfAdjoint _ (.star_mul_self x)
-  convert Complex.le_def.mp this |>.1
-  rw [← Complex.ofReal_pow, Complex.re_ofReal_mul, mul_comm]
+theorem norm_apply_le_sqrt_opNorm_mul (f : A →P[ℂ] ℂ) (x : A) :
+    ‖f x‖ ≤ √‖(f : A →L[ℂ] ℂ)‖ * √‖f (star x * x)‖ := by
+  have hl := CStarAlgebra.increasingApproximateUnit A
+  refine le_of_tendsto ((ContinuousAt.tendsto (by fun_prop)).comp (hl.tendsto_mul_right _)).norm ?_
+  filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with e he1 he2
+  grw [← he1.star_eq, Function.comp_apply, ← f.coe_toPositiveLinearMap,
+    f.toPositiveLinearMap.cauchy_schwarz_star_mul, f.coe_toPositiveLinearMap,
+    ← f.coe_toContinuousLinearMap, f.toContinuousLinearMap.le_opNorm (star e * e),
+    CStarRing.norm_star_mul_self, he2, one_mul, mul_one]
 
-theorem PositiveLinearMap.norm_map_one (f : A →ₚ[ℂ] ℂ) : ‖f 1‖ = (f 1).re := by
-  by_cases! Subsingleton A
-  · simp [Subsingleton.eq_zero (1 : A)]
-  exact le_antisymm (by simpa using f.norm_apply_le 1) (Complex.re_le_norm _)
+open Topology in
+theorem tendsto_isIncreasingApproximateUnit_nhds_opNorm (f : A →P[ℂ] ℂ) {l : Filter A}
+    (hl : l.IsIncreasingApproximateUnit) : l.Tendsto (‖f ·‖) (𝓝 ‖(f : A →L[ℂ] ℂ)‖) := by
+  refine Metric.tendsto_nhds.mpr fun ε hε ↦ ?_
+  have h : ∀ᶠ x in l, ‖f x‖ ≤ ‖(f : A →L[ℂ] ℂ)‖ + ε / 2 := by
+    filter_upwards [hl.eventually_norm] with x hx
+    grw [← f.coe_toContinuousLinearMap, ContinuousLinearMap.le_opNorm, hx, mul_one]
+    grind
+  have h2 : ∀ᶠ x in l, ‖(f : A →L[ℂ] ℂ)‖ - ε / 2 < ‖f x‖ := by
+    obtain ⟨_, ⟨a, ha1, rfl⟩, ha2⟩ := exists_lt_of_lt_csSup (b := ‖(f : A →L[ℂ] ℂ)‖ - ε / 4)
+      ((Metric.nonempty_closedBall (x := 0).mpr zero_le_one).image (‖f ·‖))
+      (by grind [f.toContinuousLinearMap.sSup_unitClosedBall_eq_norm])
+    have h3 : ∀ᶠ x in l, ‖f (x * a)‖ ^ 2 ≤ ‖f x‖ * ‖(f : A →L[ℂ] ℂ)‖ := by
+      filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with x hx1 hx2
+      have : ‖f (star x * x)‖ ≤ ‖f x‖ := by
+        refine CStarAlgebra.norm_le_norm_of_nonneg_of_le (f.map_nonneg (star_mul_self_nonneg _)) ?_
+        exact f.mono <| hx1.star_eq.symm ▸ CStarAlgebra.mul_self_le_of_nonneg_of_norm_le_one hx1 hx2
+      conv_lhs => rw [← hx1.star_eq, ← f.coe_toPositiveLinearMap]
+      grw [f.cauchy_schwarz_star_mul x a, mul_pow, Real.sq_sqrt (norm_nonneg _),
+        Real.sq_sqrt (norm_nonneg _), f.coe_toPositiveLinearMap, this,
+        ← f.coe_toContinuousLinearMap, f.toContinuousLinearMap.le_opNorm (star a * a),
+        CStarRing.norm_star_mul_self, ← mul_assoc]
+      refine mul_le_of_le_one_right (by positivity) ?_
+      grw [mem_closedBall_zero_iff.mp ha1, one_mul]
+    have h4 : ∀ᶠ x in l, ‖(f : A →L[ℂ] ℂ)‖ - ε / 4 < ‖f (x * a)‖ := by
+      refine (Filter.Tendsto.norm ?_).eventually (lt_mem_nhds ha2)
+      exact (ContinuousAt.tendsto (by fun_prop)).comp (hl.tendsto_mul_right a)
+    filter_upwards [h3, h4] with x _ _ using by nlinarith [norm_nonneg (f x)]
+  filter_upwards [h, h2] using by grind [Real.dist_eq]
 
-theorem PositiveLinearMap.opNorm_eq_re_map_one (f : A →ₚ[ℂ] ℂ) :
-    ‖f.toContinuousLinearMap‖ = (f 1).re := by
-  refine le_antisymm (f.toContinuousLinearMap.opNorm_le_bound
-    (by simp [← norm_map_one]) f.norm_apply_le) ?_
-  by_cases! Subsingleton A
-  · simp [Subsingleton.eq_zero (1 : A)]
-  simpa [norm_map_one] using f.toContinuousLinearMap.le_opNorm 1
+theorem opNorm_eq_norm_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+    (f : A →P[ℂ] ℂ) : ‖(f : A →L[ℂ] ℂ)‖ = ‖f 1‖ :=
+  tendsto_nhds_unique (f.tendsto_isIncreasingApproximateUnit_nhds_opNorm (.pure_one A))
+    (tendsto_pure_nhds _ _)
+
+end PositiveContinuousLinearMap

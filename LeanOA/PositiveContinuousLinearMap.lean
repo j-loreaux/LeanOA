@@ -61,6 +61,7 @@ notation:25 E " →P[" R:25 "] " F:0 => PositiveContinuousLinearMap R E F
 add_decl_doc PositiveContinuousLinearMap.toContinuousLinearMap
 /-- The `PositiveLinearMap` underlying a `PositiveContinuousLinearMap`. -/
 add_decl_doc PositiveContinuousLinearMap.toPositiveLinearMap
+
 namespace PositiveContinuousLinearMap
 
 section General
@@ -128,6 +129,7 @@ lemma coe_ofClass (f : F) : ⇑(ofClass f) = f := rfl
 
 end ofClass
 
+instance : Coe (E₁ →P[R] E₂) (E₁ →L[R] E₂) := ⟨toContinuousLinearMap⟩
 
 @[simp]
 lemma coe_toPositiveLinearMap (f : E₁ →P[R] E₂) :
@@ -161,6 +163,15 @@ lemma toContinuousLinearMap_zero : (0 : E₁ →P[R] E₂).toContinuousLinearMap
 @[simp]
 lemma zero_apply (x : E₁) : (0 : E₁ →P[R] E₂) x = 0 :=
   rfl
+
+variable (R E₁) in
+/-- The identity as a positive continuous linear map. -/
+@[simps!] protected def id : E₁ →P[R] E₁ where __ := PositiveLinearMap.id R E₁
+
+@[simp] lemma toContinuousLinearMap_id :
+    (PositiveContinuousLinearMap.id R E₁).toContinuousLinearMap = .id R E₁ := rfl
+@[simp] lemma toPositiveLinearMap_id :
+    (PositiveContinuousLinearMap.id R E₁).toPositiveLinearMap = .id R E₁ := rfl
 
 variable [IsOrderedAddMonoid E₂] [ContinuousAdd E₂]
 
