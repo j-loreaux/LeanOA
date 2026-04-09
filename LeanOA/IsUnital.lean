@@ -17,14 +17,13 @@ In general you should use `NonUnitalRing`, `Ring`, etc. -/
 @[simp] lemma not_isNotUnital_iff_isUnital {A : Type*} [Mul A] : ¬IsNotUnital A ↔ IsUnital A := by
   grind [not_isUnital_iff_isNotUnital]
 
-variable (A : Type*)
+variable {A : Type*}
 
 /-- A unital magma is `MulOneClass`. -/
-noncomputable abbrev IsUnital.toMulOneClass [Mul A] [h : IsUnital A] :
-    MulOneClass A where
-  one := h.isUnital.choose
-  one_mul a := (h.isUnital.choose_spec a).1
-  mul_one a := (h.isUnital.choose_spec a).2
+noncomputable abbrev IsUnital.toMulOneClass [Mul A] [IsUnital A] : MulOneClass A where
+  one := isUnital.choose
+  one_mul a := (isUnital.choose_spec a).1
+  mul_one a := (isUnital.choose_spec a).2
 
 lemma MulOneClass.isUnital [MulOneClass A] : IsUnital A where
   isUnital := ⟨1, fun x ↦ ⟨one_mul x, mul_one x⟩⟩
@@ -35,7 +34,7 @@ namespace IsUnital
 attribute [local instance] IsUnital.toMulOneClass
 
 /-- A unital semigroup is a monoid. -/
-abbrev toMonoid [Semigroup A] [h : IsUnital A] : Monoid A where
+abbrev toMonoid [Semigroup A] [IsUnital A] : Monoid A where
 
 /-- A unital non-associative semiring is a non-associative semiring. -/
 abbrev toNonAssocSemiring [NonUnitalNonAssocSemiring A] [IsUnital A] : NonAssocSemiring A where
@@ -69,14 +68,14 @@ abbrev toAlgebra {R} [CommSemiring R] [NonUnitalSemiring A] [Module R A] [IsScal
     [SMulCommClass R A A] [IsUnital A] : Algebra R A := .ofModule smul_mul_assoc mul_smul_comm
 
 /-- A unital non-unital C⋆-algebra is a C⋆-algebra. -/
-abbrev toCStarAlgebra [NonUnitalCStarAlgebra A] [h : IsUnital A] : CStarAlgebra A where
+abbrev toCStarAlgebra [NonUnitalCStarAlgebra A] [IsUnital A] : CStarAlgebra A where
   __ := ‹NonUnitalCStarAlgebra A›
-  __ := h.toSemiring
-  __ := h.toAlgebra
+  __ := toSemiring
+  __ := toAlgebra
 
 attribute [local instance] IsUnital.toCStarAlgebra in
 /-- A unital non-unital commutative C⋆-algebra is a commutative C⋆-algebra. -/
-abbrev toCommCStarAlgebra [NonUnitalCommCStarAlgebra A] [h : IsUnital A] : CommCStarAlgebra A where
+abbrev toCommCStarAlgebra [NonUnitalCommCStarAlgebra A] [IsUnital A] : CommCStarAlgebra A where
 
 end IsUnital
 end
