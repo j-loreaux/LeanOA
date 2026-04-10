@@ -104,9 +104,23 @@ lemma foo (e : M) :
   have e_mul_e : (e * · * e) = LinearMap.mulLeftRight ℂ ⟨e, e⟩ := by ext; simp
   rw [e_mul_e, ← Set.image_sub, setOf_isSelfAdjoint_inter_closedBall_eq]
 
+lemma IsStarProjection.idempotent_mul_mul {M : Type*} [Semigroup M] [StarMul M]
+    {e : M} (he : IsStarProjection e) :
+    (e * · * e) ∘ (e * · * e) = (e * · * e) := by
+  ext; simp [mul_assoc, he.isIdempotentElem.mul_mul_self, he.isIdempotentElem.mul_self_mul]
+
+/-- If `f` is an idempotent function which maps sets `s` and `t` to themselves, then
+`f '' (s ∩ t) = (f '' s) ∩ t`. -/
+lemma Set.MapsTo.image_inter_of_idempotent {α : Type*} {s t : Set α} {f : α → α}
+    (hf : f ∘ f = f) (hfs : MapsTo f s s) (hft : MapsTo f t t) :
+    f '' (s ∩ t) = (f '' s) ∩ t := by
+  apply subset_antisymm (fun _ _ ↦ by aesop)
+  rintro - ⟨⟨x, hx, rfl⟩, hxt⟩
+  exact ⟨f x, ⟨hfs hx, hxt⟩, congr($hf x)⟩
+
 open scoped ComplexStarModule Pointwise in
 open Filter in
-lemma IsStarProjection.isClosed_corner_of_ultraweak' {e : σ(M, P)} (he : IsStarProjection e) :
+lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarProjection e) :
     IsClosed (corner ℂ e : Set σ(M, P)) := by
   apply Ultraweak.krein_smulian_of_submodule ((corner ℂ e).toSubmodule.restrictScalars ℝ≥0)
   simp only [Submodule.coe_restrictScalars, Submodule.coe_set_mk,
@@ -118,65 +132,45 @@ lemma IsStarProjection.isClosed_corner_of_ultraweak' {e : σ(M, P)} (he : IsStar
     obtain ⟨⟨y, -, hxy⟩, -⟩ := this (ℜ x : σ(M, P)) (map ((ℜ ·) : σ(M, P) → σ(M, P)) l)
       inferInstance
       (by
-        simp only [le_principal_iff, inter_mem_iff] at hl
-        rw [le_principal_iff]
-        simp only [Filter.mem_map]
-        filter_upwards [hl.1, hl.2] with m hm₁ hm₂
-        obtain ⟨x, rfl⟩ := hm₁
+        simp only [le_principal_iff, Filter.mem_map] at hl ⊢
+        filter_upwards [hl] with m hm
+        obtain ⟨⟨x, rfl⟩, hx⟩ := hm
         simp only [Set.preimage_inter, Set.mem_inter_iff, Set.mem_preimage, Set.mem_image,
-          Set.mem_setOf_eq, mem_closedBall, dist_zero_right] at hm₂ ⊢
-        refine ⟨⟨ℜ x, (ℜ x).2, ?_⟩, realPart.norm_le _ |>.trans hm₂⟩
+          Set.mem_setOf_eq, mem_closedBall, dist_zero_right] at hx ⊢
+        refine ⟨⟨ℜ x, (ℜ x).2, ?_⟩, realPart.norm_le _ |>.trans hx⟩
         simp [realPart_apply_coe, ← mul_assoc, he.isSelfAdjoint.star_eq, mul_add, add_mul])
       (by grw [hlx]; apply Continuous.tendsto; fun_prop)
     obtain ⟨⟨z, -, hxz⟩, -⟩ := this (ℑ x : σ(M, P)) (map ((ℑ ·) : σ(M, P) → σ(M, P)) l)
       inferInstance
       (by
-        simp only [le_principal_iff, inter_mem_iff] at hl
-        rw [le_principal_iff]
-        simp only [Filter.mem_map]
-        filter_upwards [hl.1, hl.2] with m hm₁ hm₂
-        obtain ⟨x, rfl⟩ := hm₁
+        simp only [le_principal_iff, Filter.mem_map] at hl ⊢
+        filter_upwards [hl] with m hm
+        obtain ⟨⟨x, rfl⟩, hx⟩ := hm
         simp only [Set.preimage_inter, Set.mem_inter_iff, Set.mem_preimage, Set.mem_image,
-          Set.mem_setOf_eq, mem_closedBall, dist_zero_right] at hm₂ ⊢
-        refine ⟨⟨ℑ x, (ℑ x).2, ?_⟩, imaginaryPart.norm_le _ |>.trans hm₂⟩
+          Set.mem_setOf_eq, mem_closedBall, dist_zero_right] at hx ⊢
+        refine ⟨⟨ℑ x, (ℑ x).2, ?_⟩, imaginaryPart.norm_le _ |>.trans hx⟩
         simp [imaginaryPart_apply_coe, ← mul_assoc, he.isSelfAdjoint.star_eq, mul_sub, sub_mul])
       (by grw [hlx]; apply Continuous.tendsto; fun_prop)
     refine ⟨⟨y + Complex.I • z, ?_⟩, ?_⟩
     · simp [mul_add, add_mul, hxy, hxz, realPart_add_I_smul_imaginaryPart]
     · exact isClosed_iff_forall_filter.mp (Ultraweak.isClosed_closedBall ℂ P 0 1) x l hl_neBot
         (by grw [hl]; simp) hlx
-  have h₁ : (e * · * e) '' {x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' closedBall 0 1 =
-      (e * · * e) '' ({x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' closedBall 0 1) := by
-    ext; constructor
-    · rintro ⟨⟨x, hx, rfl⟩, hx₁⟩
-      refine ⟨e * x * e, ⟨?_, hx₁⟩, ?_⟩
-      · simpa [he.isSelfAdjoint.star_eq] using hx.conjugate e
-      · simp [mul_assoc, he.isIdempotentElem.mul_mul_self, he.isIdempotentElem.mul_self_mul]
-    · rintro ⟨x, ⟨hx, hx₁⟩, rfl⟩
-      refine ⟨⟨x, hx, rfl⟩, ?_⟩
-      simp only [mem_preimage, mem_closedBall, dist_zero_right, ofUltraweak_mul] at hx₁ ⊢
+  suffices (e * · * e) '' {x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' closedBall 0 1 =
+      (· - ·).uncurry ''
+        (Icc 0 e ∩ ofUltraweak ⁻¹' closedBall 0 1) ×ˢ (Icc 0 e ∩ ofUltraweak ⁻¹' closedBall 0 1) by
+    refine this ▸ (IsCompact.image ?_ continuous_sub |>.isClosed)
+    suffices h : IsCompact (Icc 0 e ∩ ofUltraweak ⁻¹' closedBall 0 1) from h.prod h
+    exact (Ultraweak.isCompact_closedBall ℂ P 0 1).inter_left isClosed_Icc
+  calc (e * · * e) '' {x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' closedBall 0 1
+    _ = (e * · * e) '' ({x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' closedBall 0 1) := by
+      apply Eq.symm <| Set.MapsTo.image_inter_of_idempotent he.idempotent_mul_mul
+        (fun x hx ↦ by simpa [he.isSelfAdjoint.star_eq] using hx.conjugate e) (fun x hx ↦ ?_)
+      simp only [mem_preimage, mem_closedBall, dist_zero_right, ofUltraweak_mul] at hx ⊢
+      grw [norm_mul₃_le, hx, he.norm_le, mul_one, mul_one]
+    _ = ofUltraweak ⁻¹'
+          ((ofUltraweak e * · * ofUltraweak e) '' ({x | IsSelfAdjoint x} ∩ closedBall 0 1)) := rfl
+    _ = ofUltraweak ⁻¹'
+          (Icc 0 (ofUltraweak e) ∩ closedBall 0 1 - Icc 0 (ofUltraweak e) ∩ closedBall 0 1) := by
       have he' : IsStarProjection (ofUltraweak e) := he
-      grw [norm_mul₃_le, he'.norm_le]
-      simpa
-  have h₂ : (e * · * e) '' ({x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' closedBall 0 1) =
-      ofUltraweak ⁻¹'
-        ((ofUltraweak e * · * ofUltraweak e) '' ({x | IsSelfAdjoint x} ∩ closedBall 0 1)) := by
-    rfl -- lol
-  have h₃ : (ofUltraweak e * · * ofUltraweak e) '' ({x | IsSelfAdjoint x} ∩ closedBall 0 1) =
-      (Icc 0 (ofUltraweak e) ∩ closedBall 0 1) - (Icc 0 (ofUltraweak e) ∩ closedBall 0 1) := by
-    have he' : IsStarProjection (ofUltraweak e) := he
-    rw [foo, he'.mem_image_mul_mul_nonnegative_inter_unitClosedBall_iff]
-  rw [h₁, h₂, h₃, ← Set.image2_sub, ← Set.image_uncurry_prod]
-  clear h₁ h₂ h₃
-  have h₄ :
-      ofUltraweak ⁻¹' ((Function.uncurry (· - ·)) ''
-        (Icc 0 (ofUltraweak e) ∩ closedBall 0 1) ×ˢ (Icc 0 (ofUltraweak e) ∩ closedBall 0 1)) =
-      (Function.uncurry (· - ·)) ''
-        (Icc 0 e ∩ ofUltraweak ⁻¹' closedBall 0 1) ×ˢ
-          (Icc 0 e ∩ ofUltraweak ⁻¹' closedBall 0 1) := by
-    rfl -- lol
-  rw [h₄]
-  apply IsCompact.isClosed
-  apply IsCompact.image ?_ continuous_sub
-  suffices h : IsCompact (Icc 0 e ∩ ofUltraweak ⁻¹' closedBall 0 1) from h.prod h
-  exact (Ultraweak.isCompact_closedBall ℂ P 0 1).inter_left isClosed_Icc
+      rw [foo, he'.mem_image_mul_mul_nonnegative_inter_unitClosedBall_iff]
+    _ = _ := by rw [← Set.image2_sub, ← Set.image_uncurry_prod]; rfl
