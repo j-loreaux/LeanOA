@@ -96,7 +96,8 @@ lemma setOf_isSelfAdjoint_inter_ball_eq {r : ℝ} :
   grind
 
 open Pointwise in
-lemma foo (e : M) :
+-- the proof of this is inlined in the theorem below.
+example (e : M) :
     letI S := closedBall 0 1
     letI Ms := {x | IsSelfAdjoint x}
     letI P := {x | 0 ≤ x}
@@ -172,5 +173,8 @@ lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarP
     _ = ofUltraweak ⁻¹'
           (Icc 0 (ofUltraweak e) ∩ closedBall 0 1 - Icc 0 (ofUltraweak e) ∩ closedBall 0 1) := by
       have he' : IsStarProjection (ofUltraweak e) := he
-      rw [foo, he'.mem_image_mul_mul_nonnegative_inter_unitClosedBall_iff]
+      have e_mul_e : (ofUltraweak e * · * ofUltraweak e) =
+          LinearMap.mulLeftRight ℂ ⟨ofUltraweak e, ofUltraweak e⟩ := by ext; simp
+      rw [← he'.mem_image_mul_mul_nonnegative_inter_unitClosedBall_iff, e_mul_e,
+        setOf_isSelfAdjoint_inter_closedBall_eq, Set.image_sub]
     _ = _ := by rw [← Set.image2_sub, ← Set.image_uncurry_prod]; rfl
