@@ -124,12 +124,9 @@ lemma IsStarProjection.isClosed_corner_of_ultraweak' {e : σ(M, P)} (he : IsStar
         filter_upwards [hl.1, hl.2] with m hm₁ hm₂
         obtain ⟨x, rfl⟩ := hm₁
         simp only [Set.preimage_inter, Set.mem_inter_iff, Set.mem_preimage, Set.mem_image,
-          Set.mem_setOf_eq, mem_closedBall, dist_zero_right]
-        refine ⟨⟨ℜ x, (ℜ x).2, ?_⟩, ?_⟩
-        · simp [realPart_apply_coe, ← mul_assoc, he.isSelfAdjoint.star_eq, mul_add, add_mul]
-        · simp only [Set.mem_preimage, mem_closedBall, dist_zero_right] at hm₂
-          rw [ofUltraweak_realPart]
-          exact realPart.norm_le _ |>.trans hm₂)
+          Set.mem_setOf_eq, mem_closedBall, dist_zero_right] at hm₂ ⊢
+        refine ⟨⟨ℜ x, (ℜ x).2, ?_⟩, realPart.norm_le _ |>.trans hm₂⟩
+        simp [realPart_apply_coe, ← mul_assoc, he.isSelfAdjoint.star_eq, mul_add, add_mul])
       (by grw [hlx]; apply Continuous.tendsto; fun_prop)
     obtain ⟨⟨z, -, hxz⟩, -⟩ := this (ℑ x : σ(M, P)) (map ((ℑ ·) : σ(M, P) → σ(M, P)) l)
       inferInstance
@@ -140,12 +137,9 @@ lemma IsStarProjection.isClosed_corner_of_ultraweak' {e : σ(M, P)} (he : IsStar
         filter_upwards [hl.1, hl.2] with m hm₁ hm₂
         obtain ⟨x, rfl⟩ := hm₁
         simp only [Set.preimage_inter, Set.mem_inter_iff, Set.mem_preimage, Set.mem_image,
-          Set.mem_setOf_eq, mem_closedBall, dist_zero_right]
-        refine ⟨⟨ℑ x, (ℑ x).2, ?_⟩, ?_⟩
-        · simp [imaginaryPart_apply_coe, ← mul_assoc, he.isSelfAdjoint.star_eq, mul_sub, sub_mul]
-        · simp only [Set.mem_preimage, mem_closedBall, dist_zero_right] at hm₂
-          rw [ofUltraweak_imaginaryPart]
-          exact imaginaryPart.norm_le _ |>.trans hm₂)
+          Set.mem_setOf_eq, mem_closedBall, dist_zero_right] at hm₂ ⊢
+        refine ⟨⟨ℑ x, (ℑ x).2, ?_⟩, imaginaryPart.norm_le _ |>.trans hm₂⟩
+        simp [imaginaryPart_apply_coe, ← mul_assoc, he.isSelfAdjoint.star_eq, mul_sub, sub_mul])
       (by grw [hlx]; apply Continuous.tendsto; fun_prop)
     refine ⟨⟨y + Complex.I • z, ?_⟩, ?_⟩
     · simp [mul_add, add_mul, hxy, hxz, realPart_add_I_smul_imaginaryPart]
