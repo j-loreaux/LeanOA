@@ -158,14 +158,14 @@ variable (𝕜) in
 Note: if `f` is unbounded on `s`, this seminorm takes the value zero. -/
 noncomputable def seminorm (s : Set α) (hs : s ∈ 𝔖) :
     Seminorm 𝕜 (α →ᵤ[𝔖] β) where
-  toFun f := ⨆ x ∈ s, ‖toFun 𝔖 f x‖
+  toFun f := ⨆ x : s, ‖toFun 𝔖 f x‖
   map_zero' := by simp
   add_le' := sorry
   neg' := by simp
   smul' := sorry
 
 lemma seminorm_apply (s : Set α) (hs : s ∈ 𝔖) (f : α →ᵤ[𝔖] β) :
-    seminorm 𝕜 s hs f = ⨆ x ∈ s, ‖toFun 𝔖 f x‖ := rfl
+    seminorm 𝕜 s hs f = ⨆ x : s, ‖toFun 𝔖 f x‖ := rfl
 
 variable (𝕜 α β 𝔖) in
 /-- lazy -/
@@ -173,7 +173,7 @@ noncomputable def seminormFamily : SeminormFamily 𝕜 (α →ᵤ[𝔖] β) 𝔖
   fun s ↦ seminorm 𝕜 s.1 s.2
 
 lemma seminormFamily_apply (s : 𝔖) (f : α →ᵤ[𝔖] β) :
-    seminormFamily α β 𝔖 𝕜 s f = ⨆ x ∈ s.1, ‖toFun 𝔖 f x‖ := rfl
+    seminormFamily α β 𝔖 𝕜 s f = ⨆ x : s.1, ‖toFun 𝔖 f x‖ := rfl
 
 
 end UniformOnFun
@@ -286,7 +286,7 @@ noncomputable def seminorm (s : Set F) (hs : s ∈ 𝔖) : Seminorm 𝕜 (PolarT
   (UniformOnFun.seminorm 𝕜 s hs).comp toUniformOnFun
 
 lemma seminorm_apply (s : Set F) (hs : s ∈ 𝔖) (x : PolarTopology B 𝔖) :
-    seminorm B s hs x = ⨆ y ∈ s, ‖B (linearEquiv x) y‖ := by
+    seminorm B s hs x = ⨆ y : s, ‖B (linearEquiv x) y‖ := by
   rfl
 
 variable (B 𝔖) in
@@ -294,7 +294,7 @@ noncomputable def seminormFamily : SeminormFamily 𝕜 (PolarTopology B 𝔖) �
   (UniformOnFun.seminormFamily F 𝕜 𝔖 𝕜).comp toUniformOnFun
 
 lemma seminormFamily_apply (s : 𝔖) (x : PolarTopology B 𝔖) :
-    seminormFamily B 𝔖 s x = ⨆ y ∈ s.1, ‖B (linearEquiv x) y‖ := by
+    seminormFamily B 𝔖 s x = ⨆ y : s.1, ‖B (linearEquiv x) y‖ := by
   rfl
 
 variable (B 𝔖) in
@@ -327,9 +327,13 @@ def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
     eta_expand
     simp only [Seminorm.comp_apply, LinearEquiv.coe_coe, seminormFamily_apply,
       LinearEquiv.apply_symm_apply]
-    change Continuous fun x ↦ ⨆ y ∈ B.polar s, ‖(B x) y‖ -- avoid `Set` defeq abuse.
-
-    sorry
+    change Continuous fun x ↦ ⨆ y : B.polar s, ‖(B x) y‖ -- avoid `Set` defeq abuse.
+    simp only [← sSup_range, ← image_univ]
+    let _ : TopologicalSpace F := inferInstanceAs (TopologicalSpace (WeakBilin B.flip))
+    apply IsCompact.continuous_sSup ?_
+    · sorry
+    · rw [← isCompact_iff_isCompact_univ]
+      sorry
 
 end PolarTopology
 
