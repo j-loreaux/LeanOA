@@ -62,21 +62,24 @@ lemma Filter.nhd_zero_absorb (v : F) (hnhd : U ∈ 𝓝 (0 : F)) :
   ContinuousAt.eventually_mem
     (by continuity : Continuous (fun t : 𝕜 ↦ t • v)).continuousAt (by rwa [zero_smul])
 
-lemma absorbing (hnhd : U ∈ 𝓝 (0 : F)) (v : F) : ∃ t : 𝕜, t ≠ 0 ∧ t • v ∈ U := by
-  have A := Filter.nhd_zero_absorb (𝕜 := 𝕜) v hnhd
-  simp only at A
-  dsimp [Filter.Eventually] at A
-  rw [Metric.mem_nhds_iff] at A
-  obtain ⟨ε, hε, h⟩ := A
-  obtain ⟨r, hr, hr1⟩ := NormedField.exists_norm_lt (α := 𝕜) hε
-  use r
-  constructor
-  · exact norm_pos_iff.mp hr
-  · exact mem_preimage.mp (h <| mem_ball_zero_iff.mpr hr1)
+lemma nhd_zero_nonemp_nontrivially_normed_field : ∀ U ∈ 𝓝 (0 : 𝕜), ∃ t ∈ U, t ≠ 0 := by
+  intro U hU
+  have := NormedField.exists_norm_lt (α := 𝕜)
 
 /- This should be generalized, and furthermore ought to already exist! -/
 lemma pointwise_bound (hnhd : U ∈ 𝓝 (0 : F)) (v : F) : ∃ M, ∀ p ∈ s U B, p v ≤ M := by
-  obtain ⟨t , htnz, ht⟩ := absorbing (𝕜 := 𝕜) hnhd v
+  have h_absorb : ∃ t : 𝕜, t ≠ 0 ∧ t • v ∈ U := by
+    have A := Filter.nhd_zero_absorb (𝕜 := 𝕜) v hnhd
+    simp only at A
+    dsimp [Filter.Eventually] at A
+    rw [Metric.mem_nhds_iff] at A
+    obtain ⟨ε, hε, h⟩ := A
+    obtain ⟨r, hr, hr1⟩ := NormedField.exists_norm_lt (α := 𝕜) hε
+    use r
+    constructor
+    · exact norm_pos_iff.mp hr
+    · exact mem_preimage.mp (h <| mem_ball_zero_iff.mpr hr1)
+  obtain ⟨t , htnz, ht⟩ := h_absorb
   use ‖t‖⁻¹
   have h : 0 < ‖t‖ := by aesop
   intro p hp
