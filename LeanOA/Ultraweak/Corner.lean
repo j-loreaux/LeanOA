@@ -23,36 +23,33 @@ lemma continuous_imaginaryPart : Continuous (ℑ : M → selfAdjoint M) := by
 
 end RealImaginaryPart
 
-variable {M P : Type*}
+variable {A M P : Type*}
     [NormedAddCommGroup P] [NormedSpace ℂ P] [CompleteSpace P]
     [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M] [Predual ℂ M P]
+    [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 open NonUnitalStarSubalgebra Metric Ultraweak Set
 open scoped Ultraweak NNReal
 
-lemma IsStarProjection.mem_image_mul_mul_nonnegative_inter_unitClosedBall_iff
-    {e : M} (he : IsStarProjection e) :
+lemma IsStarProjection.mem_image_mul_mul_nonneg_inter_unitClosedBall_iff
+    {e : A} (he : IsStarProjection e) :
     (e * · * e) '' ({x | 0 ≤ x} ∩ closedBall 0 1) = Icc 0 e ∩ closedBall 0 1 := by
   ext x
   constructor
   · rintro ⟨x, ⟨hx₀, hx₁⟩, rfl⟩
     refine ⟨⟨?_, ?_⟩, ?_⟩ <;> simp only [mem_closedBall, dist_zero_right] at hx₁ ⊢
     · exact he.isSelfAdjoint.conjugate_nonneg hx₀
-    · calc
-        e * x * e ≤ ‖x‖ • (e * e) := by
-          rw (occs := [1,3]) [← he.isSelfAdjoint.star_eq]
-          exact CStarAlgebra.star_left_conjugate_le_norm_smul hx₀.isSelfAdjoint
-        _ ≤ (1 : ℝ) • e := by
-          grw [he.isIdempotentElem.eq, hx₁]
-          exact he.nonneg
-        _ = e := by simp
+    · rw (occs := [1]) [← he.isSelfAdjoint.star_eq]
+      grw [CStarAlgebra.star_left_conjugate_le_norm_smul hx₀.isSelfAdjoint,
+        he.isSelfAdjoint.star_eq, he.isIdempotentElem.eq, hx₁, one_smul]
+      exact he.nonneg
     · grw [norm_mul₃_le, hx₁, he.norm_le]
       simp
   · rintro ⟨⟨hx₀, hxe⟩, hx₁⟩
     exact ⟨x, ⟨hx₀, hx₁⟩, he.conjugate_of_nonneg_of_le hx₀ hxe⟩
 
 open CStarAlgebra in
-lemma isSelfAdjoint_and_norm_le_iff {x : M} {r : ℝ} :
+lemma isSelfAdjoint_and_norm_le_iff {x : A} {r : ℝ} :
     IsSelfAdjoint x ∧ ‖x‖ ≤ r ↔ ∃ y z, (0 ≤ y ∧ ‖y‖ ≤ r) ∧ (0 ≤ z ∧ ‖z‖ ≤ r) ∧ x = y - z := by
   constructor
   · rintro ⟨hx, hxr⟩
@@ -66,7 +63,7 @@ lemma isSelfAdjoint_and_norm_le_iff {x : M} {r : ℝ} :
     all_goals simpa
 
 open CStarAlgebra in
-lemma isSelfAdjoint_and_norm_lt_iff {x : M} {r : ℝ} :
+lemma isSelfAdjoint_and_norm_lt_iff {x : A} {r : ℝ} :
     IsSelfAdjoint x ∧ ‖x‖ < r ↔ ∃ y z, (0 ≤ y ∧ ‖y‖ < r) ∧ (0 ≤ z ∧ ‖z‖ < r) ∧ x = y - z := by
   constructor
   · rintro ⟨hx, hxr⟩
@@ -81,7 +78,7 @@ lemma isSelfAdjoint_and_norm_lt_iff {x : M} {r : ℝ} :
 
 open Pointwise in
 lemma setOf_isSelfAdjoint_inter_closedBall_eq {r : ℝ} :
-    {x : M | IsSelfAdjoint x} ∩ closedBall 0 r =
+    {x : A | IsSelfAdjoint x} ∩ closedBall 0 r =
       {x | 0 ≤ x} ∩ closedBall 0 r - {x | 0 ≤ x} ∩ closedBall 0 r := by
   ext
   simp [isSelfAdjoint_and_norm_le_iff, Set.mem_sub]
@@ -89,8 +86,7 @@ lemma setOf_isSelfAdjoint_inter_closedBall_eq {r : ℝ} :
 
 open Pointwise in
 lemma setOf_isSelfAdjoint_inter_ball_eq {r : ℝ} :
-    {x : M | IsSelfAdjoint x} ∩ ball 0 r =
-      {x | 0 ≤ x} ∩ ball 0 r - {x | 0 ≤ x} ∩ ball 0 r := by
+    {x : A | IsSelfAdjoint x} ∩ ball 0 r = {x | 0 ≤ x} ∩ ball 0 r - {x | 0 ≤ x} ∩ ball 0 r := by
   ext
   simp [isSelfAdjoint_and_norm_lt_iff, Set.mem_sub]
   grind
@@ -102,7 +98,7 @@ example (e : M) :
     letI Ms := {x | IsSelfAdjoint x}
     letI P := {x | 0 ≤ x}
     (e * · * e) '' (Ms ∩ S) = (e * · * e) '' (P ∩ S) - (e * · * e) '' (P ∩ S) := by
-  have e_mul_e : (e * · * e) = LinearMap.mulLeftRight ℂ ⟨e, e⟩ := by ext; simp
+  have e_mul_e : (e * · * e) = LinearMap.mulLeftRight ℂ ⟨e, e⟩ := rfl
   rw [e_mul_e, ← Set.image_sub, setOf_isSelfAdjoint_inter_closedBall_eq]
 
 lemma IsStarProjection.idempotent_mul_mul {M : Type*} [Semigroup M] [StarMul M]
@@ -173,6 +169,6 @@ lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarP
       have he' : IsStarProjection (ofUltraweak e) := he
       have e_mul_e : (ofUltraweak e * · * ofUltraweak e) =
           LinearMap.mulLeftRight ℂ ⟨ofUltraweak e, ofUltraweak e⟩ := by ext; simp
-      rw [← he'.mem_image_mul_mul_nonnegative_inter_unitClosedBall_iff, e_mul_e,
+      rw [← he'.mem_image_mul_mul_nonneg_inter_unitClosedBall_iff, e_mul_e,
         setOf_isSelfAdjoint_inter_closedBall_eq, Set.image_sub]
     _ = _ := by rw [← Set.image2_sub, ← Set.image_uncurry_prod]; rfl

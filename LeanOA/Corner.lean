@@ -10,7 +10,6 @@ open NonUnitalStarSubalgebra
 variable {R A : Type*} [CommSemiring R] [NonUnitalSemiring A] [Module R A] [IsScalarTower R A A]
     [SMulCommClass R A A] [StarRing A]
 
-
 variable (R) in
 /-- The non-unital star-subalgebra `a * A * star a` of `A` given by compression to the corner. -/
 @[simps]
