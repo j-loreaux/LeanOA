@@ -7,6 +7,21 @@ import Mathlib.Analysis.LocallyConvex.WithSeminorms
 import Mathlib.Analysis.Normed.Module.WeakDual
 import Mathlib.Analysis.LocallyConvex.ContinuousOfBounded
 
+section
+
+lemma bar {α β : Type} {f g : α → α} : f = g := by
+  sorry
+
+variable {α β : Type} {f g : α → α}
+
+lemma foo : f = g := by
+  sorry
+
+#check foo
+#check bar
+
+end
+
 
 section Banach_Alaoglu
 
@@ -293,8 +308,8 @@ variable (B 𝔖) in
 noncomputable def seminormFamily : SeminormFamily 𝕜 (PolarTopology B 𝔖) 𝔖 :=
   (UniformOnFun.seminormFamily F 𝕜 𝔖 𝕜).comp toUniformOnFun
 
-lemma seminormFamily_apply (s : 𝔖) (x : PolarTopology B 𝔖) :
-    seminormFamily B 𝔖 s x = ⨆ y : s.1, ‖B (linearEquiv x) y‖ := by
+lemma seminormFamily_apply (s : 𝔖) :
+    seminormFamily B 𝔖 s = seminorm B s.1 s.2 := by
   rfl
 
 variable (B 𝔖) in
@@ -319,86 +334,39 @@ instance : IsUniformAddGroup (PolarTopology B 𝔖) :=
   IsUniformInducing.isUniformAddGroup _ (isUniformInducing_toUniformOnFun _ _)
 
 instance : ContinuousConstSMul 𝕜 (PolarTopology B 𝔖) :=
-  Topology.IsInducing.continuousConstSMul (f := id)
-    (isUniformInducing_toUniformOnFun B 𝔖).isInducing
-      fun _ {_} ↦ LinearMap.CompatibleSMul.map_smul toUniformOnFun ..
+  isUniformInducing_toUniformOnFun B 𝔖 |>.isInducing.continuousConstSMul id <| by simp
 
-variable [TopologicalSpace E] [ContinuousSMul 𝕜 E] [B.flip.IsCompatible]
-    {s : Set E} (hs1 : s ∈ (𝓝 0).sets) (hs2 : B.polar s ∈ nhdsPolars B)
+lemma polar_mem_nhdsPolars [TopologicalSpace E] {s : Set E} (hs : s ∈ 𝓝 0) :
+    B.polar s ∈ nhdsPolars B :=
+  ⟨s, hs, rfl⟩
 
-lemma polar_nhd_zero_mem_nhdsPolars {s : Set E} (hs1 : s ∈ (𝓝 0).sets) :
-    B.polar s ∈ nhdsPolars B := by
-  simp only [nhdsPolars_mem_iff, mem_image, Filter.mem_sets]
-  use s
-  simpa
-
-lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E] [B.flip.IsCompatible]
-    {s : Set E} (hs1 : s ∈ (𝓝 0).sets) :
-    ContinuousAt (Seminorm.comp ((seminorm B (B.polar s) (polar_nhd_zero_mem_nhdsPolars hs1)))
-      (linearEquiv.symm).toLinearMap) 0
-    := by
-  apply Seminorm.continuousAt_zero (r := 2)
-  have Ao : ∀ v ∈ s,  ∀ f ∈ (B.polar s), ‖B v f‖ ≤ 1 := by
-    intro v hv f hf
-    exact LinearMap.polar_mem B s f hf v hv
-  have A1 : ∀ v ∈ s, Seminorm.comp ((seminorm B (B.polar s) (polar_nhd_zero_mem_nhdsPolars hs1)))
-      (linearEquiv.symm).toLinearMap v ≤ 1 := by
-    intro v hv
-    simp only [Seminorm.comp_apply, LinearEquiv.coe_coe, seminorm_apply]
-    apply csSup_le
-    · simp only [LinearEquiv.apply_symm_apply]
-      · use 0
-        simp only [mem_range, norm_eq_zero, Subtype.exists, exists_prop]
-        use 0
-        constructor
-        · exact LinearMap.zero_mem_polar B s
-        · exact LinearMap.map_zero (B v)
-    · intro b hb
-      obtain ⟨f, hf⟩ := hb
-      grw [← hf]
-      simp only [LinearEquiv.apply_symm_apply]
-      apply Ao v hv
-      exact Subtype.coe_prop f
-  have A :
-    s ⊆ ((Seminorm.comp ((seminorm B (B.polar s) (polar_nhd_zero_mem_nhdsPolars hs1)))
-      (linearEquiv.symm).toLinearMap)).ball 0 2 :=
-    by
-      intro a ha
-      rw [Seminorm.mem_ball_zero]
-      simp only [Seminorm.comp_apply, LinearEquiv.coe_coe]
-      dsimp [seminorm, toUniformOnFun]
-      simp only [LinearEquiv.apply_symm_apply, ofFun]
-      simp only [Equiv.coe_fn_mk]
-      sorry -- this will reduce to some kind of le of lt business.. got to clean up...
-  exact (𝓝 0).sets_of_superset hs1 A
-
-#exit
-lemma uniformContinuous_seminorm [TopologicalSpace E] (s : Set F) (hs : s ∈ nhdsPolars B) :
-    UniformContinuous (seminorm B s hs) :=
-  Seminorm.uniformContinuous_of_continuousAt_zero (continuousAt_zero_seminorm ..)
+variable (B) in
+lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E]
+    {s : Set E} (hs1 : s ∈ 𝓝 0) :
+    ContinuousAt (Seminorm.comp ((seminorm B (B.polar s) (polar_mem_nhdsPolars hs1)))
+      (linearEquiv.symm).toLinearMap) 0 := by
+  refine Seminorm.continuousAt_zero' (r := 1) <| mem_of_superset hs1 fun x hx ↦ ?_
+  simp only [Seminorm.mem_closedBall, sub_zero, Seminorm.comp_apply, LinearEquiv.coe_coe,
+    seminorm_apply, LinearEquiv.apply_symm_apply]
+  apply csSup_le (range_nonempty (h := ⟨0, by simp⟩) _)
+  rintro - ⟨⟨y, hy⟩, rfl⟩
+  exact B.polar_mem s y hy x hx
 
 /-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatible` and
 `PolarTopology B (nhdsPolars B)`. -/
 def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [ContinuousSMul 𝕜 E]
     [B.flip.IsCompatible] :
     PolarTopology B (nhdsPolars B) ≃L[𝕜] E where
   toLinearEquiv := linearEquiv (B := B) (𝔖 := nhdsPolars B)
-  continuous_toFun := by sorry
-  continuous_invFun := by
-    change Continuous linearEquiv.symm.toLinearMap
-    apply (withSeminorms B (nhdsPolars B)).continuous_of_continuous_comp _ fun s ↦ ?_
-    obtain ⟨-, ⟨s, (hs : s ∈ 𝓝 0), rfl⟩⟩ := s
-    eta_expand
-    simp only [Seminorm.comp_apply, LinearEquiv.coe_coe, seminormFamily_apply,
-      LinearEquiv.apply_symm_apply]
-    change Continuous fun x ↦ ⨆ y : B.polar s, ‖(B x) y‖ -- avoid `Set` defeq abuse.
-    simp only [← sSup_range, ← image_univ]
+  continuous_toFun := by
+    simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, LinearEquiv.coe_coe]
     sorry
-    --let _ : TopologicalSpace F := inferInstanceAs (TopologicalSpace (WeakBilin B.flip))
-    --apply IsCompact.continuous_sSup ?_
-    --· sorry
-    --· rw [← isCompact_iff_isCompact_univ]
-    --  sorry
+  continuous_invFun := by
+    simp only [LinearEquiv.invFun_eq_symm]
+    apply (withSeminorms B (nhdsPolars B)).continuous_of_continuous_comp _
+    rintro ⟨-, ⟨s, (hs : s ∈ 𝓝 0), rfl⟩⟩
+    exact Seminorm.continuous_of_continuousAt_zero <| continuousAt_zero_seminorm B hs
 
 end PolarTopology
 
