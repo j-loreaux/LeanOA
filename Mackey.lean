@@ -354,7 +354,11 @@ lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E] [B
         · exact LinearMap.zero_mem_polar B s
         · exact LinearMap.map_zero (B v)
     · intro b hb
-    sorry
+      obtain ⟨f, hf⟩ := hb
+      grw [← hf]
+      simp only [LinearEquiv.apply_symm_apply]
+      apply Ao v hv
+      exact Subtype.coe_prop f
   have A :
     s ⊆ ((Seminorm.comp ((seminorm B (B.polar s) (polar_nhd_zero_mem_nhdsPolars hs1)))
       (linearEquiv.symm).toLinearMap)).ball 0 2 :=
@@ -365,8 +369,7 @@ lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E] [B
       dsimp [seminorm, toUniformOnFun]
       simp only [LinearEquiv.apply_symm_apply, ofFun]
       simp only [Equiv.coe_fn_mk]
-      --mess. We need to just show that the sup ≤ 1 from all the individuals being ≤ 1.
-      sorry
+      sorry -- this will reduce to some kind of le of lt business.. got to clean up...
   exact (𝓝 0).sets_of_superset hs1 A
 
 #exit
