@@ -28,11 +28,14 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
 import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 import LeanOA.Mathlib.Analysis.Complex.Basic
 import LeanOA.Mathlib.Analysis.Convex.Extreme
+import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
+import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
 import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
 import LeanOA.Mathlib.Analysis.RCLike.Extend
 import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 import LeanOA.Mathlib.Misc
 import LeanOA.Mathlib.Order.Hom.Basic
+import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 import LeanOA.Mathlib.Topology.Bornology.Basic
 import LeanOA.Mathlib.Topology.ContinuousMap.Bounded.Normed
 import LeanOA.Mathlib.Topology.ContinuousMap.Compact
