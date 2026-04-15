@@ -7,6 +7,24 @@ import Mathlib.Analysis.LocallyConvex.WithSeminorms
 import Mathlib.Analysis.Normed.Module.WeakDual
 import Mathlib.Analysis.LocallyConvex.ContinuousOfBounded
 
+
+namespace LinearMap
+
+open scoped Pointwise
+
+variable {𝕜 E F : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [AddCommGroup F] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+
+lemma polar_smul (s : Set E) (c : 𝕜) (hc : c ≠ 0) : B.polar (c • s) = c⁻¹ • B.polar s := by
+  ext x
+  lift c to 𝕜ˣ using IsUnit.mk0 c hc
+  simp [polar, Set.mem_smul_set]
+  simp [← Units.smul_def, smul_eq_iff_eq_inv_smul, ← Units.val_inv_eq_inv_val]
+  simp [Units.smul_def]
+  -- clean up later.
+
+end LinearMap
+
 section Banach_Alaoglu
 
 variable (𝕜 : Type*) {E : Type*} [NontriviallyNormedField 𝕜]
@@ -148,8 +166,11 @@ def toFunLinearEquiv [Semiring R] [AddCommMonoid β] [Module R β] :
   toAddEquiv := toFunAddEquiv 𝔖
   map_smul' _ _ := rfl
 
+
+---------- This is nonsense and unprovable, *BUT* where it is used later is fixable. ------------
+
 variable {𝔖}
-variable {𝕜 : Type*} [SeminormedRing 𝕜] [SeminormedAddCommGroup β] [Module 𝕜 β]
+variable {𝕜 : Type*} [NormedField 𝕜] [SeminormedAddCommGroup β] [NormedSpace 𝕜 β]
 
 variable (𝕜) in
 /-- The seminorm given by taking the supremum of the norms over a set in the collection.
@@ -161,7 +182,7 @@ noncomputable def seminorm (s : Set α) (hs : s ∈ 𝔖) :
   map_zero' := by simp
   add_le' := sorry
   neg' := by simp
-  smul' := sorry
+  smul' := by simp [norm_smul, Real.mul_iSup_of_nonneg (norm_nonneg _)]
 
 lemma seminorm_apply (s : Set α) (hs : s ∈ 𝔖) (f : α →ᵤ[𝔖] β) :
     seminorm 𝕜 s hs f = ⨆ x : s, ‖toFun 𝔖 f x‖ := rfl
@@ -174,6 +195,7 @@ noncomputable def seminormFamily : SeminormFamily 𝕜 (α →ᵤ[𝔖] β) 𝔖
 lemma seminormFamily_apply (s : 𝔖) (f : α →ᵤ[𝔖] β) :
     seminormFamily α β 𝔖 𝕜 s f = ⨆ x : s.1, ‖toFun 𝔖 f x‖ := rfl
 
+---------- End broken part ------------
 
 end UniformOnFun
 
@@ -283,6 +305,8 @@ variable (B) in
 `B x y` over all `y ∈ s`, where `s ∈ 𝔖`. -/
 noncomputable def seminorm (s : Set F) (hs : s ∈ 𝔖) : Seminorm 𝕜 (PolarTopology B 𝔖) :=
   (UniformOnFun.seminorm 𝕜 s hs).comp toUniformOnFun
+  --- TODO: this construction of the seminorm doesn't work because it is not a seminorm on
+  --- `UniformOnFun`. We'll need that `s ∈ 𝔖` is compact in `WeakBilin B.flip`.
 
 lemma seminorm_apply (s : Set F) (hs : s ∈ 𝔖) (x : PolarTopology B 𝔖) :
     seminorm B s hs x = ⨆ y : s, ‖B (linearEquiv x) y‖ := by
