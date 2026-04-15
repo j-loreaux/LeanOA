@@ -312,6 +312,9 @@ variable (B) in
 /-- The collection of polars of neighborhoods of zero. -/
 def nhdsPolars [TopologicalSpace E] : Set (Set F) := B.polar '' (𝓝 0).sets
 
+lemma nhdsPolars_mem_iff [TopologicalSpace E] {s : Set F} :
+  s ∈ nhdsPolars B ↔ s ∈ B.polar '' (𝓝 0).sets := Eq.to_iff rfl
+
 instance : IsUniformAddGroup (PolarTopology B 𝔖) :=
   IsUniformInducing.isUniformAddGroup _ (isUniformInducing_toUniformOnFun _ _)
 
@@ -323,25 +326,29 @@ instance : ContinuousConstSMul 𝕜 (PolarTopology B 𝔖) :=
 variable [TopologicalSpace E] [ContinuousSMul 𝕜 E] [B.flip.IsCompatible]
     {s : Set E} (hs1 : s ∈ (𝓝 0).sets) (hs2 : B.polar s ∈ nhdsPolars B)
 
-lemma bbb {s : Set E} (hs1 : s ∈ (𝓝 0).sets) : B.polar s ∈ nhdsPolars B := by
-  dsimp [nhdsPolars] --need auxiliary lemma
-  simp only [mem_image, Filter.mem_sets]
+lemma polar_nhd_zero_mem_nhdsPolars {s : Set E} (hs1 : s ∈ (𝓝 0).sets) :
+    B.polar s ∈ nhdsPolars B := by
+  simp only [nhdsPolars_mem_iff, mem_image, Filter.mem_sets]
   use s
-  simp only [and_true]
-  exact mem_of_superset hs1 fun ⦃a⦄ a_1 ↦ a_1
+  simpa
 
 lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E] [B.flip.IsCompatible]
     {s : Set E} (hs1 : s ∈ (𝓝 0).sets) :
-    ContinuousAt (Seminorm.comp ((seminorm B (B.polar s) (bbb hs1)))
+    ContinuousAt (Seminorm.comp ((seminorm B (B.polar s) (polar_nhd_zero_mem_nhdsPolars hs1)))
       (linearEquiv.symm).toLinearMap) 0
     := by
   apply Seminorm.continuousAt_zero (r := 2)
   have A :
-    s ⊆ ((Seminorm.comp ((seminorm B (B.polar s) (bbb hs1)))
+    s ⊆ ((Seminorm.comp ((seminorm B (B.polar s) (polar_nhd_zero_mem_nhdsPolars hs1)))
       (linearEquiv.symm).toLinearMap)).ball 0 2 :=
     by
       intro a ha
-      simp only [Seminorm.mem_ball, sub_zero, Seminorm.comp_apply, LinearEquiv.coe_coe]
+      rw [Seminorm.mem_ball_zero]
+      simp only [Seminorm.comp_apply, LinearEquiv.coe_coe]
+      dsimp [seminorm, toUniformOnFun]
+      simp only [LinearEquiv.apply_symm_apply, ofFun]
+      simp only [Equiv.coe_fn_mk]
+      --mess. We need to just show that the sup ≤ 1 from all the individuals being ≤ 1.
       sorry
   exact (𝓝 0).sets_of_superset hs1 A
 
