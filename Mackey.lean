@@ -7,22 +7,6 @@ import Mathlib.Analysis.LocallyConvex.WithSeminorms
 import Mathlib.Analysis.Normed.Module.WeakDual
 import Mathlib.Analysis.LocallyConvex.ContinuousOfBounded
 
-section
-
-lemma bar {α β : Type} {f g : α → α} : f = g := by
-  sorry
-
-variable {α β : Type} {f g : α → α}
-
-lemma foo : f = g := by
-  sorry
-
-#check foo
-#check bar
-
-end
-
-
 section Banach_Alaoglu
 
 variable (𝕜 : Type*) {E : Type*} [NontriviallyNormedField 𝕜]
