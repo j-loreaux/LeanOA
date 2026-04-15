@@ -320,20 +320,34 @@ instance : ContinuousConstSMul 𝕜 (PolarTopology B 𝔖) :=
     (isUniformInducing_toUniformOnFun B 𝔖).isInducing
       fun _ {_} ↦ LinearMap.CompatibleSMul.map_smul toUniformOnFun ..
 
+variable [TopologicalSpace E] [ContinuousSMul 𝕜 E] [B.flip.IsCompatible]
+    {s : Set E} (hs1 : s ∈ (𝓝 0).sets) (hs2 : B.polar s ∈ nhdsPolars B)
 
-/- Will have to think about the following more carefully...-/
+lemma bbb {s : Set E} (hs1 : s ∈ (𝓝 0).sets) : B.polar s ∈ nhdsPolars B := by
+  dsimp [nhdsPolars] --need auxiliary lemma
+  simp only [mem_image, Filter.mem_sets]
+  use s
+  simp only [and_true]
+  exact mem_of_superset hs1 fun ⦃a⦄ a_1 ↦ a_1
 
-/-- The following may be nonsense. It at least commits terrible defeq abuse. -/
 lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E] [B.flip.IsCompatible]
-    {s : Set E} (hs1 : s ∈ (𝓝 0).sets) (hs2 : B.polar s ∈ nhdsPolars B) :
-      ContinuousAt (X := E) (seminorm B (B.polar s) hs2) (0 : E) := by
-  refine Seminorm.continuousAt_zero (𝕜 := 𝕜) (E := E) (r := 2) ?_
-  have A : s ⊆ (seminorm B (B.polar s) hs2).ball 0 2 := sorry -- This lemma has massive defeq abuse
+    {s : Set E} (hs1 : s ∈ (𝓝 0).sets) :
+    ContinuousAt (Seminorm.comp ((seminorm B (B.polar s) (bbb hs1)))
+      (linearEquiv.symm).toLinearMap) 0
+    := by
+  apply Seminorm.continuousAt_zero (r := 2)
+  have A :
+    s ⊆ ((Seminorm.comp ((seminorm B (B.polar s) (bbb hs1)))
+      (linearEquiv.symm).toLinearMap)).ball 0 2 :=
+    by
+      intro a ha
+      simp only [Seminorm.mem_ball, sub_zero, Seminorm.comp_apply, LinearEquiv.coe_coe]
+      sorry
   exact (𝓝 0).sets_of_superset hs1 A
 
---lemma uniformContinuous_seminorm [TopologicalSpace E] (s : Set F) (hs : s ∈ nhdsPolars B) :
---    UniformContinuous (seminorm B s hs) :=
---  Seminorm.uniformContinuous_of_continuousAt_zero (continuousAt_zero_seminorm ..)
+lemma uniformContinuous_seminorm [TopologicalSpace E] (s : Set F) (hs : s ∈ nhdsPolars B) :
+    UniformContinuous (seminorm B s hs) :=
+  Seminorm.uniformContinuous_of_continuousAt_zero (continuousAt_zero_seminorm ..)
 
 /-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatible` and
 `PolarTopology B (nhdsPolars B)`. -/
