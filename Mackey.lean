@@ -308,10 +308,32 @@ open scoped ComplexOrder
 instance [Module ℝ E] [h : IsScalarTower ℝ 𝕜 E] : LocallyConvexSpace ℝ (PolarTopology B 𝔖) :=
   (withSeminorms B 𝔖).toLocallyConvexSpace
 
-
 variable (B) in
 /-- The collection of polars of neighborhoods of zero. -/
 def nhdsPolars [TopologicalSpace E] : Set (Set F) := B.polar '' (𝓝 0).sets
+
+instance : IsUniformAddGroup (PolarTopology B 𝔖) :=
+  IsUniformInducing.isUniformAddGroup _ (isUniformInducing_toUniformOnFun _ _)
+
+instance : ContinuousConstSMul 𝕜 (PolarTopology B 𝔖) :=
+  Topology.IsInducing.continuousConstSMul (f := id)
+    (isUniformInducing_toUniformOnFun B 𝔖).isInducing
+      fun _ {_} ↦ LinearMap.CompatibleSMul.map_smul toUniformOnFun ..
+
+
+/- Will have to think about the following more carefully...-/
+
+/-- The following may be nonsense. It at least commits terrible defeq abuse. -/
+lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E] [B.flip.IsCompatible]
+    {s : Set E} (hs1 : s ∈ (𝓝 0).sets) (hs2 : B.polar s ∈ nhdsPolars B) :
+      ContinuousAt (X := E) (seminorm B (B.polar s) hs2) (0 : E) := by
+  refine Seminorm.continuousAt_zero (𝕜 := 𝕜) (E := E) (r := 2) ?_
+  have A : s ⊆ (seminorm B (B.polar s) hs2).ball 0 2 := sorry -- This lemma has massive defeq abuse
+  exact (𝓝 0).sets_of_superset hs1 A
+
+--lemma uniformContinuous_seminorm [TopologicalSpace E] (s : Set F) (hs : s ∈ nhdsPolars B) :
+--    UniformContinuous (seminorm B s hs) :=
+--  Seminorm.uniformContinuous_of_continuousAt_zero (continuousAt_zero_seminorm ..)
 
 /-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatible` and
 `PolarTopology B (nhdsPolars B)`. -/
@@ -329,11 +351,12 @@ def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
       LinearEquiv.apply_symm_apply]
     change Continuous fun x ↦ ⨆ y : B.polar s, ‖(B x) y‖ -- avoid `Set` defeq abuse.
     simp only [← sSup_range, ← image_univ]
-    let _ : TopologicalSpace F := inferInstanceAs (TopologicalSpace (WeakBilin B.flip))
-    apply IsCompact.continuous_sSup ?_
-    · sorry
-    · rw [← isCompact_iff_isCompact_univ]
-      sorry
+    sorry
+    --let _ : TopologicalSpace F := inferInstanceAs (TopologicalSpace (WeakBilin B.flip))
+    --apply IsCompact.continuous_sSup ?_
+    --· sorry
+    --· rw [← isCompact_iff_isCompact_univ]
+    --  sorry
 
 end PolarTopology
 
