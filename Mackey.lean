@@ -338,6 +338,23 @@ lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E] [B
       (linearEquiv.symm).toLinearMap) 0
     := by
   apply Seminorm.continuousAt_zero (r := 2)
+  have Ao : ∀ v ∈ s,  ∀ f ∈ (B.polar s), ‖B v f‖ ≤ 1 := by
+    intro v hv f hf
+    exact LinearMap.polar_mem B s f hf v hv
+  have A1 : ∀ v ∈ s, Seminorm.comp ((seminorm B (B.polar s) (polar_nhd_zero_mem_nhdsPolars hs1)))
+      (linearEquiv.symm).toLinearMap v ≤ 1 := by
+    intro v hv
+    simp only [Seminorm.comp_apply, LinearEquiv.coe_coe, seminorm_apply]
+    apply csSup_le
+    · simp only [LinearEquiv.apply_symm_apply]
+      · use 0
+        simp only [mem_range, norm_eq_zero, Subtype.exists, exists_prop]
+        use 0
+        constructor
+        · exact LinearMap.zero_mem_polar B s
+        · exact LinearMap.map_zero (B v)
+    · intro b hb
+    sorry
   have A :
     s ⊆ ((Seminorm.comp ((seminorm B (B.polar s) (polar_nhd_zero_mem_nhdsPolars hs1)))
       (linearEquiv.symm).toLinearMap)).ball 0 2 :=
@@ -352,6 +369,7 @@ lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E] [B
       sorry
   exact (𝓝 0).sets_of_superset hs1 A
 
+#exit
 lemma uniformContinuous_seminorm [TopologicalSpace E] (s : Set F) (hs : s ∈ nhdsPolars B) :
     UniformContinuous (seminorm B s hs) :=
   Seminorm.uniformContinuous_of_continuousAt_zero (continuousAt_zero_seminorm ..)
