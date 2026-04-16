@@ -542,29 +542,20 @@ lemma seminorm_union {s t : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
   · simpa using Real.sSup_nonneg <| by rintro - ⟨_, -, rfl⟩; positivity
   have hst := hs.union ht
   rw [WeakBilin.isVonNBounded_iff_bddAbove] at hs ht hst
-  apply le_antisymm
-  · apply csSup_le (hs_non.inl.image _)
-    rintro - ⟨x, (hx | hx), rfl⟩
-    · apply le_trans ?_ (le_max_left _ _)
-      simpa using le_csSup (hs (linearEquiv _)) ⟨x, hx, rfl⟩
-    · apply le_trans ?_ (le_max_right _ _)
-      simpa using le_csSup (ht (linearEquiv _)) ⟨x, hx, rfl⟩
-  · rw [max_le_iff]
-    constructor
-    all_goals
-      apply csSup_le_csSup (hst _) (by aesop)
-      gcongr
-      simp
+  have h₁ := isLUB_csSup (hs_non.image _) (hs (linearEquiv x))
+  have h₂ := isLUB_csSup (ht_non.image _) (ht (linearEquiv x))
+  have h₃ := isLUB_csSup (hs_non.inl.image _) (hst (linearEquiv x))
+  exact h₃.unique ((Set.image_union ..) ▸ h₁.union h₂)
 
 open TopologicalSpace
 
 variable (B 𝔖) in
 noncomputable def seminormFamily (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) :
     SeminormFamily 𝕜 (PolarTopology B 𝔖) 𝔖 :=
-  fun s ↦ seminorm B s.1 (h𝔖 _ s.2)
+  fun s ↦ seminorm B 𝔖 s.1 (h𝔖 _ s.2)
 
 lemma seminormFamily_apply (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) (s : 𝔖) :
-    seminormFamily B 𝔖 h𝔖 s = seminorm B s.1 (h𝔖 _ s.2) := by
+    seminormFamily B 𝔖 h𝔖 s = seminorm B 𝔖 s.1 (h𝔖 _ s.2) := by
   rfl
 
 variable (B 𝔖) in
