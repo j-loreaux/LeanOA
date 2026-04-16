@@ -6,6 +6,7 @@ import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Analysis.LocallyConvex.WithSeminorms
 import Mathlib.Analysis.Normed.Module.WeakDual
 import Mathlib.Analysis.LocallyConvex.ContinuousOfBounded
+import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 
 
 namespace LinearMap
@@ -208,44 +209,77 @@ set_option linter.unusedVariables false in
 is induced by `B` when we equip `F → 𝕜` with the topology of uniform convergence on the collection
 of sets `𝔖 : Set (Set F))`. -/
 @[nolint unusedArguments]
-def PolarTopology (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set F)) := E
+def PolarTopology (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set (WeakBilin B.flip))) := E
 deriving AddCommGroup, Module 𝕜
 
-instance {𝕝 : Type*} [CommRing 𝕝] [Module 𝕝 E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set F)) :
+instance {𝕝 : Type*} [CommRing 𝕝] [Module 𝕝 E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+    (𝔖 : Set (Set (WeakBilin B.flip))) :
     Module 𝕝 (PolarTopology B 𝔖) :=
   ‹Module 𝕝 E›
 
 instance {𝕝 : Type*} [CommRing 𝕝] [Module 𝕝 E] [SMul 𝕝 𝕜] [IsScalarTower 𝕝 𝕜 E]
-    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set F)) :
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set (WeakBilin B.flip))) :
     IsScalarTower 𝕝 𝕜 (PolarTopology B 𝔖) :=
   ‹IsScalarTower 𝕝 𝕜 E›
 
-variable (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set F))
+variable (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set (WeakBilin B.flip)))
 
 namespace PolarTopology
 
-open UniformOnFun Topology
+open UniformOnFun Topology WeakBilin
+
+open scoped UniformConvergenceCLM
 
 variable {B 𝔖} in
 /-- The canonical equivalence between `PolarTopology B 𝔖` and `E`. -/
 def linearEquiv : PolarTopology B 𝔖 ≃ₗ[𝕜] E := .refl _ _
 
--- TODO: maybe this should be a `ContinuousLinearMap`.
+/-- Upgrade a bilinear map `B : E →ₗ[𝕜] F →ₗ[𝕜] → 𝕜` to a linear map into continuous linear maps
+`B : E →ₗ[𝕜] F →L[𝕜] → 𝕜` (this can be generalized a lot; no need for scalars, also we can
+semilinearize). -/
+noncomputable def _root_.LinearMap.toCLMRight [TopologicalSpace F] (hB : ∀ x, Continuous (B x)) :
+    E →ₗ[𝕜] F →L[𝕜] 𝕜 :=
+  letI e : (F →L[𝕜] 𝕜) ≃ₗ[𝕜] (ContinuousLinearMap.coeLM 𝕜 (M := F) (N₃ := 𝕜) (R := 𝕜)).range :=
+    .ofInjective (ContinuousLinearMap.coeLM 𝕜) fun _ _ ↦ by simp [DFunLike.ext_iff]
+  letI B' : E →ₗ[𝕜] (ContinuousLinearMap.coeLM 𝕜 (M := F) (N₃ := 𝕜) (R := 𝕜)).range :=
+    B.codRestrict  _ (fun x ↦ ⟨⟨B x, hB x⟩, rfl⟩)
+  (LinearEquiv.refl _ _).arrowCongr e.symm B'
+
+@[simp]
+lemma _root_.LinearMap.coeLM_toCLMRight_apply [TopologicalSpace F] (hB : ∀ x, Continuous (B x))
+    (x : E) : (B.toCLMRight hB x).coeLM 𝕜 = B x := by
+  simp [LinearMap.toCLMRight]
+
+@[simp]
+lemma _root_.LinearMap.coe_toCLMRight [TopologicalSpace F] (hB : ∀ x, Continuous (B x))
+    (x : E) : ⇑(B.toCLMRight hB x) = B x := by
+  congrm($(B.coeLM_toCLMRight_apply hB x))
+
 variable {B 𝔖} in
-/-- The map from `PolarTopology B 𝔖` to `F →ᵤ[𝔖] 𝕜` which induces the uniformity. -/
-@[simps!]
-def toUniformOnFun : PolarTopology B 𝔖 →ₗ[𝕜] F →ᵤ[𝔖] 𝕜 :=
-  linearEquiv.symm.arrowCongr (UniformOnFun.toFunLinearEquiv 𝔖).symm <|
-    (LinearMap.ltoFun 𝕜 F 𝕜 𝕜).compRight 𝕜 B
+/-- The linear map from `PolarTopology B 𝔖` into the space of continuous linear maps on
+`F` (where `F` is equipped with the weak topology induced by `B.flip`) equipped with the topology
+of uniform convergence on `𝔖 : Set (Set (WeakBilin B.flip))`. -/
+noncomputable def toUniformConvergenceCLM :
+    PolarTopology B 𝔖 →ₗ[𝕜] WeakBilin B.flip →Lᵤ[𝕜, 𝔖] 𝕜 :=
+  linearEquiv.symm.arrowCongr (ContinuousLinearMap.toUniformConvergenceCLM ..) <|
+    (pairing B.flip).flip.toCLMRight (eval_continuous B.flip)
 
-instance : UniformSpace (PolarTopology B 𝔖) :=
-  .comap (fun x : PolarTopology B 𝔖 ↦ UniformOnFun.ofFun 𝔖 ⇑(B x)) inferInstance
+variable {B 𝔖} in
+@[simp]
+lemma toUniformConvergenceCLM_apply_apply (x : PolarTopology B 𝔖) (y : WeakBilin B.flip) :
+    toUniformConvergenceCLM x y = B x y := by
+  simp [toUniformConvergenceCLM]
+  rfl -- gross
 
-lemma isUniformInducing_toUniformOnFun : IsUniformInducing (toUniformOnFun (B := B) (𝔖 := 𝔖)) where
+noncomputable instance : UniformSpace (PolarTopology B 𝔖) :=
+  .comap (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)) inferInstance
+
+lemma isUniformInducing_toUniformConvergenceCLM :
+    IsUniformInducing (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)) where
   comap_uniformity := rfl
 
-lemma isUniformEmbedding_toUniformOnFun (hB : B.SeparatingLeft) :
-    IsUniformEmbedding (toUniformOnFun (B := B) (𝔖 := 𝔖)) where
+lemma isUniformEmbedding_toUniformConvergenceCLM (hB : B.SeparatingLeft) :
+    IsUniformEmbedding (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)) where
   comap_uniformity := rfl
   injective := by
     rw [← LinearMap.ker_eq_bot]
@@ -253,13 +287,29 @@ lemma isUniformEmbedding_toUniformOnFun (hB : B.SeparatingLeft) :
     simp only [LinearMap.mem_ker, Submodule.mem_bot]
     constructor
     · intro hx
-      apply ofFun 𝔖 |>.injective at hx
-      simp only [LinearEquiv.coe_coe, LinearMap.compRight_apply, LinearMap.coe_comp,
-        LinearEquiv.symm_symm, comp_apply, LinearMap.ltoFun_apply,
-        toFunLinearEquiv_symm_apply, funext_iff] at hx
       apply hB
-      exact (hx ·)
+      simpa [DFunLike.ext_iff] using  hx
     · rintro rfl; exact map_zero _
+
+variable {B 𝔖} in
+def toUniformOnFun : PolarTopology B 𝔖 →ₗ[𝕜] F →ᵤ[𝔖] 𝕜 :=
+  linearEquiv.symm.arrowCongr (UniformOnFun.toFunLinearEquiv 𝔖).symm <|
+    (LinearMap.ltoFun 𝕜 F 𝕜 𝕜).compRight 𝕜 B
+
+variable {B 𝔖} in
+@[simp]
+lemma toUniformOnFun_apply (x : PolarTopology B 𝔖) :
+    toUniformOnFun x = UniformOnFun.ofFun 𝔖 (B x) := by
+  rfl
+
+lemma isUniformInducing_toUniformOnFun :
+    IsUniformInducing (toUniformOnFun (B := B) (𝔖 := 𝔖)) := by
+  convert (UniformConvergenceCLM.isUniformInducing_coeFn (RingHom.id 𝕜) 𝕜 𝔖).comp
+    (isUniformInducing_toUniformConvergenceCLM B 𝔖)
+  ext
+  apply UniformOnFun.toFun 𝔖 |>.injective
+  ext
+  simp
 
 open scoped Uniformity Topology
 open UniformOnFun
@@ -271,15 +321,17 @@ lemma hasBasis_uniformity_of_basis {ι : Type*} {p : ι → Prop} {s : ι → Se
     (𝓤 (PolarTopology B 𝔖)).HasBasis
       (fun (Si : Set F × ι) ↦ Si.1 ∈ 𝔖 ∧ p Si.2)
       (fun (Si : Set F × ι) ↦
-        (Prod.map toUniformOnFun toUniformOnFun) ⁻¹' (UniformOnFun.gen 𝔖 Si.1 (s Si.2))) :=
-  UniformOnFun.hasBasis_uniformity_of_basis F 𝕜 𝔖 h h' hb |>.comap _
+        (Prod.map toUniformOnFun toUniformOnFun) ⁻¹' (UniformOnFun.gen 𝔖 Si.1 (s Si.2))) := by
+  rw [← (isUniformInducing_toUniformOnFun B 𝔖).comap_uniformity]
+  exact UniformOnFun.hasBasis_uniformity_of_basis F 𝕜 𝔖 h h' hb |>.comap _
 
 lemma hasBasis_uniformity (h : 𝔖.Nonempty) (h' : DirectedOn (· ⊆ ·) 𝔖) :
     (𝓤 (PolarTopology B 𝔖)).HasBasis
       (fun (SV : Set F × Set (𝕜 × 𝕜)) ↦ SV.1 ∈ 𝔖 ∧ SV.2 ∈ uniformity 𝕜)
       (fun (SV : Set F × Set (𝕜 × 𝕜)) ↦
-        (Prod.map toUniformOnFun toUniformOnFun) ⁻¹' (UniformOnFun.gen 𝔖 SV.1 SV.2)) :=
-  UniformOnFun.hasBasis_uniformity F 𝕜 𝔖 h h' |>.comap _
+        (Prod.map toUniformOnFun toUniformOnFun) ⁻¹' (UniformOnFun.gen 𝔖 SV.1 SV.2)) := by
+  rw [← (isUniformInducing_toUniformOnFun B 𝔖).comap_uniformity]
+  exact UniformOnFun.hasBasis_uniformity F 𝕜 𝔖 h h' |>.comap _
 
 variable {B}
 
