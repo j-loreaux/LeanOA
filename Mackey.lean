@@ -635,13 +635,27 @@ lemma seminorm_apply_le_iff {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded �
   obtain (rfl | hs_non) := s.eq_empty_or_nonempty; · simpa
   simpa [mem_upperBounds] using isLUB_le_iff (b := r) <| isLUB_seminorm hs hs_non x
 
+lemma seminorm_apply_le {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
+    (x : PolarTopology B 𝔖) {y : WeakBilin B.flip} (hy : y ∈ s) :
+    ‖(pairing B.flip).flip (linearEquiv x) y‖ ≤ seminorm B 𝔖 s hs x  :=
+  seminorm_apply_le_iff hs (apply_nonneg _ _) x |>.mp le_rfl y hy
+
+lemma seminorm_smul_le {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
+    (c : 𝕜) (x : PolarTopology B 𝔖) :
+    seminorm B 𝔖 s hs (c • x) ≤ ‖c‖ * seminorm B 𝔖 s hs x := by
+  rw [seminorm_apply_le_iff hs (mul_nonneg (norm_nonneg _) (apply_nonneg _ _)) (c • x)]
+  intro y hy
+  simp only [map_smul, LinearMap.smul_apply, smul_eq_mul, norm_mul]
+  gcongr
+  exact seminorm_apply_le hs x hy
+
 lemma seminorm_le_of_subset {s t : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
     (ht : IsVonNBounded 𝕜 t) (hst : s ⊆ t) :
     seminorm B 𝔖 s hs ≤ seminorm B 𝔖 t ht := by
   intro x
   simp only
-  rw [seminorm_apply_le_iff hs]
-  sorry
+  rw [seminorm_apply_le_iff hs (apply_nonneg _ _)]
+  exact fun y hy ↦ seminorm_apply_le ht x (hst hy)
 
 lemma seminorm_union {s t : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
       (ht : IsVonNBounded 𝕜 t) :
@@ -656,23 +670,18 @@ lemma continuous_seminorm (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (�
       (s : Set (WeakBilin B.flip)) (hs_mem : s ∈ 𝔖) (hs : IsVonNBounded 𝕜 s) :
     Continuous (seminorm B 𝔖 s hs) := by
   have := UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
-    (RingHom.id 𝕜) 𝕜 𝔖 h𝔖_non h𝔖_dir Metric.nhds_basis_ball
+    (RingHom.id 𝕜) 𝕜 𝔖 h𝔖_non h𝔖_dir Metric.nhds_basis_closedBall
     |>.comap (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖))
   apply Seminorm.continuous_of_continuousAt_zero
   rw [← map_zero (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)), ← nhds_induced] at this
-  simp only [Metric.mem_ball, dist_zero_right] at this
+  simp only [Metric.mem_closedBall, dist_zero_right] at this
   rw [ContinuousAt, this.tendsto_iff Metric.nhds_basis_closedBall]
   intro ε hε
   simp only [preimage_setOf_eq, toUniformConvergenceCLM_apply_apply, mem_setOf_eq,
-    map_zero, Metric.mem_closedBall, dist_zero_right, Real.norm_eq_abs,
-    Prod.exists]
-  simp only [seminorm_apply, LinearMap.flip_apply]
-  refine ⟨s, ε, ⟨hs_mem, hε⟩, fun x hx ↦ ?_⟩
-  rw [abs_of_nonneg (Real.sSup_image_nonneg fun _ _ ↦ by positivity)]
-  obtain (rfl | h) := s.eq_empty_or_nonempty; · simpa using hε.le
-  apply csSup_le (h.image _)
-  rintro - ⟨y, hy, rfl⟩
-  exact (hx y hy).le
+    map_zero, Metric.mem_closedBall, dist_zero_right, Real.norm_eq_abs]
+  simp_rw [abs_of_nonneg (apply_nonneg _ _)]
+  refine ⟨(s, ε), ⟨hs_mem, hε⟩, fun x hx ↦ ?_⟩
+  simpa [seminorm_apply_le_iff hs hε.le x, pairing_apply]
 
 open TopologicalSpace
 
@@ -746,7 +755,7 @@ lemma polar_mem_nhds (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆
   simpa [← Seminorm.closedBall_zero_eq_preimage_closedBall, unitClosedBall_seminorm_eq_polar]
     using h_cont h_mem
 
-open scoped Pointwise in
+open scoped Pointwise NNReal in
 lemma hasBasis_nhds_zero_polar [Module ℝ F] [IsScalarTower ℝ 𝕜 F]
     (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
     (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s)
@@ -757,11 +766,19 @@ lemma hasBasis_nhds_zero_polar [Module ℝ F] [IsScalarTower ℝ 𝕜 F]
     directed_seminormFamily h𝔖 h𝔖_dir
   apply this.to_hasBasis' ?_ fun s hs ↦ polar_mem_nhds h𝔖_non h𝔖_dir s hs (h𝔖 s hs)
   rintro ⟨s, r⟩ (hr : 0 < r)
-  simp
-
-  sorry
-
-#exit
+  obtain ⟨t, ht, hrst⟩ := h𝔖_scale r⁻¹ (by positivity) s.1 s.2
+  refine ⟨t, ht, ?_⟩
+  apply Set.Subset.trans <| LinearMap.polar_antitone (bilin B 𝔖) hrst
+  rw [← smul_one_smul 𝕜]
+  rw [LinearMap.polar_smul _ _ (r⁻¹ • 1) (by simpa using hr.ne')]
+  lift r to ℝ≥0 using hr.le
+  simp only [smul_inv₀, inv_inv, inv_one, ← NNReal.smul_def]
+  rw [← unitClosedBall_seminorm_eq_polar (h𝔖 _ s.2)]
+  rintro - ⟨x, hx, rfl⟩
+  simp only [Seminorm.mem_closedBall, sub_zero, seminormFamily_apply] at hx ⊢
+  apply seminorm_smul_le (h𝔖 _ s.2) _ _ |>.trans
+  grw [hx]
+  simp [NNReal.smul_def]
 
 open scoped ComplexOrder
 
