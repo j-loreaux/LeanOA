@@ -9,6 +9,72 @@ import Mathlib.Analysis.LocallyConvex.ContinuousOfBounded
 import Mathlib.Topology.Sets.Compacts
 import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 
+lemma WeakBilin.pairing_apply {𝕜 E F : Type*} [CommSemiring 𝕜] [AddCommMonoid E]
+    [Module 𝕜 E] [AddCommMonoid F] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (x : WeakBilin B) :
+    pairing B x = B (linearEquiv 𝕜 B x) :=
+  rfl
+
+lemma WithSeminorms.hasBasis_zero_closedBall
+    {𝕜 E ι : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
+    {p : SeminormFamily 𝕜 E ι} (hp : WithSeminorms p) :
+    (nhds 0).HasBasis (fun (sr : Finset ι × ℝ) => 0 < sr.2)
+      fun (sr : Finset ι × ℝ) => (sr.1.sup p).closedBall 0 sr.2 := by
+  apply hp.hasBasis_ball.to_hasBasis ?_
+    fun i hi ↦ ⟨i, hi, Seminorm.ball_subset_closedBall (i.1.sup p) 0 i.2⟩
+  refine fun i hi ↦ ⟨(i.1, i.2 / 2), by positivity, ?_⟩
+  rw [Seminorm.closedBall_zero_eq_preimage_closedBall, Seminorm.ball_zero_eq_preimage_ball]
+  gcongr
+  exact Metric.closedBall_subset_ball (half_lt_self hi)
+
+lemma WithSeminorms.hasBasis_zero_closedBall_of_directed
+    {𝕜 E ι : Type*} [Nonempty ι] [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
+    {p : SeminormFamily 𝕜 E ι} (hp : WithSeminorms p) (hp_dir : Directed (· ≤ ·) p) :
+    (nhds 0).HasBasis (fun (ir : ι × ℝ) => 0 < ir.2)
+      fun (ir : ι × ℝ) => (p ir.1).closedBall 0 ir.2 := by
+  apply hp.hasBasis_zero_closedBall.to_hasBasis ?_ ?_
+  · rintro ⟨s, r⟩ (hr : 0 < r)
+    classical
+    obtain ⟨-, ⟨i, rfl⟩, hi⟩ := (s.image p).sup_le_of_le_directed _
+        (Set.range_nonempty _) hp_dir.directedOn_range <| by
+      intro x hx
+      simp only [Finset.mem_image] at hx
+      obtain ⟨i, hi, rfl⟩ := hx
+      refine ⟨_, ⟨i, rfl⟩, le_rfl⟩
+    have : s.sup p ≤ p i := Finset.sup_le <| by simpa using hi
+    exact ⟨(i, r), hr, Seminorm.closedBall_antitone this⟩
+  · rintro ⟨i, r⟩ (hr : 0 < r)
+    refine ⟨({i}, r), hr, by simp⟩
+
+section -- unneeded on current master
+
+variable {𝕜₁ 𝕜₂ : Type*} [NormedField 𝕜₁] [NormedField 𝕜₂] (σ : 𝕜₁ →+* 𝕜₂)
+  {E F G : Type*}
+  [AddCommGroup E] [Module 𝕜₁ E] [TopologicalSpace E]
+  [AddCommGroup F] [Module 𝕜₂ F]
+variable (F)
+
+@[inherit_doc]
+scoped[UniformConvergenceCLM]
+notation:25 E' " →SLᵤ[" σ ", " 𝔖 "] " F => UniformConvergenceCLM σ (E := E') F 𝔖
+
+@[inherit_doc]
+scoped[UniformConvergenceCLM]
+notation:25 E' " →Lᵤ[" R ", " 𝔖 "] " F => UniformConvergenceCLM (RingHom.id R) (E := E') F 𝔖
+
+end
+
+-- the version in Mathlib has some small defeq abuse. It uses `f : E →SL[σ] F`
+open scoped UniformConvergenceCLM UniformConvergence in
+lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
+    {𝕜₁ 𝕜₂ : Type*} [NormedField 𝕜₁] [NormedField 𝕜₂] (σ : 𝕜₁ →+* 𝕜₂) {E : Type*} (F : Type*)
+    [AddCommGroup E] [Module 𝕜₁ E] [TopologicalSpace E] [AddCommGroup F] [Module 𝕜₂ F]
+    [TopologicalSpace F] [IsTopologicalAddGroup F] {ι : Type*} (𝔖 : Set (Set E))
+    (h𝔖₁ : 𝔖.Nonempty) (h𝔖₂ : DirectedOn (fun (x1 x2 : Set E) => x1 ⊆ x2) 𝔖) {p : ι → Prop}
+    {b : ι → Set F} (h : (nhds 0).HasBasis p b) :
+    (nhds 0).HasBasis (fun (Si : Set E × ι) => Si.1 ∈ 𝔖 ∧ p Si.2) fun (Si : Set E × ι) =>
+      {f : E →SLᵤ[σ, 𝔖] F | ∀ x ∈ Si.1, f x ∈ b Si.2} :=
+  UniformConvergenceCLM.hasBasis_nhds_zero_of_basis σ F 𝔖 h𝔖₁ h𝔖₂ h
+
 namespace WeakBilin
 
 lemma isInducing {𝕜 E F : Type*} [TopologicalSpace 𝕜] [CommSemiring 𝕜]
@@ -99,7 +165,8 @@ open scoped Pointwise
 
 section NormedField
 
-variable {𝕜 E F : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
+variable {𝕜 E F F' : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [AddCommGroup F'] [Module 𝕜 F']
     [AddCommGroup F] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
 
 lemma polar_smul (s : Set E) (c : 𝕜) (hc : c ≠ 0) : B.polar (c • s) = c⁻¹ • B.polar s := by
@@ -116,10 +183,31 @@ lemma smul_mem_polar_iff (s : Set E) (c : 𝕜) (hc : c ≠ 0) (y : F) :
   congr! 2 with x hx
   rw [← inv_inv ‖c‖, inv_mul_le_one₀ (by simpa), inv_inv]
 
-open Bornology WeakBilin in
+open Bornology WeakBilin
 lemma _root_.WeakBilin.isVonNBounded_iff (s : Set (WeakBilin B)) :
     IsVonNBounded 𝕜 s ↔ ∀ y, IsVonNBounded 𝕜 (((pairing B).flip y) '' s) :=
   WeakBilin.isInducing B |>.isVonNBounded_iff (pairing B).flip s
+
+/-- Weak topologies induced by bilinear forms with equivalent dual spaces are continuously
+linearly equivalent. -/
+@[simps!]
+def _root_.WeakBilin.continuousLinearEquiv (e : F ≃ₗ[𝕜] F') (B' : E →ₗ[𝕜] F' →ₗ[𝕜] 𝕜)
+    (hB : (e.arrowCongr (.refl ..) B.flip).flip = B') :
+    WeakBilin B ≃L[𝕜] WeakBilin B' where
+  toLinearEquiv := linearEquiv 𝕜 B |>.trans <| (linearEquiv 𝕜 B').symm
+  continuous_toFun := by
+    apply continuous_of_continuous_eval B' fun y' ↦ ?_
+    simp only [DFunLike.ext_iff, flip_apply, LinearEquiv.arrowCongr_apply,
+      LinearEquiv.refl_apply] at hB
+    simp only [← hB]
+    exact eval_continuous B _
+  continuous_invFun := by
+    apply continuous_of_continuous_eval B fun y ↦ ?_
+    simp only [DFunLike.ext_iff, flip_apply, LinearEquiv.arrowCongr_apply,
+      LinearEquiv.refl_apply] at hB
+    rw [← e.symm_apply_apply y]
+    simp only [hB]
+    exact eval_continuous B' _
 
 end NormedField
 
@@ -128,8 +216,9 @@ section NontriviallyNormedField
 variable {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [AddCommGroup F] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
 
+variable {B} in
 open Bornology WeakBilin in
-lemma _root_.WeakBilin.isVonNBounded_iff_bddAbove (s : Set (WeakBilin B)) :
+lemma _root_.WeakBilin.isVonNBounded_iff_bddAbove {s : Set (WeakBilin B)} :
     IsVonNBounded 𝕜 s ↔ ∀ y, BddAbove ((‖(pairing B).flip y ·‖) '' s) := by
   have (y : F) : BddBelow ((‖pairing B · y‖) '' s) := ⟨0, by rintro - ⟨_, -, rfl⟩; positivity⟩
   rw [WeakBilin.isVonNBounded_iff]
@@ -143,7 +232,7 @@ lemma _root_.WeakBilin.isVonNBounded_iff_bddAbove (s : Set (WeakBilin B)) :
 
 open scoped Topology
 open WeakBilin Bornology
-lemma absorbing_polar_iff_isVonNBounded (s : Set (WeakBilin B)) :
+lemma absorbent_polar_iff_isVonNBounded {s : Set (WeakBilin B)} :
     Absorbent 𝕜 ((pairing B).polar s) ↔ IsVonNBounded 𝕜 s := by
   rw [absorbent_iff_eventually_nhdsNE_zero]
   have : ∀ y, ∀ᶠ (c : 𝕜) in 𝓝[≠] 0,
@@ -165,6 +254,9 @@ lemma absorbing_polar_iff_isVonNBounded (s : Set (WeakBilin B)) :
     exact ⟨‖r'‖, by simp; grind⟩
   · rintro ⟨r, hr⟩
     exact ⟨r, by simp at hr; grind⟩
+
+alias ⟨isVonNBounded_of_absorbent_polar, absorbent_polar⟩ := absorbent_polar_iff_isVonNBounded
+
 
 end NontriviallyNormedField
 
@@ -276,23 +368,6 @@ end
 
 end LinearMap
 
-section -- unneeded on current master
-
-variable {𝕜₁ 𝕜₂ : Type*} [NormedField 𝕜₁] [NormedField 𝕜₂] (σ : 𝕜₁ →+* 𝕜₂)
-  {E F G : Type*}
-  [AddCommGroup E] [Module 𝕜₁ E] [TopologicalSpace E]
-  [AddCommGroup F] [Module 𝕜₂ F]
-variable (F)
-
-@[inherit_doc]
-scoped[UniformConvergenceCLM]
-notation:25 E' " →SLᵤ[" σ ", " 𝔖 "] " F => UniformConvergenceCLM σ (E := E') F 𝔖
-
-@[inherit_doc]
-scoped[UniformConvergenceCLM]
-notation:25 E' " →Lᵤ[" R ", " 𝔖 "] " F => UniformConvergenceCLM (RingHom.id R) (E := E') F 𝔖
-
-end
 
 namespace UniformOnFun
 
@@ -418,9 +493,14 @@ lemma toUniformConvergenceCLM_apply_apply (x : PolarTopology B 𝔖) (y : WeakBi
 noncomputable instance : UniformSpace (PolarTopology B 𝔖) :=
   .comap (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)) inferInstance
 
+instance : IsUniformAddGroup (PolarTopology B 𝔖) := .comap _
+
 lemma isUniformInducing_toUniformConvergenceCLM :
     IsUniformInducing (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)) where
   comap_uniformity := rfl
+
+instance : ContinuousConstSMul 𝕜 (PolarTopology B 𝔖) :=
+  isUniformInducing_toUniformConvergenceCLM B 𝔖 |>.isInducing.continuousConstSMul id <| by simp
 
 lemma isUniformEmbedding_toUniformConvergenceCLM (hB : B.SeparatingLeft) :
     IsUniformEmbedding (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)) where
@@ -531,21 +611,68 @@ lemma seminorm_apply (s : Set (WeakBilin B.flip)) (hs : IsVonNBounded 𝕜 s) (x
     seminorm B 𝔖 s hs x = sSup ((‖(pairing B.flip).flip (linearEquiv x) ·‖) '' s) := by
   rfl
 
+alias _root_.Bornology.IsVonNBounded.empty := Bornology.isVonNBounded_empty
+
+@[simp]
+lemma seminorm_empty : seminorm B 𝔖 ∅ (.empty ..) = 0 := by
+  ext
+  simp [seminorm_apply]
+
+lemma _root_.Real.sSup_image_nonneg {α : Type*} {f : α → ℝ} {s : Set α} (h : ∀ x ∈ s, 0 ≤ f x) :
+    0 ≤ sSup (f '' s) := by
+  apply Real.sSup_nonneg
+  rintro - ⟨x, hx, rfl⟩
+  exact h x hx
+
+lemma isLUB_seminorm {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
+    (hs_non : s.Nonempty) (x : PolarTopology B 𝔖) :
+    IsLUB ((‖(pairing B.flip).flip (linearEquiv x) ·‖) '' s) (seminorm B 𝔖 s hs x) :=
+  isLUB_csSup (hs_non.image _) (WeakBilin.isVonNBounded_iff_bddAbove.mp hs _)
+
+lemma seminorm_apply_le_iff {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
+    {r : ℝ} (hr : 0 ≤ r) (x : PolarTopology B 𝔖) :
+    seminorm B 𝔖 s hs x ≤ r ↔ ∀ y ∈ s, ‖(pairing B.flip).flip (linearEquiv x) y‖ ≤ r := by
+  obtain (rfl | hs_non) := s.eq_empty_or_nonempty; · simpa
+  simpa [mem_upperBounds] using isLUB_le_iff (b := r) <| isLUB_seminorm hs hs_non x
+
+lemma seminorm_le_of_subset {s t : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
+    (ht : IsVonNBounded 𝕜 t) (hst : s ⊆ t) :
+    seminorm B 𝔖 s hs ≤ seminorm B 𝔖 t ht := by
+  intro x
+  simp only
+  rw [seminorm_apply_le_iff hs]
+  sorry
+
 lemma seminorm_union {s t : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
       (ht : IsVonNBounded 𝕜 t) :
     seminorm B 𝔖 (s ∪ t) (hs.union ht) = seminorm B 𝔖 s hs ⊔ seminorm B 𝔖 t ht := by
-  ext x
-  simp only [seminorm_apply, Seminorm.coe_sup, Pi.sup_apply]
-  obtain (rfl | hs_non) := s.eq_empty_or_nonempty
-  · simpa using Real.sSup_nonneg <| by rintro - ⟨_, -, rfl⟩; positivity
-  obtain (rfl | ht_non) := t.eq_empty_or_nonempty
-  · simpa using Real.sSup_nonneg <| by rintro - ⟨_, -, rfl⟩; positivity
-  have hst := hs.union ht
-  rw [WeakBilin.isVonNBounded_iff_bddAbove] at hs ht hst
-  have h₁ := isLUB_csSup (hs_non.image _) (hs (linearEquiv x))
-  have h₂ := isLUB_csSup (ht_non.image _) (ht (linearEquiv x))
-  have h₃ := isLUB_csSup (hs_non.inl.image _) (hst (linearEquiv x))
-  exact h₃.unique ((Set.image_union ..) ▸ h₁.union h₂)
+  ext
+  obtain (rfl | hs_non) := s.eq_empty_or_nonempty; · simp
+  obtain (rfl | ht_non) := t.eq_empty_or_nonempty; · simp
+  exact isLUB_seminorm (hs.union ht) hs_non.inl _ |>.unique <|
+    (Set.image_union ..) ▸ (isLUB_seminorm hs hs_non _).union (isLUB_seminorm ht ht_non _)
+
+lemma continuous_seminorm (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
+      (s : Set (WeakBilin B.flip)) (hs_mem : s ∈ 𝔖) (hs : IsVonNBounded 𝕜 s) :
+    Continuous (seminorm B 𝔖 s hs) := by
+  have := UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
+    (RingHom.id 𝕜) 𝕜 𝔖 h𝔖_non h𝔖_dir Metric.nhds_basis_ball
+    |>.comap (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖))
+  apply Seminorm.continuous_of_continuousAt_zero
+  rw [← map_zero (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)), ← nhds_induced] at this
+  simp only [Metric.mem_ball, dist_zero_right] at this
+  rw [ContinuousAt, this.tendsto_iff Metric.nhds_basis_closedBall]
+  intro ε hε
+  simp only [preimage_setOf_eq, toUniformConvergenceCLM_apply_apply, mem_setOf_eq,
+    map_zero, Metric.mem_closedBall, dist_zero_right, Real.norm_eq_abs,
+    Prod.exists]
+  simp only [seminorm_apply, LinearMap.flip_apply]
+  refine ⟨s, ε, ⟨hs_mem, hε⟩, fun x hx ↦ ?_⟩
+  rw [abs_of_nonneg (Real.sSup_image_nonneg fun _ _ ↦ by positivity)]
+  obtain (rfl | h) := s.eq_empty_or_nonempty; · simpa using hε.le
+  apply csSup_le (h.image _)
+  rintro - ⟨y, hy, rfl⟩
+  exact (hx y hy).le
 
 open TopologicalSpace
 
@@ -558,17 +685,90 @@ lemma seminormFamily_apply (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) (s : �
     seminormFamily B 𝔖 h𝔖 s = seminorm B 𝔖 s.1 (h𝔖 _ s.2) := by
   rfl
 
+lemma directed_seminormFamily (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖) :
+    Directed (· ≤ ·) (seminormFamily B 𝔖 h𝔖) := by
+  intro s t
+  obtain ⟨u, hu', hu⟩ := h𝔖_dir _ s.2 _ t.2
+  lift u to 𝔖 using hu'
+  use u
+  exact ⟨seminorm_le_of_subset (h𝔖 _ s.2) (h𝔖 _ u.2) hu.1,
+    seminorm_le_of_subset (h𝔖 _ t.2) (h𝔖 _ u.2) hu.2⟩
+
+
 variable (B 𝔖) in
-lemma withSeminorms (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖) (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) :
+lemma withSeminorms (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
+    (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) :
     WithSeminorms (seminormFamily B 𝔖 h𝔖) := by
+  apply (seminormFamily B 𝔖 h𝔖).withSeminorms_of_hasBasis
+  have := UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
+    (RingHom.id 𝕜) 𝕜 𝔖 h𝔖_non h𝔖_dir Metric.nhds_basis_ball
+    |>.comap (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖))
+  rw [← map_zero (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)), ← nhds_induced] at this
+  simp only [Metric.mem_ball, dist_zero_right] at this
+  apply this.to_hasBasis' ?_ ?_
+  · simp only [id_eq, preimage_setOf_eq, toUniformConvergenceCLM_apply_apply, and_imp, Prod.forall]
+    intro s ε hs hε
+    simp only [SeminormFamily.basisSets, mem_iUnion, mem_singleton_iff, exists_prop, ↓existsAndEq,
+      and_true]
+    change ∃ t, ∃ δ > 0, _
+    lift s to 𝔖 using hs
+    use {s}, ε, hε
+    intro x
+    simp only [Finset.sup_singleton, seminormFamily_apply, Seminorm.ball_zero_eq_preimage_ball,
+      mem_preimage, Metric.mem_ball, dist_zero_right,
+      Real.norm_eq_abs, mem_setOf_eq]
+    intro hx y hy
+    replace hx := le_abs_self _ |>.trans_lt hx
+    obtain (hs | hs) := s.1.eq_empty_or_nonempty; · simp_all
+    have := isLUB_seminorm (h𝔖 _ s.2) hs x |>.1 ⟨y, hy, rfl⟩
+    exact isLUB_seminorm (h𝔖 _ s.2) hs x |>.1 ⟨y, hy, rfl⟩ |>.trans_lt hx
+  · apply SeminormFamily.basisSets_mem_nhds _ fun s ↦ ?_
+    exact continuous_seminorm h𝔖_non h𝔖_dir s.1 s.2 (h𝔖 _ s.2)
+
+variable (B 𝔖) in
+abbrev bilin : WeakBilin B.flip →ₗ[𝕜] PolarTopology B 𝔖 →ₗ[𝕜] 𝕜 :=
+  linearEquiv.symm.arrowCongr (.refl _ _) (pairing B.flip).flip |>.flip
+
+lemma bilin_apply_apply (y : WeakBilin B.flip) (x : PolarTopology B 𝔖) :
+    bilin B 𝔖 y x = B (linearEquiv x) (WeakBilin.linearEquiv 𝕜 B.flip y) := by
+  rfl
+
+lemma unitClosedBall_seminorm_eq_polar {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s) :
+    (seminorm B 𝔖 s hs).closedBall 0 1 = (bilin B 𝔖).polar s := by
+  ext y
+  simpa [LinearMap.polar_mem_iff] using seminorm_apply_le_iff hs zero_le_one y
+
+lemma polar_mem_nhds (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
+    (s : Set (WeakBilin B.flip)) (hs_mem : s ∈ 𝔖) (hs : IsVonNBounded 𝕜 s) :
+    (bilin B 𝔖).polar s ∈ 𝓝 (0 : PolarTopology B 𝔖) := by
+  have h_cont := continuous_seminorm h𝔖_non h𝔖_dir s hs_mem hs |>.tendsto 0
+  have h_mem := map_zero (seminorm B 𝔖 s hs) ▸ Metric.closedBall_mem_nhds (0 : ℝ) zero_lt_one
+  simpa [← Seminorm.closedBall_zero_eq_preimage_closedBall, unitClosedBall_seminorm_eq_polar]
+    using h_cont h_mem
+
+open scoped Pointwise in
+lemma hasBasis_nhds_zero_polar [Module ℝ F] [IsScalarTower ℝ 𝕜 F]
+    (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
+    (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s)
+    (h𝔖_scale : ∀ c > (0 : ℝ), ∀ s ∈ 𝔖, ∃ t ∈ 𝔖, c • s ⊆ t) :
+    (𝓝 (0 : PolarTopology B 𝔖)).HasBasis (· ∈ 𝔖) (bilin B 𝔖).polar := by
+  have _ := h𝔖_non.to_subtype
+  have := withSeminorms B 𝔖 h𝔖_non h𝔖_dir h𝔖 |>.hasBasis_zero_closedBall_of_directed <|
+    directed_seminormFamily h𝔖 h𝔖_dir
+  apply this.to_hasBasis' ?_ fun s hs ↦ polar_mem_nhds h𝔖_non h𝔖_dir s hs (h𝔖 s hs)
+  rintro ⟨s, r⟩ (hr : 0 < r)
+  simp
+
   sorry
 
 #exit
+
 open scoped ComplexOrder
 
-instance [Module ℝ E] [h : IsScalarTower ℝ 𝕜 E] (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) :
+instance [Module ℝ E] [h : IsScalarTower ℝ 𝕜 E] (h𝔖_non : 𝔖.Nonempty)
+    (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖) (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) :
     LocallyConvexSpace ℝ (PolarTopology B 𝔖) :=
-  (withSeminorms B 𝔖 h𝔖).toLocallyConvexSpace
+  (withSeminorms B 𝔖 h𝔖_non h𝔖_dir h𝔖 ).toLocallyConvexSpace
 
 variable (B) in
 /-- The collection of polars of neighborhoods of zero. -/
