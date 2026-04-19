@@ -677,10 +677,10 @@ lemma seminorm_finite_sUnion {s : Set (Set (WeakBilin B.flip))} (hs : s.Finite)
     simp only [sUnion_insert]
     rw [Set.forall_mem_insert, seminorm_union hyp.1 ((isVonNBounded_sUnion hfin).mpr hyp.2)] at *
     obtain (coll_empty | h_nonempty) := isEmpty_or_nonempty coll
-    · have : IsEmpty { t // t ∈ coll} := Function.isEmpty fun a ↦ a
+    · have : IsEmpty { t // t ∈ coll} := Function.isEmpty id
       simp only [isEmpty_coe_sort] at coll_empty
-      simp only [coll_empty, sUnion_empty, seminorm_empty, iSup, range_insert]
-      simp only [range, IsEmpty.exists_iff, setOf_false]
+      simp only [coll_empty, sUnion_empty, iSup, range_insert]
+      simp only [range]
       ext t; simp
     · simp only [iSup, range_insert]
       rw [csSup_insert]
