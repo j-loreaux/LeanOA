@@ -227,9 +227,6 @@ lemma _root_.WeakBilin.isVonNBounded_iff_bddAbove {s : Set (WeakBilin B)} :
     ← isBounded_norm_iff, Set.image_image, isBounded_iff_bddBelow_bddAbove]
   simp [this]
 
-
-
-
 open scoped Topology
 open WeakBilin Bornology
 lemma absorbent_polar_iff_isVonNBounded {s : Set (WeakBilin B)} :
@@ -367,7 +364,6 @@ lemma IsCompatible.equiv_apply (B : F →ₗ[𝕜] E →ₗ[𝕜] 𝕜) [h : IsC
 end
 
 end LinearMap
-
 
 namespace UniformOnFun
 
@@ -665,6 +661,35 @@ lemma seminorm_union {s t : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
   obtain (rfl | ht_non) := t.eq_empty_or_nonempty; · simp
   exact isLUB_seminorm (hs.union ht) hs_non.inl _ |>.unique <|
     (Set.image_union ..) ▸ (isLUB_seminorm hs hs_non _).union (isLUB_seminorm ht ht_non _)
+
+lemma seminorm_finite_sUnion {s : Set (Set (WeakBilin B.flip))} (hs : s.Finite)
+   (hsbdd : ∀ t ∈ s, Bornology.IsVonNBounded 𝕜 t) :
+    seminorm B 𝔖 (⋃₀ s) ((isVonNBounded_sUnion hs).mpr hsbdd) =
+      iSup (fun (i : {t // t ∈ s}) ↦ seminorm B 𝔖 i.1 (hsbdd i.1 i.2)) := by
+  revert hsbdd
+  refine Set.Finite.induction_on s hs ?_ ?_
+  · simp only [mem_empty_iff_false, IsEmpty.forall_iff, implies_true,
+      sUnion_empty, forall_true_left, mem_empty_iff_false]
+    ext l
+    rw [Seminorm.iSup_apply (by simp)]
+    simp [Real.iSup_of_isEmpty]
+  · intro p coll hnp hfin himp hyp
+    simp only [sUnion_insert]
+    rw [Set.forall_mem_insert, seminorm_union hyp.1 ((isVonNBounded_sUnion hfin).mpr hyp.2)] at *
+    obtain (coll_empty | h_nonempty) := isEmpty_or_nonempty coll
+    · have : IsEmpty { t // t ∈ coll} := Function.isEmpty fun a ↦ a
+      simp only [isEmpty_coe_sort] at coll_empty
+      simp only [coll_empty, sUnion_empty, seminorm_empty, iSup, range_insert]
+      simp only [range, IsEmpty.exists_iff, setOf_false]
+      ext t; simp
+    · simp only [iSup, range_insert]
+      rw [csSup_insert]
+      · exact
+        Seminorm.ext_iff.mpr
+          (congrFun (congrArg DFunLike.coe (congrArg (max (seminorm B 𝔖 p hyp.left))<| himp hyp.2)))
+      · have := finite_coe_iff.mpr hfin
+        apply Finite.bddAbove_range
+      refine range_nonempty_iff_nonempty.mpr h_nonempty
 
 lemma continuous_seminorm (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
       (s : Set (WeakBilin B.flip)) (hs_mem : s ∈ 𝔖) (hs : IsVonNBounded 𝕜 s) :
