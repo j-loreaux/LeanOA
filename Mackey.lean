@@ -670,7 +670,7 @@ lemma seminorm_finite_sUnion {s : Set (Set (WeakBilin B.flip))} (hs : s.Finite)
   refine Set.Finite.induction_on s hs ?_ ?_
   · simp only [mem_empty_iff_false, IsEmpty.forall_iff, implies_true,
       sUnion_empty, forall_true_left, mem_empty_iff_false]
-    ext l
+    ext
     rw [Seminorm.iSup_apply (by simp)]
     simp [Real.iSup_of_isEmpty]
   · intro p hp hnp hfin himp hyp
