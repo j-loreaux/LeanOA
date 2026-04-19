@@ -681,12 +681,12 @@ lemma seminorm_finite_sUnion {s : Set (Set (WeakBilin B.flip))} (hs : s.Finite)
       simp only [isEmpty_coe_sort] at h_empty
       simp only [h_empty, sUnion_empty, iSup, range_insert]
       simp only [range]
-      ext t; simp
+      ext; simp
     · simp only [iSup, range_insert]
       rw [csSup_insert]
       · exact
         Seminorm.ext_iff.mpr
-          (congrFun (congrArg DFunLike.coe (congrArg (max (seminorm B 𝔖 p hyp.left))<| himp hyp.2)))
+          (congrFun (congrArg DFunLike.coe (congrArg (max (seminorm B 𝔖 p hyp.1)) <| himp hyp.2)))
       · have := finite_coe_iff.mpr hfin
         apply Finite.bddAbove_range
       exact range_nonempty_iff_nonempty.mpr h_nonempty
@@ -727,7 +727,6 @@ lemma directed_seminormFamily (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) (h�
   use u
   exact ⟨seminorm_le_of_subset (h𝔖 _ s.2) (h𝔖 _ u.2) hu.1,
     seminorm_le_of_subset (h𝔖 _ t.2) (h𝔖 _ u.2) hu.2⟩
-
 
 variable (B 𝔖) in
 lemma withSeminorms (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
