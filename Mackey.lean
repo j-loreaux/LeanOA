@@ -689,7 +689,7 @@ lemma seminorm_finite_sUnion {s : Set (Set (WeakBilin B.flip))} (hs : s.Finite)
           (congrFun (congrArg DFunLike.coe (congrArg (max (seminorm B 𝔖 p hyp.left))<| himp hyp.2)))
       · have := finite_coe_iff.mpr hfin
         apply Finite.bddAbove_range
-      refine range_nonempty_iff_nonempty.mpr h_nonempty
+      exact range_nonempty_iff_nonempty.mpr h_nonempty
 
 lemma continuous_seminorm (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
       (s : Set (WeakBilin B.flip)) (hs_mem : s ∈ 𝔖) (hs : IsVonNBounded 𝕜 s) :
