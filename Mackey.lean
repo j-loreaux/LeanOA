@@ -77,6 +77,22 @@ lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
 
 namespace WeakBilin
 
+variable {𝕜 E F : Type*} [TopologicalSpace 𝕜] [CommSemiring 𝕜]
+    [AddCommMonoid E] [Module 𝕜 E] [AddCommMonoid F] [Module 𝕜 F]
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+
+/-- The coercion `(fun x y => B x y) : E → (F → 𝕜)` is continuous. -/
+theorem coeFn_continuous' : Continuous fun (x : WeakBilin B) y => pairing B x y :=
+  continuous_induced_dom
+
+@[fun_prop]
+theorem eval_continuous' (y : F) : Continuous fun x : WeakBilin B => pairing B x y :=
+  (continuous_pi_iff.mp (coeFn_continuous B)) y
+
+theorem continuous_of_continuous_eval' {α : Type*} [TopologicalSpace α] {g : α → WeakBilin B}
+    (h : ∀ y, Continuous fun a => pairing B (g a) y) : Continuous g :=
+  continuous_induced_rng.2 (continuous_pi_iff.mpr h)
+
 lemma isInducing {𝕜 E F : Type*} [TopologicalSpace 𝕜] [CommSemiring 𝕜]
     [AddCommMonoid E] [Module 𝕜 E] [AddCommMonoid F] [Module 𝕜 F]
     (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) :
@@ -165,10 +181,12 @@ open scoped Pointwise
 
 section NormedField
 
-variable {𝕜 E F F' : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
+variable {𝕜 E F E' F' : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [AddCommGroup E'] [Module 𝕜 E']
     [AddCommGroup F'] [Module 𝕜 F']
     [AddCommGroup F] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
 
+-- we should generalize this to `IsScalarTower`.
 lemma polar_smul (s : Set E) (c : 𝕜) (hc : c ≠ 0) : B.polar (c • s) = c⁻¹ • B.polar s := by
   ext x
   lift c to 𝕜ˣ using IsUnit.mk0 c hc
@@ -188,26 +206,26 @@ lemma _root_.WeakBilin.isVonNBounded_iff (s : Set (WeakBilin B)) :
     IsVonNBounded 𝕜 s ↔ ∀ y, IsVonNBounded 𝕜 (((pairing B).flip y) '' s) :=
   WeakBilin.isInducing B |>.isVonNBounded_iff (pairing B).flip s
 
-/-- Weak topologies induced by bilinear forms with equivalent dual spaces are continuously
-linearly equivalent. -/
+/-- Weak topologies induced by equivalent bilinear forms are continuously linearly equivalent. -/
 @[simps!]
-def _root_.WeakBilin.continuousLinearEquiv (e : F ≃ₗ[𝕜] F') (B' : E →ₗ[𝕜] F' →ₗ[𝕜] 𝕜)
-    (hB : (e.arrowCongr (.refl ..) B.flip).flip = B') :
+def _root_.WeakBilin.congr (e : E ≃ₗ[𝕜] E') (f : F ≃ₗ[𝕜] F')
+    (B' : E' →ₗ[𝕜] F' →ₗ[𝕜] 𝕜) (hB : e.arrowCongr (f.arrowCongr (.refl ..)) B = B') :
     WeakBilin B ≃L[𝕜] WeakBilin B' where
-  toLinearEquiv := linearEquiv 𝕜 B |>.trans <| (linearEquiv 𝕜 B').symm
+  toLinearEquiv := linearEquiv 𝕜 B ≪≫ₗ e ≪≫ₗ (linearEquiv 𝕜 B').symm
   continuous_toFun := by
-    apply continuous_of_continuous_eval B' fun y' ↦ ?_
-    simp only [DFunLike.ext_iff, flip_apply, LinearEquiv.arrowCongr_apply,
-      LinearEquiv.refl_apply] at hB
-    simp only [← hB]
-    exact eval_continuous B _
+    apply continuous_of_continuous_eval' B' fun y' ↦ ?_
+    simp_rw [pairing_apply]
+    simpa [← hB] using WeakBilin.eval_continuous' B _
   continuous_invFun := by
-    apply continuous_of_continuous_eval B fun y ↦ ?_
-    simp only [DFunLike.ext_iff, flip_apply, LinearEquiv.arrowCongr_apply,
-      LinearEquiv.refl_apply] at hB
-    rw [← e.symm_apply_apply y]
+    apply continuous_of_continuous_eval' B fun y ↦ ?_
+    simp_rw [pairing_apply]
+    simp only [DFunLike.ext_iff, LinearEquiv.arrowCongr_apply, LinearEquiv.refl_apply] at hB
+    simp only [LinearEquiv.invFun_eq_symm, LinearEquiv.trans_symm, LinearEquiv.symm_symm,
+      LinearEquiv.trans_apply, LinearEquiv.apply_symm_apply]
+    rw [← f.symm_apply_apply y]
     simp only [hB]
     exact eval_continuous B' _
+
 
 end NormedField
 
@@ -327,29 +345,68 @@ namespace LinearMap
 
 public section
 
-variable {𝕜 E F : Type*} [NormedField 𝕜] [AddCommMonoid E] [Module 𝕜 E]
-    [TopologicalSpace E] [AddCommMonoid F] [Module 𝕜 F]
+variable {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F]
 
-class IsCompatible (B : F →ₗ[𝕜] E →ₗ[𝕜] 𝕜) : Prop where
-  range_eq_range : B.range = (ContinuousLinearMap.coeLM 𝕜).range
-  injective : Function.Injective B
+class IsCompatible (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) : Prop where
+  range_eq_range : B.flip.range = (ContinuousLinearMap.coeLM 𝕜).range
+  injective : Function.Injective B.flip
 
 -- TODO: show that any `F ≃ₗ[𝕜] StrongDual 𝕜 E` yields an `IsCompatible` instance.
 
-lemma IsCompatible.continuous (B : F →ₗ[𝕜] E →ₗ[𝕜] 𝕜) [h : B.IsCompatible]
-    (x : F) : Continuous (B x) :=
-  have ⟨y, hy⟩ := Submodule.ext_iff.mp h.range_eq_range (B x) |>.mp (B.mem_range_self x)
+lemma IsCompatible.continuous (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible]
+    (x : F) : Continuous (B.flip x) :=
+  have ⟨y, hy⟩ := Submodule.ext_iff.mp h.range_eq_range (B.flip x) |>.mp (B.flip.mem_range_self x)
   hy ▸ y.continuous
 
-noncomputable def IsCompatible.equiv (B : F →ₗ[𝕜] E →ₗ[𝕜] 𝕜) [h : B.IsCompatible] :
+noncomputable def IsCompatible.equiv (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible] :
     F ≃ₗ[𝕜] StrongDual 𝕜 E :=
   .ofBijective
-    { toFun x := ⟨B x, h.continuous B x⟩,
+    { toFun x := ⟨B.flip x, h.continuous B x⟩,
       map_add' _ _ := by ext; simp,
       map_smul' _ _ := by ext; simp }
     ⟨fun _ _ ↦ by simp [h.injective.eq_iff], fun x ↦
       have ⟨y, hy⟩ := h.range_eq_range ▸ LinearMap.mem_range_self _ x
       ⟨y, ContinuousLinearMap.ext fun _ ↦ congr($hy _)⟩⟩
+
+@[simp]
+lemma IsCompatible.equiv_apply (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible] (y : F) (x : E) :
+    h.equiv B y x = B x y := rfl
+
+def _root_.WeakDual.weakBilinCLE : WeakDual 𝕜 E ≃L[𝕜] WeakBilin (topDualPairing 𝕜 E) where
+  toLinearEquiv := WeakDual.toStrongDual ≪≫ₗ (WeakBilin.linearEquiv 𝕜 (topDualPairing 𝕜 E)).symm
+  continuous_toFun := WeakBilin.continuous_of_continuous_eval' _ WeakDual.eval_continuous
+  continuous_invFun := WeakDual.continuous_of_continuous_eval <| WeakBilin.eval_continuous' _
+
+def _root_.WeakSpace.weakBilinCLE : WeakSpace 𝕜 E ≃L[𝕜] WeakBilin (topDualPairing 𝕜 E).flip where
+  toLinearEquiv := (toWeakSpace 𝕜 E).symm ≪≫ₗ
+    (WeakBilin.linearEquiv 𝕜 (topDualPairing 𝕜 E).flip).symm
+  continuous_toFun := WeakBilin.continuous_of_continuous_eval' _ <| WeakBilin.eval_continuous _
+  continuous_invFun := WeakBilin.continuous_of_continuous_eval _ <| WeakBilin.eval_continuous' _
+
+noncomputable def IsCompatible.weakSpaceCLE (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible] :
+    WeakBilin B ≃L[𝕜] WeakSpace 𝕜 E :=
+  .trans
+    (WeakBilin.congr _ (.refl _ _) h.equiv _ <| by ext x f; simp [← IsCompatible.equiv_apply])
+    WeakSpace.weakBilinCLE.symm
+
+noncomputable def IsCompatible.weakDualCLE (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible] :
+    WeakBilin B.flip ≃L[𝕜] WeakDual 𝕜 E :=
+  .trans
+    (WeakBilin.congr _ h.equiv (.refl 𝕜 E) _ <| by ext f x; simp [← IsCompatible.equiv_apply])
+    WeakDual.weakBilinCLE.symm
+
+open WeakBilin
+theorem IsCompatible.isCompact_polar [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [ProperSpace 𝕜]
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible]
+    {s : Set E} (s_nhds : s ∈ 𝓝 0) :
+    IsCompact ((pairing B.flip).flip.polar s) := by
+  have := WeakDual.isCompact_polar' 𝕜 s_nhds |>.image (IsCompatible.weakDualCLE B).symm.continuous
+  rw [ContinuousLinearEquiv.image_eq_preimage_symm] at this
+  exact this
+
+
+#exit
 
 end
 
@@ -640,15 +697,6 @@ lemma seminorm_apply_le {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
     ‖(pairing B.flip).flip (linearEquiv x) y‖ ≤ seminorm B 𝔖 s hs x  :=
   seminorm_apply_le_iff hs (apply_nonneg _ _) x |>.mp le_rfl y hy
 
-lemma seminorm_smul_le {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
-    (c : 𝕜) (x : PolarTopology B 𝔖) :
-    seminorm B 𝔖 s hs (c • x) ≤ ‖c‖ * seminorm B 𝔖 s hs x := by
-  rw [seminorm_apply_le_iff hs (mul_nonneg (norm_nonneg _) (apply_nonneg _ _)) (c • x)]
-  intro y hy
-  simp only [map_smul, LinearMap.smul_apply, smul_eq_mul, norm_mul]
-  gcongr
-  exact seminorm_apply_le hs x hy
-
 lemma seminorm_le_of_subset {s t : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
     (ht : IsVonNBounded 𝕜 t) (hst : s ⊆ t) :
     seminorm B 𝔖 s hs ≤ seminorm B 𝔖 t ht := by
@@ -776,8 +824,7 @@ lemma hasBasis_nhds_zero_polar [Module ℝ F] [IsScalarTower ℝ 𝕜 F]
   rw [← unitClosedBall_seminorm_eq_polar (h𝔖 _ s.2)]
   rintro - ⟨x, hx, rfl⟩
   simp only [Seminorm.mem_closedBall, sub_zero, seminormFamily_apply] at hx ⊢
-  apply seminorm_smul_le (h𝔖 _ s.2) _ _ |>.trans
-  grw [hx]
+  grw [map_smul_eq_mul, hx]
   simp [NNReal.smul_def]
 
 open scoped ComplexOrder
@@ -787,23 +834,42 @@ instance [Module ℝ E] [h : IsScalarTower ℝ 𝕜 E] (h𝔖_non : 𝔖.Nonempt
     LocallyConvexSpace ℝ (PolarTopology B 𝔖) :=
   (withSeminorms B 𝔖 h𝔖_non h𝔖_dir h𝔖 ).toLocallyConvexSpace
 
+-- Question: Should we first map these through `linearEquiv.symm`, and then `(bilin B 𝔖).polar`?
+-- It might make it easier to apply the bipolar theorem later.
 variable (B) in
 /-- The collection of polars of neighborhoods of zero. -/
-def nhdsPolars [TopologicalSpace E] : Set (Set F) := B.polar '' (𝓝 0).sets
+def nhdsPolars [TopologicalSpace E] : Set (Set (WeakBilin B.flip)) :=
+  (pairing B.flip).flip.polar '' (𝓝 0).sets
+
+lemma nonempty_nhdsPolars [TopologicalSpace E] : (nhdsPolars B).Nonempty :=
+  Set.Nonempty.image _ ⟨univ, univ_mem⟩
+
+lemma directedOn_nhdsPolars [TopologicalSpace E] : DirectedOn (· ⊆ ·) (nhdsPolars B) := by
+  rintro - ⟨s₁, (hs₁ : s₁ ∈ 𝓝 0), rfl⟩ - ⟨s₂, (hs₂ : s₂ ∈ 𝓝 0), rfl⟩
+  refine ⟨_, ⟨s₁ ∩ s₂, inter_mem hs₁ hs₂, rfl⟩, ?_, ?_⟩
+  all_goals exact LinearMap.polar_antitone _ <| by simp
 
 lemma nhdsPolars_mem_iff [TopologicalSpace E] {s : Set F} :
-  s ∈ nhdsPolars B ↔ s ∈ B.polar '' (𝓝 0).sets := Eq.to_iff rfl
-
-instance : IsUniformAddGroup (PolarTopology B 𝔖) :=
-  IsUniformInducing.isUniformAddGroup _ (isUniformInducing_toUniformOnFun _ _)
-
-instance : ContinuousConstSMul 𝕜 (PolarTopology B 𝔖) :=
-  isUniformInducing_toUniformOnFun B 𝔖 |>.isInducing.continuousConstSMul id <| by simp
+    s ∈ nhdsPolars B ↔ ∃ u ∈ 𝓝 0, (pairing B.flip).flip.polar u = s :=
+  Eq.to_iff rfl
 
 lemma polar_mem_nhdsPolars [TopologicalSpace E] {s : Set E} (hs : s ∈ 𝓝 0) :
-    B.polar s ∈ nhdsPolars B :=
+    (pairing B.flip).flip.polar s ∈ nhdsPolars B :=
   ⟨s, hs, rfl⟩
 
+open scoped Pointwise in
+lemma scale_nhdsPolars [TopologicalSpace E] [ContinuousConstSMul 𝕜 E]
+    [Module ℝ F] [IsScalarTower ℝ 𝕜 F] {c : ℝ} (hc : 0 < c)
+    {s : Set (WeakBilin B.flip)} (hs : s ∈ nhdsPolars B) :
+    c • s ∈ nhdsPolars B := by
+  let _ : Module ℝ E := RestrictScalars.module ℝ 𝕜 E
+  have _ : IsScalarTower ℝ 𝕜 E := RestrictScalars.isScalarTower ℝ 𝕜 E
+  have _ : ContinuousConstSMul ℝ E := sorry -- this should be a lemma in Mathlib, but it's missing.
+  obtain ⟨s, (hs : s ∈ 𝓝 0), rfl⟩ := hs
+
+  sorry
+
+-- sorry
 variable (B) in
 lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E]
     {s : Set E} (hs1 : s ∈ 𝓝 0) :
