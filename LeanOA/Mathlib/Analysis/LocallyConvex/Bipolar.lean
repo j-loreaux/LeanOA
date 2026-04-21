@@ -129,6 +129,21 @@ theorem pairing_flip_polar_polar {s : Set (WeakBilin B)} [Nonempty s] :
     (Preorder.le_trans (RCLike.re ((pairing B x) f₀)) ‖(pairing B x) f₀‖ 1
       (RCLike.re_le_norm ((pairing B x) f₀)) (hc f₀ mem_polar))
 
+set_option backward.isDefEq.respectTransparency false in
+open scoped ComplexConjugate ComplexOrder in
+theorem _root_.StrongDual.topDualPairing_flip_polar_polar
+    [TopologicalSpace E] [ContinuousConstSMul 𝕜 𝕜] {s : Set E} [h : Nonempty s] :
+    (topDualPairing 𝕜 E).polar ((topDualPairing 𝕜 E).flip.polar s)
+      = closedAbsConvexHull 𝕜 s := by
+  have := pairing_flip_polar_polar (topDualPairing 𝕜 E).flip
+    (s :=(((WeakBilin.linearEquiv 𝕜 (topDualPairing 𝕜 E).flip).symm '' s)))
+  have := congr (WeakSpace.weakBilinCLE)
+  sorry
+
+--Convex.toWeakSpace_closure
+--Map the bipolar here through WeakSpace, and we get the above bipolar.
+--Convex set is closed iff image is closed under toWeakSpace. (Prove lemma.)
+
 /-
 This fails when `s` is empty. Indeed, `closedAbsConvexHull (E := WeakBilin B) 𝕜 s` is the empty set,
 but `B.polar_gc.closureOperator s` equals `{0}` when `B` is left separating (see example above).
