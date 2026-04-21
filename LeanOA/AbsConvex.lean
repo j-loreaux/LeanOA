@@ -149,5 +149,3 @@ protected lemma IsCompact.closedAbsConvexHull {𝕜 E : Type*} [RCLike 𝕜] [Ad
   apply IsCompact.convexHull_biUnion (by simp)
   · grind [IsCompact.smul, IsCompact.neg]
   · grind [Convex.smul, Convex.neg]
-
-#min_imports
