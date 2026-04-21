@@ -129,6 +129,7 @@ theorem pairing_flip_polar_polar {s : Set (WeakBilin B)} [Nonempty s] :
     (Preorder.le_trans (RCLike.re ((pairing B x) f₀)) ‖(pairing B x) f₀‖ 1
       (RCLike.re_le_norm ((pairing B x) f₀)) (hc f₀ mem_polar))
 
+/-
 set_option backward.isDefEq.respectTransparency false in
 open scoped ComplexConjugate ComplexOrder in
 theorem _root_.StrongDual.topDualPairing_flip_polar_polar
@@ -139,6 +140,7 @@ theorem _root_.StrongDual.topDualPairing_flip_polar_polar
     (s :=(((WeakBilin.linearEquiv 𝕜 (topDualPairing 𝕜 E).flip).symm '' s)))
   have := congr (WeakSpace.weakBilinCLE)
   sorry
+-/
 
 --Convex.toWeakSpace_closure
 --Map the bipolar here through WeakSpace, and we get the above bipolar.
