@@ -1,3 +1,4 @@
+import LeanOA.AbsConvex
 import LeanOA.BlueprintImports
 import LeanOA.CFC
 import LeanOA.CStarAlgebra.Extreme
@@ -7,8 +8,10 @@ import LeanOA.CStarModule.Standard
 import LeanOA.ComplexOrder
 import LeanOA.ExtremallyDisconnected
 import LeanOA.KreinSmulian
+import LeanOA.LocallyConvexNhdsBasis
 import LeanOA.Lp.Holder
 import LeanOA.Lp.lpSpace
+import LeanOA.MackeyArens
 import LeanOA.Masa
 import LeanOA.Mathlib.Algebra.LinearAlgebra.Span.Defs
 import LeanOA.Mathlib.Algebra.Order.Module.PositiveLinearMap
@@ -29,13 +32,20 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 import LeanOA.Mathlib.Analysis.Complex.Basic
 import LeanOA.Mathlib.Analysis.Convex.Extreme
 import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
+import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
+import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
 import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
+import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
+import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
+import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
 import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
 import LeanOA.Mathlib.Analysis.RCLike.Extend
 import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 import LeanOA.Mathlib.Misc
 import LeanOA.Mathlib.Order.Hom.Basic
 import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
+import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
+import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 import LeanOA.Mathlib.Topology.Bornology.Basic
 import LeanOA.Mathlib.Topology.ContinuousMap.Bounded.Normed
 import LeanOA.Mathlib.Topology.ContinuousMap.Compact
