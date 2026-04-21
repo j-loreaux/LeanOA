@@ -131,5 +131,3 @@ theorem LocallyConvexSpace.absConvex_closed_basis_zero (𝕜 E : Type*) [Nontriv
     exact hs.2.closure_image_homothety_subset_interior_of_lt_one
       (by simpa [mem_interior_iff_mem_nhds] using hs_mem) (2⁻¹ : 𝕜) (by positivity) (by norm_num)
       |>.trans<| interior_subset
-
-#min_imports
