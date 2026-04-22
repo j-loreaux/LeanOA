@@ -232,7 +232,7 @@ theorem _root_.StrongDual.topDualPairing_flip_polar_polar {𝕜 E : Type*}
   rw [ContinuousLinearEquiv.closedAbsConvexHull_image
     (WeakSpace.weakBilinCLE (𝕜 := 𝕜) (E := E).symm)] at h'
   have k := congr((toWeakSpace 𝕜 E).symm '' $h')
-  rw [toWeakSpace_symm_closedAbsConvexHull_eq] at k
-  rw [LinearEquiv.image_symm_eq_preimage, ContinuousLinearEquiv.image_symm_eq_preimage,
-    LinearEquiv.image_symm_eq_preimage, ContinuousLinearEquiv.image_symm_eq_preimage] at k
+  rw [toWeakSpace_symm_closedAbsConvexHull_eq, LinearEquiv.image_symm_eq_preimage,
+     ContinuousLinearEquiv.image_symm_eq_preimage, LinearEquiv.image_symm_eq_preimage,
+     ContinuousLinearEquiv.image_symm_eq_preimage] at k
   simpa only [s', LinearEquiv.image_symm_eq_preimage] using k
