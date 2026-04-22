@@ -166,7 +166,9 @@ lemma zero_apply (x : E₁) : (0 : E₁ →P[R] E₂) x = 0 :=
 
 variable (R E₁) in
 /-- The identity as a positive continuous linear map. -/
-@[simps!] protected def id : E₁ →P[R] E₁ where __ := PositiveLinearMap.id R E₁
+@[simps!] protected def id : E₁ →P[R] E₁ where
+    toPositiveLinearMap := PositiveLinearMap.id R E₁
+    cont := by dsimp; fun_prop
 
 @[simp] lemma toContinuousLinearMap_id :
     (PositiveContinuousLinearMap.id R E₁).toContinuousLinearMap = .id R E₁ := rfl

@@ -130,9 +130,9 @@ variable {p : ℝ≥0∞}
 
 variable (E) in
 lemma range_addMonoidHomOfLE_top_le_tendstoZero (hp : p < ∞) :
-    (addMonoidHomOfLE E hp.le).range ≤ c₀ E := by
+    (AddSubgroup.inclusion (lp.monotone hp.le)).range ≤ c₀ E := by
   rintro - ⟨x, rfl⟩
-  simp only [mem_tendstoZero_iff, coe_addMonoidHomOfLE_apply]
+  simp only [mem_tendstoZero_iff, AddSubgroup.coe_inclusion]
   obtain (rfl | hp') := eq_zero_or_pos p
   · exact tendsto_nhds_of_eventually_eq <| by simpa using memℓp_zero_iff.mp <| lp.memℓp x
   have hp'' := ENNReal.toReal_pos_iff.mpr ⟨hp', hp⟩
@@ -148,15 +148,22 @@ lemma range_linearMapOfLE_top_le_tendstoZero (hp : p < ∞) :
   simpa [← Submodule.toAddSubgroup_le, LinearMap.range_toAddSubgroup]
     using range_addMonoidHomOfLE_top_le_tendstoZero E hp
 
+open AddSubgroup in
+lemma _root_.AddSubgroup.inclusion_comp {G : Type*} [AddGroup G]
+    {H K L : AddSubgroup G} (h₁ : H ≤ K) (h₂ : K ≤ L) :
+    (inclusion h₂).comp (inclusion h₁) = inclusion (h₁.trans h₂) :=
+  rfl
+
 set_option backward.isDefEq.respectTransparency false in
 lemma topologicalClosure_range_addMonoidHomOfLE_top (hp : p < ∞) :
-    (addMonoidHomOfLE E hp.le).range.topologicalClosure = c₀ E := by
+    (AddSubgroup.inclusion (lp.monotone hp.le)).range.topologicalClosure = c₀ E := by
   apply le_antisymm
     (AddSubgroup.topologicalClosure_minimal _ (range_addMonoidHomOfLE_top_le_tendstoZero E hp)
       tendstoZero.isClosed)
-  suffices c₀ E ≤ (addMonoidHomOfLE E (zero_le ∞)).range.topologicalClosure by
+  suffices c₀ E ≤ (AddSubgroup.inclusion (lp.monotone (zero_le ∞))).range.topologicalClosure by
     apply this.trans <| AddSubgroup.topologicalClosure_mono ?_
-    rw [← addMonoidHomOfLE_comp (zero_le p) hp.le, AddMonoidHom.range_comp]
+    rw [← AddSubgroup.inclusion_comp  (lp.monotone (zero_le p)) (lp.monotone hp.le),
+      AddMonoidHom.range_comp]
     exact AddSubgroup.map_le_range ..
   intro x hx
   rw [mem_tendstoZero_iff] at hx

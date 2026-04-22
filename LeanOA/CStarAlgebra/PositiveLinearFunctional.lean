@@ -116,7 +116,7 @@ theorem tendsto_isIncreasingApproximateUnit_nhds_opNorm (f : A →P[ℂ] ℂ) {l
   have h2 : ∀ᶠ x in l, ‖(f : A →L[ℂ] ℂ)‖ - ε / 2 < ‖f x‖ := by
     obtain ⟨_, ⟨a, ha1, rfl⟩, ha2⟩ := exists_lt_of_lt_csSup (b := ‖(f : A →L[ℂ] ℂ)‖ - ε / 4)
       ((Metric.nonempty_closedBall (x := 0).mpr zero_le_one).image (‖f ·‖))
-      (by grind [f.toContinuousLinearMap.sSup_unitClosedBall_eq_norm])
+      (by rw [← f.toContinuousLinearMap.sSup_unitClosedBall_eq_norm]; simp; grind)
     have h3 : ∀ᶠ x in l, ‖f (x * a)‖ ^ 2 ≤ ‖f x‖ * ‖(f : A →L[ℂ] ℂ)‖ := by
       filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with x hx1 hx2
       have : ‖f (star x * x)‖ ≤ ‖f x‖ := by
