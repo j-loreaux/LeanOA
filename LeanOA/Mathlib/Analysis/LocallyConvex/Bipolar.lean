@@ -8,6 +8,7 @@ import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
 import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
 import Mathlib.Analysis.LocallyConvex.WeakDual
 import Mathlib.Analysis.LocallyConvex.WeakSpace
+import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
 
 /-!
 
@@ -69,8 +70,9 @@ The Bipolar Theorem: The bipolar of a set coincides with its closed absolutely c
 -/
 set_option backward.isDefEq.respectTransparency false in
 open scoped ComplexConjugate ComplexOrder in
-theorem pairing_flip_polar_polar {s : Set (WeakBilin B)} [Nonempty s] :
+theorem pairing_flip_polar_polar {s : Set (WeakBilin B)} (hs : s.Nonempty) :
     (pairing B).flip.polar ((pairing B).polar s) = closedAbsConvexHull 𝕜 s := by
+  have _ := hs.to_subtype --can be removed after issue below is fixed.
   apply subset_antisymm ?h1 <| closedAbsConvexHull_min (subset_bipolar (pairing B) s)
       (absConvex_polar _) (B.flip.isClosed_polar _)
   rw [← Set.compl_subset_compl]
@@ -83,6 +85,7 @@ theorem pairing_flip_polar_polar {s : Set (WeakBilin B)} [Nonempty s] :
   -- `0` is in `(closedAbsConvexHull 𝕜) s` so `u` must be strictly positive
   have f_zero_lt_u : RCLike.re (f 0) < u :=
     (hf₁ 0) (absConvexHull_subset_closedAbsConvexHull zero_mem_absConvexHull)
+     --zero_mem_absConvexyHull needs coercion to subtype, which should be fixed in Mathlib.
   rw [map_zero, map_zero] at f_zero_lt_u
   -- Rescale `f` as `g` in order that for all `a` in `(closedAbsConvexHull 𝕜) s` `Re (g a) < 1`
   set g := (1/u : ℝ) • f with fg
@@ -149,9 +152,9 @@ theorem _root_.StrongDual.topDualPairing_flip_polar_polar
 This fails when `s` is empty. Indeed, `closedAbsConvexHull (E := WeakBilin B) 𝕜 s` is the empty set,
 but `B.polar_gc.closureOperator s` equals `{0}` when `B` is left separating (see example above).
 -/
-lemma closureOperator_polar_gc_nonempty {s : Set (WeakBilin B)} [Nonempty s] :
+lemma closureOperator_polar_gc_nonempty {s : Set (WeakBilin B)} (hs : s.Nonempty) :
     (pairing B).polar_gc.closureOperator s = closedAbsConvexHull (E := WeakBilin B) 𝕜 s := by
-  simp [pairing_flip_polar_polar]
+  simp [pairing_flip_polar_polar (B := B) hs]
 
 end RCLike
 
@@ -220,14 +223,15 @@ theorem _root_.ContinuousLinearEquiv.closedAbsConvexHull_image {𝕜 E F : Type*
 
 set_option backward.isDefEq.respectTransparency false in
 open scoped ComplexConjugate ComplexOrder in
-theorem _root_.StrongDual.topDualPairing_flip_polar_polar {𝕜 E : Type*}
+theorem _root_.StrongDual.topDualPairing_flip_polar_polar (𝕜 : Type*) {E : Type*}
     [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
-    [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E] {s : Set E} [h : Nonempty s] :
+    [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E] {s : Set E} (h : s.Nonempty) :
     (topDualPairing 𝕜 E).polar ((topDualPairing 𝕜 E).flip.polar s)
       = closedAbsConvexHull 𝕜 s := by
   letI s' := ((WeakBilin.linearEquiv 𝕜 (topDualPairing 𝕜 E).flip).symm '' s)
-  have := LinearMap.pairing_flip_polar_polar (topDualPairing 𝕜 E).flip (s := s')
+  have := LinearMap.pairing_flip_polar_polar (topDualPairing 𝕜 E).flip (s := s') <|
+    Set.Nonempty.image (⇑(WeakBilin.linearEquiv 𝕜 (topDualPairing 𝕜 E).flip).symm) h
   have h' := congr((WeakSpace.weakBilinCLE (𝕜 := 𝕜)).symm '' $this)
   rw [ContinuousLinearEquiv.closedAbsConvexHull_image
     (WeakSpace.weakBilinCLE (𝕜 := 𝕜) (E := E).symm)] at h'
@@ -236,3 +240,19 @@ theorem _root_.StrongDual.topDualPairing_flip_polar_polar {𝕜 E : Type*}
      ContinuousLinearEquiv.image_symm_eq_preimage, LinearEquiv.image_symm_eq_preimage,
      ContinuousLinearEquiv.image_symm_eq_preimage] at k
   simpa only [s', LinearEquiv.image_symm_eq_preimage] using k
+
+open LinearMap
+
+set_option backward.isDefEq.respectTransparency false in
+open scoped ComplexConjugate ComplexOrder in
+theorem _root_.IsCompatible.flip_polar_polar {𝕜 E F : Type*}
+    [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E] {s : Set E} (h : s.Nonempty)
+    [AddCommGroup F] [Module 𝕜 F]
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsCompatible] :
+    (B.flip).polar (B.polar s)
+      = closedAbsConvexHull 𝕜 s := by
+  convert StrongDual.topDualPairing_flip_polar_polar 𝕜 h
+  ext
+  simp [polar_mem_iff, (IsCompatible.equiv B).surjective.forall]
