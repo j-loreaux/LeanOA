@@ -32,6 +32,14 @@ public section
 
 open scoped ComplexOrder
 
+theorem LocallyConvexSpace.real_iff_rclike (𝕜 E : Type*) [RCLike 𝕜]
+    [AddCommGroup E] [Module 𝕜 E] [Module ℝ E] [TopologicalSpace E] [IsScalarTower ℝ 𝕜 E] :
+    LocallyConvexSpace ℝ E ↔ LocallyConvexSpace 𝕜 E := by
+  simp only [locallyConvexSpace_iff_exists_convex_subset, convex_RCLike_iff_convex_real]
+
+alias ⟨LocallyConvexSpace.to_rclike, LocallyConvexSpace.to_real⟩ :=
+  LocallyConvexSpace.real_iff_rclike
+
 variable {𝕜 E F : Type*}
 
 namespace LinearMap
