@@ -3,15 +3,10 @@ Copyright (c) 2025 Christopher Hoskin. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Christopher Hoskin
 -/
-import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
-import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
-import Mathlib.Analysis.LocallyConvex.WeakDual
-import Mathlib.Analysis.Normed.Module.Convex
-import Mathlib.Analysis.Normed.Module.Dual -- this imports Hahn-Banach extension, gross
-import Mathlib.Analysis.LocallyConvex.Separation
-import Mathlib.Topology.Algebra.Module.WeakDual
 import LeanOA.LocallyConvexNhdsBasis
+import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
 import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.Analysis.LocallyConvex.WeakDual
 import Mathlib.Analysis.LocallyConvex.WeakSpace
 
 /-!
