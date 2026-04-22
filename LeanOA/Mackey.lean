@@ -121,17 +121,17 @@ is induced by `B` when we equip `F → 𝕜` with the topology of uniform conver
 of sets `𝔖 : Set (Set F))`. -/
 @[nolint unusedArguments]
 def PolarTopology (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set (WeakBilin B.flip))) := E
-deriving AddCommGroup, Module 𝕜
+deriving AddCommGroup
 
 instance {𝕝 : Type*} [CommRing 𝕝] [Module 𝕝 E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
     (𝔖 : Set (Set (WeakBilin B.flip))) :
     Module 𝕝 (PolarTopology B 𝔖) :=
-  ‹Module 𝕝 E›
+  inferInstanceAs (Module 𝕝 E)
 
 instance {𝕝 : Type*} [CommRing 𝕝] [Module 𝕝 E] [SMul 𝕝 𝕜] [IsScalarTower 𝕝 𝕜 E]
     (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set (WeakBilin B.flip))) :
     IsScalarTower 𝕝 𝕜 (PolarTopology B 𝔖) :=
-  ‹IsScalarTower 𝕝 𝕜 E›
+  inferInstanceAs (IsScalarTower 𝕝 𝕜 E)
 
 variable (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set (WeakBilin B.flip)))
 
@@ -185,6 +185,9 @@ lemma toUniformConvergenceCLM_apply_apply (x : PolarTopology B 𝔖) (y : WeakBi
 noncomputable instance : UniformSpace (PolarTopology B 𝔖) :=
   .comap (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)) inferInstance
 
+noncomputable instance : TopologicalSpace (PolarTopology B 𝔖) :=
+  .induced (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)) inferInstance
+
 instance : IsUniformAddGroup (PolarTopology B 𝔖) := .comap _
 
 lemma isUniformInducing_toUniformConvergenceCLM :
@@ -206,6 +209,21 @@ lemma isUniformEmbedding_toUniformConvergenceCLM (hB : B.SeparatingLeft) :
       apply hB
       simpa [DFunLike.ext_iff] using  hx
     · rintro rfl; exact map_zero _
+
+--- this is a bit of a weird statement, but it also exists for `UniformConvergenceCLM`.
+lemma uniformSpace_mono (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 𝔗 : Set (Set (WeakBilin B.flip))) (h𝔖𝔗 : 𝔖 ⊆ 𝔗) :
+    instUniformSpace B 𝔗 ≤ instUniformSpace B 𝔖 :=
+  UniformSpace.comap_mono <| UniformConvergenceCLM.uniformSpace_mono _ _ h𝔖𝔗
+
+--- this is a bit of a weird statement, but it also exists for `UniformConvergenceCLM`.
+lemma topologicalSpace_mono (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 𝔗 : Set (Set (WeakBilin B.flip)))
+    (h𝔖𝔗 : 𝔖 ⊆ 𝔗) :
+    instTopologicalSpace B 𝔗 ≤ instTopologicalSpace B 𝔖 :=
+  induced_mono <| UniformConvergenceCLM.topologicalSpace_mono _ _ h𝔖𝔗
+
+lemma continuous_mono (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 𝔗 : Set (Set (WeakBilin B.flip))) (h𝔖𝔗 : 𝔖 ⊆ 𝔗) :
+    Continuous ((linearEquiv (B := B) (𝔖 := 𝔗)).trans (linearEquiv (B := B) (𝔖 := 𝔖)).symm) :=
+  continuous_id_of_le (topologicalSpace_mono B 𝔖 𝔗 h𝔖𝔗)
 
 variable {B 𝔖} in
 def toUniformOnFun : PolarTopology B 𝔖 →ₗ[𝕜] F →ᵤ[𝔖] 𝕜 :=
@@ -587,5 +605,20 @@ def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
     exact continuous_seminorm_comp B hs
 
 end PolarTopology
+
+def weakDualPairing (𝕜 E : Type*) [CommSemiring 𝕜] [TopologicalSpace 𝕜] [AddCommMonoid E]
+    [Module 𝕜 E] [TopologicalSpace E] [ContinuousAdd 𝕜] [ContinuousConstSMul 𝕜 𝕜] :
+    WeakDual 𝕜 E →ₗ[𝕜] E →ₗ[𝕜] 𝕜 :=
+  StrongDual.toWeakDual.arrowCongr (.refl _ _) (topDualPairing 𝕜 E)
+
+open scoped ComplexOrder
+
+abbrev MackeyBilin := PolarTopology B {s | IsCompact s ∧ AbsConvex 𝕜 s}
+
+variable [TopologicalSpace E] --[IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E]
+variable (𝕜 E) in
+-- this is almost certainly cursed
+abbrev Mackey :=
+  PolarTopology (topDualPairing 𝕜 E).flip {s : Set (WeakDual 𝕜 E) | IsCompact s ∧ AbsConvex 𝕜 s}
 
 end PolarTopology
