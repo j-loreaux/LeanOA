@@ -15,6 +15,7 @@ import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
 import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
+import LeanOA.LocallyConvexNhdsBasis
 
 section -- unneeded on current master
 
@@ -543,13 +544,29 @@ instance [TopologicalSpace E] [B.IsCompatible] :
 /-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatible` and
 `PolarTopology B (nhdsPolars B)`. -/
 def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
-    [ContinuousSMul 𝕜 E]
-    [B.IsCompatible] :
-    PolarTopology B (nhdsPolars B) ≃L[𝕜] E where
+    [ContinuousSMul 𝕜 E] [hLCS : LocallyConvexSpace 𝕜 E]
+    [Module ℝ E] [IsScalarTower ℝ 𝕜 E]
+    [B.IsCompatible] : PolarTopology B (nhdsPolars B) ≃L[𝕜] E where
   toLinearEquiv := linearEquiv (B := B) (𝔖 := nhdsPolars B)
   continuous_toFun := by
     simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, LinearEquiv.coe_coe]
-    sorry
+    letI f := (PolarTopology.linearEquiv (𝔖 := nhdsPolars B))
+    letI B₁ := (pairing B.flip).flip
+    letI B₂ := bilin B (nhdsPolars B)
+    apply continuous_of_tendsto_nhds_zero
+    rw [Filter.HasBasis.tendsto_right_iff (LocallyConvexSpace.absConvex_closed_basis_zero 𝕜 E)]
+    rintro u ⟨hu_nhd, hu_ac, hu_cl⟩
+    have hR : LocallyConvexSpace ℝ E := LocallyConvexSpace.to_real 𝕜 E hLCS
+    have hAc : u = closedAbsConvexHull 𝕜 u := sorry
+    have : B₂.polar (B₁.polar u) = f ⁻¹' u := by
+      nth_rw 2 [hAc]
+      have : (B₁).IsCompatible := inferInstance
+      rw [← IsCompatible.flip_polar_polar (Filter.nonempty_of_mem hu_nhd) (B := B₁)]
+      ext; congr!
+    simp only [id_eq]
+    have foo := polar_mem_nhds (B := B) (𝔖 := nhdsPolars B) nonempty_nhdsPolars
+      directedOn_nhdsPolars (B₁.polar u) ⟨u, hu_nhd, rfl⟩ sorry
+    filter_upwards [foo] with x hx using show x ∈ f ⁻¹' u from this ▸ hx
   continuous_invFun := by sorry
     -- have : LinearMap.IsCompatible (pairing B.flip).flip := inferInstance
     -- simp only [LinearEquiv.invFun_eq_symm]
