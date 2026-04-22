@@ -80,8 +80,6 @@ lemma absorbent_polar_iff_isVonNBounded {𝕜 E F : Type*} [NontriviallyNormedFi
 
 alias ⟨isVonNBounded_of_absorbent_polar, absorbent_polar⟩ := absorbent_polar_iff_isVonNBounded
 
-end LinearMap
-
 section Banach_Alaoglu
 
 open WeakBilin Topology in
@@ -94,7 +92,20 @@ theorem IsCompatible.isCompact_polar {𝕜 E F : Type*} [NontriviallyNormedField
   rw [ContinuousLinearEquiv.image_eq_preimage_symm] at this
   exact this
 
+--- there's a proof of this that doesn't use compactness (hence properness of `𝕜`) using the fact
+--- that a set is von Neumann bounded if and only if its polar is absorbent.
+lemma IsCompatible.isVonNBounded_polar {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
+    [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F]
+    [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [ProperSpace 𝕜] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+    [hB : B.IsCompatible] {s : Set E} (hs : s ∈ 𝓝 0) :
+    IsVonNBounded 𝕜 ((pairing B.flip).flip.polar s) := by
+  rw [WeakBilin.isVonNBounded_iff_bddAbove]
+  exact fun x ↦ hB.isCompact_polar _ hs |>.bddAbove_image
+    (eval_continuous B.flip x).norm.continuousOn
+
 end Banach_Alaoglu
+
+end LinearMap
 
 open Bornology Filter Function Set Topology
 open scoped UniformConvergence Uniformity
@@ -509,44 +520,46 @@ lemma polar_mem_nhdsPolars [TopologicalSpace E] {s : Set E} (hs : s ∈ 𝓝 0) 
     (pairing B.flip).flip.polar s ∈ nhdsPolars B :=
   ⟨s, hs, rfl⟩
 
-open scoped Pointwise in
-lemma scale_nhdsPolars [TopologicalSpace E] [ContinuousConstSMul 𝕜 E]
-    [Module ℝ F] [IsScalarTower ℝ 𝕜 F] {c : ℝ} (hc : 0 < c)
-    {s : Set (WeakBilin B.flip)} (hs : s ∈ nhdsPolars B) :
-    c • s ∈ nhdsPolars B := by
-  let _ : Module ℝ E := RestrictScalars.module ℝ 𝕜 E
-  have _ : IsScalarTower ℝ 𝕜 E := RestrictScalars.isScalarTower ℝ 𝕜 E
-  have _ : ContinuousConstSMul ℝ E := sorry -- this should be a lemma in Mathlib, but it's missing.
+lemma isVonNBounded_nhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [ContinuousSMul 𝕜 E] [hB : B.IsCompatible]
+    (s : Set (WeakBilin B.flip)) (hs : s ∈ nhdsPolars B) :
+    IsVonNBounded 𝕜 s := by
   obtain ⟨s, (hs : s ∈ 𝓝 0), rfl⟩ := hs
+  exact hB.isVonNBounded_polar _ hs
 
-  sorry
-
--- sorry
 variable (B) in
-lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E]
-    {s : Set E} (hs1 : s ∈ 𝓝 0) :
-    ContinuousAt (Seminorm.comp ((seminorm B (B.polar s) (polar_mem_nhdsPolars hs1)))
-      (linearEquiv.symm).toLinearMap) 0 := by
+lemma continuous_seminorm_comp [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [ContinuousSMul 𝕜 E] [B.IsCompatible] {s : Set E} (hs1 : s ∈ 𝓝 0) :
+    Continuous
+      (seminorm B (nhdsPolars B) (B.polar s) (isVonNBounded_nhdsPolars _ ⟨s, hs1, rfl⟩) |>.comp <|
+        linearEquiv.symm.toLinearMap) := by
+  apply Seminorm.continuous_of_continuousAt_zero
   refine Seminorm.continuousAt_zero' (r := 1) <| mem_of_superset hs1 fun x hx ↦ ?_
   simp only [Seminorm.mem_closedBall, sub_zero, Seminorm.comp_apply, LinearEquiv.coe_coe,
     seminorm_apply, LinearEquiv.apply_symm_apply]
-  apply csSup_le (range_nonempty (h := ⟨0, by simp⟩) _)
-  rintro - ⟨⟨y, hy⟩, rfl⟩
+  apply csSup_le (B.polar_nonempty s |>.image _)
+  rintro - ⟨y, hy, rfl⟩
   exact B.polar_mem s y hy x hx
 
 open LinearMap WithSeminorms
 
 instance [TopologicalSpace E] [B.IsCompatible] :
-    LinearMap.IsCompatible (pairing B.flip).flip := by
-  let e := WeakBilin.linearEquiv 𝕜 B.flip ≪≫ₗ LinearMap.IsCompatible.equiv B
-  exact e.isCompatible _ rfl
+    LinearMap.IsCompatible (pairing B.flip).flip :=
+  WeakBilin.linearEquiv 𝕜 B.flip ≪≫ₗ LinearMap.IsCompatible.equiv B |>.isCompatible _ rfl
+
+lemma _root_.closedAbsConvexHull_eq_self {𝕜 E : Type*} [SeminormedRing 𝕜]
+    [SMul 𝕜 E] [AddCommMonoid E] [PartialOrder 𝕜] [TopologicalSpace E]
+    {s : Set E} (h_conv : AbsConvex 𝕜 s) (h_closed : IsClosed s) :
+    closedAbsConvexHull 𝕜 s = s :=
+  subset_antisymm (closedAbsConvexHull_min le_rfl h_conv h_closed) subset_closedAbsConvexHull
+
 
 /-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatible` and
 `PolarTopology B (nhdsPolars B)`. -/
 def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
     [ContinuousSMul 𝕜 E] [hLCS : LocallyConvexSpace 𝕜 E]
-    [Module ℝ E] [IsScalarTower ℝ 𝕜 E]
-    [B.IsCompatible] : PolarTopology B (nhdsPolars B) ≃L[𝕜] E where
+    [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [hB : B.IsCompatible] :
+    PolarTopology B (nhdsPolars B) ≃L[𝕜] E where
   toLinearEquiv := linearEquiv (B := B) (𝔖 := nhdsPolars B)
   continuous_toFun := by
     simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, LinearEquiv.coe_coe]
@@ -557,22 +570,21 @@ def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
     rw [Filter.HasBasis.tendsto_right_iff (LocallyConvexSpace.absConvex_closed_basis_zero 𝕜 E)]
     rintro u ⟨hu_nhd, hu_ac, hu_cl⟩
     have hR : LocallyConvexSpace ℝ E := LocallyConvexSpace.to_real 𝕜 E hLCS
-    have hAc : u = closedAbsConvexHull 𝕜 u := sorry
     have : B₂.polar (B₁.polar u) = f ⁻¹' u := by
-      nth_rw 2 [hAc]
+      nth_rw 2 [← closedAbsConvexHull_eq_self hu_ac hu_cl]
       have : (B₁).IsCompatible := inferInstance
       rw [← IsCompatible.flip_polar_polar (Filter.nonempty_of_mem hu_nhd) (B := B₁)]
       ext; congr!
     simp only [id_eq]
     have foo := polar_mem_nhds (B := B) (𝔖 := nhdsPolars B) nonempty_nhdsPolars
-      directedOn_nhdsPolars (B₁.polar u) ⟨u, hu_nhd, rfl⟩ sorry
+      directedOn_nhdsPolars (B₁.polar u) ⟨u, hu_nhd, rfl⟩ (hB.isVonNBounded_polar _ hu_nhd)
     filter_upwards [foo] with x hx using show x ∈ f ⁻¹' u from this ▸ hx
-  continuous_invFun := by sorry
-    -- have : LinearMap.IsCompatible (pairing B.flip).flip := inferInstance
-    -- simp only [LinearEquiv.invFun_eq_symm]
-    -- apply (withSeminorms B (nhdsPolars B)).continuous_of_continuous_comp _
-    -- rintro ⟨-, ⟨s, (hs : s ∈ 𝓝 0), rfl⟩⟩
-    -- exact Seminorm.continuous_of_continuousAt_zero <| continuousAt_zero_seminorm B hs
+  continuous_invFun := by
+    simp only [LinearEquiv.invFun_eq_symm]
+    apply withSeminorms B (nhdsPolars B) nonempty_nhdsPolars directedOn_nhdsPolars
+      isVonNBounded_nhdsPolars |>.continuous_of_continuous_comp _
+    rintro ⟨-, ⟨s, (hs : s ∈ 𝓝 0), rfl⟩⟩
+    exact continuous_seminorm_comp B hs
 
 end PolarTopology
 
