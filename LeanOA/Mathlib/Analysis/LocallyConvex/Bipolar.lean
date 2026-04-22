@@ -9,6 +9,10 @@ import Mathlib.Analysis.LocallyConvex.WeakDual
 import Mathlib.Analysis.Normed.Module.Convex
 import Mathlib.Analysis.Normed.Module.Dual -- this imports Hahn-Banach extension, gross
 import Mathlib.Analysis.LocallyConvex.Separation
+import Mathlib.Topology.Algebra.Module.WeakDual
+import LeanOA.LocallyConvexNhdsBasis
+import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.Analysis.LocallyConvex.WeakSpace
 
 /-!
 
@@ -157,3 +161,83 @@ lemma closureOperator_polar_gc_nonempty {s : Set (WeakBilin B)} [Nonempty s] :
 end RCLike
 
 end LinearMap
+
+set_option backward.isDefEq.respectTransparency false in
+open ComplexOrder in
+theorem toWeakSpace_closedAbsConvexHull_eq {𝕜 E : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E] {s : Set E} :
+    (toWeakSpace 𝕜 E) '' (closedAbsConvexHull 𝕜 s) = closedAbsConvexHull 𝕜 (toWeakSpace 𝕜 E '' s)
+    := by
+  simpa only [← closedAbsConvexHull_eq_closedConvexHull_balancedHull, LinearEquiv.coe_coe,
+    ← toWeakSpace_closedConvexHull_eq] using
+    congr(closedConvexHull 𝕜 $((toWeakSpace 𝕜 E).image_balancedHull s))
+
+theorem Convex.toWeakSpace_symm_closure (𝕜 : Type*) {E : Type*} [RCLike 𝕜] [AddCommGroup E]
+    [Module 𝕜 E] [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E] {s : Set (WeakSpace 𝕜 E)} (hs : Convex ℝ s) :
+    (toWeakSpace 𝕜 E).symm '' closure s = closure ((toWeakSpace 𝕜 E).symm '' s) := by
+  apply (toWeakSpace 𝕜 E).injective.image_injective
+  trans closure (toWeakSpace 𝕜 E '' ((toWeakSpace 𝕜 E).symm '' s))
+  · simp [Set.image_image]
+  · rw [Convex.toWeakSpace_closure]
+    exact hs.linear_image <| (toWeakSpace 𝕜 E).symm.toLinearMap.restrictScalars ℝ
+
+set_option backward.isDefEq.respectTransparency false in
+open ComplexOrder in
+theorem toWeakSpace_symm_closedConvexHull_eq {𝕜 E : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E] {s : Set (WeakSpace 𝕜 E)} :
+    (toWeakSpace 𝕜 E).symm '' (closedConvexHull 𝕜 s) =
+      closedConvexHull 𝕜 ((toWeakSpace 𝕜 E).symm '' s) := by
+  rw [closedConvexHull_eq_closure_convexHull (𝕜 := 𝕜),
+    ((convex_convexHull 𝕜 s).lift ℝ).toWeakSpace_symm_closure _,
+      closedConvexHull_eq_closure_convexHull]
+  congr
+  refine LinearMap.image_convexHull (toWeakSpace 𝕜 E).symm.toLinearMap s
+
+set_option backward.isDefEq.respectTransparency false in
+open ComplexOrder in
+theorem toWeakSpace_symm_closedAbsConvexHull_eq {𝕜 E : Type*} [RCLike 𝕜] [AddCommGroup E]
+    [Module 𝕜 E] [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E] {s : Set (WeakSpace 𝕜 E)} :
+    (toWeakSpace 𝕜 E).symm '' (closedAbsConvexHull 𝕜 s) =
+      closedAbsConvexHull 𝕜 ((toWeakSpace 𝕜 E).symm '' s)
+    := by
+  simpa [closedAbsConvexHull_eq_closedConvexHull_balancedHull,
+    toWeakSpace_symm_closedConvexHull_eq] using
+      congr(closedConvexHull 𝕜 $((toWeakSpace 𝕜 E).symm.image_balancedHull s))
+
+set_option backward.isDefEq.respectTransparency false in
+open ComplexOrder in
+theorem _root_.ContinuousLinearEquiv.closedAbsConvexHull_image {𝕜 E F : Type*} [RCLike 𝕜]
+    [AddCommGroup E] [AddCommGroup F]
+    [Module 𝕜 E] [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [Module 𝕜 F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [TopologicalSpace F] [IsTopologicalAddGroup F]
+    [ContinuousSMul 𝕜 E] [ContinuousSMul 𝕜 F]
+    {s : Set E} (f : E ≃L[𝕜] F) :
+    f '' (closedAbsConvexHull 𝕜 s) = closedAbsConvexHull 𝕜 (f '' s)
+    := by
+  rw [closedAbsConvexHull_eq_closedConvexHull_balancedHull, closedConvexHull_eq_closure_convexHull,
+    ContinuousLinearEquiv.image_closure, ← absConvexHull_eq_convexHull_balancedHull,
+     ← ContinuousLinearEquiv.coe_toLinearEquiv, ← LinearEquiv.coe_coe,
+     LinearMap.image_absConvexHull, ← closedAbsConvexHull_eq_closure_absConvexHull]
+
+set_option backward.isDefEq.respectTransparency false in
+open scoped ComplexConjugate ComplexOrder in
+theorem _root_.StrongDual.topDualPairing_flip_polar_polar {𝕜 E : Type*}
+    [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E] {s : Set E} [h : Nonempty s] :
+    (topDualPairing 𝕜 E).polar ((topDualPairing 𝕜 E).flip.polar s)
+      = closedAbsConvexHull 𝕜 s := by
+  letI s' := ((WeakBilin.linearEquiv 𝕜 (topDualPairing 𝕜 E).flip).symm '' s)
+  have := LinearMap.pairing_flip_polar_polar (topDualPairing 𝕜 E).flip (s := s')
+  have h' := congr((WeakSpace.weakBilinCLE (𝕜 := 𝕜)).symm '' $this)
+  rw [ContinuousLinearEquiv.closedAbsConvexHull_image
+    (WeakSpace.weakBilinCLE (𝕜 := 𝕜) (E := E).symm)] at h'
+  have k := congr((toWeakSpace 𝕜 E).symm '' $h')
+  rw [toWeakSpace_symm_closedAbsConvexHull_eq] at k
+  rw [LinearEquiv.image_symm_eq_preimage, ContinuousLinearEquiv.image_symm_eq_preimage,
+    LinearEquiv.image_symm_eq_preimage, ContinuousLinearEquiv.image_symm_eq_preimage] at k
+  simpa only [s', LinearEquiv.image_symm_eq_preimage] using k
