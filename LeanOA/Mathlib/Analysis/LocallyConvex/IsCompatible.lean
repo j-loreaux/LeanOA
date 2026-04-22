@@ -11,7 +11,20 @@ class IsCompatible (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) : Prop where
   range_eq_range : B.flip.range = (ContinuousLinearMap.coeLM 𝕜).range
   injective : Function.Injective B.flip
 
+open scoped ContinuousLinearMap in
+@[simp]
+lemma ContinuousLinearMap.coeLM_injective {R M N : Type*} (S : Type*) [Semiring R] [Semiring S]
+    [TopologicalSpace M] [AddCommMonoid M] [Module R M] [TopologicalSpace N] [AddCommMonoid N]
+    [Module R N] [Module S N] [SMulCommClass R S N] [ContinuousConstSMul S N] [ContinuousAdd N] :
+    Function.Injective (ContinuousLinearMap.coeLM S : (M →L[R] N) →ₗ[S] M →ₗ[R] N) := by
+  simp [Function.Injective, DFunLike.ext_iff]
+
 -- TODO: show that any `F ≃ₗ[𝕜] StrongDual 𝕜 E` yields an `IsCompatible` instance.
+lemma _root_.LinearEquiv.isCompatible (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (e : F ≃ₗ[𝕜] StrongDual 𝕜 E)
+    (hB : B.flip = (ContinuousLinearMap.coeLM 𝕜).comp e.toLinearMap) :
+    B.IsCompatible :=
+    ⟨by convert congr($(hB).range)
+        simp, by simpa [hB] using e.injective⟩
 
 lemma IsCompatible.continuous (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible]
     (x : F) : Continuous (B.flip x) :=

@@ -533,21 +533,29 @@ lemma continuousAt_zero_seminorm [TopologicalSpace E] [ContinuousSMul 𝕜 E]
   rintro - ⟨⟨y, hy⟩, rfl⟩
   exact B.polar_mem s y hy x hx
 
+open LinearMap WithSeminorms
+
+instance [TopologicalSpace E] [B.IsCompatible] :
+    LinearMap.IsCompatible (pairing B.flip).flip := by
+  let e := WeakBilin.linearEquiv 𝕜 B.flip ≪≫ₗ LinearMap.IsCompatible.equiv B
+  exact e.isCompatible _ rfl
+
 /-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatible` and
 `PolarTopology B (nhdsPolars B)`. -/
 def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
     [ContinuousSMul 𝕜 E]
-    [B.flip.IsCompatible] :
+    [B.IsCompatible] :
     PolarTopology B (nhdsPolars B) ≃L[𝕜] E where
   toLinearEquiv := linearEquiv (B := B) (𝔖 := nhdsPolars B)
   continuous_toFun := by
     simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, LinearEquiv.coe_coe]
     sorry
-  continuous_invFun := by
-    simp only [LinearEquiv.invFun_eq_symm]
-    apply (withSeminorms B (nhdsPolars B)).continuous_of_continuous_comp _
-    rintro ⟨-, ⟨s, (hs : s ∈ 𝓝 0), rfl⟩⟩
-    exact Seminorm.continuous_of_continuousAt_zero <| continuousAt_zero_seminorm B hs
+  continuous_invFun := by sorry
+    -- have : LinearMap.IsCompatible (pairing B.flip).flip := inferInstance
+    -- simp only [LinearEquiv.invFun_eq_symm]
+    -- apply (withSeminorms B (nhdsPolars B)).continuous_of_continuous_comp _
+    -- rintro ⟨-, ⟨s, (hs : s ∈ 𝓝 0), rfl⟩⟩
+    -- exact Seminorm.continuous_of_continuousAt_zero <| continuousAt_zero_seminorm B hs
 
 end PolarTopology
 
