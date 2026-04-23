@@ -18,7 +18,6 @@ import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
 import LeanOA.Mathlib.Algebra.Star.StarAlgHom
 import LeanOA.Mathlib.Algebra.Star.Unitary
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
-import LeanOA.Mathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Transfer

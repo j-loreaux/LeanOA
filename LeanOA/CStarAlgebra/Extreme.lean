@@ -1,10 +1,10 @@
 import LeanOA.CFC
 import LeanOA.IsUnital
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
-import LeanOA.Mathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import Mathlib.Analysis.Convex.Extreme
+import Mathlib.Analysis.CStarAlgebra.Unitary.Maps
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 
 /-! # Extreme points of the closed unit ball in C⋆-algebras
@@ -120,8 +120,7 @@ lemma CStarAlgebra.one_mem_extremePoints_unitClosedBall {A : Type*} [CStarAlgebr
 
 lemma Unitary.coe_mem_extremePoints_unitClosedBall {A : Type*} [CStarAlgebra A] (u : unitary A) :
     (u : A) ∈ extremePoints ℝ (closedBall 0 1) := by
-  rw [← map_zero (mulLeftLinearIsometryEquiv ℝ A u), ← LinearIsometryEquiv.image_closedBall,
-    ← image_extremePoints]
+  rw [← map_zero (mulLeft ℝ A u), ← LinearIsometryEquiv.image_closedBall, ← image_extremePoints]
   exact ⟨1 , ⟨one_mem_extremePoints_unitClosedBall, by simp⟩⟩
 
 section nonUnital
