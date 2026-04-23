@@ -77,10 +77,11 @@ The Bipolar Theorem: The bipolar of a set coincides with its closed absolutely c
 [Conway, *A course in functional analysis*, Chapter V. 1.8][conway1990]
 -/
 open scoped ComplexConjugate ComplexOrder in
-theorem pairing_flip_polar_polar {s : Set (WeakBilin B)} (hs : s.Nonempty) :
-    (pairing B).flip.polar ((pairing B).polar s) = closedAbsConvexHull 𝕜 s := by
+theorem pairing_flip_polar_polar [TopologicalSpace E] [hB : B.IsWeak] {s : Set E} (hs : s.Nonempty) :
+    B.flip.polar (B.polar s) = closedAbsConvexHull 𝕜 s := by
   have _ := hs.to_subtype --can be removed after issue below is fixed.
-  apply subset_antisymm ?h1 <| closedAbsConvexHull_min (subset_bipolar (pairing B) s)
+  have : LocallyConvexSpace ℝ E := LinearMap.IsWeak.locallyConvexSpace B
+  apply subset_antisymm ?h1 <| closedAbsConvexHull_min (subset_bipolar B s)
       (absConvex_polar _) (B.flip.isClosed_polar _)
   rw [← Set.compl_subset_compl]
   -- Let `x` be an element not in `(closedAbsConvexHull 𝕜) s`
