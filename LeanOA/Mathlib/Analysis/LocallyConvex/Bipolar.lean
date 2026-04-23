@@ -68,19 +68,22 @@ section RCLike
 variable [RCLike 𝕜] [AddCommGroup E] [AddCommGroup F]
 variable [Module 𝕜 E] [Module 𝕜 F]
 variable (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
-variable [Module ℝ E] [IsScalarTower ℝ 𝕜 E]
 
 alias absConvex_polar := polar_AbsConvex
 
 /-
-The Bipolar Theorem: The bipolar of a set coincides with its closed absolutely convex hull.
+The **Bipolar Theorem**: The bipolar of a set `s : Set E` relative to a bilinear form
+`B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜` (where `E` is equipped with the weak topology induced by `B`)
+coincides with its closed absolutely convex hull.
 [Conway, *A course in functional analysis*, Chapter V. 1.8][conway1990]
 -/
 open scoped ComplexConjugate ComplexOrder in
 theorem flip_polar_polar [TopologicalSpace E] [hB : B.IsWeak] {s : Set E}
     (hs : s.Nonempty) :
     B.flip.polar (B.polar s) = closedAbsConvexHull 𝕜 s := by
-  have _ := hs.to_subtype --can be removed after issue below is fixed.
+  let _ : Module ℝ E := RestrictScalars.module ℝ 𝕜 E
+  let _ : IsScalarTower ℝ 𝕜 E := RestrictScalars.isScalarTower ℝ 𝕜 E
+  have _ := hs.to_subtype -- can be removed after issue below is fixed.
   have : IsTopologicalAddGroup E := hB.isTopologicalAddGroup _
   have : LocallyConvexSpace ℝ E := hB.locallyConvexSpace _
   have : ContinuousSMul 𝕜 E := hB.continuousSMul _
