@@ -1,4 +1,5 @@
 import Mathlib.Analysis.LocallyConvex.Polar
+import LeanOA.IsWeak
 import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 
 open scoped Pointwise
@@ -7,11 +8,17 @@ open WeakBilin
 namespace LinearMap
 
 theorem isClosed_polar {𝕜 E F : Type*} [NormedCommRing 𝕜] [AddCommMonoid E]
-    [AddCommMonoid F] [Module 𝕜 E] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (s : Set E) :
-    IsClosed ((pairing B.flip).flip.polar s) := by
+    [AddCommMonoid F] [Module 𝕜 E] [Module 𝕜 F] [TopologicalSpace F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+    [hB : B.flip.IsWeak] (s : Set E) :
+    IsClosed (B.polar s) := by
   rw [polar_eq_biInter_preimage]
   exact isClosed_biInter
-    fun _ _ ↦ Metric.isClosed_closedBall.preimage (eval_continuous (pairing B.flip) _)
+    fun _ _ ↦ Metric.isClosed_closedBall.preimage (IsWeak.continuous_eval B.flip _)
+
+theorem isClosed_polar' {𝕜 E F : Type*} [NormedCommRing 𝕜] [AddCommMonoid E]
+    [AddCommMonoid F] [Module 𝕜 E] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (s : Set E) :
+    IsClosed ((pairing B.flip).flip.polar s) :=
+  isClosed_polar (pairing B.flip).flip s
 
 variable {𝕜 E F E' F' : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [AddCommGroup E'] [Module 𝕜 E']

@@ -1,8 +1,11 @@
 import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
 import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
+import Mathlib.Analysis.LocallyConvex.WeakDual
 
 open Topology Filter
+
+section Basic
 
 variable {α 𝕜 E F E' F' : Type*} [CommSemiring 𝕜] [TopologicalSpace 𝕜]
     [AddCommMonoid E] [Module 𝕜 E]
@@ -34,9 +37,15 @@ variable [inst : TopologicalSpace E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h
 
 namespace LinearMap.IsWeak
 
+instance : B.flip.flip.IsWeak := hB
+
+/-- The coercion `(fun x y ↦ B x y) : E → (F → 𝕜)` is continuous. -/
+theorem coeFn_continuous : Continuous (B · ·) :=
+  hB.eq_induced ▸ continuous_induced_dom
+
 @[fun_prop]
 lemma continuous_eval (y : F) : Continuous (B · y) :=
-  continuous_pi_iff.mp (hB.eq_induced ▸ continuous_induced_dom) _
+  continuous_pi_iff.mp (coeFn_continuous B) _
 
 lemma continuous_of_continuous_eval {α : Type*} [TopologicalSpace α]
     {f : α → E} (hf : ∀ y, Continuous (fun x ↦ B (f x) y)) :
@@ -72,15 +81,54 @@ protected theorem LinearMap.IsWeak.congr [AddCommMonoid E'] [Module 𝕜 E']
     congr!
     simp
 
-variable [ContinuousAdd 𝕜] [ContinuousConstSMul 𝕜 𝕜]
-
 /--
 Map `F` into the topological dual of `E` with the weak topology induced by `F`
 -/
-def eval : F →ₗ[𝕜] StrongDual 𝕜 E where
+def eval [ContinuousAdd 𝕜] [ContinuousConstSMul 𝕜 𝕜] : F →ₗ[𝕜] StrongDual 𝕜 E where
   toFun f := ⟨B.flip f, by fun_prop⟩
   map_add' _ _ := by ext; simp
   map_smul' _ _ := by ext; simp
+
+include hB in
+/-- Addition in `E` is continuous when `E` is equipped with a `LinearMap.IsWeak` topology. -/
+theorem continuousAdd [ContinuousAdd 𝕜] : ContinuousAdd E := by
+  rw [hB.eq_induced]
+  let t₁ : TopologicalSpace E := .induced (B · ·) Pi.topologicalSpace
+  have : B.IsWeak := ⟨rfl⟩
+  refine ⟨continuous_induced_rng.2 ?_⟩
+  refine
+    cast (congr_arg _ ?_)
+      (((coeFn_continuous B).comp continuous_fst).add ((coeFn_continuous B).comp continuous_snd))
+  ext
+  simp only [Function.comp_apply, Pi.add_apply, map_add, LinearMap.add_apply]
+
+include hB in
+/-- Scalar multiplication in `E` is continuous when `E` is equipped with a `LinearMap.IsWeak`
+topology. -/
+theorem continuousSMul [ContinuousSMul 𝕜 𝕜] : ContinuousSMul 𝕜 E := by
+  rw [hB.eq_induced]
+  let t₁ : TopologicalSpace E := .induced (B · ·) Pi.topologicalSpace
+  have : B.IsWeak := ⟨rfl⟩
+  refine ⟨continuous_induced_rng.2 ?_⟩
+  refine cast (congr_arg _ ?_) (continuous_fst.smul ((coeFn_continuous B).comp continuous_snd))
+  ext
+  simp only [Function.comp_apply, Pi.smul_apply, map_smulₛₗ, RingHom.id_apply, LinearMap.smul_apply]
+
+/-- `E` is a `IsTopologicalAddGroup` when `E` is equipped with a `LinearMap.IsWeak` topology. -/
+theorem isTopologicalAddGroup {𝕜 E F : Type*} [CommRing 𝕜] [TopologicalSpace 𝕜]
+    [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace E]
+    [ContinuousAdd 𝕜] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak] : IsTopologicalAddGroup E where
+  toContinuousAdd := continuousAdd B
+  continuous_neg := by
+    rw [hB.eq_induced]
+    let t₁ : TopologicalSpace E := .induced (B · ·) Pi.topologicalSpace
+    have : B.IsWeak := ⟨rfl⟩
+    refine continuous_induced_rng.2 (continuous_pi_iff.mpr fun y => ?_)
+    refine cast (congr_arg _ ?_) (continuous_eval B (-y))
+    ext x
+    simp only [map_neg, Function.comp_apply, LinearMap.neg_apply]
+
+variable [ContinuousAdd 𝕜] [ContinuousConstSMul 𝕜 𝕜]
 
 open WeakBilin in
 instance : (pairing B).IsWeak where
@@ -103,5 +151,38 @@ instance {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
     letI B' : WeakSpace 𝕜 E →ₗ[𝕜] F →ₗ[𝕜] 𝕜 := (toWeakSpace 𝕜 E).arrowCongr (.refl ..) B
     B'.IsWeak :=
   LinearMap.IsWeak.congr (weakSpacePairing 𝕜 E) _ (.refl ..) hB.equiv.symm rfl
+
+end LinearMap.IsWeak
+
+end Basic
+
+namespace LinearMap.IsWeak
+section Topology
+
+variable {𝕜 E F : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F]
+  [TopologicalSpace E]
+
+theorem withSeminorms (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak] :
+    WithSeminorms (LinearMap.toSeminormFamily B : F → Seminorm 𝕜 E) :=
+  let e : F ≃ (Σ _ : F, Fin 1) := .symm <| .sigmaUnique _ _
+  hB.eq_induced ▸ withSeminorms_induced (withSeminorms_pi (fun _ ↦ norm_withSeminorms 𝕜 𝕜))
+    (LinearMap.ltoFun 𝕜 F 𝕜 𝕜 ∘ₗ B : E →ₗ[𝕜] (F → 𝕜)) |>.congr_equiv e
+
+theorem hasBasis_nhds_zero (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak] :
+    (𝓝 (0 : E)).HasBasis (· ∈ B.toSeminormFamily.basisSets) _root_.id :=
+  withSeminorms B |>.hasBasis
+
+end Topology
+
+section LocallyConvex
+
+variable {𝕜 E F : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F]
+variable [NormedSpace ℝ 𝕜] [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E]
+
+theorem locallyConvexSpace (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak] :
+    LocallyConvexSpace ℝ E :=
+  withSeminorms B |>.toLocallyConvexSpace
+
+end LocallyConvex
 
 end LinearMap.IsWeak
