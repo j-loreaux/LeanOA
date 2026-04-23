@@ -77,10 +77,13 @@ The Bipolar Theorem: The bipolar of a set coincides with its closed absolutely c
 [Conway, *A course in functional analysis*, Chapter V. 1.8][conway1990]
 -/
 open scoped ComplexConjugate ComplexOrder in
-theorem pairing_flip_polar_polar [TopologicalSpace E] [hB : B.IsWeak] {s : Set E} (hs : s.Nonempty) :
+theorem flip_polar_polar [TopologicalSpace E] [hB : B.IsWeak] {s : Set E}
+    (hs : s.Nonempty) :
     B.flip.polar (B.polar s) = closedAbsConvexHull 𝕜 s := by
   have _ := hs.to_subtype --can be removed after issue below is fixed.
-  have : LocallyConvexSpace ℝ E := LinearMap.IsWeak.locallyConvexSpace B
+  have : IsTopologicalAddGroup E := hB.isTopologicalAddGroup _
+  have : LocallyConvexSpace ℝ E := hB.locallyConvexSpace _
+  have : ContinuousSMul 𝕜 E := hB.continuousSMul _
   apply subset_antisymm ?h1 <| closedAbsConvexHull_min (subset_bipolar B s)
       (absConvex_polar _) (B.flip.isClosed_polar _)
   rw [← Set.compl_subset_compl]
@@ -106,28 +109,28 @@ theorem pairing_flip_polar_polar [TopologicalSpace E] [hB : B.IsWeak] {s : Set E
       ← (inv_mul_cancel₀ (lt_iff_le_and_ne.mp f_zero_lt_u).2.symm)]
     exact mul_lt_mul_of_pos_left ((hf₁ _) ha) (inv_pos_of_pos f_zero_lt_u)
   -- The dual embedding is surjective, let `f₀` be the element of `F` corresponding to `g`
-  obtain ⟨f₀, hf₀⟩ := (pairing B).dualEmbedding_surjective g
+  obtain ⟨f₀, hf₀⟩ := hB.eval_surjective _ g
   -- Then, by construction, `f₀` is in the polar of `s`
-  have mem_polar : f₀ ∈ (pairing B).polar s := by
-    simp only [← hf₀, WeakBilin.eval, coe_mk, AddHom.coe_mk, ContinuousLinearMap.coe_mk']
+  have mem_polar : f₀ ∈ B.polar s := by
+    simp only [← hf₀, LinearMap.IsWeak.eval, coe_mk, AddHom.coe_mk, ContinuousLinearMap.coe_mk']
       at re_g_a_lt_one
     intro x₂ hx₂
-    let l := conj (pairing B x₂ f₀) / ‖pairing B x₂ f₀‖
+    let l := conj (B x₂ f₀) / ‖B x₂ f₀‖
     have lnorm : ‖l‖ ≤ 1 := by
       rw [norm_div, RCLike.norm_conj, norm_algebraMap', norm_norm]
       exact div_self_le_one _
-    have i1 : RCLike.re (((pairing B).flip f₀) (l • x₂)) ≤ 1 := le_of_lt <| re_g_a_lt_one
+    have i1 : RCLike.re ((B.flip f₀) (l • x₂)) ≤ 1 := le_of_lt <| re_g_a_lt_one
       <| balanced_iff_smul_mem.mp absConvex_convexClosedHull.1 lnorm
         (subset_closedAbsConvexHull hx₂)
     rwa [CompatibleSMul.map_smul, smul_eq_mul, mul_comm, ← mul_div_assoc, LinearMap.flip_apply,
       RCLike.mul_conj, sq, mul_self_div_self, RCLike.ofReal_re] at i1
   -- and `1 < Re (B x f₀)`
-  have one_lt_x_f₀ : 1 < RCLike.re (pairing B x f₀) := by
+  have one_lt_x_f₀ : 1 < RCLike.re (B x f₀) := by
     rw [← one_lt_inv_mul₀ f_zero_lt_u] at hf₂
-    suffices u⁻¹ * RCLike.re (f x) = RCLike.re ((pairing B x) f₀) by exact lt_of_lt_of_eq hf₂ this
+    suffices u⁻¹ * RCLike.re (f x) = RCLike.re (B x f₀) by exact lt_of_lt_of_eq hf₂ this
     rw [← RCLike.re_ofReal_mul]
     congr
-    simp only [map_inv₀, ← u_smul_g_eq_f, ← hf₀, WeakBilin.eval, coe_mk, AddHom.coe_mk,
+    simp only [map_inv₀, ← u_smul_g_eq_f, ← hf₀, LinearMap.IsWeak.eval, coe_mk, AddHom.coe_mk,
       ContinuousLinearMap.coe_smul', ContinuousLinearMap.coe_mk', Pi.smul_apply,
       Algebra.mul_smul_comm]
     rw [← smul_eq_mul, ← smul_assoc]
@@ -136,75 +139,10 @@ theorem pairing_flip_polar_polar [TopologicalSpace E] [hB : B.IsWeak] {s : Set E
     exact flip_apply ..
   -- From which it follows that `x` can't be in the bipolar of `s`
   exact fun hc ↦ ((lt_iff_le_not_ge.mp one_lt_x_f₀).2)
-    (Preorder.le_trans (RCLike.re ((pairing B x) f₀)) ‖(pairing B x) f₀‖ 1
-      (RCLike.re_le_norm ((pairing B x) f₀)) (hc f₀ mem_polar))
-open WeakBilin
-/-
-The Bipolar Theorem: The bipolar of a set coincides with its closed absolutely convex hull.
-[Conway, *A course in functional analysis*, Chapter V. 1.8][conway1990]
--/
-set_option backward.isDefEq.respectTransparency false in
-open scoped ComplexConjugate ComplexOrder in
-theorem pairing_flip_polar_polar {s : Set (WeakBilin B)} (hs : s.Nonempty) :
-    (pairing B).flip.polar ((pairing B).polar s) = closedAbsConvexHull 𝕜 s := by
-  have _ := hs.to_subtype --can be removed after issue below is fixed.
-  apply subset_antisymm ?h1 <| closedAbsConvexHull_min (subset_bipolar (pairing B) s)
-      (absConvex_polar _) (B.flip.isClosed_polar _)
-  rw [← Set.compl_subset_compl]
-  -- Let `x` be an element not in `(closedAbsConvexHull 𝕜) s`
-  intro x hx
-  obtain ⟨f, ⟨u, ⟨hf₁, hf₂⟩⟩⟩ :=
-    RCLike.geometric_hahn_banach_closed_point (𝕜 := 𝕜)
-      (by rw [← convex_RCLike_iff_convex_real (K := 𝕜)]; exact absConvex_convexClosedHull.2)
-      isClosed_closedAbsConvexHull hx
-  -- `0` is in `(closedAbsConvexHull 𝕜) s` so `u` must be strictly positive
-  have f_zero_lt_u : RCLike.re (f 0) < u :=
-    (hf₁ 0) (absConvexHull_subset_closedAbsConvexHull zero_mem_absConvexHull)
-     --zero_mem_absConvexyHull needs coercion to subtype, which should be fixed in Mathlib.
-  rw [map_zero, map_zero] at f_zero_lt_u
-  -- Rescale `f` as `g` in order that for all `a` in `(closedAbsConvexHull 𝕜) s` `Re (g a) < 1`
-  set g := (1/u : ℝ) • f with fg
-  have u_smul_g_eq_f : u • g = f := by
-    rw [fg, one_div, ← smul_assoc, smul_eq_mul, mul_inv_cancel₀ (ne_of_lt f_zero_lt_u).symm,
-      one_smul]
-  have re_g_a_lt_one {a : _} (ha : a ∈ closedAbsConvexHull 𝕜 s) :
-    RCLike.re (g a) < 1 := by
-    rw [fg, ContinuousLinearMap.coe_smul', Pi.smul_apply, RCLike.smul_re, one_div,
-      ← (inv_mul_cancel₀ (lt_iff_le_and_ne.mp f_zero_lt_u).2.symm)]
-    exact mul_lt_mul_of_pos_left ((hf₁ _) ha) (inv_pos_of_pos f_zero_lt_u)
-  -- The dual embedding is surjective, let `f₀` be the element of `F` corresponding to `g`
-  obtain ⟨f₀, hf₀⟩ := (pairing B).dualEmbedding_surjective g
-  -- Then, by construction, `f₀` is in the polar of `s`
-  have mem_polar : f₀ ∈ (pairing B).polar s := by
-    simp only [← hf₀, WeakBilin.eval, coe_mk, AddHom.coe_mk, ContinuousLinearMap.coe_mk']
-      at re_g_a_lt_one
-    intro x₂ hx₂
-    let l := conj (pairing B x₂ f₀) / ‖pairing B x₂ f₀‖
-    have lnorm : ‖l‖ ≤ 1 := by
-      rw [norm_div, RCLike.norm_conj, norm_algebraMap', norm_norm]
-      exact div_self_le_one _
-    have i1 : RCLike.re (((pairing B).flip f₀) (l • x₂)) ≤ 1 := le_of_lt <| re_g_a_lt_one
-      <| balanced_iff_smul_mem.mp absConvex_convexClosedHull.1 lnorm
-        (subset_closedAbsConvexHull hx₂)
-    rwa [CompatibleSMul.map_smul, smul_eq_mul, mul_comm, ← mul_div_assoc, LinearMap.flip_apply,
-      RCLike.mul_conj, sq, mul_self_div_self, RCLike.ofReal_re] at i1
-  -- and `1 < Re (B x f₀)`
-  have one_lt_x_f₀ : 1 < RCLike.re (pairing B x f₀) := by
-    rw [← one_lt_inv_mul₀ f_zero_lt_u] at hf₂
-    suffices u⁻¹ * RCLike.re (f x) = RCLike.re ((pairing B x) f₀) by exact lt_of_lt_of_eq hf₂ this
-    rw [← RCLike.re_ofReal_mul]
-    congr
-    simp only [map_inv₀, ← u_smul_g_eq_f, ← hf₀, WeakBilin.eval, coe_mk, AddHom.coe_mk,
-      ContinuousLinearMap.coe_smul', ContinuousLinearMap.coe_mk', Pi.smul_apply,
-      Algebra.mul_smul_comm]
-    rw [← smul_eq_mul, ← smul_assoc]
-    norm_cast
-    simp only [smul_eq_mul, mul_inv_cancel₀ (ne_of_lt f_zero_lt_u).symm, map_one, one_mul]
-    exact flip_apply ..
-  -- From which it follows that `x` can't be in the bipolar of `s`
-  exact fun hc ↦ ((lt_iff_le_not_ge.mp one_lt_x_f₀).2)
-    (Preorder.le_trans (RCLike.re ((pairing B x) f₀)) ‖(pairing B x) f₀‖ 1
-      (RCLike.re_le_norm ((pairing B x) f₀)) (hc f₀ mem_polar))
+    (Preorder.le_trans (RCLike.re (B x f₀)) ‖B x f₀‖ 1
+      (RCLike.re_le_norm (B x f₀)) (hc f₀ mem_polar))
+
+alias bipolar := flip_polar_polar
 
 /-
 set_option backward.isDefEq.respectTransparency false in
@@ -228,8 +166,8 @@ This fails when `s` is empty. Indeed, `closedAbsConvexHull (E := WeakBilin B) �
 but `B.polar_gc.closureOperator s` equals `{0}` when `B` is left separating (see example above).
 -/
 lemma closureOperator_polar_gc_nonempty {s : Set (WeakBilin B)} (hs : s.Nonempty) :
-    (pairing B).polar_gc.closureOperator s = closedAbsConvexHull (E := WeakBilin B) 𝕜 s := by
-  simp [pairing_flip_polar_polar (B := B) hs]
+    (WeakBilin.pairing B).polar_gc.closureOperator s = closedAbsConvexHull 𝕜 s := by
+  simp [(WeakBilin.pairing B).flip_polar_polar hs]
 
 end RCLike
 
@@ -256,7 +194,6 @@ theorem Convex.toWeakSpace_symm_closure (𝕜 : Type*) {E : Type*} [RCLike 𝕜]
   · rw [Convex.toWeakSpace_closure]
     exact hs.linear_image <| (toWeakSpace 𝕜 E).symm.toLinearMap.restrictScalars ℝ
 
-set_option backward.isDefEq.respectTransparency false in
 open ComplexOrder in
 theorem toWeakSpace_symm_closedConvexHull_eq {𝕜 E : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
@@ -269,7 +206,6 @@ theorem toWeakSpace_symm_closedConvexHull_eq {𝕜 E : Type*} [RCLike 𝕜] [Add
   congr
   refine LinearMap.image_convexHull (toWeakSpace 𝕜 E).symm.toLinearMap s
 
-set_option backward.isDefEq.respectTransparency false in
 open ComplexOrder in
 theorem toWeakSpace_symm_closedAbsConvexHull_eq {𝕜 E : Type*} [RCLike 𝕜] [AddCommGroup E]
     [Module 𝕜 E] [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
@@ -281,7 +217,6 @@ theorem toWeakSpace_symm_closedAbsConvexHull_eq {𝕜 E : Type*} [RCLike 𝕜] [
     toWeakSpace_symm_closedConvexHull_eq] using
       congr(closedConvexHull 𝕜 $((toWeakSpace 𝕜 E).symm.image_balancedHull s))
 
-set_option backward.isDefEq.respectTransparency false in
 open ComplexOrder in
 theorem _root_.ContinuousLinearEquiv.closedAbsConvexHull_image {𝕜 E F : Type*} [RCLike 𝕜]
     [AddCommGroup E] [AddCommGroup F]
@@ -296,38 +231,31 @@ theorem _root_.ContinuousLinearEquiv.closedAbsConvexHull_image {𝕜 E F : Type*
      ← ContinuousLinearEquiv.coe_toLinearEquiv, ← LinearEquiv.coe_coe,
      LinearMap.image_absConvexHull, ← closedAbsConvexHull_eq_closure_absConvexHull]
 
-set_option backward.isDefEq.respectTransparency false in
 open scoped ComplexConjugate ComplexOrder in
 theorem _root_.StrongDual.topDualPairing_flip_polar_polar (𝕜 : Type*) {E : Type*}
     [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
     [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E] {s : Set E} (h : s.Nonempty) :
-    (topDualPairing 𝕜 E).polar ((topDualPairing 𝕜 E).flip.polar s)
-      = closedAbsConvexHull 𝕜 s := by
-  letI s' := ((WeakBilin.linearEquiv 𝕜 (topDualPairing 𝕜 E).flip).symm '' s)
-  have := LinearMap.pairing_flip_polar_polar (topDualPairing 𝕜 E).flip (s := s') <|
-    Set.Nonempty.image (⇑(WeakBilin.linearEquiv 𝕜 (topDualPairing 𝕜 E).flip).symm) h
-  have h' := congr((WeakSpace.weakBilinCLE (𝕜 := 𝕜)).symm '' $this)
-  rw [ContinuousLinearEquiv.closedAbsConvexHull_image
-    (WeakSpace.weakBilinCLE (𝕜 := 𝕜) (E := E).symm)] at h'
-  have k := congr((toWeakSpace 𝕜 E).symm '' $h')
-  rw [toWeakSpace_symm_closedAbsConvexHull_eq, LinearEquiv.image_symm_eq_preimage,
-     ContinuousLinearEquiv.image_symm_eq_preimage, LinearEquiv.image_symm_eq_preimage,
-     ContinuousLinearEquiv.image_symm_eq_preimage] at k
-  simpa only [s', LinearEquiv.image_symm_eq_preimage] using k
+    (topDualPairing 𝕜 E).polar ((topDualPairing 𝕜 E).flip.polar s) = closedAbsConvexHull 𝕜 s := by
+  have := congr(toWeakSpace 𝕜 E ⁻¹' $((weakSpacePairing 𝕜 E).bipolar (h.image (toWeakSpace 𝕜 E))))
+  rw [← toWeakSpace_closedAbsConvexHull_eq] at this
+  simpa [LinearEquiv.image_eq_preimage_symm]
 
 open LinearMap
 
+alias StrongDual.bipolar := StrongDual.topDualPairing_flip_polar_polar
+
 set_option backward.isDefEq.respectTransparency false in
 open scoped ComplexConjugate ComplexOrder in
-theorem _root_.IsCompatible.flip_polar_polar {𝕜 E F : Type*}
+theorem LinearMap.IsCompatible.flip_polar_polar {𝕜 E F : Type*}
     [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
-    [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E] {s : Set E} (h : s.Nonempty)
+    [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E]
     [AddCommGroup F] [Module 𝕜 F]
-    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsCompatible] :
-    (B.flip).polar (B.polar s)
-      = closedAbsConvexHull 𝕜 s := by
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsCompatible] {s : Set E} (h : s.Nonempty) :
+    B.flip.polar (B.polar s) = closedAbsConvexHull 𝕜 s := by
   convert StrongDual.topDualPairing_flip_polar_polar 𝕜 h
   ext
   simp [polar_mem_iff, (IsCompatible.equiv B).surjective.forall]
+
+alias LinearMap.IsCompatible.bipolar := LinearMap.IsCompatible.flip_polar_polar

@@ -176,7 +176,39 @@ end Topology
 
 section LocallyConvex
 
-variable {𝕜 E F : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F]
+variable {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [AddCommGroup F] [Module 𝕜 F]
+
+section
+
+variable [TopologicalSpace E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak]
+
+/-- The Weak Representation Theorem: Every continuous functional on `E` endowed with
+the `σ(E, F; B)`-topology is of the form `x ↦ B(x, y)` for some `y : F`. -/
+theorem eval_surjective : Function.Surjective (eval B) := fun f ↦ by
+  have : f.toLinearMap ∈
+      Submodule.span 𝕜 (ContinuousLinearMap.coeLM 𝕜 ∘ₗ eval B).range := by
+    simpa [coe_range, mem_span_iff_continuous, continuous_iff_le_induced, ← induced_to_pi]
+      using hB.eq_induced ▸ f.continuous.le_induced
+  simpa
+
+lemma eval_injective (hr : B.SeparatingRight) : Function.Injective (eval B) := by
+  simpa [injective_iff_map_eq_zero, DFunLike.ext_iff]
+
+
+/-- When `B` is right-separating, `F` is linearly equivalent to the strong dual of `E` with the
+weak topology. -/
+noncomputable def rightDualEquiv (hr : B.SeparatingRight) : F ≃ₗ[𝕜] StrongDual 𝕜 E :=
+  .ofBijective (eval B) ⟨eval_injective B hr, eval_surjective B⟩
+
+end
+
+/-- When `B` is left-separating, `E` is linearly equivalent to the strong dual of `F` with the
+weak topology. -/
+noncomputable def leftDualEquiv [TopologicalSpace F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+    [hB : B.flip.IsWeak] (hl : B.SeparatingLeft) : E ≃ₗ[𝕜] StrongDual 𝕜 F :=
+  rightDualEquiv _ (LinearMap.flip_separatingRight.mpr hl)
+
 variable [NormedSpace ℝ 𝕜] [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E]
 
 theorem locallyConvexSpace (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak] :
