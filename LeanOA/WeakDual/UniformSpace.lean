@@ -1,5 +1,5 @@
-import Mathlib.Topology.Algebra.Module.WeakBilin
-import Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.Topology.Algebra.Module.Spaces.WeakBilin
+import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
 import Mathlib.Topology.UniformSpace.Basic
 import Mathlib.Topology.UniformSpace.Pi
 
@@ -32,8 +32,8 @@ variable {𝕜 E : Type*} [CommSemiring 𝕜] [UniformSpace 𝕜] [ContinuousAdd
 
 variable (𝕜 E) in
 /-- The uniform structure on `WeakBilin B` induced by the uniform structure on `𝕜`. -/
-instance instUniformSpace : UniformSpace (WeakDual 𝕜 E) :=
-  WeakBilin.instUniformSpace (topDualPairing 𝕜 E)
+noncomputable instance instUniformSpace : UniformSpace (WeakDual 𝕜 E) :=
+  inferInstanceAs (UniformSpace (WeakBilin (topDualPairing 𝕜 E)))
 
 -- verify that the uniform structure induces the pre-existing topological structure.
 example : (instUniformSpace 𝕜 E).toTopologicalSpace = instTopologicalSpaceWeakDual 𝕜 E := by

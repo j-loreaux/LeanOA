@@ -4,7 +4,7 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 import LeanOA.Mathlib.Analysis.CStarAlgebra.Basic
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
-import LeanOA.Mathlib.Analysis.Convex.Extreme
+import Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 
 /-! # Extreme points of the closed unit ball in C⋆-algebras

@@ -50,8 +50,8 @@ theorem ExtremallyDisconnected.ofConditionallyCompletePartialOrderSupContinuousM
       simp [h1 (by simpa using hx)]
     simpa [← isClosed_compl_iff, key] using isClosed_singleton.preimage (map_continuous f)
   intro s hs hsn hb
-  obtain ⟨g', hg⟩ := h _ (hs.mono_comp (monotone_realToRCLike K 𝕜)) (hsn.image _)
-    ((monotone_realToRCLike K 𝕜).map_bddAbove hb)
+  obtain ⟨g', hg⟩ := h _ (hs.mono_comp (realToRCLike_monotone K 𝕜)) (hsn.image _)
+    ((realToRCLike_monotone K 𝕜).map_bddAbove hb)
   rw [← isSelfAdjoint_realToRCLike.of_ge (hg.1 ⟨_, hsn.some_mem, rfl⟩)
     |>.realToRCLike_rclikeToReal] at hg
   exact ⟨_, hg.of_image <| by simp [le_def]⟩

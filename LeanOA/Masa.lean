@@ -8,69 +8,18 @@ section IsMulCommutative
 
 variable {S M : Type*} [SetLike S M] [Mul M] [MulMemClass S M]
 
-@[to_additive]
-lemma isMulCommutative_iff : IsMulCommutative M ↔ ∀ a b : M, a * b = b * a := by
-  grind [IsMulCommutative, Std.Commutative]
-
-@[to_additive]
-alias ⟨IsMulCommutative.mul_comm, IsMulCommutative.of_forall_comm⟩ := isMulCommutative_iff
-
-@[to_additive]
-lemma isMulCommutative_iff_of_setLike {s : S} :
-    IsMulCommutative s ↔ ∀ a ∈ s, ∀ b ∈ s, a * b = b * a := by
-  simp [isMulCommutative_iff]
-
-@[to_additive]
-alias ⟨IsMulCommutative.setLike_mul_comm, IsMulCommutative.of_setLike_mul_comm⟩ :=
-  isMulCommutative_iff_of_setLike
-
-instance Algebra.instIsMulCommutativeAdjoin {S R A : Type*} [CommSemiring R]
-    [Semiring A] [Algebra R A] [SetLike S A] [MulMemClass S A] (s : S) [hs : IsMulCommutative s] :
-    IsMulCommutative (adjoin R (s : Set A)) :=
-  let := adjoinCommSemiringOfComm R hs.setLike_mul_comm
-  ⟨⟨mul_comm⟩⟩
-
-instance NonUnitalAlgebra.instIsMulCommutativeAdjoin {S R A : Type*} [CommSemiring R]
-    [NonUnitalSemiring A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
-    [SetLike S A] [MulMemClass S A] (s : S) [hs : IsMulCommutative s] :
-    IsMulCommutative (adjoin R (s : Set A)) :=
-  let := adjoinNonUnitalCommSemiringOfComm R hs.setLike_mul_comm
-  ⟨⟨mul_comm⟩⟩
-
-instance NonUnitalStarAlgebra.instIsMulCommutativeAdjoin {S R A : Type*} [CommSemiring R]
-    [NonUnitalSemiring A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
-    [StarRing A] [StarRing R] [StarModule R A]
-    [SetLike S A] [MulMemClass S A] [StarMemClass S A] (s : S) [hs : IsMulCommutative s] :
-    IsMulCommutative (adjoin R (s : Set A)) :=
-  let := adjoinNonUnitalCommSemiringOfComm R hs.setLike_mul_comm
-    (fun a ha b hb ↦ hs.setLike_mul_comm a ha (star b) (star_mem hb))
-  ⟨⟨mul_comm⟩⟩
-
-instance StarAlgebra.instIsMulCommutativeAdjoin {S R A : Type*} [CommSemiring R]
-    [Semiring A] [Algebra R A] [StarRing A] [StarRing R] [StarModule R A]
-    [SetLike S A] [MulMemClass S A] [StarMemClass S A] (s : S) [hs : IsMulCommutative s] :
-    IsMulCommutative (adjoin R (s : Set A)) :=
-  let := adjoinCommSemiringOfComm R hs.setLike_mul_comm
-    (fun a ha b hb ↦ hs.setLike_mul_comm a ha (star b) (star_mem hb))
-  ⟨⟨mul_comm⟩⟩
-
-instance Subalgebra.instIsMulCommutativeToNonUnitalSubalgebra {R A : Type*} [CommSemiring R]
-    [Semiring A] [Algebra R A] (S : Subalgebra R A) [hS : IsMulCommutative S] :
-    IsMulCommutative S.toNonUnitalSubalgebra :=
-  hS
-
-instance StarSubalgebra.instIsMulCommutativeToNonUnitalStarSubalgebra {R A : Type*} [CommSemiring R]
-    [Semiring A] [Algebra R A] [StarRing A] [StarRing R] [StarModule R A]
-    (S : StarSubalgebra R A) [hS : IsMulCommutative S] :
-    IsMulCommutative S.toNonUnitalStarSubalgebra :=
-  hS
+lemma setLike_mul_comm_star {S A : Type*}
+    [Semigroup A] [StarMul A] [SetLike S A] [MulMemClass S A] [StarMemClass S A]
+    {s : S} [hs : IsMulCommutative s] ⦃a b : A⦄ (ha : a ∈ s) (hb : b ∈ s) :
+    a * star b = star b * a :=
+  setLike_mul_comm ha (star_mem hb)
 
 @[to_additive]
 instance Subsemigroup.instIsMulCommutativeTopologicalClosure {A : Type*}
     [TopologicalSpace A] [Semigroup A] [ContinuousMul A] [T2Space A]
     (s : Subsemigroup A) [hs : IsMulCommutative s] :
     IsMulCommutative s.topologicalClosure :=
-  let := s.commSemigroupTopologicalClosure hs.mul_comm
+  let := s.commSemigroupTopologicalClosure mul_comm'
   ⟨⟨mul_comm⟩⟩
 
 @[to_additive]
@@ -78,35 +27,35 @@ instance Submonoid.instIsMulCommutativeTopologicalClosure {A : Type*}
     [TopologicalSpace A] [Monoid A] [ContinuousMul A] [T2Space A]
     (s : Submonoid A) [hs : IsMulCommutative s] :
     IsMulCommutative s.topologicalClosure :=
-  let := s.commMonoidTopologicalClosure hs.mul_comm
+  let := s.commMonoidTopologicalClosure mul_comm'
   ⟨⟨mul_comm⟩⟩
 
 instance NonUnitalSubsemiring.instIsMulCommutativeTopologicalClosure {A : Type*}
     [TopologicalSpace A] [NonUnitalSemiring A] [IsTopologicalSemiring A] [T2Space A]
     (s : NonUnitalSubsemiring A) [hs : IsMulCommutative s] :
     IsMulCommutative s.topologicalClosure :=
-  let := s.nonUnitalCommSemiringTopologicalClosure hs.mul_comm
+  let := s.nonUnitalCommSemiringTopologicalClosure mul_comm'
   ⟨⟨mul_comm⟩⟩
 
 instance Subsemiring.instIsMulCommutativeTopologicalClosure {A : Type*}
     [TopologicalSpace A] [Semiring A] [IsTopologicalSemiring A] [T2Space A]
     (s : Subsemiring A) [hs : IsMulCommutative s] :
     IsMulCommutative s.topologicalClosure :=
-  let := s.commSemiringTopologicalClosure hs.mul_comm
+  let := s.commSemiringTopologicalClosure mul_comm'
   ⟨⟨mul_comm⟩⟩
 
 instance NonUnitalSubring.instIsMulCommutativeTopologicalClosure {A : Type*}
     [TopologicalSpace A] [NonUnitalRing A] [IsTopologicalRing A] [T2Space A]
     (s : NonUnitalSubring A) [hs : IsMulCommutative s] :
     IsMulCommutative s.topologicalClosure :=
-  let := s.nonUnitalCommRingTopologicalClosure hs.mul_comm
+  let := s.nonUnitalCommRingTopologicalClosure mul_comm'
   ⟨⟨mul_comm⟩⟩
 
 instance Subring.instIsMulCommutativeTopologicalClosure {A : Type*}
     [TopologicalSpace A] [Ring A] [IsTopologicalRing A] [T2Space A]
     (s : Subring A) [hs : IsMulCommutative s] :
     IsMulCommutative s.topologicalClosure :=
-  let := s.commRingTopologicalClosure hs.mul_comm
+  let := s.commRingTopologicalClosure mul_comm'
   ⟨⟨mul_comm⟩⟩
 
 instance NonUnitalStarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
@@ -114,7 +63,7 @@ instance NonUnitalStarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : T
     [IsTopologicalSemiring A] [ContinuousStar A] [ContinuousConstSMul R A] [T2Space A]
     (s : NonUnitalStarSubalgebra R A) [hs : IsMulCommutative s] :
     IsMulCommutative s.topologicalClosure :=
-  let := s.nonUnitalCommSemiringTopologicalClosure hs.mul_comm
+  let := s.nonUnitalCommSemiringTopologicalClosure mul_comm'
   ⟨⟨mul_comm⟩⟩
 
 instance NonUnitalSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
@@ -122,7 +71,7 @@ instance NonUnitalSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*
     [IsTopologicalSemiring A] [ContinuousConstSMul R A] [T2Space A]
     (s : NonUnitalSubalgebra R A) [hs : IsMulCommutative s] :
     IsMulCommutative s.topologicalClosure :=
-  let := s.nonUnitalCommSemiringTopologicalClosure hs.mul_comm
+  let := s.nonUnitalCommSemiringTopologicalClosure mul_comm'
   ⟨⟨mul_comm⟩⟩
 
 instance Subalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
@@ -130,7 +79,7 @@ instance Subalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
     [IsTopologicalSemiring A] [T2Space A]
     (s : Subalgebra R A) [hs : IsMulCommutative s] :
     IsMulCommutative s.topologicalClosure :=
-  let := s.commSemiringTopologicalClosure hs.mul_comm
+  let := s.commSemiringTopologicalClosure mul_comm'
   ⟨⟨mul_comm⟩⟩
 
 instance StarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
@@ -138,7 +87,7 @@ instance StarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
     [StarModule R A] [IsTopologicalSemiring A] [ContinuousStar A]
     [T2Space A] (s : StarSubalgebra R A) [hs : IsMulCommutative s] :
     IsMulCommutative s.topologicalClosure :=
-  let := s.commSemiringTopologicalClosure hs.mul_comm
+  let := s.commSemiringTopologicalClosure mul_comm'
   ⟨⟨mul_comm⟩⟩
 
 @[to_additive]
@@ -150,7 +99,7 @@ theorem Subsemigroup.isMulCommutative_iSup {A : Type*} [Semigroup A] {ι : Type*
     SetLike.mem_coe, forall_exists_index]
   intro a i ha b j hb
   obtain ⟨k, hik, hjk⟩ := dir i j
-  exact (hS k).setLike_mul_comm a (hik ha) b (hjk hb)
+  exact setLike_mul_comm (hik ha) (hjk hb)
 
 @[to_additive]
 theorem Subgroup.isMulCommutative_iSup {A : Type*} [Group A] {ι : Type*} [Nonempty ι]
@@ -175,7 +124,7 @@ theorem NonUnitalSubsemiring.isMulCommutative_iSup {A : Type*} [NonUnitalSemirin
     SetLike.mem_coe, forall_exists_index]
   intro a i ha b j hb
   obtain ⟨k, hik, hjk⟩ := dir i j
-  exact (hS k).setLike_mul_comm a (hik ha) b (hjk hb)
+  exact setLike_mul_comm (hik ha) (hjk hb)
 
 theorem Subsemiring.isMulCommutative_iSup {A : Type*} [Semiring A] {ι : Type*} [Nonempty ι]
     {S : ι → Subsemiring A} [hS : ∀ i, IsMulCommutative (S i)]
@@ -328,23 +277,6 @@ variable {R : Type*}
 instance (priority := 100) [Mul R] [Subsingleton R] : IsMulCommutative R where
   is_comm := ⟨fun _ _ ↦ Subsingleton.elim ..⟩
 
-/-- A multiplicative type with commutative multiplication is a commutative multiplicative magma. -/
-scoped instance (priority := 50) [Mul R] [IsMulCommutative R] : CommMagma R where
-  mul_comm := IsMulCommutative.mul_comm inferInstance
-
-/-- A nonunital semiring with commutative multiplication is a commutative non-unital semiring. -/
-scoped instance (priority := 50) [NonUnitalSemiring R] [IsMulCommutative R] :
-    NonUnitalCommSemiring R where
-
-/-- A semiring with commutative multiplication is a commutative semiring. -/
-scoped instance (priority := 50) [Semiring R] [IsMulCommutative R] : CommSemiring R where
-
-/-- A nonunital ring with commutative multiplication is a commutative nonunital ring. -/
-scoped instance (priority := 50) [NonUnitalRing R] [IsMulCommutative R] : NonUnitalCommRing R where
-
-/-- A ring with commutative multiplication is a commutative ring. -/
-scoped instance (priority := 50) [Ring R] [IsMulCommutative R] : CommRing R where
-
 /-- A nonunital seminiormed ring with commutative multiplication is a commutative nonunital
 seminormed ring. -/
 scoped instance (priority := 50) [NonUnitalSeminormedRing R] [IsMulCommutative R] :
@@ -411,6 +343,25 @@ theorem NonUnitalStarSubalgebra.exists_le_isMasa (B : NonUnitalStarSubalgebra R 
   have hC' := C.prop.1
   exact ⟨fun S hS hCS ↦ @hC ⟨S, hS, C.prop.2.trans hCS⟩ hCS⟩
 
+attribute [grind →] Commute.eq star_comm_self
+
+open NonUnitalStarAlgebra in
+/-- A normal element which commutes with every element of a masa is itself in the masa. -/
+theorem NonUnitalStarSubalgebra.IsMasa.mem_of_commute (B : NonUnitalStarSubalgebra R A)
+    [hB : IsMasa B] {x : A} [IsStarNormal x] (hx : ∀ y ∈ B, Commute x y) : x ∈ B := by
+  let S : NonUnitalStarSubalgebra R A := adjoin R ({x} ∪ B)
+  suffices IsMulCommutative S by
+    replace hx : x ∈ S := subset_adjoin R _ <| by simp
+    exact hB.maximal S (fun y hy ↦ subset_adjoin R _ (by aesop)) hx
+  have hx₀ : star x * x = x * star x := star_comm_self' x
+  have hx₁ : ∀ y : B, Commute x (star y) := by
+    rw [star_involutive.surjective.forall]; simpa using hx
+  have hx₂ : ∀ y : B, Commute (star x) y := by simpa [commute_star_comm] using hx₁
+  have hB₀ := setLike_mul_comm (s := B)
+  have hB₁ := setLike_mul_comm_star (s := B)
+  refine isMulCommutative_adjoin R ?_ ?_
+  all_goals simp [commute_iff_eq] at *; grind
+
 end NonUnitalStarSubalgebra
 
 section TopologicalAlgebra
@@ -444,11 +395,16 @@ instance StarSubalgebra.IsMasa.instIsMulCommutative {B : StarSubalgebra R A} [hB
     IsMulCommutative B :=
   hB.toIsMulCommutative
 
+open scoped IsMulCommutative in
 /-- If `B` is a (non-unital) masa in a unital star algebra, then `1 ∈ B`, so that `B` is,
 in fact, unital. -/
 protected lemma NonUnitalStarSubalgebra.IsMasa.one_mem (B : NonUnitalStarSubalgebra R A)
     [hB : B.IsMasa] : (1 : A) ∈ B :=
   letI C := (StarAlgebra.adjoin R (B : Set A)).toNonUnitalStarSubalgebra
+  have : IsMulCommutative (StarAlgebra.adjoin R (B : Set A)) := inferInstance -- I don't like
+  -- that this is necessary, maybe we need those instances that I had before and I should reopen
+  -- the PR.
+  have : IsMulCommutative C := by unfold C; infer_instance
   have : B ≤ C := fun _a ha ↦ StarAlgebra.subset_adjoin R (B : Set A) ha
   hB.maximal C this (one_mem (StarAlgebra.adjoin R (B : Set A)))
 
@@ -472,6 +428,12 @@ lemma StarSubalgebra.exists_le_isMasa (B : StarSubalgebra R A) [hB : IsMulCommut
     ∃ (C : StarSubalgebra R A), B ≤ C ∧ C.IsMasa :=
   have ⟨C, hC⟩ := B.toNonUnitalStarSubalgebra.exists_le_isMasa
   ⟨C.toStarSubalgebra hC.2.one_mem, hC⟩
+
+/-- A normal element which commutes with every element of a masa is itself in the masa. -/
+theorem StarSubalgebra.IsMasa.mem_of_commute (B : StarSubalgebra R A)
+    [hB : IsMasa B] {x : A} [IsStarNormal x] (hx : ∀ y ∈ B, Commute x y) : x ∈ B := by
+  rw [← mem_toNonUnitalStarSubalgebra]
+  exact NonUnitalStarSubalgebra.IsMasa.mem_of_commute B.toNonUnitalStarSubalgebra hx
 
 /-- A masa in a topological star algebra is closed. -/
 instance StarSubalgebra.IsMasa.isClosed [TopologicalSpace A] [IsTopologicalSemiring A]
