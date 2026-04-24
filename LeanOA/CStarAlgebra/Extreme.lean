@@ -4,6 +4,7 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import Mathlib.Analysis.Convex.Extreme
+import Mathlib.Analysis.Convex.Strict.Extreme
 import Mathlib.Analysis.CStarAlgebra.Unitary.Maps
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 
@@ -42,22 +43,6 @@ In particular, we show that in a C⋆-algebra :
 -/
 
 open Set Metric CFC CStarAlgebra Unitization
-
--- move to...?
-@[simp]
-lemma Set.extremePoints_Icc {a b : ℝ} (hab : a ≤ b) :
-    Set.extremePoints ℝ (Icc a b) = {a, b} := by
-  ext x
-  rw [convex_Icc .. |>.mem_extremePoints_iff_convex_diff]
-  constructor
-  · intro ⟨h₁, h₂⟩
-    suffices x ∉ Ioo a b by grind
-    intro hx
-    have := h₂.isPreconnected.Icc_subset (a := a) (b := b) (by grind) (by grind)
-    grind
-  · rintro (rfl | rfl)
-    · simpa using ⟨hab, convex_Ioc ..⟩
-    · simpa using ⟨hab, convex_Ico ..⟩
 
 open scoped ComplexStarModule in
 lemma CStarAlgebra.one_mem_extremePoints_unitClosedBall {A : Type*} [CStarAlgebra A] :
