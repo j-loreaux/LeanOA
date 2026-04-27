@@ -96,11 +96,8 @@ theorem continuousAdd [ContinuousAdd 𝕜] : ContinuousAdd E := by
   let t₁ : TopologicalSpace E := .induced (B · ·) Pi.topologicalSpace
   have : B.IsWeak := ⟨rfl⟩
   refine ⟨continuous_induced_rng.2 ?_⟩
-  refine
-    cast (congr_arg _ ?_)
-      (((coeFn_continuous B).comp continuous_fst).add ((coeFn_continuous B).comp continuous_snd))
-  ext
-  simp only [Function.comp_apply, Pi.add_apply, map_add, LinearMap.add_apply]
+  simp only [Function.comp_def, map_add, add_apply]
+  fun_prop
 
 include hB in
 /-- Scalar multiplication in `E` is continuous when `E` is equipped with a `LinearMap.IsWeak`
@@ -110,9 +107,8 @@ theorem continuousSMul [ContinuousSMul 𝕜 𝕜] : ContinuousSMul 𝕜 E := by
   let t₁ : TopologicalSpace E := .induced (B · ·) Pi.topologicalSpace
   have : B.IsWeak := ⟨rfl⟩
   refine ⟨continuous_induced_rng.2 ?_⟩
-  refine cast (congr_arg _ ?_) (continuous_fst.smul ((coeFn_continuous B).comp continuous_snd))
-  ext
-  simp only [Function.comp_apply, Pi.smul_apply, map_smulₛₗ, RingHom.id_apply, LinearMap.smul_apply]
+  simp only [Function.comp_def, map_smul, smul_apply]
+  fun_prop
 
 /-- `E` is a `IsTopologicalAddGroup` when `E` is equipped with a `LinearMap.IsWeak` topology. -/
 theorem isTopologicalAddGroup {𝕜 E F : Type*} [CommRing 𝕜] [TopologicalSpace 𝕜]
@@ -124,14 +120,13 @@ theorem isTopologicalAddGroup {𝕜 E F : Type*} [CommRing 𝕜] [TopologicalSpa
     let t₁ : TopologicalSpace E := .induced (B · ·) Pi.topologicalSpace
     have : B.IsWeak := ⟨rfl⟩
     refine continuous_induced_rng.2 (continuous_pi_iff.mpr fun y => ?_)
-    refine cast (congr_arg _ ?_) (continuous_eval B (-y))
-    ext x
-    simp only [map_neg, Function.comp_apply, LinearMap.neg_apply]
+    simp_rw [Function.comp_apply, map_neg, neg_apply, ← map_neg (B _)]
+    fun_prop
 
 variable [ContinuousAdd 𝕜] [ContinuousConstSMul 𝕜 𝕜]
 
 open WeakBilin in
-instance : (pairing B).IsWeak where
+instance (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) : (pairing B).IsWeak where
   eq_induced := rfl
 
 instance : (weakDualPairing 𝕜 E).IsWeak where
@@ -141,7 +136,7 @@ instance : (weakSpacePairing 𝕜 E).IsWeak where
   eq_induced := rfl
 
 open WeakBilin in
-instance : (pairing (pairing B.flip).flip).IsWeak :=
+instance (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) : (pairing (pairing B.flip).flip).IsWeak :=
   LinearMap.IsWeak.congr (pairing B) _ (.refl ..) (WeakBilin.linearEquiv 𝕜 B.flip).symm rfl
 
 instance {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]

@@ -606,11 +606,6 @@ def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
 
 end PolarTopology
 
-def weakDualPairing (𝕜 E : Type*) [CommSemiring 𝕜] [TopologicalSpace 𝕜] [AddCommMonoid E]
-    [Module 𝕜 E] [TopologicalSpace E] [ContinuousAdd 𝕜] [ContinuousConstSMul 𝕜 𝕜] :
-    WeakDual 𝕜 E →ₗ[𝕜] E →ₗ[𝕜] 𝕜 :=
-  StrongDual.toWeakDual.arrowCongr (.refl _ _) (topDualPairing 𝕜 E)
-
 open scoped ComplexOrder
 
 abbrev MackeyBilin := PolarTopology B {s | IsCompact s ∧ AbsConvex 𝕜 s}
