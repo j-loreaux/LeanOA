@@ -85,23 +85,31 @@ section Banach_Alaoglu
 open WeakBilin Topology in
 theorem IsCompatible.isCompact_polar {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E]
     [Module 𝕜 E] [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F] [IsTopologicalAddGroup E]
-    [ContinuousSMul 𝕜 E] [ProperSpace 𝕜] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible]
-    {s : Set E} (s_nhds : s ∈ 𝓝 0) :
-    IsCompact ((pairing B.flip).flip.polar s) := by
-  have := WeakDual.isCompact_polar' 𝕜 s_nhds |>.image h.weakDualCLE.symm.continuous
+    [ContinuousSMul 𝕜 E] [ProperSpace 𝕜] [TopologicalSpace F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+    [h : B.IsCompatible] [hB : B.flip.IsWeak] {s : Set E} (s_nhds : s ∈ 𝓝 0) :
+    IsCompact (B.polar s) := by
+  have := WeakDual.isCompact_polar' 𝕜 s_nhds |>.image h.weakDualCLE'.symm.continuous
   rw [ContinuousLinearEquiv.image_eq_preimage_symm] at this
   exact this
 
+instance {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E]
+    [Module 𝕜 E] [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+    [B.IsCompatible] :
+    LinearMap.IsCompatible (pairing B.flip).flip :=
+  WeakBilin.linearEquiv 𝕜 B.flip ≪≫ₗ LinearMap.IsCompatible.equiv B |>.isCompatible _ rfl
+
 --- there's a proof of this that doesn't use compactness (hence properness of `𝕜`) using the fact
 --- that a set is von Neumann bounded if and only if its polar is absorbent.
-lemma IsCompatible.isVonNBounded_polar {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
+open WeakBilin Topology in
+theorem IsCompatible.isVonNBounded_polar {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
     [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F]
-    [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [ProperSpace 𝕜] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
-    [hB : B.IsCompatible] {s : Set E} (hs : s ∈ 𝓝 0) :
-    IsVonNBounded 𝕜 ((pairing B.flip).flip.polar s) := by
-  rw [WeakBilin.isVonNBounded_iff_bddAbove]
-  exact fun x ↦ hB.isCompact_polar _ hs |>.bddAbove_image
-    (eval_continuous B.flip x).norm.continuousOn
+    [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [ProperSpace 𝕜] [TopologicalSpace F]
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible] [hB : B.flip.IsWeak]
+    {s : Set E} (s_nhds : s ∈ 𝓝 0) :
+    IsVonNBounded 𝕜 (B.polar s) := by
+  rw [LinearMap.IsWeak.isVonNBounded_iff_bddAbove B.flip]
+  exact fun x ↦ h.isCompact_polar _ s_nhds |>.bddAbove_image
+    (LinearMap.IsWeak.continuous_eval B.flip x).norm.continuousOn
 
 end Banach_Alaoglu
 
@@ -120,20 +128,20 @@ set_option linter.unusedVariables false in
 is induced by `B` when we equip `F → 𝕜` with the topology of uniform convergence on the collection
 of sets `𝔖 : Set (Set F))`. -/
 @[nolint unusedArguments]
-def PolarTopology (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set (WeakBilin B.flip))) := E
+def PolarTopology (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set F)) := E
 deriving AddCommGroup
 
 instance {𝕝 : Type*} [CommRing 𝕝] [Module 𝕝 E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
-    (𝔖 : Set (Set (WeakBilin B.flip))) :
+    (𝔖 : Set (Set F)) :
     Module 𝕝 (PolarTopology B 𝔖) :=
   inferInstanceAs (Module 𝕝 E)
 
 instance {𝕝 : Type*} [CommRing 𝕝] [Module 𝕝 E] [SMul 𝕝 𝕜] [IsScalarTower 𝕝 𝕜 E]
-    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set (WeakBilin B.flip))) :
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set F)) :
     IsScalarTower 𝕝 𝕜 (PolarTopology B 𝔖) :=
   inferInstanceAs (IsScalarTower 𝕝 𝕜 E)
 
-variable (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set (WeakBilin B.flip)))
+variable (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set F))
 
 namespace PolarTopology
 
@@ -167,17 +175,30 @@ lemma _root_.LinearMap.coe_toCLMRight [TopologicalSpace F] (hB : ∀ x, Continuo
   congrm($(B.coeLM_toCLMRight_apply hB x))
 
 variable {B 𝔖} in
-/-- The linear map from `PolarTopology B 𝔖` into the space of continuous linear maps on
-`F` (where `F` is equipped with the weak topology induced by `B.flip`) equipped with the topology
-of uniform convergence on `𝔖 : Set (Set (WeakBilin B.flip))`. -/
-noncomputable def toUniformConvergenceCLM :
-    PolarTopology B 𝔖 →ₗ[𝕜] WeakBilin B.flip →Lᵤ[𝕜, 𝔖] 𝕜 :=
-  linearEquiv.symm.arrowCongr (ContinuousLinearMap.toUniformConvergenceCLM ..) <|
-    (pairing B.flip).flip.toCLMRight (eval_continuous B.flip)
+def toUniformOnFun : PolarTopology B 𝔖 →ₗ[𝕜] F →ᵤ[𝔖] 𝕜 :=
+  linearEquiv.symm.arrowCongr (UniformOnFun.toFunLinearEquiv 𝔖).symm <|
+    (LinearMap.ltoFun 𝕜 F 𝕜 𝕜).compRight 𝕜 B
 
 variable {B 𝔖} in
 @[simp]
-lemma toUniformConvergenceCLM_apply_apply (x : PolarTopology B 𝔖) (y : WeakBilin B.flip) :
+lemma toUniformOnFun_apply (x : PolarTopology B 𝔖) :
+    toUniformOnFun x = UniformOnFun.ofFun 𝔖 (B x) := by
+  rfl
+
+variable {B 𝔖} in
+/-- The linear map from `PolarTopology B 𝔖` into the space of continuous linear maps on
+`F` (where `F` is equipped with the weak topology induced by `B.flip`) equipped with the topology
+of uniform convergence on `𝔖 : Set (Set F)`. -/
+noncomputable def toUniformConvergenceCLM [TopologicalSpace F] [B.flip.IsWeak] :
+    PolarTopology B 𝔖 →ₗ[𝕜] F →Lᵤ[𝕜, 𝔖] 𝕜 :=
+  linearEquiv.symm.arrowCongr (ContinuousLinearMap.toUniformConvergenceCLM ..) <|
+    B.toCLMRight (LinearMap.IsWeak.continuous_eval B.flip)
+
+variable [TopologicalSpace F] [B.flip.IsWeak]
+
+variable {B 𝔖} in
+@[simp]
+lemma toUniformConvergenceCLM_apply_apply (x : PolarTopology B 𝔖) (y : F) :
     toUniformConvergenceCLM x y = B x y := by
   simp [toUniformConvergenceCLM]
   rfl -- gross
@@ -211,30 +232,19 @@ lemma isUniformEmbedding_toUniformConvergenceCLM (hB : B.SeparatingLeft) :
     · rintro rfl; exact map_zero _
 
 --- this is a bit of a weird statement, but it also exists for `UniformConvergenceCLM`.
-lemma uniformSpace_mono (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 𝔗 : Set (Set (WeakBilin B.flip))) (h𝔖𝔗 : 𝔖 ⊆ 𝔗) :
+lemma uniformSpace_mono (𝔖 𝔗 : Set (Set F)) (h𝔖𝔗 : 𝔖 ⊆ 𝔗) :
     instUniformSpace B 𝔗 ≤ instUniformSpace B 𝔖 :=
   UniformSpace.comap_mono <| UniformConvergenceCLM.uniformSpace_mono _ _ h𝔖𝔗
 
 --- this is a bit of a weird statement, but it also exists for `UniformConvergenceCLM`.
-lemma topologicalSpace_mono (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 𝔗 : Set (Set (WeakBilin B.flip)))
+lemma topologicalSpace_mono (𝔖 𝔗 : Set (Set F))
     (h𝔖𝔗 : 𝔖 ⊆ 𝔗) :
     instTopologicalSpace B 𝔗 ≤ instTopologicalSpace B 𝔖 :=
   induced_mono <| UniformConvergenceCLM.topologicalSpace_mono _ _ h𝔖𝔗
 
-lemma continuous_mono (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 𝔗 : Set (Set (WeakBilin B.flip))) (h𝔖𝔗 : 𝔖 ⊆ 𝔗) :
+lemma continuous_mono (𝔖 𝔗 : Set (Set F)) (h𝔖𝔗 : 𝔖 ⊆ 𝔗) :
     Continuous ((linearEquiv (B := B) (𝔖 := 𝔗)).trans (linearEquiv (B := B) (𝔖 := 𝔖)).symm) :=
   continuous_id_of_le (topologicalSpace_mono B 𝔖 𝔗 h𝔖𝔗)
-
-variable {B 𝔖} in
-def toUniformOnFun : PolarTopology B 𝔖 →ₗ[𝕜] F →ᵤ[𝔖] 𝕜 :=
-  linearEquiv.symm.arrowCongr (UniformOnFun.toFunLinearEquiv 𝔖).symm <|
-    (LinearMap.ltoFun 𝕜 F 𝕜 𝕜).compRight 𝕜 B
-
-variable {B 𝔖} in
-@[simp]
-lemma toUniformOnFun_apply (x : PolarTopology B 𝔖) :
-    toUniformOnFun x = UniformOnFun.ofFun 𝔖 (B x) := by
-  rfl
 
 lemma isUniformInducing_toUniformOnFun :
     IsUniformInducing (toUniformOnFun (B := B) (𝔖 := 𝔖)) := by
@@ -294,31 +304,29 @@ lemma isBounded_pairing_flip_flip_of_isCompact (s : Set (WeakBilin B.flip)) (hs 
 variable (B 𝔖) in
 /-- The seminorm on `PolarTopology B 𝔖` by taking for `x : E` the supremum of the values of
 `B x y` over all `y ∈ s`, where `s ∈ 𝔖`. -/
-noncomputable def seminorm (s : Set (WeakBilin B.flip)) (hs : IsVonNBounded 𝕜 s) :
+noncomputable def seminorm (s : Set F) (hs : IsVonNBounded 𝕜 s) :
     Seminorm 𝕜 (PolarTopology B 𝔖) where
-  toFun x := sSup ((‖(pairing B.flip).flip (linearEquiv x) ·‖) '' s)
+  toFun x := sSup ((‖B (linearEquiv x) ·‖) '' s)
   map_zero' := by simp [sSup_image']
   add_le' x₁ x₂ := by
     simp only [sSup_image']
     obtain (h | h) := isEmpty_or_nonempty s
     · simp
-    rw [WeakBilin.isVonNBounded_iff_bddAbove] at hs
+    rw [LinearMap.IsWeak.isVonNBounded_iff_bddAbove B.flip, LinearMap.flip_flip] at hs
     rw [ciSup_set_le_iff .of_subtype (hs (linearEquiv (x₁ + x₂)))]
     simp only [map_add, LinearMap.add_apply]
     intro y hy
     lift y to s using hy
     apply norm_add_le _ _ |>.trans <| add_le_add ?_ ?_
     · apply le_ciSup ?_ y
-      simpa [Set.range_comp' (fun y : WeakBilin B.flip ↦ ‖pairing B.flip y (linearEquiv x₁)‖)]
-        using hs (linearEquiv x₁)
+      simpa [Set.range_comp' (fun y : F ↦ ‖B (linearEquiv x₁) y‖)] using hs (linearEquiv x₁)
     · apply le_ciSup ?_ y
-      simpa [Set.range_comp' (fun y : WeakBilin B.flip ↦ ‖pairing B.flip y (linearEquiv x₂)‖)]
-        using hs (linearEquiv x₂)
+      simpa [Set.range_comp' (fun y : F ↦ ‖B (linearEquiv x₂) y‖)] using hs (linearEquiv x₂)
   neg' := by simp
   smul' := by simp [sSup_image', Real.mul_iSup_of_nonneg (norm_nonneg _)]
 
-lemma seminorm_apply (s : Set (WeakBilin B.flip)) (hs : IsVonNBounded 𝕜 s) (x : PolarTopology B 𝔖) :
-    seminorm B 𝔖 s hs x = sSup ((‖(pairing B.flip).flip (linearEquiv x) ·‖) '' s) := by
+lemma seminorm_apply (s : Set F) (hs : IsVonNBounded 𝕜 s) (x : PolarTopology B 𝔖) :
+    seminorm B 𝔖 s hs x = sSup ((‖B (linearEquiv x) ·‖) '' s) := by
   rfl
 
 alias _root_.Bornology.IsVonNBounded.empty := Bornology.isVonNBounded_empty
@@ -334,23 +342,23 @@ lemma _root_.Real.sSup_image_nonneg {α : Type*} {f : α → ℝ} {s : Set α} (
   rintro - ⟨x, hx, rfl⟩
   exact h x hx
 
-lemma isLUB_seminorm {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
+lemma isLUB_seminorm {s : Set F} (hs : IsVonNBounded 𝕜 s)
     (hs_non : s.Nonempty) (x : PolarTopology B 𝔖) :
-    IsLUB ((‖(pairing B.flip).flip (linearEquiv x) ·‖) '' s) (seminorm B 𝔖 s hs x) :=
-  isLUB_csSup (hs_non.image _) (WeakBilin.isVonNBounded_iff_bddAbove.mp hs _)
+    IsLUB ((‖B (linearEquiv x) ·‖) '' s) (seminorm B 𝔖 s hs x) :=
+  isLUB_csSup (hs_non.image _) (LinearMap.IsWeak.isVonNBounded_iff_bddAbove B.flip |>.mp hs _)
 
-lemma seminorm_apply_le_iff {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
+lemma seminorm_apply_le_iff {s : Set F} (hs : IsVonNBounded 𝕜 s)
     {r : ℝ} (hr : 0 ≤ r) (x : PolarTopology B 𝔖) :
-    seminorm B 𝔖 s hs x ≤ r ↔ ∀ y ∈ s, ‖(pairing B.flip).flip (linearEquiv x) y‖ ≤ r := by
+    seminorm B 𝔖 s hs x ≤ r ↔ ∀ y ∈ s, ‖B (linearEquiv x) y‖ ≤ r := by
   obtain (rfl | hs_non) := s.eq_empty_or_nonempty; · simpa
   simpa [mem_upperBounds] using isLUB_le_iff (b := r) <| isLUB_seminorm hs hs_non x
 
-lemma seminorm_apply_le {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
+lemma seminorm_apply_le {s : Set F} (hs : IsVonNBounded 𝕜 s)
     (x : PolarTopology B 𝔖) {y : WeakBilin B.flip} (hy : y ∈ s) :
-    ‖(pairing B.flip).flip (linearEquiv x) y‖ ≤ seminorm B 𝔖 s hs x  :=
+    ‖B (linearEquiv x) y‖ ≤ seminorm B 𝔖 s hs x  :=
   seminorm_apply_le_iff hs (apply_nonneg _ _) x |>.mp le_rfl y hy
 
-lemma seminorm_le_of_subset {s t : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
+lemma seminorm_le_of_subset {s t : Set F} (hs : IsVonNBounded 𝕜 s)
     (ht : IsVonNBounded 𝕜 t) (hst : s ⊆ t) :
     seminorm B 𝔖 s hs ≤ seminorm B 𝔖 t ht := by
   intro x
@@ -358,8 +366,7 @@ lemma seminorm_le_of_subset {s t : Set (WeakBilin B.flip)} (hs : IsVonNBounded �
   rw [seminorm_apply_le_iff hs (apply_nonneg _ _)]
   exact fun y hy ↦ seminorm_apply_le ht x (hst hy)
 
-lemma seminorm_union {s t : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
-      (ht : IsVonNBounded 𝕜 t) :
+lemma seminorm_union {s t : Set F} (hs : IsVonNBounded 𝕜 s) (ht : IsVonNBounded 𝕜 t) :
     seminorm B 𝔖 (s ∪ t) (hs.union ht) = seminorm B 𝔖 s hs ⊔ seminorm B 𝔖 t ht := by
   ext
   obtain (rfl | hs_non) := s.eq_empty_or_nonempty; · simp
@@ -367,7 +374,7 @@ lemma seminorm_union {s t : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s)
   exact isLUB_seminorm (hs.union ht) hs_non.inl _ |>.unique <|
     (Set.image_union ..) ▸ (isLUB_seminorm hs hs_non _).union (isLUB_seminorm ht ht_non _)
 
-lemma seminorm_finite_sUnion {s : Set (Set (WeakBilin B.flip))} (hs : s.Finite)
+lemma seminorm_finite_sUnion {s : Set (Set F)} (hs : s.Finite)
    (hsbdd : ∀ t ∈ s, Bornology.IsVonNBounded 𝕜 t) :
     seminorm B 𝔖 (⋃₀ s) ((isVonNBounded_sUnion hs).mpr hsbdd) =
       iSup (fun (i : {t // t ∈ s}) ↦ seminorm B 𝔖 i.1 (hsbdd i.1 i.2)) := by
@@ -397,7 +404,7 @@ lemma seminorm_finite_sUnion {s : Set (Set (WeakBilin B.flip))} (hs : s.Finite)
       exact range_nonempty_iff_nonempty.mpr h_nonempty
 
 lemma continuous_seminorm (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
-      (s : Set (WeakBilin B.flip)) (hs_mem : s ∈ 𝔖) (hs : IsVonNBounded 𝕜 s) :
+      (s : Set F) (hs_mem : s ∈ 𝔖) (hs : IsVonNBounded 𝕜 s) :
     Continuous (seminorm B 𝔖 s hs) := by
   have := UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
     (RingHom.id 𝕜) 𝕜 𝔖 h𝔖_non h𝔖_dir Metric.nhds_basis_closedBall
@@ -464,22 +471,22 @@ lemma withSeminorms (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ 
     exact continuous_seminorm h𝔖_non h𝔖_dir s.1 s.2 (h𝔖 _ s.2)
 
 variable (B 𝔖) in
-abbrev bilin : WeakBilin B.flip →ₗ[𝕜] PolarTopology B 𝔖 →ₗ[𝕜] 𝕜 :=
-  linearEquiv.symm.arrowCongr (.refl _ _) (pairing B.flip).flip |>.flip
+abbrev bilin : F →ₗ[𝕜] PolarTopology B 𝔖 →ₗ[𝕜] 𝕜 :=
+  linearEquiv.symm.arrowCongr (.refl _ _) B |>.flip
 
-lemma bilin_apply_apply (y : WeakBilin B.flip) (x : PolarTopology B 𝔖) :
-    bilin B 𝔖 y x = B (linearEquiv x) (WeakBilin.linearEquiv 𝕜 B.flip y) := by
+lemma bilin_apply_apply (y : F) (x : PolarTopology B 𝔖) :
+    bilin B 𝔖 y x = B (linearEquiv x) y := by
   rfl
 
-lemma unitClosedBall_seminorm_eq_polar {s : Set (WeakBilin B.flip)} (hs : IsVonNBounded 𝕜 s) :
+lemma unitClosedBall_seminorm_eq_polar {s : Set F} (hs : IsVonNBounded 𝕜 s) :
     (seminorm B 𝔖 s hs).closedBall 0 1 = (bilin B 𝔖).polar s := by
   ext y
   simpa [LinearMap.polar_mem_iff] using seminorm_apply_le_iff hs zero_le_one y
 
 lemma polar_mem_nhds (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
-    (s : Set (WeakBilin B.flip)) (hs_mem : s ∈ 𝔖) (hs : IsVonNBounded 𝕜 s) :
+    (s : Set F) (hs_mem : s ∈ 𝔖) (hs : IsVonNBounded 𝕜 s) :
     (bilin B 𝔖).polar s ∈ 𝓝 (0 : PolarTopology B 𝔖) := by
-  have h_cont := continuous_seminorm h𝔖_non h𝔖_dir s hs_mem hs |>.tendsto 0
+  have h_cont := continuous_seminorm (B := B) h𝔖_non h𝔖_dir s hs_mem hs |>.tendsto 0
   have h_mem := map_zero (seminorm B 𝔖 s hs) ▸ Metric.closedBall_mem_nhds (0 : ℝ) zero_lt_one
   simpa [← Seminorm.closedBall_zero_eq_preimage_closedBall, unitClosedBall_seminorm_eq_polar]
     using h_cont h_mem
@@ -519,8 +526,8 @@ instance [Module ℝ E] [h : IsScalarTower ℝ 𝕜 E] (h𝔖_non : 𝔖.Nonempt
 -- It might make it easier to apply the bipolar theorem later.
 variable (B) in
 /-- The collection of polars of neighborhoods of zero. -/
-def nhdsPolars [TopologicalSpace E] : Set (Set (WeakBilin B.flip)) :=
-  (pairing B.flip).flip.polar '' (𝓝 0).sets
+def nhdsPolars [TopologicalSpace E] : Set (Set F) :=
+  B.polar '' (𝓝 0).sets
 
 lemma nonempty_nhdsPolars [TopologicalSpace E] : (nhdsPolars B).Nonempty :=
   Set.Nonempty.image _ ⟨univ, univ_mem⟩
@@ -531,16 +538,15 @@ lemma directedOn_nhdsPolars [TopologicalSpace E] : DirectedOn (· ⊆ ·) (nhdsP
   all_goals exact LinearMap.polar_antitone _ <| by simp
 
 lemma nhdsPolars_mem_iff [TopologicalSpace E] {s : Set F} :
-    s ∈ nhdsPolars B ↔ ∃ u ∈ 𝓝 0, (pairing B.flip).flip.polar u = s :=
+    s ∈ nhdsPolars B ↔ ∃ u ∈ 𝓝 0, B.polar u = s :=
   Eq.to_iff rfl
 
 lemma polar_mem_nhdsPolars [TopologicalSpace E] {s : Set E} (hs : s ∈ 𝓝 0) :
-    (pairing B.flip).flip.polar s ∈ nhdsPolars B :=
+    B.polar s ∈ nhdsPolars B :=
   ⟨s, hs, rfl⟩
 
 lemma isVonNBounded_nhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
-    [ContinuousSMul 𝕜 E] [hB : B.IsCompatible]
-    (s : Set (WeakBilin B.flip)) (hs : s ∈ nhdsPolars B) :
+    [ContinuousSMul 𝕜 E] [hB : B.IsCompatible] (s : Set F) (hs : s ∈ nhdsPolars B) :
     IsVonNBounded 𝕜 s := by
   obtain ⟨s, (hs : s ∈ 𝓝 0), rfl⟩ := hs
   exact hB.isVonNBounded_polar _ hs
@@ -561,10 +567,6 @@ lemma continuous_seminorm_comp [TopologicalSpace E] [IsTopologicalAddGroup E]
 
 open LinearMap WithSeminorms
 
-instance [TopologicalSpace E] [B.IsCompatible] :
-    LinearMap.IsCompatible (pairing B.flip).flip :=
-  WeakBilin.linearEquiv 𝕜 B.flip ≪≫ₗ LinearMap.IsCompatible.equiv B |>.isCompatible _ rfl
-
 lemma _root_.closedAbsConvexHull_eq_self {𝕜 E : Type*} [SeminormedRing 𝕜]
     [SMul 𝕜 E] [AddCommMonoid E] [PartialOrder 𝕜] [TopologicalSpace E]
     {s : Set E} (h_conv : AbsConvex 𝕜 s) (h_closed : IsClosed s) :
@@ -576,26 +578,26 @@ lemma _root_.closedAbsConvexHull_eq_self {𝕜 E : Type*} [SeminormedRing 𝕜]
 `PolarTopology B (nhdsPolars B)`. -/
 def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
     [ContinuousSMul 𝕜 E] [hLCS : LocallyConvexSpace 𝕜 E]
-    [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [hB : B.IsCompatible] :
+    [hB : B.IsCompatible] :
     PolarTopology B (nhdsPolars B) ≃L[𝕜] E where
   toLinearEquiv := linearEquiv (B := B) (𝔖 := nhdsPolars B)
   continuous_toFun := by
     simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, LinearEquiv.coe_coe]
-    letI f := (PolarTopology.linearEquiv (𝔖 := nhdsPolars B))
-    letI B₁ := (pairing B.flip).flip
+    letI f := (PolarTopology.linearEquiv (B := B) (𝔖 := nhdsPolars B))
     letI B₂ := bilin B (nhdsPolars B)
     apply continuous_of_tendsto_nhds_zero
     rw [Filter.HasBasis.tendsto_right_iff (LocallyConvexSpace.absConvex_closed_basis_zero 𝕜 E)]
     rintro u ⟨hu_nhd, hu_ac, hu_cl⟩
+    let _ : Module ℝ E := RestrictScalars.module ℝ 𝕜 E
+    let _ : IsScalarTower ℝ 𝕜 E := RestrictScalars.isScalarTower ℝ 𝕜 E
     have hR : LocallyConvexSpace ℝ E := LocallyConvexSpace.to_real 𝕜 E hLCS
-    have : B₂.polar (B₁.polar u) = f ⁻¹' u := by
+    have : B₂.polar (B.polar u) = f ⁻¹' u := by
       nth_rw 2 [← closedAbsConvexHull_eq_self hu_ac hu_cl]
-      have : (B₁).IsCompatible := inferInstance
-      rw [← IsCompatible.flip_polar_polar (Filter.nonempty_of_mem hu_nhd) (B := B₁)]
+      rw [← IsCompatible.flip_polar_polar (Filter.nonempty_of_mem hu_nhd) (B := B)]
       ext; congr!
     simp only [id_eq]
     have foo := polar_mem_nhds (B := B) (𝔖 := nhdsPolars B) nonempty_nhdsPolars
-      directedOn_nhdsPolars (B₁.polar u) ⟨u, hu_nhd, rfl⟩ (hB.isVonNBounded_polar _ hu_nhd)
+      directedOn_nhdsPolars (B.polar u) ⟨u, hu_nhd, rfl⟩ (hB.isVonNBounded_polar _ hu_nhd)
     filter_upwards [foo] with x hx using show x ∈ f ⁻¹' u from this ▸ hx
   continuous_invFun := by
     simp only [LinearEquiv.invFun_eq_symm]
@@ -607,13 +609,56 @@ def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
 end PolarTopology
 
 open scoped ComplexOrder
+open WeakBilin
 
-abbrev MackeyBilin := PolarTopology B {s | IsCompact s ∧ AbsConvex 𝕜 s}
+/-- The Mackey toplogy on a space `E` relative to a bilinear form `B : E →ₗ[𝕜] F →ₗ[𝕜] → 𝕜` is the
+polar topology corresponding to all (weakly) compact absolutely convex sets in `F`. -/
+abbrev MackeyBilin := PolarTopology (pairing B.flip).flip {s | IsCompact s ∧ AbsConvex 𝕜 s}
 
-variable [TopologicalSpace E] --[IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E]
+variable [TopologicalSpace E]
 variable (𝕜 E) in
--- this is almost certainly cursed
-abbrev Mackey :=
-  PolarTopology (topDualPairing 𝕜 E).flip {s : Set (WeakDual 𝕜 E) | IsCompact s ∧ AbsConvex 𝕜 s}
+/-- The Mackey toplogy on a space `E` is the polar topology corresponding to all weak-⋆ compact
+absolutely convex sets in `WeakDual 𝕜 E`. -/
+abbrev Mackey := PolarTopology (weakDualPairing 𝕜 E).flip {s | IsCompact s ∧ AbsConvex 𝕜 s}
+
+variable (𝕜) in
+/-- The identity map from `E` to its type synonym equipped with the Mackey topology. -/
+def toMackey : E ≃ₗ[𝕜] Mackey 𝕜 E := PolarTopology.linearEquiv.symm
+
+/-- The identity map from the type synonrm `Mackey 𝕜 E` back to `E` with its original topology. -/
+def ofMackey : Mackey 𝕜 E ≃ₗ[𝕜] E := PolarTopology.linearEquiv
+
+
+@[simp]
+lemma ofMackey_symm : (ofMackey (𝕜 := 𝕜) (E := E)).symm = toMackey 𝕜 := rfl
+
+@[simp]
+lemma toMackey_symm : (toMackey (𝕜 := 𝕜) (E := E)).symm = ofMackey := rfl
+
+@[simp]
+lemma toMackey_ofMackey (x : Mackey 𝕜 E) : toMackey 𝕜 (ofMackey x) = x := rfl
+
+@[simp]
+lemma ofMackey_toMackey (x : E) : ofMackey (toMackey 𝕜 x) = x := rfl
+
+open PolarTopology in
+/-- Every locally convex topology is weaker than the Mackey topology. -/
+lemma continuous_ofMackey (𝕜 E : Type*) [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [LocallyConvexSpace 𝕜 E] :
+    Continuous (ofMackey : Mackey 𝕜 E → E) := by
+  letI B := weakDualPairing 𝕜 E
+  have hB : B.flip.IsCompatible := WeakDual.toStrongDual.isCompatible (weakDualPairing 𝕜 E).flip
+    (by ext; simp; rfl)
+  refine polarTopologyNhdsPolars (B := B.flip) |>.continuous.comp <|
+    continuous_mono B.flip (nhdsPolars B.flip) {s | IsCompact s ∧ AbsConvex 𝕜 s} ?_
+  rintro - ⟨s, hs, rfl⟩
+  exact ⟨LinearMap.IsCompatible.isCompact_polar B.flip hs, LinearMap.polar_AbsConvex s⟩
+
+/-- The map `⇑ofMackey : Mackey 𝕜 E → E` as a continuous linear map. -/
+def ofMackeyCLM (𝕜 E : Type*) [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
+    [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [LocallyConvexSpace 𝕜 E] :
+    Mackey 𝕜 E →L[𝕜] E where
+  toLinearMap := ofMackey.toLinearMap
+  cont := continuous_ofMackey 𝕜 E
 
 end PolarTopology
