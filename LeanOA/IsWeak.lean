@@ -1,7 +1,9 @@
 import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
 import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
+import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
 import Mathlib.Analysis.LocallyConvex.WeakDual
+import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
 
 open Topology Filter
 
@@ -51,6 +53,10 @@ lemma continuous_of_continuous_eval {α : Type*} [TopologicalSpace α]
     {f : α → E} (hf : ∀ y, Continuous (fun x ↦ B (f x) y)) :
     Continuous f :=
   hB.eq_induced ▸ continuous_induced_rng.mpr (continuous_pi_iff.mpr hf)
+
+/-- The coercion `(fun x y => B x y) : E → (F → 𝕜)` is an embedding. -/
+theorem isInducing : IsInducing (B · ·) where
+  eq_induced := hB.eq_induced
 
 variable {B} in
 /-- The coercion `(fun x y => B x y) : E → (F → 𝕜)` is an embedding. -/
@@ -147,6 +153,20 @@ instance {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
     B'.IsWeak :=
   LinearMap.IsWeak.congr (weakSpacePairing 𝕜 E) _ (.refl ..) hB.equiv.symm rfl
 
+noncomputable
+def _root_.LinearMap.IsCompatible.weakDualCLE' {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
+    [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
+    [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F]
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB' : B.IsCompatible] [hB : B.flip.IsWeak] :
+    F ≃L[𝕜] WeakDual 𝕜 E where
+  toLinearEquiv := hB'.equiv ≪≫ₗ StrongDual.toWeakDual
+  continuous_toFun := by
+    apply WeakDual.continuous_of_continuous_eval fun f ↦ ?_
+    simpa [hB'.equiv_apply_apply] using hB.continuous_eval B.flip f
+  continuous_invFun := by
+    apply hB.continuous_of_continuous_eval _ fun x ↦ ?_
+    simpa [← hB'.equiv_apply_apply] using WeakDual.eval_continuous x
+
 end LinearMap.IsWeak
 
 end Basic
@@ -166,6 +186,24 @@ theorem withSeminorms (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak] :
 theorem hasBasis_nhds_zero (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak] :
     (𝓝 (0 : E)).HasBasis (· ∈ B.toSeminormFamily.basisSets) _root_.id :=
   withSeminorms B |>.hasBasis
+
+open Bornology
+
+lemma isVonNBounded_iff (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak] (s : Set E) :
+    IsVonNBounded 𝕜 s ↔ ∀ y, IsVonNBounded 𝕜 (B.flip y '' s) :=
+  hB.isInducing B |>.isVonNBounded_iff B.flip s
+
+variable {B} in
+lemma isVonNBounded_iff_bddAbove {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E]
+    [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace E]
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak] {s : Set E} :
+    IsVonNBounded 𝕜 s ↔ ∀ y, BddAbove ((‖B.flip y ·‖) '' s) := by
+  have (y : F) : BddBelow ((‖B · y‖) '' s) := ⟨0, by rintro - ⟨_, -, rfl⟩; positivity⟩
+  rw [isVonNBounded_iff B]
+  congr! with y
+  rw [← Bornology.isBounded_iff_isVonNBounded, NormedSpace.vonNBornology_eq 𝕜,
+    ← isBounded_norm_iff, Set.image_image, isBounded_iff_bddBelow_bddAbove]
+  simp [this]
 
 end Topology
 
