@@ -85,8 +85,6 @@ lemma Convex.nsmul_eq_smul_set {𝕜 E : Type*} [Field 𝕜] [AddCommGroup E] [M
     · rintro - ⟨x, hx, rfl⟩
       exact ⟨n • x, (ih ▸ ⟨x, hx, rfl⟩ : n • x ∈ n • s), x, hx, by simp [add_smul]⟩
 
-open ComplexOrder in
-/-- If we get rid of the real type ascriptions here, it's exactly the have... -/
 lemma RCLike.image_mul_I_segment_neg_one_one (𝕜 : Type*) [RCLike 𝕜] :
     (fun (x : ℝ) ↦ x * (I : 𝕜)) ∘ RCLike.ofReal ''
       (segment ℝ (-1 : ℝ) (1 : ℝ)) = segment ℝ (-I) I := by
