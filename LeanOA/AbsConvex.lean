@@ -127,6 +127,7 @@ lemma RCLike.closedBall_subset_two_smul_convexHull (𝕜 : Type*) [RCLike 𝕜] 
     rw [this] at hb1
     exact mem_preimage.mp (h₂ hb1)
   exact ⟨(a : 𝕜), by simpa [nsmulRec] using ha, (b * I : 𝕜), hb, by simp [a, b]⟩
+
 open RCLike Pointwise in
 protected lemma IsCompact.closedAbsConvexHull {𝕜 E : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [T2Space E]
