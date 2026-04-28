@@ -110,8 +110,7 @@ lemma RCLike.closedBall_subset_two_smul_convexHull (𝕜 : Type*) [RCLike 𝕜] 
       simp only [mem_image, mul_eq_mul_right_iff]
       use RCLike.ofReal b
       constructor
-      · simp only [segment, mem_setOf_eq]
-        use (1 - b) / 2
+      · use (1 - b) / 2
         use (1 + b) / 2
         field_simp
         simp only [zero_mul, sub_nonneg, sub_add_add_cancel, smul_neg]
