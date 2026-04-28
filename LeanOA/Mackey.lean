@@ -1,21 +1,7 @@
-import Mathlib.Topology.Algebra.Module.StrongTopology
-import Mathlib.Topology.Algebra.Module.WeakDual
-import Mathlib.Analysis.LocallyConvex.AbsConvex
-import Mathlib.Analysis.LocallyConvex.Polar
-import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Analysis.LocallyConvex.WithSeminorms
-import Mathlib.Analysis.Normed.Module.WeakDual
-import Mathlib.Analysis.LocallyConvex.ContinuousOfBounded
-import Mathlib.Topology.Sets.Compacts
 import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
-import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
-import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
 import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
-import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
-import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
 import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
-import LeanOA.LocallyConvexNhdsBasis
 
 section -- unneeded on current master
 
@@ -46,8 +32,6 @@ lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
     (nhds 0).HasBasis (fun (Si : Set E × ι) => Si.1 ∈ 𝔖 ∧ p Si.2) fun (Si : Set E × ι) =>
       {f : E →SLᵤ[σ, 𝔖] F | ∀ x ∈ Si.1, f x ∈ b Si.2} :=
   UniformConvergenceCLM.hasBasis_nhds_zero_of_basis σ F 𝔖 h𝔖₁ h𝔖₂ h
-
-
 namespace LinearMap
 
 open scoped Pointwise Topology
@@ -88,15 +72,14 @@ theorem IsCompatible.isCompact_polar {𝕜 E F : Type*} [NontriviallyNormedField
     [ContinuousSMul 𝕜 E] [ProperSpace 𝕜] [TopologicalSpace F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
     [h : B.IsCompatible] [hB : B.flip.IsWeak] {s : Set E} (s_nhds : s ∈ 𝓝 0) :
     IsCompact (B.polar s) := by
-  have := WeakDual.isCompact_polar' 𝕜 s_nhds |>.image h.weakDualCLE'.symm.continuous
-  rw [ContinuousLinearEquiv.image_eq_preimage_symm] at this
-  exact this
+  simpa [ContinuousLinearEquiv.image_eq_preimage_symm] using
+    WeakDual.isCompact_polar' _ s_nhds |>.image h.weakDualCLE'.symm.continuous
 
 instance {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E]
     [Module 𝕜 E] [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
     [B.IsCompatible] :
     LinearMap.IsCompatible (pairing B.flip).flip :=
-  WeakBilin.linearEquiv 𝕜 B.flip ≪≫ₗ LinearMap.IsCompatible.equiv B |>.isCompatible _ rfl
+  WeakBilin.linearEquiv _ B.flip ≪≫ₗ LinearMap.IsCompatible.equiv B |>.isCompatible _ rfl
 
 --- there's a proof of this that doesn't use compactness (hence properness of `𝕜`) using the fact
 --- that a set is von Neumann bounded if and only if its polar is absorbent.
@@ -182,8 +165,7 @@ def toUniformOnFun : PolarTopology B 𝔖 →ₗ[𝕜] F →ᵤ[𝔖] 𝕜 :=
 variable {B 𝔖} in
 @[simp]
 lemma toUniformOnFun_apply (x : PolarTopology B 𝔖) :
-    toUniformOnFun x = UniformOnFun.ofFun 𝔖 (B x) := by
-  rfl
+    toUniformOnFun x = UniformOnFun.ofFun 𝔖 (B x) := rfl
 
 variable {B 𝔖} in
 /-- The linear map from `PolarTopology B 𝔖` into the space of continuous linear maps on
@@ -297,9 +279,9 @@ lemma tendsto_iff {α : Type*} {f : α → PolarTopology B 𝔖} {l : Filter α}
   rfl
 
 --- do we still need this?
-lemma isBounded_pairing_flip_flip_of_isCompact (s : Set (WeakBilin B.flip)) (hs : IsCompact s)
-    (x : E) : IsBounded ((pairing B.flip).flip x '' s) :=
-  hs.image (eval_continuous B.flip x) |>.isBounded
+--lemma isBounded_pairing_flip_flip_of_isCompact (s : Set (WeakBilin B.flip)) (hs : IsCompact s)
+--    (x : E) : IsBounded ((pairing B.flip).flip x '' s) :=
+--  hs.image (eval_continuous B.flip x) |>.isBounded
 
 variable (B 𝔖) in
 /-- The seminorm on `PolarTopology B 𝔖` by taking for `x : E` the supremum of the values of
@@ -326,8 +308,7 @@ noncomputable def seminorm (s : Set F) (hs : IsVonNBounded 𝕜 s) :
   smul' := by simp [sSup_image', Real.mul_iSup_of_nonneg (norm_nonneg _)]
 
 lemma seminorm_apply (s : Set F) (hs : IsVonNBounded 𝕜 s) (x : PolarTopology B 𝔖) :
-    seminorm B 𝔖 s hs x = sSup ((‖B (linearEquiv x) ·‖) '' s) := by
-  rfl
+    seminorm B 𝔖 s hs x = sSup ((‖B (linearEquiv x) ·‖) '' s) := rfl
 
 alias _root_.Bornology.IsVonNBounded.empty := Bornology.isVonNBounded_empty
 
@@ -428,8 +409,7 @@ noncomputable def seminormFamily (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) 
   fun s ↦ seminorm B 𝔖 s.1 (h𝔖 _ s.2)
 
 lemma seminormFamily_apply (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) (s : 𝔖) :
-    seminormFamily B 𝔖 h𝔖 s = seminorm B 𝔖 s.1 (h𝔖 _ s.2) := by
-  rfl
+    seminormFamily B 𝔖 h𝔖 s = seminorm B 𝔖 s.1 (h𝔖 _ s.2) := rfl
 
 lemma directed_seminormFamily (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖) :
     Directed (· ≤ ·) (seminormFamily B 𝔖 h𝔖) := by
@@ -475,8 +455,7 @@ abbrev bilin : F →ₗ[𝕜] PolarTopology B 𝔖 →ₗ[𝕜] 𝕜 :=
   linearEquiv.symm.arrowCongr (.refl _ _) B |>.flip
 
 lemma bilin_apply_apply (y : F) (x : PolarTopology B 𝔖) :
-    bilin B 𝔖 y x = B (linearEquiv x) y := by
-  rfl
+    bilin B 𝔖 y x = B (linearEquiv x) y := rfl
 
 lemma unitClosedBall_seminorm_eq_polar {s : Set F} (hs : IsVonNBounded 𝕜 s) :
     (seminorm B 𝔖 s hs).closedBall 0 1 = (bilin B 𝔖).polar s := by
