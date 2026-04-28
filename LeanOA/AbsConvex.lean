@@ -85,6 +85,20 @@ lemma Convex.nsmul_eq_smul_set {𝕜 E : Type*} [Field 𝕜] [AddCommGroup E] [M
     · rintro - ⟨x, hx, rfl⟩
       exact ⟨n • x, (ih ▸ ⟨x, hx, rfl⟩ : n • x ∈ n • s), x, hx, by simp [add_smul]⟩
 
+open ComplexOrder in
+/-- If we get rid of the real type ascriptions here, it's exactly the have... -/
+lemma RCLike.image_mul_I_segment_neg_one_one (𝕜 : Type*) [RCLike 𝕜] :
+    (fun (x : ℝ) ↦ x * (I : 𝕜)) ∘ RCLike.ofReal ''
+      (segment ℝ (-1 : ℝ) (1 : ℝ)) = segment ℝ (-I) I := by
+ have := (image_segment ℝ ((LinearMap.mulRight (R := ℝ) (A := 𝕜)) I).toAffineMap) (-1 : ℝ) 1
+ simp only [LinearMap.coe_toAffineMap, LinearMap.mulRight_apply, map_neg, map_one,
+   one_mul] at this
+ convert this
+ simp only [ofReal_real_eq_id, Function.comp_apply, id_eq, neg_le_self_iff, zero_le_one,
+   segment_eq_Icc]
+  --this isn't quite going to work, but it's close.
+ sorry
+
 open RCLike Pointwise in
 lemma RCLike.closedBall_subset_two_smul_convexHull (𝕜 : Type*) [RCLike 𝕜] :
     Metric.closedBall (0 : 𝕜) 1 ⊆ 2 • convexHull ℝ ({-1, 1, -I, I} : Set 𝕜) := by
@@ -104,9 +118,26 @@ lemma RCLike.closedBall_subset_two_smul_convexHull (𝕜 : Type*) [RCLike 𝕜] 
     simp only [image_segment] at ha'''
     simpa [f] using ha'''
   have hb : (b * I : 𝕜) ∈ s := by
-    sorry
+    have hb1: b ∈ segment ℝ (-1) 1 := by
+      simpa [segment_eq_Icc] using abs_le.mp (abs_im_le_norm x |>.trans hx)
+    have hb2 : RCLike.ofReal b * I ∈
+      (fun (x : ℝ) ↦ x * (I : 𝕜)) ∘ RCLike.ofReal '' (segment ℝ (-1 : ℝ) (1 : ℝ)) := by
+      rw [RCLike.image_mul_I_segment_neg_one_one 𝕜]
+      by_cases h1 : I = (0 : 𝕜)
+      · aesop
+      · simp only [segment, smul_eq_mul, mul_neg, mul_one, exists_and_left, mem_setOf_eq,
+        smul_neg] at hb1 ⊢
+        convert hb1 with t s
+        rw [← neg_smul, ← add_smul, ← smul_eq_mul]
+        constructor
+        · intro h
+          rwa [← RCLike.real_smul_eq_coe_smul, smul_left_inj h1] at h
+        · intro h
+          rwa [← RCLike.real_smul_eq_coe_smul, smul_left_inj h1]
+    refine mem_preimage.mp (h₂ ?_)
+    rw [← RCLike.image_mul_I_segment_neg_one_one 𝕜]
+    exact hb2
   exact ⟨(a : 𝕜), by simpa [nsmulRec] using ha, (b * I : 𝕜), hb, by simp [a, b]⟩
-
 open RCLike Pointwise in
 protected lemma IsCompact.closedAbsConvexHull {𝕜 E : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [T2Space E]
