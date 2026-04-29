@@ -110,7 +110,7 @@ lemma RCLike.closedBall_subset_two_smul_convexHull (𝕜 : Type*) [RCLike 𝕜] 
       at this
     rw [← this]
     have hb3 : |b| ≤ 1 := abs_im_le_norm x |>.trans hx
-    exact ⟨RCLike.ofReal b, by exact ⟨(1 - b) / 2, (1 + b) / 2, by
+    exact ⟨RCLike.ofReal b, ⟨(1 - b) / 2, (1 + b) / 2, by
       field_simp
       simp only [zero_mul, sub_nonneg, sub_add_add_cancel, smul_neg]
       exact ⟨le_of_max_le_left hb3, by grind [abs_le], by ring, by
