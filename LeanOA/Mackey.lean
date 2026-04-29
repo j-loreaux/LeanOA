@@ -141,6 +141,7 @@ lemma _root_.LinearMap.coe_toCLMRight [TopologicalSpace F] (hB : ∀ x, Continuo
   congrm($(B.coeLM_toCLMRight_apply hB x))
 
 variable {B 𝔖} in
+/-- Linear equivalence of `PolarTopology B 𝔖` with `F →ᵤ[𝔖] 𝕜`. -/
 def toUniformOnFun : PolarTopology B 𝔖 →ₗ[𝕜] F →ᵤ[𝔖] 𝕜 :=
   linearEquiv.symm.arrowCongr (UniformOnFun.toFunLinearEquiv 𝔖).symm <|
     (LinearMap.ltoFun 𝕜 F 𝕜 𝕜).compRight 𝕜 B
@@ -387,6 +388,7 @@ lemma continuous_seminorm (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (�
 open TopologicalSpace
 
 variable (B 𝔖) in
+/-- The natural `SeminormFamily` that implements `PolarTopology B 𝔖`. -/
 noncomputable def seminormFamily (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) :
     SeminormFamily 𝕜 (PolarTopology B 𝔖) 𝔖 :=
   fun s ↦ seminorm B 𝔖 s.1 (h𝔖 _ s.2)
@@ -434,6 +436,7 @@ lemma withSeminorms (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ 
     exact continuous_seminorm h𝔖_non h𝔖_dir s.1 s.2 (h𝔖 _ s.2)
 
 variable (B 𝔖) in
+/-- Variant of `B.flip` with the type synonym `PolarTopology B 𝔖` in place of `E`. -/
 abbrev bilin : F →ₗ[𝕜] PolarTopology B 𝔖 →ₗ[𝕜] 𝕜 :=
   linearEquiv.symm.arrowCongr (.refl _ _) B |>.flip
 

@@ -7,6 +7,8 @@ public section
 variable {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F]
 
+/-- A linear topology on `E` is compatible with the bilinear form `B` if the
+every continuous linear functional on `E` has the form `B.flip f` for some `f : F`. -/
 class IsCompatible (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) : Prop where
   range_eq_range : B.flip.range = (ContinuousLinearMap.coeLM 𝕜).range
   injective : Function.Injective B.flip
@@ -31,6 +33,7 @@ lemma IsCompatible.continuous (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.Is
   have ⟨y, hy⟩ := Submodule.ext_iff.mp h.range_eq_range (B.flip x) |>.mp (B.flip.mem_range_self x)
   hy ▸ y.continuous
 
+/-- Linear equivalence of `F` with `StrongDual 𝕜 E` obtained from `B.IsCompatible`. -/
 noncomputable def IsCompatible.equiv (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible] :
     F ≃ₗ[𝕜] StrongDual 𝕜 E :=
   .ofBijective
@@ -48,12 +51,16 @@ lemma IsCompatible.equiv_apply_apply (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h
 lemma IsCompatible.equiv_apply' (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible]
     (y : F) : h.equiv B y = ⟨B.flip y, h.continuous B y⟩ := rfl
 
+/-- Continuous linear equivalence of `WeakBilin B` with `WeakSpace 𝕜 E` obtained from
+  `B.IsCompatible`. -/
 noncomputable def IsCompatible.weakSpaceCLE (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible] :
     WeakBilin B ≃L[𝕜] WeakSpace 𝕜 E :=
   .trans
     (WeakBilin.congr _ (.refl _ _) h.equiv _ <| by ext x f; simp [← IsCompatible.equiv_apply_apply])
     WeakSpace.weakBilinCLE.symm
 
+/-- Continuous linear equivalence of `WeakBilin B.flip` with `WeakDual 𝕜 E` obtained from
+  `B.IsCompatible`. -/
 noncomputable def IsCompatible.weakDualCLE (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible] :
     WeakBilin B.flip ≃L[𝕜] WeakDual 𝕜 E :=
   .trans

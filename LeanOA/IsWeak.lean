@@ -31,6 +31,8 @@ noncomputable def weakSpacePairing : WeakSpace 𝕜 E →ₗ[𝕜] (StrongDual �
 
 end
 
+/-- Typeclass expressing that the topology on `E` is the weak topology induced
+by the bilinear form `B`. -/
 @[mk_iff]
 class LinearMap.IsWeak [t : TopologicalSpace E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) : Prop where
   eq_induced : t = .induced (B · ·) Pi.topologicalSpace
@@ -153,6 +155,8 @@ instance {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
     B'.IsWeak :=
   LinearMap.IsWeak.congr (weakSpacePairing 𝕜 E) _ (.refl ..) hB.equiv.symm rfl
 
+/-- Continuous linear equivalence of `F` with `WeakDual 𝕜 E` from `B.IsCompatible` and
+`B.flip.IsWeak` . -/
 noncomputable
 def _root_.LinearMap.IsCompatible.weakDualCLE' {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
     [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
