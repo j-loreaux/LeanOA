@@ -104,27 +104,20 @@ lemma RCLike.closedBall_subset_two_smul_convexHull (𝕜 : Type*) [RCLike 𝕜] 
     simp only [image_segment] at ha'''
     simpa [f] using ha'''
   have hb : (b * I : 𝕜) ∈ s := by
-    have hb1 : RCLike.ofReal b * I ∈
-      (fun x ↦ x * (I : 𝕜)) '' (segment ℝ (-1) 1) := by
-      have hb3 : |b| ≤ 1 := abs_im_le_norm x |>.trans hx
-      simp only [mem_image, mul_eq_mul_right_iff]
-      use RCLike.ofReal b
-      constructor
-      · use (1 - b) / 2
-        use (1 + b) / 2
-        field_simp
-        simp only [zero_mul, sub_nonneg, sub_add_add_cancel, smul_neg]
-        exact ⟨le_of_max_le_left hb3, by grind [abs_le], by ring,
-          by rw [← neg_smul, ← add_smul]
-             field_simp
-             ring_nf
-             exact Eq.symm (ofReal_alg b)⟩
-      · simp only [true_or]
-    have : (fun x ↦ x * (I : 𝕜)) '' (segment ℝ (-1) 1) = segment ℝ (-I) I := by
-      simpa using (image_segment ℝ ((LinearMap.mulRight (R := ℝ) (A := 𝕜)) I).toAffineMap)
+    apply mem_preimage.mp (h₂ ?_)
+    have := (image_segment ℝ ((LinearMap.mulRight (R := ℝ) (A := 𝕜)) I).toAffineMap)
         (-1 : ℝ) 1
-    rw [this] at hb1
-    exact mem_preimage.mp (h₂ hb1)
+    simp only [LinearMap.coe_toAffineMap, LinearMap.mulRight_apply, map_neg, map_one,
+      one_mul] at this
+    rw [← this]
+    have hb3 : |b| ≤ 1 := abs_im_le_norm x |>.trans hx
+    exact ⟨RCLike.ofReal b, by exact ⟨(1 - b) / 2, (1 + b) / 2, by
+      field_simp
+      simp only [zero_mul, sub_nonneg, sub_add_add_cancel, smul_neg]
+      exact ⟨le_of_max_le_left hb3, by grind [abs_le], by ring, by
+           rw [← neg_smul, ← add_smul]
+           ring_nf
+           exact Eq.symm (ofReal_alg b)⟩⟩ , by simp⟩
   exact ⟨(a : 𝕜), by simpa [nsmulRec] using ha, (b * I : 𝕜), hb, by simp [a, b]⟩
 
 open RCLike Pointwise in
