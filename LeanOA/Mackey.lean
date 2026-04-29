@@ -2,6 +2,7 @@ import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
+import LeanOA.AbsConvex
 
 -- the version in Mathlib has some small defeq abuse. It uses `f : E →SL[σ] F`
 open scoped UniformConvergenceCLM UniformConvergence in
@@ -300,11 +301,6 @@ lemma tendsto_iff {α : Type*} {f : α → PolarTopology B 𝔖} {l : Filter α}
     UniformOnFun.tendsto_iff_tendstoUniformlyOn]
   rfl
 
---- do we still need this?
---lemma isBounded_pairing_flip_flip_of_isCompact (s : Set (WeakBilin B.flip)) (hs : IsCompact s)
---    (x : E) : IsBounded ((pairing B.flip).flip x '' s) :=
---  hs.image (eval_continuous B.flip x) |>.isBounded
-
 variable (B 𝔖) in
 /-- The seminorm on `PolarTopology B 𝔖` by taking for `x : E` the supremum of the values of
 `B x y` over all `y ∈ s`, where `s ∈ 𝔖`. -/
@@ -585,54 +581,136 @@ end PolarTopology
 open scoped ComplexOrder
 open WeakBilin
 
-/-- The Mackey toplogy on a space `E` relative to a bilinear form `B : E →ₗ[𝕜] F →ₗ[𝕜] → 𝕜` is the
-polar topology corresponding to all (weakly) compact absolutely convex sets in `F`. -/
-abbrev MackeyBilin := PolarTopology (pairing B.flip).flip {s | IsCompact s ∧ AbsConvex 𝕜 s}
+variable [TopologicalSpace F]
 
-variable [TopologicalSpace E]
-variable (𝕜 E) in
-/-- The Mackey toplogy on a space `E` is the polar topology corresponding to all weak-⋆ compact
-absolutely convex sets in `WeakDual 𝕜 E`. -/
-abbrev Mackey := PolarTopology (weakDualPairing 𝕜 E).flip {s | IsCompact s ∧ AbsConvex 𝕜 s}
+/-- The Mackey toplogy on a space `E` relative to a bilinear form `B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜` is the
+polar topology corresponding to all (weakly) compact absolutely convex sets in `F`. The space
+`F` must be equipped with the weak topology induced by `B.flip`. -/
+abbrev Mackey (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.flip.IsWeak] :=
+    PolarTopology B {s | IsCompact s ∧ AbsConvex 𝕜 s}
 
-variable (𝕜) in
+variable {B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜} [B.flip.IsWeak]
+
+variable (B) in
 /-- The identity map from `E` to its type synonym equipped with the Mackey topology. -/
-noncomputable def toMackey : E ≃ₗ[𝕜] Mackey 𝕜 E := PolarTopology.linearEquiv.symm
+noncomputable def toMackey : E ≃ₗ[𝕜] Mackey B := PolarTopology.linearEquiv.symm
 
-/-- The identity map from the type synonrm `Mackey 𝕜 E` back to `E` with its original topology. -/
-noncomputable def ofMackey : Mackey 𝕜 E ≃ₗ[𝕜] E := PolarTopology.linearEquiv
-
-
-@[simp]
-lemma ofMackey_symm : (ofMackey (𝕜 := 𝕜) (E := E)).symm = toMackey 𝕜 := rfl
+/-- The identity map from the type synonrm `Mackey B` back to `E` with its original topology. -/
+noncomputable def ofMackey : Mackey B ≃ₗ[𝕜] E := PolarTopology.linearEquiv
 
 @[simp]
-lemma toMackey_symm : (toMackey (𝕜 := 𝕜) (E := E)).symm = ofMackey := rfl
+lemma ofMackey_symm : ofMackey.symm = toMackey B := rfl
 
 @[simp]
-lemma toMackey_ofMackey (x : Mackey 𝕜 E) : toMackey 𝕜 (ofMackey x) = x := rfl
+lemma toMackey_symm : (toMackey B).symm = ofMackey := rfl
 
 @[simp]
-lemma ofMackey_toMackey (x : E) : ofMackey (toMackey 𝕜 x) = x := rfl
+lemma toMackey_ofMackey (x : Mackey B) : toMackey B (ofMackey x) = x := rfl
+
+@[simp]
+lemma ofMackey_toMackey (x : E) : ofMackey (toMackey B x) = x := rfl
+
+
+-- this is available on current master in Mathlib
+theorem IsCompact.isVonNBounded (𝕜 : Type*) {E : Type*} [NormedField 𝕜] [AddCommGroup E]
+    [Module 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E]
+    {s : Set E} (hs : IsCompact s) :
+    Bornology.IsVonNBounded 𝕜 s :=
+  sorry
+
+theorem nonempty_setOf_isCompact_absConvex (𝕜 F : Type*) [NormedField 𝕜]
+    [PartialOrder 𝕜] [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F] :
+    (Set.Nonempty {s : Set F | IsCompact s ∧ AbsConvex 𝕜 s}) :=
+  ⟨∅, isCompact_empty, .empty⟩
+
+theorem directedOn_setOf_isCompact_absConvex (𝕜 F : Type*) [RCLike 𝕜]
+    [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F] [IsTopologicalAddGroup F]
+    [ContinuousSMul 𝕜 F] [T2Space F] :
+    DirectedOn (· ⊆ ·) {s : Set F | IsCompact s ∧ AbsConvex 𝕜 s} := by
+  rintro s ⟨hs₁, hs₂⟩ t ⟨ht₁, ht₂⟩
+  refine ⟨closedAbsConvexHull 𝕜 (convexHull 𝕜 (s ∪ t)), ⟨?_, absConvex_convexClosedHull⟩,
+    ?hs, ?ht⟩
+  case hs | ht => grw [← subset_closedAbsConvexHull, ← subset_convexHull]; simp
+  exact hs₁.convexHull_union ht₁ hs₂.2 ht₂.2 |>.closedAbsConvexHull (convex_convexHull 𝕜 _)
+
+namespace Mackey
+
+/-- This version assumes `B.IsWeak` and is only meant to be used in developing the API for
+`Mackey`. -/
+private theorem _root_.IsCompact.isVonNBounded' {𝕜 E F : Type*} [RCLike 𝕜]
+    [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace E]
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.IsWeak] {s : Set E} (hs : IsCompact s) :
+    IsVonNBounded 𝕜 s :=
+  have := LinearMap.IsWeak.isTopologicalAddGroup B
+  have := LinearMap.IsWeak.continuousSMul B
+  hs.isVonNBounded 𝕜
+
+variable (B)
+
+-- can we eliminate the need for `T2Space F` here? At least under certain circumstances?
+-- probably `IsCompatible` will be enough? This was used in the proof that the
+-- `closedAbsConvexHull` of a compact convex set is compact. I'm unsure if it's strictly necessary
+-- there.
+instance [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [T2Space F] :
+    LocallyConvexSpace ℝ (Mackey B) :=
+  have := LinearMap.IsWeak.isTopologicalAddGroup B.flip
+  have := LinearMap.IsWeak.continuousSMul B.flip
+  PolarTopology.locallyConvexSpace (nonempty_setOf_isCompact_absConvex 𝕜 _)
+    (directedOn_setOf_isCompact_absConvex 𝕜 _) fun _ h ↦ h.1.isVonNBounded' B.flip
+
+instance [T2Space F] : LocallyConvexSpace 𝕜 (Mackey B) :=
+  let _ : Module ℝ E := RestrictScalars.module ℝ 𝕜 E
+  let _ : IsScalarTower ℝ 𝕜 E := RestrictScalars.isScalarTower ℝ 𝕜 E
+  .to_rclike 𝕜 (Mackey B) inferInstance
+
+noncomputable abbrev seminorm (s : Set F) (hs : IsCompact s) :
+    Seminorm 𝕜 (Mackey B) :=
+  PolarTopology.seminorm B {s | IsCompact s ∧ AbsConvex 𝕜 s} s <| hs.isVonNBounded' B.flip
+
+noncomputable abbrev seminormFamily :
+    SeminormFamily 𝕜 (Mackey B) {s : Set F | IsCompact s ∧ AbsConvex 𝕜 s} :=
+  PolarTopology.seminormFamily B {s | IsCompact s ∧ AbsConvex 𝕜 s}
+    fun _s hs ↦ hs.1.isVonNBounded' B.flip
+
+lemma continuous_seminorm [T2Space F] (s : Set F) (hs₁ : IsCompact s) (hs₂ : AbsConvex 𝕜 s) :
+    Continuous (seminorm B s hs₁) :=
+  have := LinearMap.IsWeak.isTopologicalAddGroup B.flip
+  have := LinearMap.IsWeak.continuousSMul B.flip
+  PolarTopology.continuous_seminorm (nonempty_setOf_isCompact_absConvex 𝕜 F)
+    (directedOn_setOf_isCompact_absConvex 𝕜 F) _ ⟨hs₁, hs₂⟩ (hs₁.isVonNBounded' B.flip)
+
+lemma directed_seminormFamily [T2Space F] : Directed (· ≤ ·) (seminormFamily B) :=
+  have := LinearMap.IsWeak.isTopologicalAddGroup B.flip
+  have := LinearMap.IsWeak.continuousSMul B.flip
+  PolarTopology.directed_seminormFamily (fun _s hs ↦ hs.1.isVonNBounded' B.flip)
+    (directedOn_setOf_isCompact_absConvex 𝕜 F)
+
+lemma withSeminorms [T2Space F] : WithSeminorms (seminormFamily B) :=
+  have := LinearMap.IsWeak.isTopologicalAddGroup B.flip
+  have := LinearMap.IsWeak.continuousSMul B.flip
+  PolarTopology.withSeminorms B _ (nonempty_setOf_isCompact_absConvex 𝕜 F)
+    (directedOn_setOf_isCompact_absConvex 𝕜 F) fun _s hs ↦ hs.1.isVonNBounded' B.flip
+
+
+end Mackey
+
+variable (B)
 
 open PolarTopology in
 /-- Every locally convex topology is weaker than the Mackey topology. -/
-lemma continuous_ofMackey (𝕜 E : Type*) [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
-    [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [LocallyConvexSpace 𝕜 E] :
-    Continuous (ofMackey : Mackey 𝕜 E → E) := by
-  letI B := weakDualPairing 𝕜 E
-  have hB : B.flip.IsCompatible := WeakDual.toStrongDual.isCompatible (weakDualPairing 𝕜 E).flip
-    (by ext; simp; rfl)
-  refine polarTopologyNhdsPolars (B := B.flip) |>.continuous.comp <|
-    continuous_mono B.flip B.flip.nhdsPolars {s | IsCompact s ∧ AbsConvex 𝕜 s} ?_
+lemma continuous_ofMackey [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E]
+    [LocallyConvexSpace 𝕜 E] [B.IsCompatible] :
+    Continuous (ofMackey : Mackey B → E) := by
+  refine polarTopologyNhdsPolars.continuous.comp <|
+    continuous_mono B B.nhdsPolars {s | IsCompact s ∧ AbsConvex 𝕜 s} ?_
   rintro - ⟨s, hs, rfl⟩
-  exact ⟨LinearMap.IsCompatible.isCompact_polar B.flip hs, LinearMap.polar_AbsConvex s⟩
+  exact ⟨LinearMap.IsCompatible.isCompact_polar B hs, B.absConvex_polar s⟩
 
 /-- The map `⇑ofMackey : Mackey 𝕜 E → E` as a continuous linear map. -/
-noncomputable def ofMackeyCLM (𝕜 E : Type*) [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
-    [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [LocallyConvexSpace 𝕜 E] :
-    Mackey 𝕜 E →L[𝕜] E where
+noncomputable def ofMackeyCLM [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E]
+    [LocallyConvexSpace 𝕜 E] [B.IsCompatible] :
+    Mackey B →L[𝕜] E where
   toLinearMap := ofMackey.toLinearMap
-  cont := continuous_ofMackey 𝕜 E
+  cont := continuous_ofMackey B
 
 end PolarTopology
