@@ -3,24 +3,6 @@ import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 
-section -- unneeded on current master
-
-variable {𝕜₁ 𝕜₂ : Type*} [NormedField 𝕜₁] [NormedField 𝕜₂] (σ : 𝕜₁ →+* 𝕜₂)
-  {E F G : Type*}
-  [AddCommGroup E] [Module 𝕜₁ E] [TopologicalSpace E]
-  [AddCommGroup F] [Module 𝕜₂ F]
-variable (F)
-
-@[inherit_doc]
-scoped[UniformConvergenceCLM]
-notation:25 E' " →SLᵤ[" σ ", " 𝔖 "] " F => UniformConvergenceCLM σ (E := E') F 𝔖
-
-@[inherit_doc]
-scoped[UniformConvergenceCLM]
-notation:25 E' " →Lᵤ[" R ", " 𝔖 "] " F => UniformConvergenceCLM (RingHom.id R) (E := E') F 𝔖
-
-end
-
 -- the version in Mathlib has some small defeq abuse. It uses `f : E →SL[σ] F`
 open scoped UniformConvergenceCLM UniformConvergence in
 lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
@@ -602,10 +584,10 @@ abbrev Mackey := PolarTopology (weakDualPairing 𝕜 E).flip {s | IsCompact s �
 
 variable (𝕜) in
 /-- The identity map from `E` to its type synonym equipped with the Mackey topology. -/
-def toMackey : E ≃ₗ[𝕜] Mackey 𝕜 E := PolarTopology.linearEquiv.symm
+noncomputable def toMackey : E ≃ₗ[𝕜] Mackey 𝕜 E := PolarTopology.linearEquiv.symm
 
 /-- The identity map from the type synonrm `Mackey 𝕜 E` back to `E` with its original topology. -/
-def ofMackey : Mackey 𝕜 E ≃ₗ[𝕜] E := PolarTopology.linearEquiv
+noncomputable def ofMackey : Mackey 𝕜 E ≃ₗ[𝕜] E := PolarTopology.linearEquiv
 
 
 @[simp]
@@ -634,8 +616,8 @@ lemma continuous_ofMackey (𝕜 E : Type*) [RCLike 𝕜] [AddCommGroup E] [Modul
   exact ⟨LinearMap.IsCompatible.isCompact_polar B.flip hs, LinearMap.polar_AbsConvex s⟩
 
 /-- The map `⇑ofMackey : Mackey 𝕜 E → E` as a continuous linear map. -/
-def ofMackeyCLM (𝕜 E : Type*) [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
-    [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [LocallyConvexSpace 𝕜 E] :
+noncomputable def ofMackeyCLM (𝕜 E : Type*) [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [LocallyConvexSpace 𝕜 E] :
     Mackey 𝕜 E →L[𝕜] E where
   toLinearMap := ofMackey.toLinearMap
   cont := continuous_ofMackey 𝕜 E
