@@ -169,7 +169,6 @@ noncomputable def _root_.LinearMap.toCLMRight [TopologicalSpace F] (hB : ∀ x, 
     B.codRestrict  _ (fun x ↦ ⟨⟨B x, hB x⟩, rfl⟩)
   (LinearEquiv.refl _ _).arrowCongr e.symm B'
 
-@[simp]
 lemma _root_.LinearMap.coeLM_toCLMRight_apply [TopologicalSpace F] (hB : ∀ x, Continuous (B x))
     (x : E) : B.toCLMRight hB x = B x := by
   simp [← ContinuousLinearMap.coeLM_apply 𝕜, LinearMap.toCLMRight]
