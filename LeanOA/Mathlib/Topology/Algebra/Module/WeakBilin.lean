@@ -1,4 +1,4 @@
-import Mathlib.Topology.Algebra.Module.WeakBilin
+import Mathlib.Topology.Algebra.Module.Spaces.WeakBilin
 import Mathlib.Topology.Algebra.Module.Equiv
 
 variable {𝕜 E F E' F' : Type*}
@@ -10,7 +10,7 @@ namespace WeakBilin
 
 /-- The canonical linear equivalence (over `𝕝`) between `WeakBilin (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)`
 and `E`. -/
-def linearEquiv (𝕝 : Type*) [CommSemiring 𝕝] [Module 𝕝 E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) :
+noncomputable def linearEquiv (𝕝 : Type*) [CommSemiring 𝕝] [Module 𝕝 E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) :
     WeakBilin B ≃ₗ[𝕝] E :=
   LinearEquiv.refl ..
 
@@ -18,7 +18,7 @@ def linearEquiv (𝕝 : Type*) [CommSemiring 𝕝] [Module 𝕝 E] (B : E →ₗ
 of the definitional equality between `E` and `WeakBilin B`, it is necessary to use this pairing
 instead of `B` itself when considering statements involving the weak topology induced by the
 pairing, such as the bipolar theorem. -/
-def pairing : WeakBilin B →ₗ[𝕜] F →ₗ[𝕜] 𝕜 :=
+noncomputable def pairing : WeakBilin B →ₗ[𝕜] F →ₗ[𝕜] 𝕜 :=
   (linearEquiv 𝕜 B).symm.arrowCongr (.refl _ _) B
 
 variable {B} in
@@ -46,7 +46,7 @@ lemma isInducing (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) :
 
 /-- Weak topologies induced by equivalent bilinear forms are continuously linearly equivalent. -/
 @[simps!]
-protected def congr (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (e : E ≃ₗ[𝕜] E') (f : F ≃ₗ[𝕜] F')
+protected noncomputable def congr (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (e : E ≃ₗ[𝕜] E') (f : F ≃ₗ[𝕜] F')
     (B' : E' →ₗ[𝕜] F' →ₗ[𝕜] 𝕜) (hB : e.arrowCongr (f.arrowCongr (.refl ..)) B = B') :
     WeakBilin B ≃L[𝕜] WeakBilin B' where
   toLinearEquiv := linearEquiv 𝕜 B ≪≫ₗ e ≪≫ₗ (linearEquiv 𝕜 B').symm

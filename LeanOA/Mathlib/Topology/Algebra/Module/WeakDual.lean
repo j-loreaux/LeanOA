@@ -8,7 +8,7 @@ variable {𝕜 E : Type*}
 /-- The weak dual of `E` is continuously linearly equivalent to the `WeakBilin` induced by the
 `topDualPairing 𝕜 E`. This is essentially a definitional equivalence, but to avoid abuse of
 definitional equality it is implemented without `ContinuousLinearEquiv.refl`. -/
-def WeakDual.weakBilinCLE : WeakDual 𝕜 E ≃L[𝕜] WeakBilin (topDualPairing 𝕜 E) where
+noncomputable def WeakDual.weakBilinCLE : WeakDual 𝕜 E ≃L[𝕜] WeakBilin (topDualPairing 𝕜 E) where
   toLinearEquiv := WeakDual.toStrongDual ≪≫ₗ (WeakBilin.linearEquiv 𝕜 (topDualPairing 𝕜 E)).symm
   continuous_toFun := WeakBilin.continuous_of_continuous_eval' _ WeakDual.eval_continuous
   continuous_invFun :=WeakDual.continuous_of_continuous_eval <| WeakBilin.eval_continuous' _
@@ -17,7 +17,8 @@ def WeakDual.weakBilinCLE : WeakDual 𝕜 E ≃L[𝕜] WeakBilin (topDualPairing
 equivalent to the `WeakBilin` induced by the `(topDualPairing 𝕜 E).flip`. This is essentially a
 definitional equivalence, but to avoid abuse of definitional equality it is implemented without
 `ContinuousLinearEquiv.refl`. -/
-def WeakSpace.weakBilinCLE : WeakSpace 𝕜 E ≃L[𝕜] WeakBilin (topDualPairing 𝕜 E).flip where
+noncomputable def WeakSpace.weakBilinCLE :
+    WeakSpace 𝕜 E ≃L[𝕜] WeakBilin (topDualPairing 𝕜 E).flip where
   toLinearEquiv := (toWeakSpace 𝕜 E).symm ≪≫ₗ
     (WeakBilin.linearEquiv 𝕜 (topDualPairing 𝕜 E).flip).symm
   continuous_toFun := WeakBilin.continuous_of_continuous_eval' _ <| WeakBilin.eval_continuous _
