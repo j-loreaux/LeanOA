@@ -7,11 +7,12 @@ import LeanOA.CStarAlgebra.PositiveLinearFunctional
 import LeanOA.CStarModule.Standard
 import LeanOA.ComplexOrder
 import LeanOA.ExtremallyDisconnected
+import LeanOA.IsWeak
 import LeanOA.KreinSmulian
 import LeanOA.LocallyConvexNhdsBasis
 import LeanOA.Lp.Holder
 import LeanOA.Lp.lpSpace
-import LeanOA.MackeyArens
+import LeanOA.Mackey
 import LeanOA.Masa
 import LeanOA.Mathlib.Algebra.LinearAlgebra.Span.Defs
 import LeanOA.Mathlib.Algebra.Order.Module.PositiveLinearMap
@@ -29,6 +30,13 @@ import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
 import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 import LeanOA.Mathlib.Analysis.Complex.Basic
+import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
+import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
+import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
+import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
+import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
+import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
+import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
 import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
 import LeanOA.Mathlib.Analysis.RCLike.Extend
 import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
