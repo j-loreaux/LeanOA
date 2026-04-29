@@ -47,6 +47,37 @@ lemma absorbent_polar_iff_isVonNBounded {𝕜 E F : Type*} [NontriviallyNormedFi
 
 alias ⟨isVonNBounded_of_absorbent_polar, absorbent_polar⟩ := absorbent_polar_iff_isVonNBounded
 
+section nhdsPolars
+
+open Set Filter
+
+variable {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
+    [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F]
+    {B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜}
+
+variable (B) in
+/-- The collection of polars of neighborhoods of zero. -/
+def nhdsPolars [TopologicalSpace E] : Set (Set F) :=
+  B.polar '' (𝓝 0).sets
+
+lemma nonempty_nhdsPolars [TopologicalSpace E] : (nhdsPolars B).Nonempty :=
+  Set.Nonempty.image _ ⟨univ, univ_mem⟩
+
+lemma directedOn_nhdsPolars [TopologicalSpace E] : DirectedOn (· ⊆ ·) (nhdsPolars B) := by
+  rintro - ⟨s₁, (hs₁ : s₁ ∈ 𝓝 0), rfl⟩ - ⟨s₂, (hs₂ : s₂ ∈ 𝓝 0), rfl⟩
+  refine ⟨_, ⟨s₁ ∩ s₂, inter_mem hs₁ hs₂, rfl⟩, ?_, ?_⟩
+  all_goals exact LinearMap.polar_antitone _ <| by simp
+
+lemma nhdsPolars_mem_iff [TopologicalSpace E] {s : Set F} :
+    s ∈ nhdsPolars B ↔ ∃ u ∈ 𝓝 0, B.polar u = s :=
+  Eq.to_iff rfl
+
+lemma polar_mem_nhdsPolars [TopologicalSpace E] {s : Set E} (hs : s ∈ 𝓝 0) :
+    B.polar s ∈ nhdsPolars B :=
+  ⟨s, hs, rfl⟩
+
+end nhdsPolars
+
 section Banach_Alaoglu
 
 open WeakBilin Topology in
@@ -119,6 +150,14 @@ variable {B 𝔖} in
 /-- The canonical equivalence between `PolarTopology B 𝔖` and `E`. -/
 def linearEquiv : PolarTopology B 𝔖 ≃ₗ[𝕜] E := .refl _ _
 
+/-- Variant of `B.flip` with the type synonym `PolarTopology B 𝔖` in place of `E`. -/
+abbrev bilin : F →ₗ[𝕜] PolarTopology B 𝔖 →ₗ[𝕜] 𝕜 :=
+  linearEquiv.symm.arrowCongr (.refl _ _) B |>.flip
+
+variable {B 𝔖} in
+lemma bilin_apply_apply (y : F) (x : PolarTopology B 𝔖) :
+    bilin B 𝔖 y x = B (linearEquiv x) y := rfl
+
 /-- Upgrade a bilinear map `B : E →ₗ[𝕜] F →ₗ[𝕜] → 𝕜` to a linear map into continuous linear maps
 `B : E →ₗ[𝕜] F →L[𝕜] → 𝕜` (this can be generalized a lot; no need for scalars, also we can
 semilinearize). -/
@@ -132,8 +171,8 @@ noncomputable def _root_.LinearMap.toCLMRight [TopologicalSpace F] (hB : ∀ x, 
 
 @[simp]
 lemma _root_.LinearMap.coeLM_toCLMRight_apply [TopologicalSpace F] (hB : ∀ x, Continuous (B x))
-    (x : E) : (B.toCLMRight hB x).coeLM 𝕜 = B x := by
-  simp [LinearMap.toCLMRight]
+    (x : E) : B.toCLMRight hB x = B x := by
+  simp [← ContinuousLinearMap.coeLM_apply 𝕜, LinearMap.toCLMRight]
 
 @[simp]
 lemma _root_.LinearMap.coe_toCLMRight [TopologicalSpace F] (hB : ∀ x, Continuous (B x))
@@ -435,14 +474,6 @@ lemma withSeminorms (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ 
   · apply SeminormFamily.basisSets_mem_nhds _ fun s ↦ ?_
     exact continuous_seminorm h𝔖_non h𝔖_dir s.1 s.2 (h𝔖 _ s.2)
 
-variable (B 𝔖) in
-/-- Variant of `B.flip` with the type synonym `PolarTopology B 𝔖` in place of `E`. -/
-abbrev bilin : F →ₗ[𝕜] PolarTopology B 𝔖 →ₗ[𝕜] 𝕜 :=
-  linearEquiv.symm.arrowCongr (.refl _ _) B |>.flip
-
-lemma bilin_apply_apply (y : F) (x : PolarTopology B 𝔖) :
-    bilin B 𝔖 y x = B (linearEquiv x) y := rfl
-
 lemma unitClosedBall_seminorm_eq_polar {s : Set F} (hs : IsVonNBounded 𝕜 s) :
     (seminorm B 𝔖 s hs).closedBall 0 1 = (bilin B 𝔖).polar s := by
   ext y
@@ -482,36 +513,15 @@ lemma hasBasis_nhds_zero_polar [Module ℝ F] [IsScalarTower ℝ 𝕜 F]
 
 open scoped ComplexOrder
 
-instance [Module ℝ E] [h : IsScalarTower ℝ 𝕜 E] (h𝔖_non : 𝔖.Nonempty)
+theorem locallyConvexSpace [Module ℝ E] [h : IsScalarTower ℝ 𝕜 E] (h𝔖_non : 𝔖.Nonempty)
     (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖) (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) :
     LocallyConvexSpace ℝ (PolarTopology B 𝔖) :=
   (withSeminorms B 𝔖 h𝔖_non h𝔖_dir h𝔖 ).toLocallyConvexSpace
 
 -- Question: Should we first map these through `linearEquiv.symm`, and then `(bilin B 𝔖).polar`?
 -- It might make it easier to apply the bipolar theorem later.
-variable (B) in
-/-- The collection of polars of neighborhoods of zero. -/
-def nhdsPolars [TopologicalSpace E] : Set (Set F) :=
-  B.polar '' (𝓝 0).sets
-
-lemma nonempty_nhdsPolars [TopologicalSpace E] : (nhdsPolars B).Nonempty :=
-  Set.Nonempty.image _ ⟨univ, univ_mem⟩
-
-lemma directedOn_nhdsPolars [TopologicalSpace E] : DirectedOn (· ⊆ ·) (nhdsPolars B) := by
-  rintro - ⟨s₁, (hs₁ : s₁ ∈ 𝓝 0), rfl⟩ - ⟨s₂, (hs₂ : s₂ ∈ 𝓝 0), rfl⟩
-  refine ⟨_, ⟨s₁ ∩ s₂, inter_mem hs₁ hs₂, rfl⟩, ?_, ?_⟩
-  all_goals exact LinearMap.polar_antitone _ <| by simp
-
-lemma nhdsPolars_mem_iff [TopologicalSpace E] {s : Set F} :
-    s ∈ nhdsPolars B ↔ ∃ u ∈ 𝓝 0, B.polar u = s :=
-  Eq.to_iff rfl
-
-lemma polar_mem_nhdsPolars [TopologicalSpace E] {s : Set E} (hs : s ∈ 𝓝 0) :
-    B.polar s ∈ nhdsPolars B :=
-  ⟨s, hs, rfl⟩
-
 lemma isVonNBounded_nhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
-    [ContinuousSMul 𝕜 E] [hB : B.IsCompatible] (s : Set F) (hs : s ∈ nhdsPolars B) :
+    [ContinuousSMul 𝕜 E] [hB : B.IsCompatible] (s : Set F) (hs : s ∈ B.nhdsPolars) :
     IsVonNBounded 𝕜 s := by
   obtain ⟨s, (hs : s ∈ 𝓝 0), rfl⟩ := hs
   exact hB.isVonNBounded_polar _ hs
@@ -520,7 +530,7 @@ variable (B) in
 lemma continuous_seminorm_comp [TopologicalSpace E] [IsTopologicalAddGroup E]
     [ContinuousSMul 𝕜 E] [B.IsCompatible] {s : Set E} (hs1 : s ∈ 𝓝 0) :
     Continuous
-      (seminorm B (nhdsPolars B) (B.polar s) (isVonNBounded_nhdsPolars _ ⟨s, hs1, rfl⟩) |>.comp <|
+      (seminorm B B.nhdsPolars (B.polar s) (isVonNBounded_nhdsPolars _ ⟨s, hs1, rfl⟩) |>.comp <|
         linearEquiv.symm.toLinearMap) := by
   apply Seminorm.continuous_of_continuousAt_zero
   refine Seminorm.continuousAt_zero' (r := 1) <| mem_of_superset hs1 fun x hx ↦ ?_
@@ -615,7 +625,7 @@ lemma continuous_ofMackey (𝕜 E : Type*) [RCLike 𝕜] [AddCommGroup E] [Modul
   have hB : B.flip.IsCompatible := WeakDual.toStrongDual.isCompatible (weakDualPairing 𝕜 E).flip
     (by ext; simp; rfl)
   refine polarTopologyNhdsPolars (B := B.flip) |>.continuous.comp <|
-    continuous_mono B.flip (nhdsPolars B.flip) {s | IsCompact s ∧ AbsConvex 𝕜 s} ?_
+    continuous_mono B.flip B.flip.nhdsPolars {s | IsCompact s ∧ AbsConvex 𝕜 s} ?_
   rintro - ⟨s, hs, rfl⟩
   exact ⟨LinearMap.IsCompatible.isCompact_polar B.flip hs, LinearMap.polar_AbsConvex s⟩
 
