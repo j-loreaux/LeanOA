@@ -1,5 +1,5 @@
 import Mathlib.Analysis.CStarAlgebra.GelfandDuality
-import Mathlib.Topology.ContinuousMap.Compact
+import LeanOA.Mathlib.Topology.ContinuousMap.Compact
 
 variable {A : Type*} [NonUnitalCommCStarAlgebra A]
 
@@ -20,9 +20,9 @@ lemma IsSelfAdjoint.norm_add_eq_max {A : Type*} [NonUnitalCStarAlgebra A]
   have hS : IsClosed (S : Set A) := (adjoin ℂ {a, b}).isClosed_topologicalClosure
   have hab' : a * b = b * a := by
     rw [hab, eq_comm]; simpa [ha.star_eq, hb.star_eq] using congr(star $hab)
-  have : IsMulCommutative (adjoin ℂ {a, b}) :=
-    NonUnitalStarAlgebra.isMulCommutative_adjoin ℂ (by grind) (by grind [IsSelfAdjoint.star_eq])
-  let _ : NonUnitalCommRing S := (adjoin ℂ {a, b}).nonUnitalCommRingTopologicalClosure mul_comm'
+  let _ : NonUnitalCommRing (adjoin ℂ {a, b}) :=
+    adjoinNonUnitalCommRingOfComm ℂ (by grind) (by grind [IsSelfAdjoint.star_eq])
+  let _ : NonUnitalCommRing S := (adjoin ℂ {a, b}).nonUnitalCommRingTopologicalClosure mul_comm
   let _ : NonUnitalCommCStarAlgebra S := { }
   let c : S := ⟨a, subset_closure <| subset_adjoin _ _ <| by grind⟩
   let d : S := ⟨b, subset_closure <| subset_adjoin _ _ <| by grind⟩

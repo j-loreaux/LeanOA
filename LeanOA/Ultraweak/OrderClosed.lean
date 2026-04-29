@@ -23,7 +23,7 @@ protected lemma Ultraweak.krein_smulian_of_submodule (S : Submodule ℝ≥0 (σ(
   refine .preimage (map_continuous _) ?_
   simp only [map_zero] at hS
   exact krein_smulian_of_submodule
-    (S.comap ((weakDualCLE 𝕜 M P).toLinearEquiv.symm.restrictScalars ℝ≥0 |>.toLinearMap)) hS
+    (S.comap ((weakDualCLE 𝕜 M P).symm.restrictScalars ℝ≥0 |>.toLinearMap)) hS
 
 end KreinSmulian
 

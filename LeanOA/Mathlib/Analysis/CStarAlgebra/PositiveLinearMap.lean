@@ -6,9 +6,7 @@ variable {A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra
   [StarOrderedRing A₁] [PartialOrder A₂] [StarOrderedRing A₂] (f : A₁ →ₚ[ℂ] A₂)
 
 /-- Lift a positive linear map between C⋆-algebras to a positive continuous linear map. -/
-def toPositiveContinuousLinearMap : A₁ →P[ℂ] A₂ where
-  toPositiveLinearMap := f
-  cont := by dsimp; fun_prop
+def toPositiveContinuousLinearMap : A₁ →P[ℂ] A₂ where __ := f
 
 @[simp] theorem toPositiveContinuousLinearMap_apply (x : A₁) :
     f.toPositiveContinuousLinearMap x = f x := rfl

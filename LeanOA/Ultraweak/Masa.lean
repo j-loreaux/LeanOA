@@ -4,7 +4,7 @@ import LeanOA.Ultraweak.LUB
 import LeanOA.Mathlib.Algebra.Star.Unitary
 import LeanOA.Mathlib.Algebra.LinearAlgebra.Span.Defs
 import Mathlib.Algebra.Order.Monoid.Submonoid -- it makes no sense that this import is necessary
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
+import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 import Mathlib.Analysis.CStarAlgebra.Unitary.Span
 
 section IsSelfAdjoint
@@ -24,7 +24,7 @@ instance {S : Type*} [SetLike S A] [NonUnitalSubringClass S A] [SMulMemClass S �
   · let r : A := CFC.sqrt (x : A)
     have hr : r ∈ s := by
       simp only [r, CFC.sqrt, cfcₙ_nnreal_eq_real _ (x : A) hx]
-      exact cfcₙ_mem _ x.2
+      exact cfcₙ_mem s _ x.1 x.2
     refine ⟨⟨r, hr⟩, Subtype.ext ?_⟩
     simp [r, (CFC.sqrt_nonneg (x : A)).star_eq, CFC.sqrt_mul_sqrt_self (x : A)]
   · rintro ⟨x, rfl⟩
