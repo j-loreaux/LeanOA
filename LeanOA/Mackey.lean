@@ -130,7 +130,6 @@ noncomputable def _root_.LinearMap.toCLMRight [TopologicalSpace F] (hB : ∀ x, 
     B.codRestrict  _ (fun x ↦ ⟨⟨B x, hB x⟩, rfl⟩)
   (LinearEquiv.refl _ _).arrowCongr e.symm B'
 
-@[simp]
 lemma _root_.LinearMap.coeLM_toCLMRight_apply [TopologicalSpace F] (hB : ∀ x, Continuous (B x))
     (x : E) : (B.toCLMRight hB x).coeLM 𝕜 = B x := by
   simp [LinearMap.toCLMRight]
@@ -482,10 +481,10 @@ lemma hasBasis_nhds_zero_polar [Module ℝ F] [IsScalarTower ℝ 𝕜 F]
 
 open scoped ComplexOrder
 
-instance [Module ℝ E] [h : IsScalarTower ℝ 𝕜 E] (h𝔖_non : 𝔖.Nonempty)
-    (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖) (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) :
-    LocallyConvexSpace ℝ (PolarTopology B 𝔖) :=
-  (withSeminorms B 𝔖 h𝔖_non h𝔖_dir h𝔖 ).toLocallyConvexSpace
+-- instance [Module ℝ E] [h : IsScalarTower ℝ 𝕜 E] (h𝔖_non : 𝔖.Nonempty)
+--     (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖) (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) :
+--     LocallyConvexSpace ℝ (PolarTopology B 𝔖) :=
+--   (withSeminorms B 𝔖 h𝔖_non h𝔖_dir h𝔖 ).toLocallyConvexSpace
 
 -- Question: Should we first map these through `linearEquiv.symm`, and then `(bilin B 𝔖).polar`?
 -- It might make it easier to apply the bipolar theorem later.
