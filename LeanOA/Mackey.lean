@@ -14,6 +14,7 @@ lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
     (nhds 0).HasBasis (fun (Si : Set E × ι) => Si.1 ∈ 𝔖 ∧ p Si.2) fun (Si : Set E × ι) =>
       {f : E →SLᵤ[σ, 𝔖] F | ∀ x ∈ Si.1, f x ∈ b Si.2} :=
   UniformConvergenceCLM.hasBasis_nhds_zero_of_basis σ F 𝔖 h𝔖₁ h𝔖₂ h
+
 namespace LinearMap
 
 open scoped Pointwise Topology
