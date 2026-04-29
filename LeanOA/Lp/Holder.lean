@@ -28,7 +28,7 @@ theorem Memℓp.of_bilin_of_top_left (B : (i : ι) → E i →L[𝕜] F i →L[�
   simp only [Real.norm_eq_abs]
   have hC_nonneg : 0 ≤ C := norm_nonneg _ |>.trans <| hC (Classical.arbitrary ι)
   replace hK_nonneg : 0 ≤ K := norm_nonneg (B (Classical.arbitrary ι)) |>.trans <| hBK _
-  rw [abs_of_nonneg (by positivity), abs_of_nonneg (by positivity)]
+  rw [abs_of_nonneg (by positivity)]
   calc
     ‖B i (e i) (f i)‖ ≤ ‖B i‖ * ‖e i‖ * ‖f i‖ := (B i (e i)).le_of_opNorm_le ((B i).le_opNorm _) _
     _ ≤ K * C * ‖f i‖ := by gcongr; exacts [hBK i, hC i]
@@ -154,13 +154,11 @@ def lp.holder (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i) {K : ℝ} (hB
 set_option backward.isDefEq.respectTransparency false in
 /-- `lp.holder` as a bilinear map. -/
 @[simps!]
-def lp.holderₗ (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i) {K : ℝ} (hBK : ∀ i, ‖B i‖ ≤ K) :
-    lp E p →ₗ[𝕜] lp F q →ₗ[𝕜] lp G r :=
-  .mk₂ 𝕜 (lp.holder r B hBK)
-    (fun _ _ _ ↦ by ext; simp)
-    (fun _ _ _ ↦ by ext; simp)
-    (fun _ _ _ ↦ by ext; simp)
-    (fun _ _ _ ↦ by ext; simp)
+noncomputable def lp.holderₗ (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i) {K : ℝ}
+    (hBK : ∀ i, ‖B i‖ ≤ K) : lp E p →ₗ[𝕜] lp F q →ₗ[𝕜] lp G r :=
+  .mk₂ 𝕜 (lp.holder r B hBK) ?_ ?_ ?_ ?_
+where finally
+  all_goals intros; ext; simp
 
 /-- `lp.holder` as a continuous bilinear map. -/
 noncomputable def lp.holderL [Fact (1 ≤ p)] [Fact (1 ≤ q)] [Fact (1 ≤ r)]
@@ -222,7 +220,7 @@ definitionally the same as `B := ContinuousLinearMap.id 𝕜 (E →L[𝕜] 𝕜)
 noncomputable def lp.dualPairing [Fact (1 ≤ p)] [Fact (1 ≤ q)] [p.HolderConjugate q]
     (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] H) {K : ℝ≥0} (hBK : ∀ i, ‖B i‖ ≤ K) :
     lp E p →L[𝕜] lp F q →L[𝕜] H :=
-  (lp.tsumCLM ι 𝕜 H |>.postcomp <| lp F q) ∘L (lp.holderL 1 B hBK)
+  (lp.tsumCLM 𝕜 ι H |>.postcomp <| lp F q) ∘L (lp.holderL 1 B hBK)
 
 lemma lp.dualPairing_apply [Fact (1 ≤ p)] [Fact (1 ≤ q)] [p.HolderConjugate q]
     (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] H) {K : ℝ≥0} (hBK : ∀ i, ‖B i‖ ≤ K)
@@ -234,7 +232,7 @@ lemma lp.norm_dualPairing [Fact (1 ≤ p)] [Fact (1 ≤ q)] [p.HolderConjugate q
     (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] H) {K : ℝ≥0} (hBK : ∀ i, ‖B i‖ ≤ K) :
     ‖lp.dualPairing p q B hBK‖ ≤ K := calc
   ‖lp.dualPairing p q B hBK‖
-  _ ≤ ‖(tsumCLM ι 𝕜 H).postcomp (lp F q)‖ * ‖holderL 1 B hBK‖ :=
+  _ ≤ ‖(tsumCLM 𝕜 ι H).postcomp (lp F q)‖ * ‖holderL 1 B hBK‖ :=
     ContinuousLinearMap.opNorm_comp_le _ _
   _ ≤ 1 * K := by
     gcongr
