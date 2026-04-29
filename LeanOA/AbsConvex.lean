@@ -105,10 +105,9 @@ lemma RCLike.closedBall_subset_two_smul_convexHull (𝕜 : Type*) [RCLike 𝕜] 
     simpa [f] using ha'''
   have hb : (b * I : 𝕜) ∈ s := by
     apply mem_preimage.mp (h₂ ?_)
-    have := (image_segment ℝ ((LinearMap.mulRight (R := ℝ) (A := 𝕜)) I).toAffineMap)
-        (-1 : ℝ) 1
-    simp only [LinearMap.coe_toAffineMap, LinearMap.mulRight_apply, map_neg, map_one,
-      one_mul] at this
+    have := (image_segment ℝ ((LinearMap.mulRight (R := ℝ) (A := 𝕜)) I).toAffineMap) (-1 : ℝ) 1
+    simp only [LinearMap.coe_toAffineMap, LinearMap.mulRight_apply, map_neg, map_one, one_mul]
+      at this
     rw [← this]
     have hb3 : |b| ≤ 1 := abs_im_le_norm x |>.trans hx
     exact ⟨RCLike.ofReal b, by exact ⟨(1 - b) / 2, (1 + b) / 2, by
