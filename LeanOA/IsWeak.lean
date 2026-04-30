@@ -131,6 +131,11 @@ theorem isTopologicalAddGroup {𝕜 E F : Type*} [CommRing 𝕜] [TopologicalSpa
     simp_rw [Function.comp_apply, map_neg, neg_apply, ← map_neg (B _)]
     fun_prop
 
+lemma separatingLeft_of_t1Space [T1Space 𝕜] [T1Space E] : B.SeparatingLeft := by
+  intro x h
+  rw [← specializes_iff_eq, ← (isInducing B).specializes_iff, specializes_iff_eq]
+  simpa [funext_iff]
+
 variable [ContinuousAdd 𝕜] [ContinuousConstSMul 𝕜 𝕜]
 
 open WeakBilin in
@@ -220,7 +225,7 @@ section
 
 variable [TopologicalSpace E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak]
 
-/-- The Weak Representation Theorem: Every continuous functional on `E` endowed with
+/-- The **Weak Representation Theorem**: Every continuous functional on `E` endowed with
 the `σ(E, F; B)`-topology is of the form `x ↦ B(x, y)` for some `y : F`. -/
 theorem eval_surjective : Function.Surjective (eval B) := fun f ↦ by
   have : f.toLinearMap ∈
@@ -231,7 +236,6 @@ theorem eval_surjective : Function.Surjective (eval B) := fun f ↦ by
 
 lemma eval_injective (hr : B.SeparatingRight) : Function.Injective (eval B) := by
   simpa [injective_iff_map_eq_zero, DFunLike.ext_iff]
-
 
 /-- When `B` is right-separating, `F` is linearly equivalent to the strong dual of `E` with the
 weak topology. -/

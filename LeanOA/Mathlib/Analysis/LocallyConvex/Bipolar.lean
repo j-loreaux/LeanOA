@@ -41,6 +41,43 @@ theorem LocallyConvexSpace.real_iff_rclike (𝕜 E : Type*) [RCLike 𝕜]
 alias ⟨LocallyConvexSpace.to_rclike, LocallyConvexSpace.to_real⟩ :=
   LocallyConvexSpace.real_iff_rclike
 
+open scoped ComplexOrder in
+instance {𝕜 E : Type*} [RCLike 𝕜] [TopologicalSpace E] [AddCommGroup E] [IsTopologicalAddGroup E]
+    [Module 𝕜 E] [ContinuousSMul 𝕜 E] [LocallyConvexSpace 𝕜 E] [T1Space E] :
+    SeparatingDual 𝕜 E where
+  exists_ne_zero' x hx := by
+    let _ : Module ℝ E := RestrictScalars.module ℝ 𝕜 E
+    have : IsScalarTower ℝ 𝕜 E := RestrictScalars.isScalarTower ℝ 𝕜 E
+    have : LocallyConvexSpace ℝ E := LocallyConvexSpace.to_real 𝕜 _ inferInstance
+    have : ContinuousSMul ℝ E := IsScalarTower.continuousSMul 𝕜
+    rcases RCLike.geometric_hahn_banach_point_point (𝕜 := 𝕜) hx.symm with ⟨f, hf⟩
+    simp only [map_zero] at hf
+    exact ⟨f, by grind⟩
+
+lemma topDualPairing_separatingRight {𝕜 E : Type*} [CommRing 𝕜] [TopologicalSpace E]
+    [AddCommGroup E] [TopologicalSpace 𝕜] [ContinuousAdd 𝕜] [SeparatelyContinuousMul 𝕜]
+    [Module 𝕜 E] [SeparatingDual 𝕜 E] :
+    (topDualPairing 𝕜 E).SeparatingRight :=
+  fun _ ↦ SeparatingDual.eq_zero_of_forall_dual_eq_zero
+
+lemma weakDualPairing_separatingRight {𝕜 E : Type*} [CommRing 𝕜] [TopologicalSpace E]
+    [AddCommGroup E] [TopologicalSpace 𝕜] [ContinuousAdd 𝕜] [SeparatelyContinuousMul 𝕜]
+    [Module 𝕜 E] [SeparatingDual 𝕜 E] :
+    (weakDualPairing 𝕜 E).SeparatingRight :=
+  topDualPairing_separatingRight
+
+/-- The strong dual of the weak dual is linearly equivalent to the original space, and the
+isomorphism is given by evaluation. -/
+noncomputable abbrev WeakDual.strongDualEquiv (𝕜 E : Type*) [NontriviallyNormedField 𝕜]
+    [TopologicalSpace E] [AddCommGroup E] [Module 𝕜 E] [SeparatingDual 𝕜 E] :
+    E ≃ₗ[𝕜] StrongDual 𝕜 (WeakDual 𝕜 E) :=
+  LinearMap.IsWeak.rightDualEquiv (weakDualPairing 𝕜 E) weakDualPairing_separatingRight
+
+instance {𝕜 E : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [TopologicalSpace E] [SeparatingDual 𝕜 E] :
+    (weakDualPairing 𝕜 E).IsCompatible :=
+  WeakDual.strongDualEquiv 𝕜 E |>.isCompatible _ rfl
+
 variable {𝕜 E F : Type*}
 
 namespace LinearMap
