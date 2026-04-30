@@ -21,6 +21,12 @@ theorem LinearMap.image_balancedHull {𝕜 E F : Type*} [SeminormedRing 𝕜] [A
   · rintro ⟨r, hr, ⟨-, ⟨x, hx, rfl⟩, rfl⟩⟩
     exact ⟨r • x, ⟨r, hr, ⟨x, hx, rfl⟩⟩, by simp⟩
 
+lemma Balanced.image {𝕜 E F : Type*} [SeminormedRing 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [AddCommGroup F] [Module 𝕜 F] (f : E →ₗ[𝕜] F) {s : Set E} (hs : Balanced 𝕜 s) :
+    Balanced 𝕜 (f '' s) := by
+  rintro c hc - ⟨-, ⟨x, hx, rfl⟩, rfl⟩
+  exact ⟨c • x, hs c hc ⟨x, hx, rfl⟩, map_smul f c x⟩
+
 theorem LinearMap.image_absConvexHull {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [PartialOrder 𝕜]
     [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F] (f : E →ₗ[𝕜] F) (s : Set E) :
     f '' absConvexHull 𝕜 s = absConvexHull 𝕜 (f '' s):= by

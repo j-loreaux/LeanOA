@@ -4,6 +4,56 @@ import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 import LeanOA.AbsConvex
 
+
+lemma closedAbsConvexHull_eq_self {𝕜 E : Type*} [SeminormedRing 𝕜]
+    [SMul 𝕜 E] [AddCommMonoid E] [PartialOrder 𝕜] [TopologicalSpace E]
+    {s : Set E} (h_conv : AbsConvex 𝕜 s) (h_closed : IsClosed s) :
+    closedAbsConvexHull 𝕜 s = s :=
+  subset_antisymm (closedAbsConvexHull_min le_rfl h_conv h_closed) subset_closedAbsConvexHull
+
+open scoped ComplexOrder in
+open Module WeakBilin in
+-- this is Lemma 5.3 in Voigt, *Topological Vector Spaces*, used in the proof that the Mackey
+-- topology is compatible.
+lemma Module.dualPairing_flip_polar_polar {𝕜 E F : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.IsWeak]
+    {s : Set E} (hs : AbsConvex 𝕜 s) (hs' : IsCompact s) (hs_non : s.Nonempty) :
+    (dualPairing 𝕜 F).flip.polar (B.polar s) = B '' s := by
+  let B₂ : E →ₗ[𝕜] WeakBilin (dualPairing 𝕜 F) :=
+    (LinearEquiv.refl _ _).arrowCongr (linearEquiv 𝕜 (dualPairing 𝕜 F)).symm B
+  have hB₂ : Continuous B₂ := by
+    apply WeakBilin.continuous_of_continuous_eval' _ fun y ↦ ?_
+    simpa [B₂, pairing] using LinearMap.IsWeak.continuous_eval B y
+  suffices (pairing (dualPairing 𝕜 F)).flip.polar (B.polar s) = (B₂ '' s) by
+    simp only [LinearEquiv.arrowCongr_apply, LinearEquiv.refl_symm, LinearEquiv.refl_apply,
+      ← Set.image_image, LinearEquiv.image_symm_eq_preimage, B₂] at this
+    exact linearEquiv 𝕜 (dualPairing 𝕜 F) |>.surjective.preimage_injective this
+  have h₁ : B.polar s = (pairing (dualPairing 𝕜 F)).polar (B₂ '' s) := by
+    ext; simp [LinearMap.polar_mem_iff, B₂, pairing]
+  apply Eq.trans congr((pairing (dualPairing 𝕜 F)).flip.polar $h₁)
+  rw [LinearMap.bipolar, closedAbsConvexHull_eq_self]
+  · exact hs.image _
+  · have : Topology.IsEmbedding (pairing (dualPairing 𝕜 F) · ·) :=
+      LinearMap.IsWeak.isEmbedding Function.injective_id
+    have : T2Space (WeakBilin (dualPairing 𝕜 F)) := this.t2Space
+    apply IsCompact.isClosed
+    apply hs'.image hB₂
+  · exact hs_non.image _
+
+open ContinuousLinearMap Module in
+open scoped Topology in
+-- this is Theorem 3.2 in Voigt, *Topological Vector Spaces*, used in the proof that the Mackey
+-- topology is compatible.
+lemma StrongDual.range_coeLM_eq_sUnion_polar_nhds {𝕜 E : Type*} [NormedField 𝕜] [AddCommGroup E]
+    [Module 𝕜 E] [TopologicalSpace E] {ι : Sort*} {p : ι → Prop} {s : ι → Set E}
+    (h : (𝓝 0).HasBasis p s) :
+    (coeLM 𝕜 : StrongDual 𝕜 E →ₗ[𝕜] Dual 𝕜 E).range =
+      ⋃₀ {(dualPairing 𝕜 E).flip.polar (s i) | (i : ι) (hi : p i)} :=
+    -- an alternate spelling of the right-hand side could be:
+    -- ⋃₀ (Set.range (fun i : Subtype p ↦ (dualPairing 𝕜 E).flip.polar (s i)))
+  sorry
+
+#exit
 -- the version in Mathlib has some small defeq abuse. It uses `f : E →SL[σ] F`
 open scoped UniformConvergenceCLM UniformConvergence in
 lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
@@ -536,12 +586,6 @@ lemma continuous_seminorm_comp [TopologicalSpace E] [IsTopologicalAddGroup E]
   exact B.polar_mem s y hy x hx
 
 open LinearMap WithSeminorms
-
-lemma _root_.closedAbsConvexHull_eq_self {𝕜 E : Type*} [SeminormedRing 𝕜]
-    [SMul 𝕜 E] [AddCommMonoid E] [PartialOrder 𝕜] [TopologicalSpace E]
-    {s : Set E} (h_conv : AbsConvex 𝕜 s) (h_closed : IsClosed s) :
-    closedAbsConvexHull 𝕜 s = s :=
-  subset_antisymm (closedAbsConvexHull_min le_rfl h_conv h_closed) subset_closedAbsConvexHull
 
 
 /-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatible` and
