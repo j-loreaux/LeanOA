@@ -44,14 +44,23 @@ open ContinuousLinearMap Module in
 open scoped Topology in
 -- this is Theorem 3.2 in Voigt, *Topological Vector Spaces*, used in the proof that the Mackey
 -- topology is compatible.
-lemma StrongDual.range_coeLM_eq_sUnion_polar_nhds {𝕜 E : Type*} [NormedField 𝕜] [AddCommGroup E]
-    [Module 𝕜 E] [TopologicalSpace E] {ι : Sort*} {p : ι → Prop} {s : ι → Set E}
+lemma StrongDual.range_coeLM_eq_sUnion_polar_nhds {𝕜 E : Type*} [NontriviallyNormedField 𝕜]
+    [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [ContinuousSMul 𝕜 E] {ι : Sort*} {p : ι → Prop} {s : ι → Set E}
     (h : (𝓝 0).HasBasis p s) :
     (coeLM 𝕜 : StrongDual 𝕜 E →ₗ[𝕜] Dual 𝕜 E).range =
-      ⋃₀ {(dualPairing 𝕜 E).flip.polar (s i) | (i : ι) (hi : p i)} :=
-    -- an alternate spelling of the right-hand side could be:
-    -- ⋃₀ (Set.range (fun i : Subtype p ↦ (dualPairing 𝕜 E).flip.polar (s i)))
-  sorry
+      ⋃₀ {(dualPairing 𝕜 E).flip.polar (s i) | (i : ι) (hi : p i)} := by
+  ext f
+  simp only [SetLike.mem_coe, LinearMap.mem_range, coeLM_apply, exists_prop, Set.mem_sUnion,
+    Set.mem_setOf_eq, exists_exists_and_eq_and]
+  constructor
+  · rintro ⟨y , rfl⟩
+    -- This is the continuity argument, which I need to sort out...
+    sorry
+  · rintro ⟨i, _, hi2⟩
+    have hs : s i ∈ 𝓝 0 := by apply h.1 (s i) |>.mpr; use i
+    use LinearMap.clmOfExistsBoundedImage f ⟨s _, hs, Bornology.isVonNBounded_image _ _ hi2⟩
+    aesop
 
 #exit
 -- the version in Mathlib has some small defeq abuse. It uses `f : E →SL[σ] F`
