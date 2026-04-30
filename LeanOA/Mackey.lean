@@ -705,7 +705,7 @@ variable (B)
 variable [B.flip.IsWeak]
 
 open PolarTopology in
-/-- Every locally convex topology is weaker than the Mackey topology. -/
+/-- Every compatible locally convex topology is weaker than the Mackey topology. -/
 lemma continuous_ofMackey [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E]
     [LocallyConvexSpace 𝕜 E] [B.IsCompatible] :
     Continuous (ofMackey : Mackey B → E) := by
