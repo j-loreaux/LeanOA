@@ -584,12 +584,14 @@ open WeakBilin
 variable [TopologicalSpace F]
 
 /-- The Mackey toplogy on a space `E` relative to a bilinear form `B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜` is the
-polar topology corresponding to all (weakly) compact absolutely convex sets in `F`. The space
-`F` must be equipped with the weak topology induced by `B.flip`. -/
-abbrev Mackey (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.flip.IsWeak] :=
+polar topology corresponding to all (weakly) compact absolutely convex sets in `F`.
+
+Although it is not required for the definition, the space `F` should be equipped with the weak
+topology induced by `B.flip` for any of the usual theorems to be applicable. -/
+abbrev Mackey (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) :=
     PolarTopology B {s | IsCompact s ∧ AbsConvex 𝕜 s}
 
-variable {B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜} [B.flip.IsWeak]
+variable {B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜}
 
 variable (B) in
 /-- The identity map from `E` to its type synonym equipped with the Mackey topology. -/
@@ -646,6 +648,7 @@ private theorem _root_.IsCompact.isVonNBounded' {𝕜 E F : Type*} [RCLike 𝕜]
   hs.isVonNBounded 𝕜
 
 variable (B)
+variable [B.flip.IsWeak]
 
 -- can we eliminate the need for `T2Space F` here? At least under certain circumstances?
 -- probably `IsCompatible` will be enough? This was used in the proof that the
@@ -663,10 +666,14 @@ instance [T2Space F] : LocallyConvexSpace 𝕜 (Mackey B) :=
   let _ : IsScalarTower ℝ 𝕜 E := RestrictScalars.isScalarTower ℝ 𝕜 E
   .to_rclike 𝕜 (Mackey B) inferInstance
 
+/-- Every compact set gives rise to a seminorm on `Mackey B`, but in practice we are only interested
+in those for which the sets are also absolutely convex. -/
 noncomputable abbrev seminorm (s : Set F) (hs : IsCompact s) :
     Seminorm 𝕜 (Mackey B) :=
   PolarTopology.seminorm B {s | IsCompact s ∧ AbsConvex 𝕜 s} s <| hs.isVonNBounded' B.flip
 
+/-- The compact absolutely convex sets give rise to a seminorm family on `Mackey B` which induces
+the topology. -/
 noncomputable abbrev seminormFamily :
     SeminormFamily 𝕜 (Mackey B) {s : Set F | IsCompact s ∧ AbsConvex 𝕜 s} :=
   PolarTopology.seminormFamily B {s | IsCompact s ∧ AbsConvex 𝕜 s}
@@ -695,6 +702,7 @@ lemma withSeminorms [T2Space F] : WithSeminorms (seminormFamily B) :=
 end Mackey
 
 variable (B)
+variable [B.flip.IsWeak]
 
 open PolarTopology in
 /-- Every locally convex topology is weaker than the Mackey topology. -/
