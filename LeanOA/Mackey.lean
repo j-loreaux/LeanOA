@@ -49,20 +49,24 @@ lemma StrongDual.range_coeLM_eq_sUnion_polar_nhds {𝕜 E : Type*} [Nontrivially
     [ContinuousSMul 𝕜 E] {ι : Sort*} {p : ι → Prop} {s : ι → Set E}
     (h : (𝓝 0).HasBasis p s) :
     (coeLM 𝕜 : StrongDual 𝕜 E →ₗ[𝕜] Dual 𝕜 E).range =
-      ⋃₀ {(dualPairing 𝕜 E).flip.polar (s i) | (i : ι) (hi : p i)} := by
+      ⋃₀ {(dualPairing 𝕜 E).flip.polar (s i) | (i : ι) (_ : p i)} := by
   ext f
   simp only [SetLike.mem_coe, LinearMap.mem_range, coeLM_apply, exists_prop, Set.mem_sUnion,
     Set.mem_setOf_eq, exists_exists_and_eq_and]
   constructor
   · rintro ⟨y , rfl⟩
-    -- This is the continuity argument, which I need to sort out...
-    sorry
+    dsimp [dualPairing, LinearMap.flip, LinearMap.polar]
+    have h2 := ContinuousAt.tendsto <| map_continuousAt y 0
+    simp only [map_zero] at h2
+    have h3 := Filter.Tendsto.basis_left (sa := s) (pa := p) h2 h (Metric.closedBall 0 1)
+      <| Metric.closedBall_mem_nhds (α := 𝕜) (0 : 𝕜) (ε := 1) (by simp)
+    convert h3
+    simp only [Metric.closedBall, dist_zero_right, Set.MapsTo, Set.mem_setOf_eq]
   · rintro ⟨i, _, hi2⟩
     have hs : s i ∈ 𝓝 0 := by apply h.1 (s i) |>.mpr; use i
     use LinearMap.clmOfExistsBoundedImage f ⟨s _, hs, Bornology.isVonNBounded_image _ _ hi2⟩
     aesop
 
-#exit
 -- the version in Mathlib has some small defeq abuse. It uses `f : E →SL[σ] F`
 open scoped UniformConvergenceCLM UniformConvergence in
 lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
