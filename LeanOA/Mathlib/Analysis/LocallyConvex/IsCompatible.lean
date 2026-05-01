@@ -8,7 +8,7 @@ variable {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E] [Mod
     [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F]
 
 /-- A linear topology on `E` is compatible with the bilinear form `B` if the
-every continuous linear functional on `E` has the form `B.flip f` for some `f : F`. -/
+every continuous linear functional on `E` has the form `B.flip f` for exactly one `f : F`. -/
 class IsCompatible (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) : Prop where
   range_eq_range : B.flip.range = (ContinuousLinearMap.coeLM 𝕜).range
   injective : Function.Injective B.flip
