@@ -215,7 +215,7 @@ def linearEquiv : PolarTopology B 𝔖 ≃ₗ[𝕜] E := .refl _ _
 
 /-- Variant of `B.flip` with the type synonym `PolarTopology B 𝔖` in place of `E`. -/
 abbrev bilin : F →ₗ[𝕜] PolarTopology B 𝔖 →ₗ[𝕜] 𝕜 :=
-  linearEquiv.symm.arrowCongr (.refl _ _) B |>.flip
+  (linearEquiv.symm.arrowCongr (.refl _ _)) B |>.flip
 
 variable {B 𝔖} in
 lemma bilin_apply_apply (y : F) (x : PolarTopology B 𝔖) :
@@ -484,7 +484,7 @@ lemma continuous_seminorm (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (�
 open TopologicalSpace
 
 variable (B 𝔖) in
-/-- The natural `SeminormFamily` that implements `PolarTopology B 𝔖`. -/
+/-- The natural `SeminormFamily` associated to `PolarTopology B 𝔖`. -/
 noncomputable def seminormFamily (h𝔖 : ∀ s ∈ 𝔖, IsVonNBounded 𝕜 s) :
     SeminormFamily 𝕜 (PolarTopology B 𝔖) 𝔖 :=
   fun s ↦ seminorm B 𝔖 s.1 (h𝔖 _ s.2)
