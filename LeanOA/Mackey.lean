@@ -55,12 +55,11 @@ lemma StrongDual.range_coeLM_eq_sUnion_polar_nhds {𝕜 E : Type*} [Nontrivially
     Set.mem_setOf_eq, exists_exists_and_eq_and]
   constructor
   · rintro ⟨y , rfl⟩
-    dsimp [dualPairing, LinearMap.flip, LinearMap.polar]
-    have h2 := ContinuousAt.tendsto <| map_continuousAt y 0
-    simp only [map_zero] at h2
-    have h3 := Filter.Tendsto.basis_left (sa := s) (pa := p) h2 h (Metric.closedBall 0 1)
-      <| Metric.closedBall_mem_nhds (α := 𝕜) (0 : 𝕜) (ε := 1) (by simp)
-    convert h3
+    have h1 := ContinuousAt.tendsto <| map_continuousAt y 0
+    simp only [LinearMap.polar, LinearMap.flip_apply, dualPairing_apply,
+      Set.mem_setOf_eq, coe_coe, map_zero] at h1 ⊢
+    convert Filter.Tendsto.basis_left h1 h (Metric.closedBall 0 1)
+      <| Metric.closedBall_mem_nhds _ zero_lt_one
     simp only [Metric.closedBall, dist_zero_right, Set.MapsTo, Set.mem_setOf_eq]
   · rintro ⟨i, _, hi2⟩
     have hs : s i ∈ 𝓝 0 := by apply h.1 (s i) |>.mpr; use i
