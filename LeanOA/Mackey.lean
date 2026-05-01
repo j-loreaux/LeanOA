@@ -62,8 +62,8 @@ lemma StrongDual.range_coeLM_eq_sUnion_polar_nhds {𝕜 E : Type*} [Nontrivially
       <| Metric.closedBall_mem_nhds _ zero_lt_one
     simp only [Metric.closedBall, dist_zero_right, Set.MapsTo, Set.mem_setOf_eq]
   · rintro ⟨i, _, hi2⟩
-    have hs : s i ∈ 𝓝 0 := by apply h.1 (s i) |>.mpr; use i
-    use LinearMap.clmOfExistsBoundedImage f ⟨s _, hs, Bornology.isVonNBounded_image _ _ hi2⟩
+    have : s i ∈ 𝓝 0 := by apply h.1 (s i) |>.mpr; use i
+    use LinearMap.clmOfExistsBoundedImage f ⟨s _, this, Bornology.isVonNBounded_image _ _ hi2⟩
     aesop
 
 -- the version in Mathlib has some small defeq abuse. It uses `f : E →SL[σ] F`
