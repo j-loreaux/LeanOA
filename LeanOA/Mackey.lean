@@ -790,9 +790,7 @@ theorem isWeak_bilin_of_isWeak :
   apply LinearMap.IsWeak.congr B.flip (e := ContinuousLinearEquiv.refl 𝕜 F) (f := toMackey B)
   aesop
 
-open ComplexOrder in
-open ContinuousLinearMap Module Set PolarTopology Pointwise in
-open scoped Topology in
+open ContinuousLinearMap Module PolarTopology Pointwise in
 /-- Very likely defeq abuse in the statement here. But we can check/fix later.
   Also we need to whittle down the assumptions. Some need to be proved. -/
 example [IsTopologicalAddGroup F] [Module ℝ F]
@@ -803,7 +801,7 @@ example [IsTopologicalAddGroup F] [Module ℝ F]
   have hm_cts_smul : ContinuousSMul 𝕜 (Mackey B) := by
     apply PolarTopology.continuousSMul (E := Mackey B)
     exact fun S hS ↦IsCompact.isVonNBounded 𝕜 hS.1
-  have := isWeak_bilin_of_isWeak B
+  have h_iw := isWeak_bilin_of_isWeak B
   have h_pb:= hasBasis_nhds_zero_polar (B := B)
             (nonempty_setOf_isCompact_absConvex 𝕜 F)
             (directedOn_setOf_isCompact_absConvex 𝕜 F)
