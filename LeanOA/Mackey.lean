@@ -804,18 +804,18 @@ example [IsTopologicalAddGroup F] [Module ℝ F]
     exact fun _ hS ↦ IsCompact.isVonNBounded 𝕜 hS.1
   have := isWeak_bilin B
   rw [StrongDual.range_coeLM_eq_sUnion_polar_nhds <|
-      hasBasis_nhds_zero_polar (B := B) (nonempty_setOf_isCompact_absConvex 𝕜 F)
+      hasBasis_nhds_zero_polar (nonempty_setOf_isCompact_absConvex _ _)
         (directedOn_setOf_isCompact_absConvex _ _)
-        (by simpa [mem_setOf_eq, and_imp] using fun _ hx _ ↦ IsCompact.isVonNBounded _ hx)
+        (by simpa [mem_setOf_eq, and_imp] using fun _ h _ ↦ IsCompact.isVonNBounded _ h)
         (fun c _ w hw ↦ ⟨c • w, ⟨⟨IsCompact.smul _ hw.1, by
                 simpa using AbsConvex.image (Module.End.smulLeft (RCLike.ofReal _)
                   (algebraMap_mem_center _)) hw.2⟩, by aesop⟩⟩)]
   ext x
   constructor
   · simp only [mem_setOf_eq, exists_prop, mem_sUnion, exists_exists_and_eq_and]
-    rintro ⟨s, hs, hb⟩
+    rintro ⟨s, _, hb⟩
     by_cases hne : s.Nonempty
-    · rw [Module.dualPairing_flip_polar_polar (B := B₁) (by aesop) (by aesop) hne] at hb
+    · rw [Module.dualPairing_flip_polar_polar B₁ (by aesop) (by aesop) hne] at hb
       grind
     · simp only [image_univ, mem_range, not_nonempty_iff_eq_empty.mp hne , polar_empty] at hb ⊢
       rw [polar_univ, mem_singleton_iff] at hb
@@ -825,17 +825,16 @@ example [IsTopologicalAddGroup F] [Module ℝ F]
     exists_exists_and_eq_and, forall_exists_index]
     intro f hf
     use closedAbsConvexHull 𝕜 (convexHull ℝ {f})
-    have hcpt : IsCompact ((closedAbsConvexHull 𝕜) ((convexHull ℝ) {f})) := by
-      apply IsCompact.closedAbsConvexHull (𝕜 := 𝕜) <|  Set.Finite.isCompact_convexHull _
-          (Finite.of_subsingleton : Finite ({f} : Set F))
+    have hcpt : IsCompact <| closedAbsConvexHull 𝕜 (convexHull ℝ {f}) := by
+      apply IsCompact.closedAbsConvexHull <| Set.Finite.isCompact_convexHull _
+        Finite.of_subsingleton
       rw [← convexHull_rclike_eq_convexHull_real (K := 𝕜)]
-      exact convex_convexHull 𝕜 {f}
+      exact convex_convexHull _ {f}
     exact ⟨⟨hcpt, absConvex_convexClosedHull⟩, by
-      rw [Module.dualPairing_flip_polar_polar
-        (B := B₁) absConvex_convexClosedHull hcpt
+      rw [Module.dualPairing_flip_polar_polar B₁ absConvex_convexClosedHull hcpt
         (by simp only [convexHull_singleton, closedAbsConvexHull_eq_closure_absConvexHull,
          closure_nonempty_iff, absConvexHull_nonempty, singleton_nonempty])]
       exact ⟨f, by simpa [closedAbsConvexHull_eq_closure_absConvexHull] using subset_closure <|
-            (mem_absConvexHull_iff.mpr fun _ a _ ↦ a rfl : f ∈ (absConvexHull 𝕜) {f}), hf⟩⟩
+           (mem_absConvexHull_iff.mpr fun _ a _ ↦ a rfl : f ∈ absConvexHull 𝕜 {f}), hf⟩⟩
 
 end PolarTopology
