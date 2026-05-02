@@ -803,13 +803,13 @@ example [IsTopologicalAddGroup F] [Module ℝ F]
     apply PolarTopology.continuousSMul (E := Mackey B)
     exact fun _ hS ↦ IsCompact.isVonNBounded 𝕜 hS.1
   have := isWeak_bilin B
-  have := hasBasis_nhds_zero_polar (B := B) (nonempty_setOf_isCompact_absConvex 𝕜 F)
-      (directedOn_setOf_isCompact_absConvex _ _)
-      (by simpa [mem_setOf_eq, and_imp] using fun _ hx _ ↦ IsCompact.isVonNBounded _ hx)
-      (fun c _ w hw ↦ by exact ⟨c • w, ⟨⟨IsCompact.smul _ hw.1, by
+  rw [StrongDual.range_coeLM_eq_sUnion_polar_nhds <|
+      hasBasis_nhds_zero_polar (B := B) (nonempty_setOf_isCompact_absConvex 𝕜 F)
+        (directedOn_setOf_isCompact_absConvex _ _)
+        (by simpa [mem_setOf_eq, and_imp] using fun _ hx _ ↦ IsCompact.isVonNBounded _ hx)
+        (fun c _ w hw ↦ ⟨c • w, ⟨⟨IsCompact.smul _ hw.1, by
                 simpa using AbsConvex.image (Module.End.smulLeft (RCLike.ofReal _)
-                  (algebraMap_mem_center _)) hw.2⟩, by aesop⟩⟩)
-  rw [StrongDual.range_coeLM_eq_sUnion_polar_nhds this]
+                  (algebraMap_mem_center _)) hw.2⟩, by aesop⟩⟩)]
   ext x
   constructor
   · simp only [mem_setOf_eq, exists_prop, mem_sUnion, exists_exists_and_eq_and]
