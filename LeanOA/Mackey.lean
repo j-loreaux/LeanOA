@@ -286,6 +286,13 @@ lemma isUniformInducing_toUniformConvergenceCLM :
 instance : ContinuousConstSMul 𝕜 (PolarTopology B 𝔖) :=
   isUniformInducing_toUniformConvergenceCLM B 𝔖 |>.isInducing.continuousConstSMul id <| by simp
 
+protected theorem continuousSMul [IsTopologicalAddGroup F] [ContinuousSMul 𝕜 F] [TopologicalSpace E]
+    (h𝔖 : ∀ S ∈ 𝔖, Bornology.IsVonNBounded 𝕜 S) : ContinuousSMul 𝕜 (PolarTopology B 𝔖) := by
+  have : ContinuousSMul 𝕜 (F →Lᵤ[𝕜, 𝔖] 𝕜) :=
+    UniformConvergenceCLM.continuousSMul (σ := RingHom.id 𝕜) (E := F) (F := 𝕜) 𝔖 h𝔖
+  apply isUniformInducing_toUniformConvergenceCLM B 𝔖 |>.isInducing.continuousSMul continuous_id <|
+   by simp
+
 lemma isUniformEmbedding_toUniformConvergenceCLM (hB : B.SeparatingLeft) :
     IsUniformEmbedding (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)) where
   comap_uniformity := rfl
@@ -783,26 +790,19 @@ variable {𝕜 E F : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
 open ContinuousLinearMap Module Set PolarTopology
 open scoped Topology
 
-
-/- The following is a simulacrum of the proof of the remaining direction of Mackey-Arens.
-I have *not* been careful with anything at all, and was simply trying to get a prototype
-to work. The assumptions are undoubtedly all wrong. Many things need to be proved if this
-statement is indeed right. For example, `[(bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).IsWeak]`
-as well as several ContinuousSMul assumptions throughout. -/
-
 open ComplexOrder in
 open ContinuousLinearMap Module Set PolarTopology Pointwise in
 open scoped Topology in
 /-- Very likely defeq abuse in the statement here. But we can check/fix later.
   Also we need to whittle down the assumptions. Some need to be proved. -/
-example {𝕜 E F : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
-    [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F] [IsTopologicalAddGroup F]
-    [Module ℝ F] [ContinuousSMul 𝕜 F] [IsScalarTower ℝ 𝕜 F] [ContinuousSMul ℝ F]
-    [T2Space F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.flip.IsWeak]
+example [IsTopologicalAddGroup F] [Module ℝ F] [ContinuousSMul 𝕜 F]
+    [IsScalarTower ℝ 𝕜 F] [ContinuousSMul ℝ F] [T2Space F]
     [(bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).IsWeak] :
     (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range =
       (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}) '' univ := by
-  have Need : ContinuousSMul 𝕜 (Mackey B) := sorry -- I just think this is missing.
+  have hm_cts_smul : ContinuousSMul 𝕜 (Mackey B) := by
+    apply PolarTopology.continuousSMul (E := Mackey B)
+    exact fun S hS ↦IsCompact.isVonNBounded 𝕜 hS.1
   have h_pb:= hasBasis_nhds_zero_polar (B := B)
             (nonempty_setOf_isCompact_absConvex 𝕜 F)
             (directedOn_setOf_isCompact_absConvex 𝕜 F)
