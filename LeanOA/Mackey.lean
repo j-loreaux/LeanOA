@@ -790,34 +790,28 @@ theorem isWeak_bilin :
   apply LinearMap.IsWeak.congr B.flip (e := ContinuousLinearEquiv.refl 𝕜 F) (f := toMackey B)
   aesop
 
-open ContinuousLinearMap Module PolarTopology Pointwise in
+open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
 /-- Very likely defeq abuse in the statement here. But we can check/fix later.
   Also we need to whittle down the assumptions. Some need to be proved. -/
 example [IsTopologicalAddGroup F] [Module ℝ F]
     [IsScalarTower ℝ 𝕜 F] [T2Space F] [ContinuousSMul 𝕜 F] :
     (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range =
       (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}) '' univ := by
+  letI B₁ := bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}
   have h_r_cts_smul : ContinuousSMul ℝ F := IsScalarTower.continuousSMul 𝕜
   have hm_cts_smul : ContinuousSMul 𝕜 (Mackey B) := by
     apply PolarTopology.continuousSMul (E := Mackey B)
     exact fun S hS ↦IsCompact.isVonNBounded 𝕜 hS.1
-  have h_iw := isWeak_bilin B
+  have h_w := isWeak_bilin B
   have h_pb:= hasBasis_nhds_zero_polar (B := B)
             (nonempty_setOf_isCompact_absConvex 𝕜 F)
             (directedOn_setOf_isCompact_absConvex 𝕜 F)
             (by simpa [mem_setOf_eq, and_imp] using
                 fun s hx a ↦ IsCompact.isVonNBounded 𝕜 hx)
-            (by
-             intro c hc w hw
-             use c • w
-             constructor
-             · simp only [mem_setOf_eq]
-               constructor
-               · apply IsCompact.smul c
-                 exact hw.1
-               · simpa using AbsConvex.image (Module.End.smulLeft (R := 𝕜) (RCLike.ofReal c)
-                  (algebraMap_mem_center c)) hw.2
-             · aesop)
+            (fun c hc w hw ↦ by
+              exact ⟨c • w, ⟨⟨by apply IsCompact.smul c; exact hw.1, by
+                simpa using AbsConvex.image (Module.End.smulLeft (R := 𝕜) (RCLike.ofReal c)
+                  (algebraMap_mem_center c)) hw.2⟩, by aesop⟩⟩)
   rw [StrongDual.range_coeLM_eq_sUnion_polar_nhds h_pb]
   ext x
   constructor
@@ -825,44 +819,30 @@ example [IsTopologicalAddGroup F] [Module ℝ F]
     simp only [mem_setOf_eq, exists_prop, mem_sUnion, exists_exists_and_eq_and] at h
     obtain ⟨s, hs_and, hb⟩ := h
     by_cases hne : s.Nonempty
-    · rw [Module.dualPairing_flip_polar_polar
-       (B := (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s})) (by aesop) (by aesop) hne] at hb
+    · rw [Module.dualPairing_flip_polar_polar (B := B₁) (by aesop) (by aesop) hne] at hb
       grind
-    · simp only [image_univ, mem_range, not_nonempty_iff_eq_empty.mp hne , LinearMap.polar_empty]
-        at hb ⊢
+    · simp only [image_univ, mem_range, not_nonempty_iff_eq_empty.mp hne , polar_empty] at hb ⊢
       have : x = 0 := by
-         rw [LinearMap.polar_univ] at hb
-         · simpa
-         · exact LinearMap.separatingRight_iff_flip_ker_eq_bot.mpr rfl
+         rw [polar_univ] at hb
+         · exact LinearMap.ext_iff.mpr <| congrFun <| congrArg DFunLike.coe hb
+         · exact separatingRight_iff_flip_ker_eq_bot.mpr rfl
       use 0
       simp only [map_zero, this.symm]
   · simp only [image_univ, mem_range, mem_setOf_eq, exists_prop, mem_sUnion,
     exists_exists_and_eq_and, forall_exists_index]
     intro f hf
     use closedAbsConvexHull 𝕜 (convexHull ℝ {f})
-    have hmem : f ∈ (absConvexHull 𝕜) {f} := mem_absConvexHull_iff.mpr fun t a a_1 ↦ a rfl
-    have hcpt1 := Set.Finite.isCompact (Finite.of_subsingleton : Finite ({f} : Set F))
-    constructor
-    · constructor
-      · have hcpt2 := Set.Finite.isCompact_convexHull ℝ
+    have hcpt : IsCompact ((closedAbsConvexHull 𝕜) ((convexHull ℝ) {f})) := by
+      apply IsCompact.closedAbsConvexHull (𝕜 := 𝕜) <|  Set.Finite.isCompact_convexHull _
           (Finite.of_subsingleton : Finite ({f} : Set F))
-        apply IsCompact.closedAbsConvexHull hcpt2
-        rw [← convexHull_rclike_eq_convexHull_real (K := 𝕜)]
-        exact convex_convexHull 𝕜 {f}
-      · exact absConvex_convexClosedHull
-    · rw [Module.dualPairing_flip_polar_polar
-       (B := (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s})) ?_ ?_ ?_]
-      · use f
-        constructor
-        · simpa [closedAbsConvexHull_eq_closure_absConvexHull] using subset_closure hmem
-        · exact hf
-      · exact absConvex_convexClosedHull
-      · have hcpt2 := Set.Finite.isCompact_convexHull ℝ
-          (Finite.of_subsingleton : Finite ({f} : Set F))
-        apply IsCompact.closedAbsConvexHull hcpt2
-        rw [← convexHull_rclike_eq_convexHull_real (K := 𝕜)]
-        exact convex_convexHull 𝕜 {f}
-      · simp only [convexHull_singleton, closedAbsConvexHull_eq_closure_absConvexHull,
-         closure_nonempty_iff, absConvexHull_nonempty, singleton_nonempty]
+      rw [← convexHull_rclike_eq_convexHull_real (K := 𝕜)]
+      exact convex_convexHull 𝕜 {f}
+    exact ⟨⟨hcpt, absConvex_convexClosedHull⟩, by
+      rw [Module.dualPairing_flip_polar_polar
+        (B := B₁) absConvex_convexClosedHull hcpt
+        (by simp only [convexHull_singleton, closedAbsConvexHull_eq_closure_absConvexHull,
+         closure_nonempty_iff, absConvexHull_nonempty, singleton_nonempty])]
+      exact ⟨f, by simpa [closedAbsConvexHull_eq_closure_absConvexHull] using subset_closure <|
+            (mem_absConvexHull_iff.mpr fun _ a _ ↦ a rfl : f ∈ (absConvexHull 𝕜) {f}), hf⟩⟩
 
 end PolarTopology
