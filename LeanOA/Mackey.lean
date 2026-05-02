@@ -785,7 +785,7 @@ noncomputable def ofMackeyCLM [TopologicalSpace E] [IsTopologicalAddGroup E] [Co
   cont := continuous_ofMackey B
 
 open PolarTopology in
-theorem isWeak_bilin_of_isWeak :
+theorem isWeak_bilin :
     (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).IsWeak := by
   apply LinearMap.IsWeak.congr B.flip (e := ContinuousLinearEquiv.refl 𝕜 F) (f := toMackey B)
   aesop
@@ -801,7 +801,7 @@ example [IsTopologicalAddGroup F] [Module ℝ F]
   have hm_cts_smul : ContinuousSMul 𝕜 (Mackey B) := by
     apply PolarTopology.continuousSMul (E := Mackey B)
     exact fun S hS ↦IsCompact.isVonNBounded 𝕜 hS.1
-  have h_iw := isWeak_bilin_of_isWeak B
+  have h_iw := isWeak_bilin B
   have h_pb:= hasBasis_nhds_zero_polar (B := B)
             (nonempty_setOf_isCompact_absConvex 𝕜 F)
             (directedOn_setOf_isCompact_absConvex 𝕜 F)
