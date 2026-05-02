@@ -791,9 +791,8 @@ theorem isWeak_bilin :
   aesop
 
 open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
-/-- Very likely defeq abuse in the statement here. But we can check/fix later.
-  Also we need to whittle down the assumptions. Some need to be proved. -/
-example [IsTopologicalAddGroup F] [Module ℝ F]
+set_option linter.unusedSectionVars false in
+theorem Mackey.range_coeLM_eq_image_bilin [IsTopologicalAddGroup F] [Module ℝ F]
     [IsScalarTower ℝ 𝕜 F] [T2Space F] [ContinuousSMul 𝕜 F] :
     (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range =
       (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}) '' univ := by
@@ -836,5 +835,19 @@ example [IsTopologicalAddGroup F] [Module ℝ F]
          closure_nonempty_iff, absConvexHull_nonempty, singleton_nonempty])]
       exact ⟨f, by simpa [closedAbsConvexHull_eq_closure_absConvexHull] using subset_closure <|
            (mem_absConvexHull_iff.mpr fun _ a _ ↦ a rfl : f ∈ absConvexHull 𝕜 {f}), hf⟩⟩
+
+open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
+set_option linter.unusedSectionVars false in
+theorem Mackey.range_coeLM_eq_range_bilin [IsTopologicalAddGroup F] [Module ℝ F]
+    [IsScalarTower ℝ 𝕜 F] [T2Space F] [ContinuousSMul 𝕜 F] :
+    (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range =
+      (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).range := by
+  have h1 : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).range =
+      (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}) '' univ := by
+    ext x
+    simp only [SetLike.mem_coe, LinearMap.mem_range, image_univ, Set.mem_range]
+  have h2 := Mackey.range_coeLM_eq_image_bilin B
+  rw [← h1] at h2
+  exact_mod_cast h2
 
 end PolarTopology
