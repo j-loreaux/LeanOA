@@ -3,6 +3,7 @@ import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 import LeanOA.AbsConvex
+import LeanOA.LocallyConvexNhdsBasis
 
 
 lemma closedAbsConvexHull_eq_self {𝕜 E : Type*} [SeminormedRing 𝕜]
@@ -754,7 +755,6 @@ lemma withSeminorms [T2Space F] : WithSeminorms (seminormFamily B) :=
   PolarTopology.withSeminorms B _ (nonempty_setOf_isCompact_absConvex 𝕜 F)
     (directedOn_setOf_isCompact_absConvex 𝕜 F) fun _s hs ↦ hs.1.isVonNBounded' B.flip
 
-
 end Mackey
 
 variable (B)
@@ -776,5 +776,94 @@ noncomputable def ofMackeyCLM [TopologicalSpace E] [IsTopologicalAddGroup E] [Co
     Mackey B →L[𝕜] E where
   toLinearMap := ofMackey.toLinearMap
   cont := continuous_ofMackey B
+
+variable {𝕜 E F : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.flip.IsWeak]
+    {s : Set (Module.Dual 𝕜 (Mackey B))}
+open ContinuousLinearMap Module Set PolarTopology
+open scoped Topology
+
+
+/- The following is a simulacrum of the proof of the remaining direction of Mackey-Arens.
+I have *not* been careful with anything at all, and was simply trying to get a prototype
+to work. The assumptions are undoubtedly all wrong. Many things need to be proved if this
+statement is indeed right. For example, `[(bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).IsWeak]`
+as well as several ContinuousSMul assumptions throughout. -/
+
+open ComplexOrder in
+open ContinuousLinearMap Module Set PolarTopology Pointwise in
+open scoped Topology in
+/-- Very likely defeq abuse in the statement here. But we can check/fix later.
+  Also we need to whittle down the assumptions. Some need to be proved. -/
+example {𝕜 E F : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
+    [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F] [IsTopologicalAddGroup F]
+    [Module ℝ F] [ContinuousSMul 𝕜 F] [IsScalarTower ℝ 𝕜 F] [ContinuousSMul ℝ F]
+    [T2Space F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.flip.IsWeak]
+    [(bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).IsWeak] :
+    (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range =
+      (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}) '' univ := by
+  have Need : ContinuousSMul 𝕜 (Mackey B) := sorry -- I just think this is missing.
+  have h_pb:= hasBasis_nhds_zero_polar (B := B)
+            (nonempty_setOf_isCompact_absConvex 𝕜 F)
+            (directedOn_setOf_isCompact_absConvex 𝕜 F)
+            (by simpa [mem_setOf_eq, and_imp] using
+                fun s hx a ↦ IsCompact.isVonNBounded 𝕜 hx)
+            (by
+             intro c hc w hw
+             use c • w
+             constructor
+             · simp only [mem_setOf_eq]
+               constructor
+               · apply IsCompact.smul c
+                 exact hw.1
+               · simpa using AbsConvex.image (Module.End.smulLeft (R := 𝕜) (RCLike.ofReal c)
+                  (algebraMap_mem_center c)) hw.2
+             · aesop)
+  rw [StrongDual.range_coeLM_eq_sUnion_polar_nhds h_pb]
+  ext x
+  constructor
+  · intro h
+    simp only [mem_setOf_eq, exists_prop, mem_sUnion, exists_exists_and_eq_and] at h
+    obtain ⟨s, hs_and, hb⟩ := h
+    by_cases hne : s.Nonempty
+    · rw [Module.dualPairing_flip_polar_polar
+       (B := (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s})) (by aesop) (by aesop) hne] at hb
+      grind
+    · simp only [image_univ, mem_range, not_nonempty_iff_eq_empty.mp hne , LinearMap.polar_empty]
+        at hb ⊢
+      have : x = 0 := by
+         rw [LinearMap.polar_univ] at hb
+         · simpa
+         · exact LinearMap.separatingRight_iff_flip_ker_eq_bot.mpr rfl
+      use 0
+      simp only [map_zero, this.symm]
+  · simp only [image_univ, mem_range, mem_setOf_eq, exists_prop, mem_sUnion,
+    exists_exists_and_eq_and, forall_exists_index]
+    intro f hf
+    use closedAbsConvexHull 𝕜 (convexHull ℝ {f})
+    have hmem : f ∈ (absConvexHull 𝕜) {f} := mem_absConvexHull_iff.mpr fun t a a_1 ↦ a rfl
+    have hcpt1 := Set.Finite.isCompact (Finite.of_subsingleton : Finite ({f} : Set F))
+    constructor
+    · constructor
+      · have hcpt2 := Set.Finite.isCompact_convexHull ℝ
+          (Finite.of_subsingleton : Finite ({f} : Set F))
+        apply IsCompact.closedAbsConvexHull hcpt2
+        rw [← convexHull_rclike_eq_convexHull_real (K := 𝕜)]
+        exact convex_convexHull 𝕜 {f}
+      · exact absConvex_convexClosedHull
+    · rw [Module.dualPairing_flip_polar_polar
+       (B := (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s})) ?_ ?_ ?_]
+      · use f
+        constructor
+        · simpa [closedAbsConvexHull_eq_closure_absConvexHull] using subset_closure hmem
+        · exact hf
+      · exact absConvex_convexClosedHull
+      · have hcpt2 := Set.Finite.isCompact_convexHull ℝ
+          (Finite.of_subsingleton : Finite ({f} : Set F))
+        apply IsCompact.closedAbsConvexHull hcpt2
+        rw [← convexHull_rclike_eq_convexHull_real (K := 𝕜)]
+        exact convex_convexHull 𝕜 {f}
+      · simp only [convexHull_singleton, closedAbsConvexHull_eq_closure_absConvexHull,
+         closure_nonempty_iff, absConvexHull_nonempty, singleton_nonempty]
 
 end PolarTopology
