@@ -73,7 +73,7 @@ theorem tendsto_iff_forall_eval_tendsto {α : Type*} {l : Filter α} {f : α →
     Tendsto f l (𝓝 x) ↔ ∀ y, Tendsto (fun i ↦ B (f i) y) l (𝓝 (B x y)) := by
   rw [← tendsto_pi_nhds, (isEmbedding hB_inj).tendsto_nhds_iff, Function.comp_def]
 
-protected theorem LinearMap.IsWeak.congr [AddCommMonoid E'] [Module 𝕜 E']
+protected theorem congr [AddCommMonoid E'] [Module 𝕜 E']
     [AddCommMonoid F'] [Module 𝕜 F'] [TopologicalSpace E']
     (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (B' : E' →ₗ[𝕜] F' →ₗ[𝕜] 𝕜) (e : E ≃L[𝕜] E') (f : F ≃ₗ[𝕜] F')
     (hBB' : e.toLinearEquiv.arrowCongr (f.arrowCongr (.refl ..)) B = B') [hB : B.IsWeak] :
