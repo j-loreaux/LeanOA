@@ -784,22 +784,23 @@ noncomputable def ofMackeyCLM [TopologicalSpace E] [IsTopologicalAddGroup E] [Co
   toLinearMap := ofMackey.toLinearMap
   cont := continuous_ofMackey B
 
-variable {𝕜 E F : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
-    [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.flip.IsWeak]
-    {s : Set (Module.Dual 𝕜 (Mackey B))}
-open ContinuousLinearMap Module Set PolarTopology
-open scoped Topology
+open ComplexOrder in
+open ContinuousLinearMap Module Set PolarTopology Pointwise in
+open scoped Topology in
+example [B.flip.IsWeak] : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).IsWeak := by sorry
+
 
 open ComplexOrder in
 open ContinuousLinearMap Module Set PolarTopology Pointwise in
 open scoped Topology in
 /-- Very likely defeq abuse in the statement here. But we can check/fix later.
   Also we need to whittle down the assumptions. Some need to be proved. -/
-example [IsTopologicalAddGroup F] [Module ℝ F] [ContinuousSMul 𝕜 F]
-    [IsScalarTower ℝ 𝕜 F] [ContinuousSMul ℝ F] [T2Space F]
+example [IsTopologicalAddGroup F] [Module ℝ F]
+    [IsScalarTower ℝ 𝕜 F] [T2Space F] [ContinuousSMul 𝕜 F]
     [(bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).IsWeak] :
     (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range =
       (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}) '' univ := by
+  have h_r_cts_smul : ContinuousSMul ℝ F := IsScalarTower.continuousSMul 𝕜
   have hm_cts_smul : ContinuousSMul 𝕜 (Mackey B) := by
     apply PolarTopology.continuousSMul (E := Mackey B)
     exact fun S hS ↦IsCompact.isVonNBounded 𝕜 hS.1
