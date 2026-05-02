@@ -798,36 +798,29 @@ example [IsTopologicalAddGroup F] [Module ℝ F]
     (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range =
       (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}) '' univ := by
   letI B₁ := bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}
-  have h_r_cts_smul : ContinuousSMul ℝ F := IsScalarTower.continuousSMul 𝕜
-  have hm_cts_smul : ContinuousSMul 𝕜 (Mackey B) := by
+  have : ContinuousSMul ℝ F := IsScalarTower.continuousSMul 𝕜
+  have : ContinuousSMul 𝕜 (Mackey B) := by
     apply PolarTopology.continuousSMul (E := Mackey B)
-    exact fun S hS ↦IsCompact.isVonNBounded 𝕜 hS.1
-  have h_w := isWeak_bilin B
-  have h_pb:= hasBasis_nhds_zero_polar (B := B)
-            (nonempty_setOf_isCompact_absConvex 𝕜 F)
-            (directedOn_setOf_isCompact_absConvex 𝕜 F)
-            (by simpa [mem_setOf_eq, and_imp] using
-                fun s hx a ↦ IsCompact.isVonNBounded 𝕜 hx)
-            (fun c hc w hw ↦ by
-              exact ⟨c • w, ⟨⟨by apply IsCompact.smul c; exact hw.1, by
-                simpa using AbsConvex.image (Module.End.smulLeft (R := 𝕜) (RCLike.ofReal c)
-                  (algebraMap_mem_center c)) hw.2⟩, by aesop⟩⟩)
-  rw [StrongDual.range_coeLM_eq_sUnion_polar_nhds h_pb]
+    exact fun _ hS ↦ IsCompact.isVonNBounded 𝕜 hS.1
+  have := isWeak_bilin B
+  have := hasBasis_nhds_zero_polar (B := B) (nonempty_setOf_isCompact_absConvex 𝕜 F)
+      (directedOn_setOf_isCompact_absConvex _ _)
+      (by simpa [mem_setOf_eq, and_imp] using fun _ hx _ ↦ IsCompact.isVonNBounded _ hx)
+      (fun c _ w hw ↦ by exact ⟨c • w, ⟨⟨IsCompact.smul _ hw.1, by
+                simpa using AbsConvex.image (Module.End.smulLeft (RCLike.ofReal _)
+                  (algebraMap_mem_center _)) hw.2⟩, by aesop⟩⟩)
+  rw [StrongDual.range_coeLM_eq_sUnion_polar_nhds this]
   ext x
   constructor
-  · intro h
-    simp only [mem_setOf_eq, exists_prop, mem_sUnion, exists_exists_and_eq_and] at h
-    obtain ⟨s, hs_and, hb⟩ := h
+  · simp only [mem_setOf_eq, exists_prop, mem_sUnion, exists_exists_and_eq_and]
+    rintro ⟨s, hs, hb⟩
     by_cases hne : s.Nonempty
     · rw [Module.dualPairing_flip_polar_polar (B := B₁) (by aesop) (by aesop) hne] at hb
       grind
     · simp only [image_univ, mem_range, not_nonempty_iff_eq_empty.mp hne , polar_empty] at hb ⊢
-      have : x = 0 := by
-         rw [polar_univ] at hb
-         · exact LinearMap.ext_iff.mpr <| congrFun <| congrArg DFunLike.coe hb
-         · exact separatingRight_iff_flip_ker_eq_bot.mpr rfl
-      use 0
-      simp only [map_zero, this.symm]
+      rw [polar_univ, mem_singleton_iff] at hb
+      · use 0; rw [hb, map_zero]
+      exact separatingRight_iff_flip_ker_eq_bot.mpr rfl
   · simp only [image_univ, mem_range, mem_setOf_eq, exists_prop, mem_sUnion,
     exists_exists_and_eq_and, forall_exists_index]
     intro f hf
