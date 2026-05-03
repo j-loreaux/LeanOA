@@ -786,7 +786,12 @@ noncomputable def ofMackeyCLM [TopologicalSpace E] [IsTopologicalAddGroup E] [Co
 
 
 /- Yes, I think the following is all wrong, because in assuming `IsWeak`, haven't I already assumed
-`IsCompatible`? -/
+`IsCompatible`? I'm wondering if you are right and the short theorem below together with assuming
+`[T1Space F]` we can almost immediately get compatibility of Mackey. This would seriously golf
+what follows, but feels a bit too much like a free lunch. AH! Wait...in the instance at the
+bottom, there is an extra flip, so maybe everything is fine. -/
+
+
 open PolarTopology in
 theorem isWeak_bilin :
     (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).IsWeak := by
@@ -796,7 +801,7 @@ theorem isWeak_bilin :
 open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
 set_option linter.unusedSectionVars false in
 theorem Mackey.range_coeLM_eq_image_bilin [IsTopologicalAddGroup F] [Module ℝ F]
-    [IsScalarTower ℝ 𝕜 F] [T2Space F] [ContinuousSMul 𝕜 F] :
+    [IsScalarTower ℝ 𝕜 F] [T1Space F] [ContinuousSMul 𝕜 F] :
     (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range =
       (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}) '' univ := by
   letI B₁ := bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}
