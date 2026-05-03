@@ -852,7 +852,8 @@ theorem Mackey.range_coeLM_eq_range_bilin [IsTopologicalAddGroup F] [Module ℝ 
 
 open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
 instance [IsTopologicalAddGroup F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [T2Space F]
-    [ContinuousSMul 𝕜 F] : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).flip.IsCompatible where
+    (hsep : B.SeparatingRight) [ContinuousSMul 𝕜 F] :
+    (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).flip.IsCompatible where
   range_eq_range := Mackey.range_coeLM_eq_range_bilin B
   injective := by
     rw [LinearMap.flip_flip, ← LinearMap.ker_eq_bot]
@@ -861,13 +862,11 @@ instance [IsTopologicalAddGroup F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [T2
     · intro hx
       simp only [LinearMap.mem_ker, LinearMap.ext_iff, LinearMap.flip_apply,
         LinearEquiv.arrowCongr_apply, LinearEquiv.symm_symm, LinearEquiv.refl_apply,
-        LinearMap.zero_apply] at hx
-      simp only [Submodule.mem_bot]
-      sorry
+        LinearMap.zero_apply, Submodule.mem_bot] at hx ⊢
+      apply hsep x
+      exact fun y ↦ isOrtho_def.mp (hx y)
     · intro hx
       simp at hx
       aesop
-
-
 
 end PolarTopology
