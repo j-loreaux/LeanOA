@@ -847,7 +847,7 @@ theorem Mackey.range_coeLM_eq_image_bilin [IsTopologicalAddGroup F] [Module ℝ 
 open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
 set_option linter.unusedSectionVars false in
 theorem Mackey.range_coeLM_eq_range_bilin [IsTopologicalAddGroup F] [Module ℝ F]
-    [IsScalarTower ℝ 𝕜 F] [T2Space F] [ContinuousSMul 𝕜 F] :
+    [IsScalarTower ℝ 𝕜 F] [T1Space F] [ContinuousSMul 𝕜 F] :
     (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).range =
       (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range := by
   have h1 : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).range =
