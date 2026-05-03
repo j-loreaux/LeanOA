@@ -840,14 +840,27 @@ open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
 set_option linter.unusedSectionVars false in
 theorem Mackey.range_coeLM_eq_range_bilin [IsTopologicalAddGroup F] [Module ℝ F]
     [IsScalarTower ℝ 𝕜 F] [T2Space F] [ContinuousSMul 𝕜 F] :
-    (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range =
-      (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).range := by
+    (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).range =
+      (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range := by
   have h1 : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).range =
       (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}) '' univ := by
-    ext x
+    ext
     simp only [SetLike.mem_coe, LinearMap.mem_range, image_univ, Set.mem_range]
   have h2 := Mackey.range_coeLM_eq_image_bilin B
   rw [← h1] at h2
-  exact_mod_cast h2
+  exact_mod_cast h2.symm
+
+open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
+instance [IsTopologicalAddGroup F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [T2Space F]
+    [ContinuousSMul 𝕜 F] : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).flip.IsCompatible where
+  range_eq_range := Mackey.range_coeLM_eq_range_bilin B
+  injective := by
+    rw [LinearMap.flip_flip]
+    sorry -- I think we need to prove that `bilin` is separating...
+
+
+
+
+
 
 end PolarTopology
