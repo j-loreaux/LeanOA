@@ -828,13 +828,13 @@ theorem Mackey.range_coeLM_eq_image_bilin [IsTopologicalAddGroup F] [Module ℝ 
       apply IsCompact.closedAbsConvexHull <| Set.Finite.isCompact_convexHull _
         Finite.of_subsingleton
       rw [← convexHull_rclike_eq_convexHull_real (K := 𝕜)]
-      exact convex_convexHull _ {f}
+      exact convex_convexHull ..
     exact ⟨⟨hcpt, absConvex_convexClosedHull⟩, by
       rw [Module.dualPairing_flip_polar_polar B₁ absConvex_convexClosedHull hcpt
         (by simp only [convexHull_singleton, closedAbsConvexHull_eq_closure_absConvexHull,
          closure_nonempty_iff, absConvexHull_nonempty, singleton_nonempty])]
       exact ⟨f, by simpa [closedAbsConvexHull_eq_closure_absConvexHull] using subset_closure <|
-           (mem_absConvexHull_iff.mpr fun _ a _ ↦ a rfl : f ∈ absConvexHull 𝕜 {f}), hf⟩⟩
+           (mem_absConvexHull_iff.mpr fun _ a _ ↦ a rfl : f ∈ absConvexHull 𝕜 {_}), hf⟩⟩
 
 open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
 set_option linter.unusedSectionVars false in
@@ -863,7 +863,7 @@ instance [IsTopologicalAddGroup F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [T1
         LinearEquiv.arrowCongr_apply, LinearEquiv.symm_symm, LinearEquiv.refl_apply,
         LinearMap.zero_apply, Submodule.mem_bot] at hx ⊢
       apply (flip_separatingLeft.mp <| IsWeak.separatingLeft_of_t1Space B.flip) x
-      exact fun y ↦ isOrtho_def.mp (hx y)
+      exact fun _ ↦ isOrtho_def.mp (hx _)
     · intro hx
       simp at hx
       aesop
