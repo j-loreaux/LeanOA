@@ -784,6 +784,9 @@ noncomputable def ofMackeyCLM [TopologicalSpace E] [IsTopologicalAddGroup E] [Co
   toLinearMap := ofMackey.toLinearMap
   cont := continuous_ofMackey B
 
+
+/- Yes, I think the following is all wrong, because in assuming `IsWeak`, haven't I already assumed
+`IsCompatible`? -/
 open PolarTopology in
 theorem isWeak_bilin :
     (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).IsWeak := by
@@ -851,16 +854,15 @@ theorem Mackey.range_coeLM_eq_range_bilin [IsTopologicalAddGroup F] [Module ℝ 
   exact_mod_cast h2.symm
 
 open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
-/-- It seems the injectivity here requires `B.SeparatingRight`. -/
 instance [IsTopologicalAddGroup F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [T2Space F]
-    (hsep : B.SeparatingRight) [ContinuousSMul 𝕜 F] :
-    (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).flip.IsCompatible where
+    [ContinuousSMul 𝕜 F] : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).flip.IsCompatible where
   range_eq_range := Mackey.range_coeLM_eq_range_bilin B
   injective := by
     rw [LinearMap.flip_flip, ← LinearMap.ker_eq_bot]
     ext x
     constructor
-    · intro hx
+    · have hsep := flip_separatingLeft.mp <| IsWeak.separatingLeft_of_t1Space B.flip
+      intro hx
       simp only [LinearMap.mem_ker, LinearMap.ext_iff, LinearMap.flip_apply,
         LinearEquiv.arrowCongr_apply, LinearEquiv.symm_symm, LinearEquiv.refl_apply,
         LinearMap.zero_apply, Submodule.mem_bot] at hx ⊢
