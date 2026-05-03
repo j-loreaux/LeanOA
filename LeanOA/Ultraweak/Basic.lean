@@ -98,6 +98,32 @@ lemma ofUltraweak_eq_zero (x : σ(M, P)_𝕜) : ofUltraweak x = 0 ↔ x = 0 := I
 @[simp]
 lemma toUltraweak_eq_zero (x : M) : toUltraweak 𝕜 P x = 0 ↔ x = 0 := Iff.rfl
 
+variable (𝕜 M P) in
+/-- The canonical equivalence between `σ(M, P)_𝕜` and `M`. -/
+def Ultraweak.equiv : σ(M, P)_𝕜 ≃ M where
+  toFun := ofUltraweak
+  invFun := toUltraweak 𝕜 P
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+lemma ofUltraweak_bijective : Function.Bijective (ofUltraweak : σ(M, P)_𝕜 → M) :=
+  Ultraweak.equiv 𝕜 M P |>.bijective
+
+lemma ofUltraweak_injective : Function.Injective (ofUltraweak : σ(M, P)_𝕜 → M) :=
+  Ultraweak.equiv 𝕜 M P |>.injective
+
+lemma ofUltraweak_surjective : Function.Surjective (ofUltraweak : σ(M, P)_𝕜 → M) :=
+  Ultraweak.equiv 𝕜 M P |>.surjective
+
+lemma toUltraweak_bijective : Function.Bijective (toUltraweak 𝕜 P : M → σ(M, P)_𝕜) :=
+  (Ultraweak.equiv 𝕜 M P).symm.bijective
+
+lemma toUltraweak_injective : Function.Injective (toUltraweak 𝕜 P : M → σ(M, P)_𝕜) :=
+  (Ultraweak.equiv 𝕜 M P).symm.injective
+
+lemma toUltraweak_surjective : Function.Surjective (toUltraweak 𝕜 P : M → σ(M, P)_𝕜) :=
+  (Ultraweak.equiv 𝕜 M P).symm.surjective
+
 @[simp]
 lemma ofUltraweak_inj {x y : σ(M, P)_𝕜} : ofUltraweak x = ofUltraweak y ↔ x = y := Iff.rfl
 
