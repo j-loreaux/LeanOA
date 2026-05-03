@@ -856,7 +856,7 @@ instance [IsTopologicalAddGroup F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [T2
   range_eq_range := Mackey.range_coeLM_eq_range_bilin B
   injective := by
     rw [LinearMap.flip_flip]
-    sorry -- I think we need to prove that `bilin` is separating...
+    sorry
 
 
 
