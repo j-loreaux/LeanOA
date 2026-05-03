@@ -855,11 +855,18 @@ instance [IsTopologicalAddGroup F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [T2
     [ContinuousSMul 𝕜 F] : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).flip.IsCompatible where
   range_eq_range := Mackey.range_coeLM_eq_range_bilin B
   injective := by
-    rw [LinearMap.flip_flip]
-    sorry
-
-
-
+    rw [LinearMap.flip_flip, ← LinearMap.ker_eq_bot]
+    ext x
+    constructor
+    · intro hx
+      simp only [LinearMap.mem_ker, LinearMap.ext_iff, LinearMap.flip_apply,
+        LinearEquiv.arrowCongr_apply, LinearEquiv.symm_symm, LinearEquiv.refl_apply,
+        LinearMap.zero_apply] at hx
+      simp only [Submodule.mem_bot]
+      sorry
+    · intro hx
+      simp at hx
+      aesop
 
 
 
