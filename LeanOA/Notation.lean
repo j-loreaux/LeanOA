@@ -1,7 +1,11 @@
-import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
-import Mathlib.Topology.Algebra.StarSubalgebra
-import Mathlib.Algebra.Algebra.Spectrum.Quasispectrum
-import Mathlib.Data.Complex.Basic
+module
+
+public import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
+public import Mathlib.Topology.Algebra.StarSubalgebra
+public import Mathlib.Algebra.Algebra.Spectrum.Quasispectrum
+public import Mathlib.Data.Complex.Basic
+
+@[expose] public section
 
 /-! # Notation for C⋆-algebras
 

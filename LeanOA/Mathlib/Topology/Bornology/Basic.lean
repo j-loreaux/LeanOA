@@ -1,4 +1,8 @@
-import Mathlib.Topology.Bornology.Basic
+module
+
+public import Mathlib.Topology.Bornology.Basic
+
+@[expose] public section
 
 open Bornology
 

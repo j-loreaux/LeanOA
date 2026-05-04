@@ -92,7 +92,7 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
 
 \begin{lemma}
   \label{lem:one_is_extreme}
-  \lean{CStarAlgebra.one_mem_extremePoints_closedUnitBall}
+  \lean{CStarAlgebra.one_mem_extremePoints_unitClosedBall}
   \leanok
   \uses{thm:comm_cstar_cts_fcns_Sak_1_2_1,lem:star_pres_norm_Sak_1_1_6}
   In a unital $C^{*}$--algebra $\mathcal{A}$, the identity $1$ is an extreme point of the closed unit sphere $S$.
@@ -125,7 +125,7 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
 
 \begin{lemma}
   \label{lem:extreme_partial_isom}
-  \lean{isStarProjection_star_mul_self_of_mem_extremePoints_closedUnitBall}
+  \lean{isStarProjection_star_mul_self_of_mem_extremePoints_unitClosedBall}
   \leanok
   If $x$ is an extreme point of the norm unit ball of a $C^{*}$--algebra $\mathcal{A}$, then $x^{*}x$ is a projection. I.e. $x$ is a partial
   isometry.
@@ -138,7 +138,7 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
 
 \begin{theorem}
   \label{thm:cstar_unital_iff_extreme_Sak_1_6_1} (Sakai 1.6.1)
-  \lean{CStarAlgebra.ofExtremePt, CStarAlgebra.one_mem_extremePoints_closedUnitBall}
+  \lean{CStarAlgebra.isUnital_iff}
   \leanok
   \uses{lem:one_is_extreme, lem:extreme_partial_isom}
   A $C^{*}$--algebra is unital if and only if its closed unit ball has an extreme point.
@@ -150,7 +150,7 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
 
 \begin{proposition}
   \label{prop:extr_pos_projs_Sak_1_6_2} (Sakai 1.6.2)
-  \lean{isStarProjection_iff_mem_extremePoints_nonneg_and_mem_closedUnitBall}
+  \lean{isStarProjection_iff_mem_extremePoints_setOf_nonneg_inter_unitClosedBall}
   \leanok
   Let $P$ be the set of positive elements in a $C^{*}$--algebra $\mathcal{A}$ with unit sphere $S$. Then the extreme
   points of $P\cap S$ are the projections of $\mathcal{A}$.
@@ -162,7 +162,7 @@ An associative algebra $\mathcal{A}$ over the complex numbers is called a \textb
 
 \begin{proposition}
   \label{prop:extr_sa_sa_unitaries_Sak_1_6_3} (Sakai 1.6.3)
-  \lean{mem_extremePoints_isSelfAdjoint_and_mem_closedUnitBall_iff_isSelfAdjoint_and_mem_unitary}
+  \lean{mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall_iff_isSelfAdjoint_and_mem_unitary}
   \leanok
   \uses{prop:extr_pos_projs_Sak_1_6_2}
   Let $\mathcal{A}^{s}$ be the set of self-adjoint elements in a $C^{*}$--algebra $\mathcal{A}$ with unit sphere $S$. Then

@@ -1,8 +1,12 @@
-import Mathlib.Algebra.Algebra.Subalgebra.Directed
-import Mathlib.Algebra.Star.Subalgebra
-import Mathlib.Analysis.CStarAlgebra.Classes
-import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
-import Mathlib.Topology.Algebra.Ring.Basic
+module
+
+public import Mathlib.Algebra.Algebra.Subalgebra.Directed
+public import Mathlib.Algebra.Star.Subalgebra
+public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
+public import Mathlib.Topology.Algebra.Ring.Basic
+
+@[expose] public section
 
 section IsMulCommutative
 

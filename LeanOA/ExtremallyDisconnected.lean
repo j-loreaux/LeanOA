@@ -1,9 +1,13 @@
-import LeanOA.Mathlib.Algebra.Order.Star.Basic
-import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
-import Mathlib.Topology.ContinuousMap.ContinuousSqrt
-import Mathlib.Topology.ExtremallyDisconnected
-import Mathlib.Topology.GDelta.MetrizableSpace
-import Mathlib.Topology.UrysohnsLemma
+module
+
+public import LeanOA.Mathlib.Algebra.Order.Star.Basic
+public import Mathlib.Analysis.RCLike.ContinuousMap
+public import Mathlib.Topology.ContinuousMap.ContinuousSqrt
+public import Mathlib.Topology.ExtremallyDisconnected
+public import Mathlib.Topology.GDelta.MetrizableSpace
+public import Mathlib.Topology.UrysohnsLemma
+
+@[expose] public section
 
 open Set Function ContinuousMap RCLike
 open scoped ComplexOrder
@@ -52,6 +56,6 @@ theorem ExtremallyDisconnected.ofConditionallyCompletePartialOrderSupContinuousM
   intro s hs hsn hb
   obtain ⟨g', hg⟩ := h _ (hs.mono_comp (realToRCLike_monotone K 𝕜)) (hsn.image _)
     ((realToRCLike_monotone K 𝕜).map_bddAbove hb)
-  rw [← isSelfAdjoint_realToRCLike.of_ge (hg.1 ⟨_, hsn.some_mem, rfl⟩)
+  rw [← isSelfAdjoint_realToRCLike _ |>.of_ge (hg.1 ⟨_, hsn.some_mem, rfl⟩)
     |>.realToRCLike_rclikeToReal] at hg
   exact ⟨_, hg.of_image <| by simp [le_def]⟩

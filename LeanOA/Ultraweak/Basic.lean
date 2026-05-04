@@ -1,7 +1,11 @@
-import Mathlib.Analysis.CStarAlgebra.Classes
-import Mathlib.Analysis.InnerProductSpace.Basic
-import Mathlib.Analysis.Normed.Module.WeakDual
-import LeanOA.Mathlib.Analysis.RCLike.Extend
+module
+
+public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.Analysis.InnerProductSpace.Basic
+public import Mathlib.Analysis.Normed.Module.WeakDual
+public import LeanOA.Mathlib.Analysis.RCLike.Extend
+
+@[expose] public section
 
 /-- A class which encodes a specified isometric linear isomorpism between `M`
 and the strong dual of `P`, so that we may treat `P` as a predual of `M`. -/

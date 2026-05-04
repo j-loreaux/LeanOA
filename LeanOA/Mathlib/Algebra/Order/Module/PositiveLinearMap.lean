@@ -1,7 +1,11 @@
-import Mathlib.Algebra.Order.Module.PositiveLinearMap
-import Mathlib.Algebra.Module.Equiv.Opposite
-import Mathlib.Algebra.Order.Group.Opposite
-import Mathlib.Algebra.Star.SelfAdjoint
+module
+
+public import Mathlib.Algebra.Order.Module.PositiveLinearMap
+public import Mathlib.Algebra.Module.Equiv.Opposite
+public import Mathlib.Algebra.Order.Group.Opposite
+public import Mathlib.Algebra.Star.SelfAdjoint
+
+@[expose] public section
 
 /-- A class to encode that selfadjoint elements may be expressed as the
 difference of nonnegative elements. This is satisfied by types with a

@@ -1,5 +1,9 @@
-import Mathlib.Order.Hom.Basic
-import Mathlib.Algebra.Group.Defs
+module
+
+public import Mathlib.Order.Hom.Basic
+public import Mathlib.Algebra.Group.Defs
+
+@[expose] public section
 
 namespace OrderIso
 

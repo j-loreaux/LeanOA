@@ -1,4 +1,8 @@
-import Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+module
+
+public import Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+
+@[expose] public section
 
 open CStarAlgebra Topology Filter
 

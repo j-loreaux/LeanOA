@@ -1,5 +1,9 @@
-import LeanOA.Mathlib.Misc
-import LeanOA.Lp.lpSpace
+module
+
+public import LeanOA.Mathlib.Misc
+public import LeanOA.Lp.lpSpace
+
+@[expose] public section
 
 open scoped lp ENNReal NNReal
 

@@ -1,6 +1,10 @@
-import LeanOA.Ultraweak.Basic
-import LeanOA.KreinSmulian
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+module
+
+public import LeanOA.Ultraweak.Basic
+public import LeanOA.KreinSmulian
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+
+@[expose] public section
 
 open scoped NNReal Ultraweak ComplexStarModule Topology
 open Filter Complex

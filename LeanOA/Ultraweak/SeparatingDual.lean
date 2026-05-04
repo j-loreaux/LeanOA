@@ -1,8 +1,12 @@
-import LeanOA.Ultraweak.ContinuousStar
-import LeanOA.PositiveContinuousLinearMap
-import Mathlib.Analysis.LocallyConvex.WeakDual
-import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+module
+
+public import LeanOA.Ultraweak.ContinuousStar
+public import LeanOA.PositiveContinuousLinearMap
+public import Mathlib.Analysis.LocallyConvex.WeakDual
+public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+
+@[expose] public section
 
 open scoped Ultraweak ComplexOrder ComplexStarModule
 

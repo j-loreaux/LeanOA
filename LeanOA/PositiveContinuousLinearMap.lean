@@ -1,8 +1,11 @@
-import Mathlib.Topology.Algebra.Module.LinearMap
-import Mathlib.Algebra.Order.Star.Basic
-import Mathlib.Analysis.Complex.Basic
-import LeanOA.Mathlib.Algebra.Order.Module.PositiveLinearMap
+module
 
+public import Mathlib.Topology.Algebra.Module.LinearMap
+public import Mathlib.Algebra.Order.Star.Basic
+public import Mathlib.Analysis.Complex.Basic
+public import LeanOA.Mathlib.Algebra.Order.Module.PositiveLinearMap
+
+@[expose] public section
 
 namespace PositiveLinearMap
 

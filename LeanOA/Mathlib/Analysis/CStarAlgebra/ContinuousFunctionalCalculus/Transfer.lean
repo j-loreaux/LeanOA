@@ -1,6 +1,10 @@
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
-import LeanOA.Mathlib.Algebra.Star.StarAlgHom
-import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
+module
+
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
+public import LeanOA.Mathlib.Algebra.Star.StarAlgHom
+public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
+
+@[expose] public section
 
 section UnitalTransfer
 
