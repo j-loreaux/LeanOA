@@ -1,4 +1,8 @@
-import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
+module
+
+public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
+
+@[expose] public section
 
 namespace LinearMap
 

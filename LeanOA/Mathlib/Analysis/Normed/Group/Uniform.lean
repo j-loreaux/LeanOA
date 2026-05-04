@@ -1,5 +1,9 @@
-import Mathlib.Analysis.Normed.Group.Bounded
-import Mathlib.Analysis.Normed.Group.Uniform
+module
+
+public import Mathlib.Analysis.Normed.Group.Bounded
+public import Mathlib.Analysis.Normed.Group.Uniform
+
+@[expose] public section
 
 open Bornology
 

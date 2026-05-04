@@ -1,6 +1,10 @@
-import Mathlib.Analysis.Convex.Join
-import Mathlib.Analysis.LocallyConvex.AbsConvex
-import Mathlib.Analysis.RCLike.Lemmas
+module
+
+public import Mathlib.Analysis.Convex.Join
+public import Mathlib.Analysis.LocallyConvex.AbsConvex
+public import Mathlib.Analysis.RCLike.Lemmas
+
+@[expose] public section
 
 open scoped ComplexOrder
 open Set

@@ -1,4 +1,8 @@
-import Mathlib.Analysis.LocallyConvex.Bounded
+module
+
+public import Mathlib.Analysis.LocallyConvex.Bounded
+
+@[expose] public section
 
 open scoped Pointwise
 open Bornology

@@ -1,6 +1,10 @@
-import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
-import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
-import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
+module
+
+public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
+public import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
+public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
+
+@[expose] public section
 
 open Bornology
 

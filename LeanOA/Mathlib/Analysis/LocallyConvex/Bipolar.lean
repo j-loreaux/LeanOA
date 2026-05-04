@@ -3,14 +3,18 @@ Copyright (c) 2025 Christopher Hoskin. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Christopher Hoskin
 -/
-import LeanOA.LocallyConvexNhdsBasis
-import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
-import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
-import Mathlib.Analysis.LocallyConvex.WeakDual
-import Mathlib.Analysis.LocallyConvex.WeakSpace
-import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
-import LeanOA.IsWeak
-import LeanOA.AbsConvex
+module
+
+public import LeanOA.LocallyConvexNhdsBasis
+public import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
+public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
+public import Mathlib.Analysis.LocallyConvex.WeakDual
+public import Mathlib.Analysis.LocallyConvex.WeakSpace
+public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
+public import LeanOA.IsWeak
+public import LeanOA.AbsConvex
+
+@[expose] public section
 
 /-!
 
@@ -308,24 +312,24 @@ open Module WeakBilin in
 lemma Module.dualPairing_flip_polar_polar {𝕜 E F : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.IsWeak]
     {s : Set E} (hs : AbsConvex 𝕜 s) (hs' : IsCompact s) (hs_non : s.Nonempty) :
-    (dualPairing 𝕜 F).flip.polar (B.polar s) = B '' s := by
-  let B₂ : E →ₗ[𝕜] WeakBilin (dualPairing 𝕜 F) :=
-    (LinearEquiv.refl _ _).arrowCongr (linearEquiv 𝕜 (dualPairing 𝕜 F)).symm B
+    (LinearMap.id).flip.polar (B.polar s) = B '' s := by
+  let B₂ : E →ₗ[𝕜] WeakBilin (LinearMap.id) :=
+    (LinearEquiv.refl _ _).arrowCongr (linearEquiv 𝕜 (LinearMap.id)).symm B
   have hB₂ : Continuous B₂ := by
     apply WeakBilin.continuous_of_continuous_eval' _ fun y ↦ ?_
     simpa [B₂, pairing] using LinearMap.IsWeak.continuous_eval B y
-  suffices (pairing (dualPairing 𝕜 F)).flip.polar (B.polar s) = (B₂ '' s) by
+  suffices (pairing (LinearMap.id)).flip.polar (B.polar s) = (B₂ '' s) by
     simp only [LinearEquiv.arrowCongr_apply, LinearEquiv.refl_symm, LinearEquiv.refl_apply,
       ← Set.image_image, LinearEquiv.image_symm_eq_preimage, B₂] at this
-    exact linearEquiv 𝕜 (dualPairing 𝕜 F) |>.surjective.preimage_injective this
-  have h₁ : B.polar s = (pairing (dualPairing 𝕜 F)).polar (B₂ '' s) := by
+    exact linearEquiv 𝕜 (LinearMap.id) |>.surjective.preimage_injective this
+  have h₁ : B.polar s = (pairing (LinearMap.id)).polar (B₂ '' s) := by
     ext; simp [LinearMap.polar_mem_iff, B₂, pairing]
-  apply Eq.trans congr((pairing (dualPairing 𝕜 F)).flip.polar $h₁)
+  apply Eq.trans congr((pairing (LinearMap.id)).flip.polar $h₁)
   rw [LinearMap.bipolar, closedAbsConvexHull_eq_self]
   · exact hs.image _
-  · have : Topology.IsEmbedding (pairing (dualPairing 𝕜 F) · ·) :=
-      LinearMap.IsWeak.isEmbedding Function.injective_id
-    have : T2Space (WeakBilin (dualPairing 𝕜 F)) := this.t2Space
+  · have : Topology.IsEmbedding (pairing (LinearMap.id (M := Dual 𝕜 F)) · ·) :=
+      isEmbedding fun ⦃a₁ a₂⦄ a ↦ a
+    have : T2Space (WeakBilin (LinearMap.id)) := this.t2Space
     apply IsCompact.isClosed
     apply hs'.image hB₂
   · exact hs_non.image _

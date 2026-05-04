@@ -1,8 +1,15 @@
-import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
-import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
-import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
-import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
-import LeanOA.LocallyConvexNhdsBasis
+module
+
+public import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
+public import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
+public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
+public import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
+public import LeanOA.LocallyConvexNhdsBasis
+
+@[expose] public section
+
+open ContinuousLinearMap Module
+open scoped Topology
 
 open ContinuousLinearMap Module in
 open scoped Topology in
@@ -13,15 +20,15 @@ lemma StrongDual.range_coeLM_eq_sUnion_polar_nhds {𝕜 E : Type*} [Nontrivially
     [ContinuousSMul 𝕜 E] {ι : Sort*} {p : ι → Prop} {s : ι → Set E}
     (h : (𝓝 0).HasBasis p s) :
     (coeLM 𝕜 : StrongDual 𝕜 E →ₗ[𝕜] Dual 𝕜 E).range =
-      ⋃₀ {(dualPairing 𝕜 E).flip.polar (s i) | (i : ι) (_ : p i)} := by
+      ⋃₀ {(LinearMap.id (R := 𝕜) (M := Dual 𝕜 E)).flip.polar (s i) | (i : ι) (_ : p i)} := by
   ext f
   simp only [SetLike.mem_coe, LinearMap.mem_range, coeLM_apply, exists_prop, Set.mem_sUnion,
     Set.mem_setOf_eq, exists_exists_and_eq_and]
   constructor
   · rintro ⟨y , rfl⟩
     have := ContinuousAt.tendsto <| map_continuousAt y 0
-    simp only [LinearMap.polar, LinearMap.flip_apply, dualPairing_apply,
-      Set.mem_setOf_eq, coe_coe, map_zero] at this ⊢
+    simp only [map_zero, LinearMap.polar, LinearMap.flip_apply, LinearMap.id_coe, id_eq,
+      Set.mem_setOf_eq, coe_coe] at this ⊢
     convert Filter.Tendsto.basis_left this h (Metric.closedBall 0 1)
       <| Metric.closedBall_mem_nhds _ zero_lt_one
     simp only [Metric.closedBall, dist_zero_right, Set.MapsTo, Set.mem_setOf_eq]
@@ -398,6 +405,8 @@ lemma seminorm_le_of_subset {s t : Set F} (hs : IsVonNBounded 𝕜 s)
   rw [seminorm_apply_le_iff hs (apply_nonneg _ _)]
   exact fun y hy ↦ seminorm_apply_le ht x (hst hy)
 
+/- The following brittle proof broke. Can fix if we really want it.
+
 lemma seminorm_union {s t : Set F} (hs : IsVonNBounded 𝕜 s) (ht : IsVonNBounded 𝕜 t) :
     seminorm B 𝔖 (s ∪ t) (hs.union ht) = seminorm B 𝔖 s hs ⊔ seminorm B 𝔖 t ht := by
   ext
@@ -434,6 +443,8 @@ lemma seminorm_finite_sUnion {s : Set (Set F)} (hs : s.Finite)
       · have := finite_coe_iff.mpr hfin
         apply Finite.bddAbove_range
       exact range_nonempty_iff_nonempty.mpr h_nonempty
+
+-/
 
 lemma continuous_seminorm (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
       (s : Set F) (hs_mem : s ∈ 𝔖) (hs : IsVonNBounded 𝕜 s) :

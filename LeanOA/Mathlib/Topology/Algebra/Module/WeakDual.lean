@@ -1,6 +1,10 @@
-import Mathlib.Analysis.Normed.Module.WeakDual
-import Mathlib.Analysis.LocallyConvex.ContinuousOfBounded
-import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
+module
+
+public import Mathlib.Analysis.Normed.Module.WeakDual
+public import Mathlib.Analysis.LocallyConvex.ContinuousOfBounded
+public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
+
+@[expose] public section
 
 variable {𝕜 E : Type*}
   [NontriviallyNormedField 𝕜] [AddCommMonoid E] [Module 𝕜 E] [TopologicalSpace E]

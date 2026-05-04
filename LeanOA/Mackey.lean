@@ -1,4 +1,8 @@
-import LeanOA.Mathlib.Topology.Algebra.Module.PolarTopology
+module
+
+public import LeanOA.Mathlib.Topology.Algebra.Module.PolarTopology
+
+@[expose] public section
 
 open scoped ComplexOrder
 open WeakBilin
@@ -38,14 +42,6 @@ lemma toMackey_ofMackey (x : Mackey B) : toMackey B (ofMackey x) = x := rfl
 @[simp]
 lemma ofMackey_toMackey (x : E) : ofMackey (toMackey B x) = x := rfl
 
-
--- this is available on current master in Mathlib
-theorem IsCompact.isVonNBounded (𝕜 : Type*) {E : Type*} [NormedField 𝕜] [AddCommGroup E]
-    [Module 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E]
-    {s : Set E} (hs : IsCompact s) :
-    Bornology.IsVonNBounded 𝕜 s :=
-  sorry
-
 theorem nonempty_setOf_isCompact_absConvex (𝕜 F : Type*) [NormedField 𝕜]
     [PartialOrder 𝕜] [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F] :
     (Set.Nonempty {s : Set F | IsCompact s ∧ AbsConvex 𝕜 s}) :=
@@ -65,7 +61,7 @@ namespace Mackey
 
 /-- This version assumes `B.IsWeak` and is only meant to be used in developing the API for
 `Mackey`. -/
-private theorem _root_.IsCompact.isVonNBounded' {𝕜 E F : Type*} [RCLike 𝕜]
+theorem _root_.IsCompact.isVonNBounded' {𝕜 E F : Type*} [RCLike 𝕜]
     [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace E]
     (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.IsWeak] {s : Set E} (hs : IsCompact s) :
     IsVonNBounded 𝕜 s :=

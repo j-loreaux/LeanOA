@@ -1,6 +1,10 @@
-import Mathlib.Analysis.LocallyConvex.Polar
-import LeanOA.IsWeak
-import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
+module
+
+public import Mathlib.Analysis.LocallyConvex.Polar
+public import LeanOA.IsWeak
+public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
+
+@[expose] public section
 
 open scoped Pointwise
 open WeakBilin

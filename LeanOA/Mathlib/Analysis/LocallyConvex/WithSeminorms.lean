@@ -1,6 +1,8 @@
-import Mathlib.Analysis.LocallyConvex.WithSeminorms
+module
 
+public import Mathlib.Analysis.LocallyConvex.WithSeminorms
 
+@[expose] public section
 
 lemma WithSeminorms.hasBasis_zero_closedBall
     {𝕜 E ι : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]

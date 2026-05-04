@@ -1,4 +1,8 @@
-import Mathlib.Analysis.LocallyConvex.AbsConvex
+module
+
+public import Mathlib.Analysis.LocallyConvex.AbsConvex
+
+@[expose] public section
 
 open Set
 

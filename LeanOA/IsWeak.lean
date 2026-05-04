@@ -1,9 +1,13 @@
-import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
-import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
-import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
-import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
-import Mathlib.Analysis.LocallyConvex.WeakDual
-import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
+module
+
+public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
+public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
+public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
+public import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
+public import Mathlib.Analysis.LocallyConvex.WeakDual
+public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
+
+@[expose] public section
 
 open Topology Filter
 

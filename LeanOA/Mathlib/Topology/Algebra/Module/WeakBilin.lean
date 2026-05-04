@@ -1,5 +1,9 @@
-import Mathlib.Topology.Algebra.Module.Spaces.WeakBilin
-import Mathlib.Topology.Algebra.Module.Equiv
+module
+
+public import Mathlib.Topology.Algebra.Module.Spaces.WeakBilin
+public import Mathlib.Topology.Algebra.Module.Equiv
+
+@[expose] public section
 
 variable {𝕜 E F E' F' : Type*}
   [CommSemiring 𝕜]

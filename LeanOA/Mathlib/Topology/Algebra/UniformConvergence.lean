@@ -1,4 +1,8 @@
-import Mathlib.Topology.Algebra.UniformConvergence
+module
+
+public import Mathlib.Topology.Algebra.UniformConvergence
+
+@[expose] public section
 
 open scoped UniformConvergence
 
