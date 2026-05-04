@@ -1,9 +1,13 @@
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
-import LeanOA.PositiveContinuousLinearMap
-import LeanOA.Ultraweak.SeparatingDual
-import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
+module
+
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
+public import LeanOA.PositiveContinuousLinearMap
+public import LeanOA.Ultraweak.SeparatingDual
+public import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
+
+@[expose] public section
 
 open scoped ComplexOrder
 

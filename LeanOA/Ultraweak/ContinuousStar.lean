@@ -1,6 +1,10 @@
-import LeanOA.Ultraweak.OrderClosed
-import LeanOA.Mathlib.Analysis.RCLike.Extend
-import Mathlib.Analysis.Complex.Basic
+module
+
+public import LeanOA.Ultraweak.OrderClosed
+public import LeanOA.Mathlib.Analysis.RCLike.Extend
+public import Mathlib.Analysis.Complex.Basic
+
+@[expose] public section
 
 open scoped NNReal Topology
 

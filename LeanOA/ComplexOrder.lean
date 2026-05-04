@@ -1,5 +1,9 @@
-import Mathlib.Analysis.Complex.Basic
-import Mathlib.Order.ConditionallyCompletePartialOrder.Defs
+module
+
+public import Mathlib.Analysis.Complex.Basic
+public import Mathlib.Order.ConditionallyCompletePartialOrder.Defs
+
+@[expose] public section
 
 /-
 There's still a lot of API missing here.

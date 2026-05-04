@@ -1,6 +1,10 @@
-import LeanOA.Ultraweak.Basic
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Transfer
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+module
+
+public import LeanOA.Ultraweak.Basic
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Transfer
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+
+@[expose] public section
 
 set_option backward.isDefEq.respectTransparency false
 

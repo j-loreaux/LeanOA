@@ -1,12 +1,16 @@
-import LeanOA.Ultraweak.Uniformity
-import LeanOA.ComplexOrder
-import LeanOA.Mathlib.Algebra.Order.Star.Basic
-import LeanOA.Mathlib.Analysis.Complex.Basic
-import LeanOA.CFC
-import LeanOA.Ultraweak.ContinuousFunctionalCalculus
-import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
-import LeanOA.CStarAlgebra.PositiveLinearFunctional
-import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
+module
+
+public import LeanOA.Ultraweak.Uniformity
+public import LeanOA.ComplexOrder
+public import LeanOA.Mathlib.Algebra.Order.Star.Basic
+public import LeanOA.Mathlib.Analysis.Complex.Basic
+public import LeanOA.CFC
+public import LeanOA.Ultraweak.ContinuousFunctionalCalculus
+public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
+public import LeanOA.CStarAlgebra.PositiveLinearFunctional
+public import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
+
+@[expose] public section
 
 /-! # `σ(M, P)` is a conditionally complete partial order
 

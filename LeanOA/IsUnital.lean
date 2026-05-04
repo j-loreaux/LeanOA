@@ -1,4 +1,8 @@
-import Mathlib.Analysis.CStarAlgebra.Classes
+module
+
+public import Mathlib.Analysis.CStarAlgebra.Classes
+
+@[expose] public section
 
 /-- A multiplicative magma is **unital** if there exists a unit.
 

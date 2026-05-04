@@ -1,9 +1,13 @@
-import LeanOA.Mathlib.Algebra.Order.Star.Basic
-import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
-import Mathlib.Topology.ContinuousMap.ContinuousSqrt
-import Mathlib.Topology.ExtremallyDisconnected
-import Mathlib.Topology.GDelta.MetrizableSpace
-import Mathlib.Topology.UrysohnsLemma
+module
+
+public import LeanOA.Mathlib.Algebra.Order.Star.Basic
+public import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
+public import Mathlib.Topology.ContinuousMap.ContinuousSqrt
+public import Mathlib.Topology.ExtremallyDisconnected
+public import Mathlib.Topology.GDelta.MetrizableSpace
+public import Mathlib.Topology.UrysohnsLemma
+
+@[expose] public section
 
 open Set Function ContinuousMap RCLike
 open scoped ComplexOrder
