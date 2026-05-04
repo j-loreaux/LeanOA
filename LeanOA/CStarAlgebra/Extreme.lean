@@ -16,8 +16,6 @@ In particular, we show that in a C⋆-algebra :
 
 * `CStarAlgebra.isUnital_iff`:
   A C⋆-algebra is unital if and only if there exists an extreme point of the closed unit ball.
-* `isStarProjection_iff_mem_extremePoints_setOf_nonneg_inter_unitClosedBall`:
-  The extreme points of the nonnegative closed unit ball are its projections.
 * `mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall_iff_isSelfAdjoint_and_mem_unitary`:
   The extreme points of the self-adjoint closed unit ball are its self-adjoint unitaries.
 
@@ -193,7 +191,7 @@ private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_unitClo
   /- Since `p` and `star a * a` are self-adjoint
   with product zero that the norm of their sum is the max of the norms of these contractions. -/
   have hmax : ‖p + star a * a‖ ≤ 1 := by
-    rw [IsSelfAdjoint.star_mul_self x |>.norm_add_eq_max (.star_mul_self a) hpa, sup_le_iff]
+    rw [hp, IsSelfAdjoint.star_mul_self x |>.norm_add_eq_max (.star_mul_self a) hpa, sup_le_iff]
     simp only [CStarRing.norm_star_mul_self]
     grw [mem_closedBall_zero_iff.mp hx.1, mem_closedBall_zero_iff.mp ha, one_mul, and_self]
   have : ‖x + a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp <| by grind
@@ -249,7 +247,8 @@ attribute [local instance] IsUnital.toCStarAlgebra in
 
 To upgrade a non-unital C⋆-algebra to a unital one, use `IsUnital.toCStarAlgebra`. -/
 theorem CStarAlgebra.isUnital_iff :
-    IsUnital A ↔ ∃ x : A, x ∈ extremePoints ℝ (closedBall (0 : A) 1) := by
+    IsUnital A ↔ (extremePoints ℝ (closedBall (0 : A) 1)).Nonempty := by
+  rw [Set.nonempty_def]
   refine ⟨fun h ↦ ⟨1, one_mem_extremePoints_unitClosedBall⟩, fun ⟨x, hx⟩ ↦ ?_⟩
   exact ⟨_, fun y ↦ ⟨ofExtremePtOne_mul hx y, mul_ofExtremePtOne hx y⟩⟩
 
