@@ -1,7 +1,11 @@
-import Mathlib.Topology.Algebra.Module.Spaces.WeakBilin
-import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
-import Mathlib.Topology.UniformSpace.Basic
-import Mathlib.Topology.UniformSpace.Pi
+module
+
+public import Mathlib.Topology.Algebra.Module.Spaces.WeakBilin
+public import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
+public import Mathlib.Topology.UniformSpace.Basic
+public import Mathlib.Topology.UniformSpace.Pi
+
+@[expose] public section
 
 namespace WeakBilin
 

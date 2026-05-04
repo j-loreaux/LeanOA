@@ -1,13 +1,17 @@
-import LeanOA.CFC
-import LeanOA.IsUnital
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-import Mathlib.Analysis.Convex.Extreme
-import Mathlib.Analysis.Convex.Strict.Extreme
-import Mathlib.Analysis.CStarAlgebra.Extreme
-import Mathlib.Analysis.CStarAlgebra.GelfandDuality
-import Mathlib.Analysis.CStarAlgebra.Unitary.Maps
-import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
+module
+
+public import LeanOA.CFC
+public import LeanOA.IsUnital
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+public import Mathlib.Analysis.Convex.Extreme
+public import Mathlib.Analysis.Convex.Strict.Extreme
+public import Mathlib.Analysis.CStarAlgebra.Extreme
+public import Mathlib.Analysis.CStarAlgebra.GelfandDuality
+public import Mathlib.Analysis.CStarAlgebra.Unitary.Maps
+public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
+
+@[expose] public section
 
 /-! # Extreme points of the closed unit ball in C⋆-algebras
 

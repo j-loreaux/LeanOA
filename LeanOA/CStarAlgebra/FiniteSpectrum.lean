@@ -1,8 +1,12 @@
-import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
-import Mathlib.Analysis.RCLike.ContinuousMap
-import Mathlib.Topology.ContinuousMap.LocallyConstant
-import Mathlib.Topology.ExtremallyDisconnected
+module
+
+public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+public import Mathlib.Analysis.RCLike.ContinuousMap
+public import Mathlib.Topology.ContinuousMap.LocallyConstant
+public import Mathlib.Topology.ExtremallyDisconnected
+
+@[expose] public section
 
 variable {A Y 𝕜 : Type*} [RCLike 𝕜] [TopologicalSpace A] [TopologicalSpace Y]
 

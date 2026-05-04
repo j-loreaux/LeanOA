@@ -1,6 +1,10 @@
-import Mathlib.Algebra.Order.Star.Basic
-import Mathlib.Order.Bounds.OrderIso
-import LeanOA.Mathlib.Order.Hom.Basic
+module
+
+public import Mathlib.Algebra.Order.Star.Basic
+public import Mathlib.Order.Bounds.OrderIso
+public import LeanOA.Mathlib.Order.Hom.Basic
+
+@[expose] public section
 
 namespace StarOrderedRing
 -- maybe this should go in a brand new file in Mathlib to avoid increasing imports?

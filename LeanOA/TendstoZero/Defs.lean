@@ -1,8 +1,11 @@
-import Mathlib.Analysis.Normed.Lp.lpSpace
-import Mathlib.Topology.MetricSpace.UniformConvergence
-import LeanOA.Lp.lpSpace
-import LeanOA.Mathlib.Misc
+module
 
+public import Mathlib.Analysis.Normed.Lp.lpSpace
+public import Mathlib.Topology.MetricSpace.UniformConvergence
+public import LeanOA.Lp.lpSpace
+public import LeanOA.Mathlib.Misc
+
+@[expose] public section
 
 open scoped ENNReal NNReal Topology
 

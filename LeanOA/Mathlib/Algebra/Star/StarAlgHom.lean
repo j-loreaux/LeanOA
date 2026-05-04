@@ -1,4 +1,8 @@
-import Mathlib.Algebra.Star.StarAlgHom
+module
+
+public import Mathlib.Algebra.Star.StarAlgHom
+
+@[expose] public section
 
 namespace StarAlgEquiv
 

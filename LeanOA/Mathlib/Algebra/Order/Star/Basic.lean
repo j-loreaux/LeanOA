@@ -1,4 +1,8 @@
-import Mathlib.Algebra.Order.Star.Basic
+module
+
+public import Mathlib.Algebra.Order.Star.Basic
+
+public section
 
 lemma IsSelfAdjoint.iff_of_le {R : Type*} [NonUnitalRing R] [StarRing R]
     [PartialOrder R] [StarOrderedRing R] {a b : R} (hab : a ≤ b) :

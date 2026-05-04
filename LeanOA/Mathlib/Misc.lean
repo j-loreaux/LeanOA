@@ -1,8 +1,12 @@
-import Mathlib.Analysis.Convex.Extreme
-import Mathlib.Analysis.Normed.Module.Normalize
-import Mathlib.Analysis.Normed.Algebra.Spectrum
-import Mathlib.Analysis.Normed.Operator.NormedSpace
-import Mathlib.Topology.Algebra.Module.FiniteDimension
+module
+
+public import Mathlib.Analysis.Convex.Extreme
+public import Mathlib.Analysis.Normed.Module.Normalize
+public import Mathlib.Analysis.Normed.Algebra.Spectrum
+public import Mathlib.Analysis.Normed.Operator.NormedSpace
+public import Mathlib.Topology.Algebra.Module.FiniteDimension
+
+@[expose] public section
 
 -- `Analysis.Normed.Module.Basic`
 @[simp]

@@ -1,7 +1,11 @@
-import LeanOA.Ultraweak.Bornology
-import LeanOA.Ultraweak.SeparatingDual
-import LeanOA.WeakDual.UniformSpace
-import LeanOA.Mathlib.Topology.Bornology.Basic
+module
+
+public import LeanOA.Ultraweak.Bornology
+public import LeanOA.Ultraweak.SeparatingDual
+public import LeanOA.WeakDual.UniformSpace
+public import LeanOA.Mathlib.Topology.Bornology.Basic
+
+@[expose] public section
 
 /-! # Properties of the uniformity and topology of `σ(M, P)`
 

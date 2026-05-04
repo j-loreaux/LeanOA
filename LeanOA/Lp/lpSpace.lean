@@ -1,5 +1,9 @@
-import Mathlib.Analysis.Normed.Lp.lpSpace
-import Mathlib.Analysis.Normed.Lp.LpEquiv
+module
+
+public import Mathlib.Analysis.Normed.Lp.lpSpace
+public import Mathlib.Analysis.Normed.Lp.LpEquiv
+
+@[expose] public section
 
 open scoped lp ENNReal
 section NonDependent

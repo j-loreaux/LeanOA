@@ -1,9 +1,13 @@
-import LeanOA.TendstoZero.StrongDual
-import LeanOA.Mathlib.Analysis.RCLike.Extend
-import Mathlib.Analysis.InnerProductSpace.Basic
-import Mathlib.Analysis.LocallyConvex.Separation
-import Mathlib.Analysis.Normed.Module.WeakDual
-import Mathlib.Analysis.Convex.NNReal
+module
+
+public import LeanOA.TendstoZero.StrongDual
+public import LeanOA.Mathlib.Analysis.RCLike.Extend
+public import Mathlib.Analysis.InnerProductSpace.Basic
+public import Mathlib.Analysis.LocallyConvex.Separation
+public import Mathlib.Analysis.Normed.Module.WeakDual
+public import Mathlib.Analysis.Convex.NNReal
+
+@[expose] public section
 
 /-! # Krein-Smulian theorem
 
@@ -104,7 +108,7 @@ does not intersect the unit ball. This is a sequence `F` of pairs of finite sets
 recursively by: `F 0 := ({0}, {0})`, `(F (n + 1)).2 := (F n).2 ∪ (F (n + 1)).1` and
 `(F (n + 1)).1` is the result of applying `separationSeq_induction_step_aux`
 to `(F n).2`. -/
-noncomputable def separationSeq (hA : KreinSmulianProperty A)
+@[no_expose] noncomputable def separationSeq (hA : KreinSmulianProperty A)
     (hA' : A ∩ (toStrongDual ⁻¹' closedBall (0 : StrongDual 𝕜 E) 1) = ∅) :
     (n : ℕ) → Σ' F : Set E × Set E,
       F.1.Finite ∧ F.2.Finite ∧ (F.1 : Set E) ⊆ closedBall (0 : E) (n⁻¹ : ℝ) ∧

@@ -1,11 +1,15 @@
-import LeanOA.ExtremallyDisconnected
-import LeanOA.Masa
-import LeanOA.Ultraweak.LUB
-import LeanOA.Mathlib.Algebra.Star.Unitary
-import LeanOA.Mathlib.Algebra.LinearAlgebra.Span.Defs
-import Mathlib.Algebra.Order.Monoid.Submonoid -- it makes no sense that this import is necessary
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
-import Mathlib.Analysis.CStarAlgebra.Unitary.Span
+module
+
+public import LeanOA.ExtremallyDisconnected
+public import LeanOA.Masa
+public import LeanOA.Ultraweak.LUB
+public import LeanOA.Mathlib.Algebra.Star.Unitary
+public import LeanOA.Mathlib.Algebra.LinearAlgebra.Span.Defs
+public import Mathlib.Algebra.Order.Monoid.Submonoid -- it makes no sense that this import is necessary
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
+public import Mathlib.Analysis.CStarAlgebra.Unitary.Span
+
+@[expose] public section
 
 section IsSelfAdjoint
 

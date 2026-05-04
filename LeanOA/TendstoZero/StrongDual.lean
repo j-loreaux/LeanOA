@@ -1,6 +1,10 @@
-import Mathlib.Analysis.Normed.Operator.Mul
-import LeanOA.Lp.Holder
-import LeanOA.TendstoZero.Defs
+module
+
+public import Mathlib.Analysis.Normed.Operator.Mul
+public import LeanOA.Lp.Holder
+public import LeanOA.TendstoZero.Defs
+
+@[expose] public section
 
 open scoped ENNReal tendstoZero lp
 
