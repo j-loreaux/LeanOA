@@ -2,9 +2,10 @@ import LeanOA.CFC
 import LeanOA.IsUnital
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.Convex.Strict.Extreme
+import Mathlib.Analysis.CStarAlgebra.Extreme
+import Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import Mathlib.Analysis.CStarAlgebra.Unitary.Maps
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 

@@ -1,5 +1,5 @@
 import LeanOA.Mathlib.Algebra.Order.Star.Basic
-import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
+import Mathlib.Analysis.RCLike.ContinuousMap
 import Mathlib.Topology.ContinuousMap.ContinuousSqrt
 import Mathlib.Topology.ExtremallyDisconnected
 import Mathlib.Topology.GDelta.MetrizableSpace

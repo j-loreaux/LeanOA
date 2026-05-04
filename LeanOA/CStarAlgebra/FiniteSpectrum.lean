@@ -1,6 +1,6 @@
-import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
 import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+import Mathlib.Analysis.RCLike.ContinuousMap
 import Mathlib.Topology.ContinuousMap.LocallyConstant
 import Mathlib.Topology.ExtremallyDisconnected
 
