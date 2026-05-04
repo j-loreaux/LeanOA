@@ -14,6 +14,7 @@ weak.linter.mathlibStandardSet = true
 warn.sorry = false
 # Switch off the new transparency requirements for defeq until errors are fixed in Mathlib upstream.
 backward.isDefEq.respectTransparency = false
+linter.style.header = false
 
 [[require]]
 name = "mathlib"

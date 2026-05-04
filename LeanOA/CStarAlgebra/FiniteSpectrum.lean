@@ -1,8 +1,8 @@
 module
 
-public import LeanOA.Mathlib.Analysis.RCLike.ContinuousMap
 public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+public import Mathlib.Analysis.RCLike.ContinuousMap
 public import Mathlib.Topology.ContinuousMap.LocallyConstant
 public import Mathlib.Topology.ExtremallyDisconnected
 
@@ -45,11 +45,11 @@ instance [Ring A] [Algebra ℝ A] [Star A] [Subsingleton A] :
 open ContinuousMap LocallyConstant in
 instance [TotallySeparatedSpace A] [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=
   CStarAlgebra.finiteSpectrum_iff_spectrum.mpr fun x hx ↦ by
-    obtain ⟨y, rfl⟩ := range_realToRCLike_eq_isSelfAdjoint 𝕜 (A := A) ▸ hx
+    obtain ⟨y, rfl⟩ := range_realToRCLike_eq_isSelfAdjoint A 𝕜 ▸ hx
     have : realToRCLike 𝕜 '' {x : C(A, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} ⊆
       {x | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} := by aesop
     refine closure_mono this
-      (mem_closure_image (isometry_realToRCLike 𝕜).continuous.continuousAt ?_)
+      (mem_closure_image (isometry_realToRCLike A 𝕜).continuous.continuousAt ?_)
     have : .range toContinuousMap ⊆ {x : C(A, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} :=
       fun _ ⟨f, hf⟩ ↦ by simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
     apply closure_mono this

@@ -71,9 +71,9 @@ lemma sum_strongDual_eval_single_le_norm [DecidableEq ι]
   have := RCLike.norm_of_nonneg' (K := 𝕜) (h₁ ▸ s.sum_nonneg (by simp))
   rw [h₁, ← this, RCLike.ofReal_le_ofReal, ← mul_one ‖φ‖]
   refine φ.le_opNorm_of_le ?_
-  simp only [AddSubgroupClass.coe_norm, AddSubgroup.val_finset_sum, coe_smul, coe_single]
+  simp only [AddSubgroupClass.coe_norm, AddSubgroup.val_finsetSum, coe_smul, coe_single]
   refine lp.norm_le_of_forall_le (by positivity) fun i ↦ ?_
-  simp only [AddSubgroup.val_finset_sum, lp.coeFn_smul, Finset.sum_apply, Pi.smul_apply,
+  simp only [AddSubgroup.val_finsetSum, lp.coeFn_smul, Finset.sum_apply, Pi.smul_apply,
     lp.single_apply, smul_eq_mul]
   by_cases! hi : i ∈ s
   · rw [s.sum_eq_single_of_mem i hi (by simp +contextual)]

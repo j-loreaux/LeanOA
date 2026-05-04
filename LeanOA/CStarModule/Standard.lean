@@ -250,7 +250,7 @@ theorem tendsto_of_tendsto_pi {F : ℕ → ℓ²(A, E)} (hF : CauchySeq F) {f : 
   apply norm_add_le _ _ |>.trans ?_
   gcongr
   · apply le_of_tendsto (f := fun l ↦ ‖∑ x ∈ s, ⟪(F n - F l) x, (F n - F l) x⟫_A‖) (x := atTop)
-    · refine tendsto_norm.comp <| tendsto_finset_sum s fun i hi ↦ ?_
+    · refine tendsto_norm.comp <| tendsto_finsetSum s fun i hi ↦ ?_
       rw [tendsto_pi_nhds] at hf
       have := tendsto_const_nhds (x := F n i) |>.sub (hf i)
       refine (continuous_inner.tendsto _).comp (this.prodMk_nhds this)
@@ -280,7 +280,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
       simp only [Function.comp_def, tendsto_pi_nhds] at hy
       refine lt_of_le_of_lt ?_ (half_lt_self hε)
       refine le_of_tendsto (f := fun n ↦ ‖∑ i ∈ t, ⟪x n i, x n i⟫_A‖) (x := atTop) ?_ ?_
-      · exact tendsto_norm.comp <| tendsto_finset_sum t fun i hi ↦
+      · exact tendsto_norm.comp <| tendsto_finsetSum t fun i hi ↦
           (continuous_inner.tendsto _).comp ((hy i).prodMk_nhds (hy i))
       · filter_upwards [Ici_mem_atTop N] with m hm
         replace hN := norm_neg_add (x N) (x m) ▸ (hN N le_rfl m hm).le
