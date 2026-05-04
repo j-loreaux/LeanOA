@@ -5,13 +5,6 @@ import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 import LeanOA.AbsConvex
 import LeanOA.LocallyConvexNhdsBasis
 
-
-lemma closedAbsConvexHull_eq_self {𝕜 E : Type*} [SeminormedRing 𝕜]
-    [SMul 𝕜 E] [AddCommMonoid E] [PartialOrder 𝕜] [TopologicalSpace E]
-    {s : Set E} (h_conv : AbsConvex 𝕜 s) (h_closed : IsClosed s) :
-    closedAbsConvexHull 𝕜 s = s :=
-  subset_antisymm (closedAbsConvexHull_min le_rfl h_conv h_closed) subset_closedAbsConvexHull
-
 open scoped ComplexOrder in
 open Module WeakBilin in
 -- this is Lemma 5.3 in Voigt, *Topological Vector Spaces*, used in the proof that the Mackey
