@@ -1,5 +1,9 @@
-import Mathlib.Analysis.CStarAlgebra.GelfandDuality
-import Mathlib.Topology.ContinuousMap.Compact
+module
+
+public import Mathlib.Analysis.CStarAlgebra.GelfandDuality
+public import Mathlib.Topology.ContinuousMap.Compact
+
+@[expose] public section
 
 variable {A : Type*} [NonUnitalCommCStarAlgebra A]
 

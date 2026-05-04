@@ -1,5 +1,9 @@
-import LeanOA.PositiveContinuousLinearMap
-import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
+module
+
+public import LeanOA.PositiveContinuousLinearMap
+public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
+
+@[expose] public section
 
 namespace PositiveLinearMap
 variable {A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] [PartialOrder A₁]

@@ -1,4 +1,8 @@
-import Mathlib.Topology.Order.LeftRightNhds
+module
+
+public import Mathlib.Topology.Order.LeftRightNhds
+
+@[expose] public section
 
 open scoped Topology
 open Set Filter

@@ -1,7 +1,11 @@
-import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Topology.ContinuousMap.Compact
-import Mathlib.Topology.ContinuousMap.Ordered
-import Mathlib.Topology.ContinuousMap.Units
+module
+
+public import Mathlib.Analysis.RCLike.Basic
+public import Mathlib.Topology.ContinuousMap.Compact
+public import Mathlib.Topology.ContinuousMap.Ordered
+public import Mathlib.Topology.ContinuousMap.Units
+
+@[expose] public section
 
 variable {A 𝕜 : Type*} [RCLike 𝕜] [TopologicalSpace A]
 

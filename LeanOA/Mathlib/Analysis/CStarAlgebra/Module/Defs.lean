@@ -1,4 +1,8 @@
-import Mathlib.Analysis.CStarAlgebra.Module.Defs
+module
+
+public import Mathlib.Analysis.CStarAlgebra.Module.Defs
+
+@[expose] public section
 
 /-!
 

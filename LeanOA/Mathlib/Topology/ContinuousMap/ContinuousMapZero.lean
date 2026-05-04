@@ -1,5 +1,9 @@
-import Mathlib.Topology.ContinuousMap.ContinuousMapZero
-import LeanOA.Mathlib.Algebra.Star.StarAlgHom
+module
+
+public import Mathlib.Topology.ContinuousMap.ContinuousMapZero
+public import LeanOA.Mathlib.Algebra.Star.StarAlgHom
+
+@[expose] public section
 
 namespace ContinuousMapZero
 variable {A Y : Type*} [TopologicalSpace A] [TopologicalSpace Y]
