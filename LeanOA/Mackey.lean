@@ -289,8 +289,8 @@ instance : ContinuousConstSMul 𝕜 (PolarTopology B 𝔖) :=
 protected theorem continuousSMul [IsTopologicalAddGroup F] [ContinuousSMul 𝕜 F] [TopologicalSpace E]
     (h𝔖 : ∀ S ∈ 𝔖, Bornology.IsVonNBounded 𝕜 S) : ContinuousSMul 𝕜 (PolarTopology B 𝔖) := by
   have : ContinuousSMul 𝕜 (F →Lᵤ[𝕜, 𝔖] 𝕜) :=
-    UniformConvergenceCLM.continuousSMul (σ := RingHom.id 𝕜) (E := F) (F := 𝕜) 𝔖 h𝔖
-  apply isUniformInducing_toUniformConvergenceCLM B 𝔖 |>.isInducing.continuousSMul continuous_id <|
+    UniformConvergenceCLM.continuousSMul (σ := RingHom.id 𝕜) (E := F) (F := 𝕜) _ h𝔖
+  apply isUniformInducing_toUniformConvergenceCLM B _ |>.isInducing.continuousSMul continuous_id <|
    by simp
 
 lemma isUniformEmbedding_toUniformConvergenceCLM (hB : B.SeparatingLeft) :
@@ -805,7 +805,7 @@ theorem Mackey.range_coeLM_eq_image_bilin [IsTopologicalAddGroup F] [Module ℝ 
   rw [StrongDual.range_coeLM_eq_sUnion_polar_nhds <|
       hasBasis_nhds_zero_polar (nonempty_setOf_isCompact_absConvex _ _)
         (directedOn_setOf_isCompact_absConvex _ _)
-        (by simpa [mem_setOf_eq, and_imp] using fun _ h _ ↦ IsCompact.isVonNBounded _ h)
+        (by simpa only [mem_setOf_eq, and_imp] using fun _ h _ ↦ IsCompact.isVonNBounded _ h)
         (fun c _ w hw ↦ ⟨c • w, ⟨⟨IsCompact.smul _ hw.1, by
                 simpa using AbsConvex.image (Module.End.smulLeft (RCLike.ofReal _)
                   (algebraMap_mem_center _)) hw.2⟩, by aesop⟩⟩)]
