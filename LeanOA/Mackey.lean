@@ -850,7 +850,7 @@ theorem Mackey.range_coeLM_eq_range_bilin [IsTopologicalAddGroup F] [Module ℝ 
   exact_mod_cast h2.symm
 
 open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
-/-- The Mackey Topology is "compatible with B". -/
+/-- The topology on `Mackey B` is compatible with the type-appropriate version of `B`. -/
 instance [IsTopologicalAddGroup F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [T1Space F]
     [ContinuousSMul 𝕜 F] : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).flip.IsCompatible where
   range_eq_range := Mackey.range_coeLM_eq_range_bilin B
