@@ -2,37 +2,7 @@ import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
-import LeanOA.AbsConvex
 import LeanOA.LocallyConvexNhdsBasis
-
-open scoped ComplexOrder in
-open Module WeakBilin in
--- this is Lemma 5.3 in Voigt, *Topological Vector Spaces*, used in the proof that the Mackey
--- topology is compatible.
-lemma Module.dualPairing_flip_polar_polar {𝕜 E F : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
-    [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.IsWeak]
-    {s : Set E} (hs : AbsConvex 𝕜 s) (hs' : IsCompact s) (hs_non : s.Nonempty) :
-    (dualPairing 𝕜 F).flip.polar (B.polar s) = B '' s := by
-  let B₂ : E →ₗ[𝕜] WeakBilin (dualPairing 𝕜 F) :=
-    (LinearEquiv.refl _ _).arrowCongr (linearEquiv 𝕜 (dualPairing 𝕜 F)).symm B
-  have hB₂ : Continuous B₂ := by
-    apply WeakBilin.continuous_of_continuous_eval' _ fun y ↦ ?_
-    simpa [B₂, pairing] using LinearMap.IsWeak.continuous_eval B y
-  suffices (pairing (dualPairing 𝕜 F)).flip.polar (B.polar s) = (B₂ '' s) by
-    simp only [LinearEquiv.arrowCongr_apply, LinearEquiv.refl_symm, LinearEquiv.refl_apply,
-      ← Set.image_image, LinearEquiv.image_symm_eq_preimage, B₂] at this
-    exact linearEquiv 𝕜 (dualPairing 𝕜 F) |>.surjective.preimage_injective this
-  have h₁ : B.polar s = (pairing (dualPairing 𝕜 F)).polar (B₂ '' s) := by
-    ext; simp [LinearMap.polar_mem_iff, B₂, pairing]
-  apply Eq.trans congr((pairing (dualPairing 𝕜 F)).flip.polar $h₁)
-  rw [LinearMap.bipolar, closedAbsConvexHull_eq_self]
-  · exact hs.image _
-  · have : Topology.IsEmbedding (pairing (dualPairing 𝕜 F) · ·) :=
-      LinearMap.IsWeak.isEmbedding Function.injective_id
-    have : T2Space (WeakBilin (dualPairing 𝕜 F)) := this.t2Space
-    apply IsCompact.isClosed
-    apply hs'.image hB₂
-  · exact hs_non.image _
 
 open ContinuousLinearMap Module in
 open scoped Topology in
