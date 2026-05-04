@@ -805,7 +805,7 @@ theorem Mackey.range_coeLM_eq_image_bilin [IsTopologicalAddGroup F] [Module ℝ 
   rw [StrongDual.range_coeLM_eq_sUnion_polar_nhds <|
       hasBasis_nhds_zero_polar (nonempty_setOf_isCompact_absConvex _ _)
         (directedOn_setOf_isCompact_absConvex _ _)
-        (by simpa only [mem_setOf_eq, and_imp] using fun _ h _ ↦ IsCompact.isVonNBounded _ h)
+        (by simpa [mem_setOf_eq, and_imp] using fun _ h _ ↦ IsCompact.isVonNBounded _ h)
         (fun c _ w hw ↦ ⟨c • w, ⟨⟨IsCompact.smul _ hw.1, by
                 simpa using AbsConvex.image (Module.End.smulLeft (RCLike.ofReal _)
                   (algebraMap_mem_center _)) hw.2⟩, by aesop⟩⟩)]
@@ -831,7 +831,7 @@ theorem Mackey.range_coeLM_eq_image_bilin [IsTopologicalAddGroup F] [Module ℝ 
       exact convex_convexHull ..
     exact ⟨⟨hcpt, absConvex_convexClosedHull⟩, by
       rw [Module.dualPairing_flip_polar_polar B₁ absConvex_convexClosedHull hcpt
-        (by simp only [convexHull_singleton, closedAbsConvexHull_eq_closure_absConvexHull,
+        (by simp [convexHull_singleton, closedAbsConvexHull_eq_closure_absConvexHull,
          closure_nonempty_iff, absConvexHull_nonempty, singleton_nonempty])]
       exact ⟨f, by simpa [closedAbsConvexHull_eq_closure_absConvexHull] using subset_closure <|
            (mem_absConvexHull_iff.mpr fun _ a _ ↦ a rfl : f ∈ absConvexHull 𝕜 {_}), hf⟩⟩
@@ -844,7 +844,7 @@ theorem Mackey.range_coeLM_eq_range_bilin [IsTopologicalAddGroup F] [Module ℝ 
       (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range := by
   have : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).range =
       (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}) '' univ := by
-    ext; simp only [SetLike.mem_coe, LinearMap.mem_range, image_univ, Set.mem_range]
+    ext; simp
   have h2 := Mackey.range_coeLM_eq_image_bilin B
   rw [← this] at h2
   exact_mod_cast h2.symm
