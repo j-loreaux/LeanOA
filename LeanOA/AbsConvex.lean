@@ -161,3 +161,9 @@ protected lemma IsCompact.closedAbsConvexHull {𝕜 E : Type*} [RCLike 𝕜] [Ad
   apply IsCompact.convexHull_biUnion (by simp)
   · grind [IsCompact.smul, IsCompact.neg]
   · grind [Convex.smul, Convex.neg]
+
+lemma closedAbsConvexHull_eq_self {𝕜 E : Type*} [SeminormedRing 𝕜]
+    [SMul 𝕜 E] [AddCommMonoid E] [PartialOrder 𝕜] [TopologicalSpace E]
+    {s : Set E} (h_conv : AbsConvex 𝕜 s) (h_closed : IsClosed s) :
+    closedAbsConvexHull 𝕜 s = s :=
+  subset_antisymm (closedAbsConvexHull_min le_rfl h_conv h_closed) subset_closedAbsConvexHull
