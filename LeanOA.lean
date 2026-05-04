@@ -1,4 +1,4 @@
-module
+module  -- shake: keep-all
 
 public import LeanOA.BlueprintImports
 public import LeanOA.CFC
