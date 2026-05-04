@@ -10,7 +10,7 @@ public import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
 public import Mathlib.Analysis.LocallyConvex.WeakDual
 public import Mathlib.Analysis.LocallyConvex.WeakSpace
-public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
+public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatibleDual
 public import LeanOA.IsWeak
 public import LeanOA.AbsConvex
 
@@ -80,8 +80,8 @@ noncomputable abbrev WeakDual.strongDualEquiv (𝕜 E : Type*) [NontriviallyNorm
 
 instance {𝕜 E : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [TopologicalSpace E] [SeparatingDual 𝕜 E] :
-    (weakDualPairing 𝕜 E).IsCompatible :=
-  WeakDual.strongDualEquiv 𝕜 E |>.isCompatible _ rfl
+    (weakDualPairing 𝕜 E).IsCompatibleDual :=
+  WeakDual.strongDualEquiv 𝕜 E |>.IsCompatibleDual _ rfl
 
 variable {𝕜 E F : Type*}
 
@@ -292,18 +292,18 @@ alias StrongDual.bipolar := StrongDual.topDualPairing_flip_polar_polar
 
 set_option backward.isDefEq.respectTransparency false in
 open scoped ComplexConjugate ComplexOrder in
-theorem LinearMap.IsCompatible.flip_polar_polar {𝕜 E F : Type*}
+theorem LinearMap.IsCompatibleDual.flip_polar_polar {𝕜 E F : Type*}
     [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
     [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E]
     [AddCommGroup F] [Module 𝕜 F]
-    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsCompatible] {s : Set E} (h : s.Nonempty) :
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsCompatibleDual] {s : Set E} (h : s.Nonempty) :
     B.flip.polar (B.polar s) = closedAbsConvexHull 𝕜 s := by
   convert StrongDual.topDualPairing_flip_polar_polar 𝕜 h
   ext
-  simp [polar_mem_iff, (IsCompatible.equiv B).surjective.forall]
+  simp [polar_mem_iff, (IsCompatibleDual.equiv B).surjective.forall]
 
-alias LinearMap.IsCompatible.bipolar := LinearMap.IsCompatible.flip_polar_polar
+alias LinearMap.IsCompatibleDual.bipolar := LinearMap.IsCompatibleDual.flip_polar_polar
 
 open scoped ComplexOrder in
 open Module WeakBilin in

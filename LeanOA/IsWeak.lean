@@ -2,7 +2,7 @@ module
 
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
-public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
+public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatibleDual
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
 public import Mathlib.Analysis.LocallyConvex.WeakDual
 public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
@@ -159,18 +159,18 @@ instance (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) : (pairing (pairing B.flip).fl
 instance {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
     [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
     [AddCommGroup F] [Module 𝕜 F]
-    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsCompatible] :
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsCompatibleDual] :
     letI B' : WeakSpace 𝕜 E →ₗ[𝕜] F →ₗ[𝕜] 𝕜 := (toWeakSpace 𝕜 E).arrowCongr (.refl ..) B
     B'.IsWeak :=
   LinearMap.IsWeak.congr (weakSpacePairing 𝕜 E) _ (.refl ..) hB.equiv.symm rfl
 
-/-- Continuous linear equivalence of `F` with `WeakDual 𝕜 E` from `B.IsCompatible` and
+/-- Continuous linear equivalence of `F` with `WeakDual 𝕜 E` from `B.IsCompatibleDual` and
 `B.flip.IsWeak` . -/
 noncomputable
-def _root_.LinearMap.IsCompatible.weakDualCLE' {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
+def _root_.LinearMap.IsCompatibleDual.weakDualCLE' {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
     [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
     [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F]
-    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB' : B.IsCompatible] [hB : B.flip.IsWeak] :
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB' : B.IsCompatibleDual] [hB : B.flip.IsWeak] :
     F ≃L[𝕜] WeakDual 𝕜 E where
   toLinearEquiv := hB'.equiv ≪≫ₗ StrongDual.toWeakDual
   continuous_toFun := by

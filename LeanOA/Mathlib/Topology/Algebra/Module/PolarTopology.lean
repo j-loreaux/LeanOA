@@ -115,27 +115,27 @@ end nhdsPolars
 section Banach_Alaoglu
 
 open WeakBilin Topology in
-theorem IsCompatible.isCompact_polar {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E]
-    [Module 𝕜 E] [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F] [IsTopologicalAddGroup E]
-    [ContinuousSMul 𝕜 E] [ProperSpace 𝕜] [TopologicalSpace F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
-    [h : B.IsCompatible] [hB : B.flip.IsWeak] {s : Set E} (s_nhds : s ∈ 𝓝 0) :
-    IsCompact (B.polar s) := by
+theorem IsCompatibleDual.isCompact_polar {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
+    [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F]
+    [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [ProperSpace 𝕜] [TopologicalSpace F]
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatibleDual] [hB : B.flip.IsWeak] {s : Set E}
+    (s_nhds : s ∈ 𝓝 0) : IsCompact (B.polar s) := by
   simpa [ContinuousLinearEquiv.image_eq_preimage_symm] using
     WeakDual.isCompact_polar' _ s_nhds |>.image h.weakDualCLE'.symm.continuous
 
 instance {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E]
     [Module 𝕜 E] [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
-    [B.IsCompatible] :
-    LinearMap.IsCompatible (pairing B.flip).flip :=
-  WeakBilin.linearEquiv _ B.flip ≪≫ₗ LinearMap.IsCompatible.equiv B |>.isCompatible _ rfl
+    [B.IsCompatibleDual] :
+    LinearMap.IsCompatibleDual (pairing B.flip).flip :=
+  WeakBilin.linearEquiv _ B.flip ≪≫ₗ LinearMap.IsCompatibleDual.equiv B |>.IsCompatibleDual _ rfl
 
 --- there's a proof of this that doesn't use compactness (hence properness of `𝕜`) using the fact
 --- that a set is von Neumann bounded if and only if its polar is absorbent.
 open WeakBilin Topology in
-theorem IsCompatible.isVonNBounded_polar {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
+theorem IsCompatibleDual.isVonNBounded_polar {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
     [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E] [AddCommGroup F] [Module 𝕜 F]
     [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [ProperSpace 𝕜] [TopologicalSpace F]
-    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatible] [hB : B.flip.IsWeak]
+    (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatibleDual] [hB : B.flip.IsWeak]
     {s : Set E} (s_nhds : s ∈ 𝓝 0) :
     IsVonNBounded 𝕜 (B.polar s) := by
   rw [LinearMap.IsWeak.isVonNBounded_iff_bddAbove B.flip]
@@ -560,14 +560,14 @@ theorem locallyConvexSpace [Module ℝ E] [h : IsScalarTower ℝ 𝕜 E] (h𝔖_
 -- Question: Should we first map these through `linearEquiv.symm`, and then `(bilin B 𝔖).polar`?
 -- It might make it easier to apply the bipolar theorem later.
 lemma isVonNBounded_nhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
-    [ContinuousSMul 𝕜 E] [hB : B.IsCompatible] (s : Set F) (hs : s ∈ B.nhdsPolars) :
+    [ContinuousSMul 𝕜 E] [hB : B.IsCompatibleDual] (s : Set F) (hs : s ∈ B.nhdsPolars) :
     IsVonNBounded 𝕜 s := by
   obtain ⟨s, (hs : s ∈ 𝓝 0), rfl⟩ := hs
   exact hB.isVonNBounded_polar _ hs
 
 variable (B) in
 lemma continuous_seminorm_comp [TopologicalSpace E] [IsTopologicalAddGroup E]
-    [ContinuousSMul 𝕜 E] [B.IsCompatible] {s : Set E} (hs1 : s ∈ 𝓝 0) :
+    [ContinuousSMul 𝕜 E] [B.IsCompatibleDual] {s : Set E} (hs1 : s ∈ 𝓝 0) :
     Continuous
       (seminorm B B.nhdsPolars (B.polar s) (isVonNBounded_nhdsPolars _ ⟨s, hs1, rfl⟩) |>.comp <|
         linearEquiv.symm.toLinearMap) := by
@@ -581,11 +581,11 @@ lemma continuous_seminorm_comp [TopologicalSpace E] [IsTopologicalAddGroup E]
 
 open LinearMap WithSeminorms
 
-/-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatible` and
+/-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatibleDual` and
 `PolarTopology B (nhdsPolars B)`. -/
 def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
     [ContinuousSMul 𝕜 E] [hLCS : LocallyConvexSpace 𝕜 E]
-    [hB : B.IsCompatible] :
+    [hB : B.IsCompatibleDual] :
     PolarTopology B (nhdsPolars B) ≃L[𝕜] E where
   toLinearEquiv := linearEquiv (B := B) (𝔖 := nhdsPolars B)
   continuous_toFun := by
@@ -600,7 +600,7 @@ def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
     have hR : LocallyConvexSpace ℝ E := LocallyConvexSpace.to_real 𝕜 E hLCS
     have : B₂.polar (B.polar u) = f ⁻¹' u := by
       nth_rw 2 [← closedAbsConvexHull_eq_self hu_ac hu_cl]
-      rw [← IsCompatible.flip_polar_polar (Filter.nonempty_of_mem hu_nhd) (B := B)]
+      rw [← IsCompatibleDual.flip_polar_polar (Filter.nonempty_of_mem hu_nhd) (B := B)]
       ext; congr!
     simp only [id_eq]
     have foo := polar_mem_nhds (B := B) (𝔖 := nhdsPolars B) nonempty_nhdsPolars

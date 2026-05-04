@@ -73,7 +73,7 @@ variable (B)
 variable [B.flip.IsWeak]
 
 -- can we eliminate the need for `T2Space F` here? At least under certain circumstances?
--- probably `IsCompatible` will be enough? This was used in the proof that the
+-- probably `IsCompatibleDual` will be enough? This was used in the proof that the
 -- `closedAbsConvexHull` of a compact convex set is compact. I'm unsure if it's strictly necessary
 -- there.
 instance [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [T2Space F] :
@@ -128,16 +128,16 @@ variable [B.flip.IsWeak]
 open PolarTopology in
 /-- Every compatible locally convex topology is weaker than the Mackey topology. -/
 lemma continuous_ofMackey [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E]
-    [LocallyConvexSpace 𝕜 E] [B.IsCompatible] :
+    [LocallyConvexSpace 𝕜 E] [B.IsCompatibleDual] :
     Continuous (ofMackey : Mackey B → E) := by
   refine polarTopologyNhdsPolars.continuous.comp <|
     continuous_mono B B.nhdsPolars {s | IsCompact s ∧ AbsConvex 𝕜 s} ?_
   rintro - ⟨s, hs, rfl⟩
-  exact ⟨LinearMap.IsCompatible.isCompact_polar B hs, B.absConvex_polar s⟩
+  exact ⟨LinearMap.IsCompatibleDual.isCompact_polar B hs, B.absConvex_polar s⟩
 
 /-- The map `⇑ofMackey : Mackey 𝕜 E → E` as a continuous linear map. -/
 noncomputable def ofMackeyCLM [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E]
-    [LocallyConvexSpace 𝕜 E] [B.IsCompatible] :
+    [LocallyConvexSpace 𝕜 E] [B.IsCompatibleDual] :
     Mackey B →L[𝕜] E where
   toLinearMap := ofMackey.toLinearMap
   cont := continuous_ofMackey B
@@ -210,7 +210,7 @@ theorem Mackey.range_coeLM_eq_range_bilin [IsTopologicalAddGroup F] [Module ℝ 
 open ContinuousLinearMap Module PolarTopology Pointwise LinearMap in
 /-- The topology on `Mackey B` is compatible with the type-appropriate version of `B`. -/
 instance [IsTopologicalAddGroup F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [T1Space F]
-    [ContinuousSMul 𝕜 F] : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).flip.IsCompatible where
+    [ContinuousSMul 𝕜 F] : (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}).flip.IsCompatibleDual where
   range_eq_range := Mackey.range_coeLM_eq_range_bilin B
   injective := by
     rw [LinearMap.flip_flip, ← LinearMap.ker_eq_bot]

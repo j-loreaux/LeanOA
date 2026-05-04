@@ -33,7 +33,7 @@ public import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import LeanOA.Mathlib.Analysis.Complex.Basic
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
-public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatible
+public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatibleDual
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
