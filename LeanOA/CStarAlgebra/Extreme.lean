@@ -2,9 +2,10 @@ import LeanOA.CFC
 import LeanOA.IsUnital
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.Convex.Strict.Extreme
+import Mathlib.Analysis.CStarAlgebra.Extreme
+import Mathlib.Analysis.CStarAlgebra.GelfandDuality
 import Mathlib.Analysis.CStarAlgebra.Unitary.Maps
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 
@@ -15,8 +16,6 @@ In particular, we show that in a C⋆-algebra :
 
 * `CStarAlgebra.isUnital_iff`:
   A C⋆-algebra is unital if and only if there exists an extreme point of the closed unit ball.
-* `isStarProjection_iff_mem_extremePoints_nonneg_and_mem_unitClosedBall`:
-  The extreme points of the nonnegative closed unit ball are its projections.
 * `mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall_iff_isSelfAdjoint_and_mem_unitary`:
   The extreme points of the self-adjoint closed unit ball are its self-adjoint unitaries.
 
@@ -192,7 +191,7 @@ private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_unitClo
   /- Since `p` and `star a * a` are self-adjoint
   with product zero that the norm of their sum is the max of the norms of these contractions. -/
   have hmax : ‖p + star a * a‖ ≤ 1 := by
-    rw [IsSelfAdjoint.star_mul_self x |>.norm_add_eq_max hpa (.star_mul_self a), sup_le_iff, hp]
+    rw [hp, IsSelfAdjoint.star_mul_self x |>.norm_add_eq_max (.star_mul_self a) hpa, sup_le_iff]
     simp only [CStarRing.norm_star_mul_self]
     grw [mem_closedBall_zero_iff.mp hx.1, mem_closedBall_zero_iff.mp ha, one_mul, and_self]
   have : ‖x + a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp <| by grind
@@ -248,57 +247,10 @@ attribute [local instance] IsUnital.toCStarAlgebra in
 
 To upgrade a non-unital C⋆-algebra to a unital one, use `IsUnital.toCStarAlgebra`. -/
 theorem CStarAlgebra.isUnital_iff :
-    IsUnital A ↔ ∃ x : A, x ∈ extremePoints ℝ (closedBall (0 : A) 1) := by
+    IsUnital A ↔ (extremePoints ℝ (closedBall (0 : A) 1)).Nonempty := by
+  rw [Set.nonempty_def]
   refine ⟨fun h ↦ ⟨1, one_mem_extremePoints_unitClosedBall⟩, fun ⟨x, hx⟩ ↦ ?_⟩
   exact ⟨_, fun y ↦ ⟨ofExtremePtOne_mul hx y, mul_ofExtremePtOne hx y⟩⟩
-
-/-- The star projections in a non-unital C⋆-algebra are exactly the extreme points of
-the nonnegative closed unit ball. -/
-theorem isStarProjection_iff_mem_extremePoints_nonneg_and_mem_unitClosedBall
-    [PartialOrder A] [StarOrderedRing A] {e : A} :
-    IsStarProjection e ↔ e ∈ extremePoints ℝ {x : A | 0 ≤ x ∧ x ∈ closedBall 0 1} := by
-  simp only [mem_closedBall, dist_zero_right, mem_extremePoints_iff_left, mem_setOf_eq, and_imp]
-  refine ⟨fun he ↦ ⟨⟨he.nonneg, he.norm_le⟩,
-    fun a ha ha1 b hb hb1 ⟨t, s, h0t, h0s, hts, hlin⟩ ↦ ?_⟩, fun ⟨⟨h1, h2⟩, h3⟩ ↦ ?_⟩
-  · /- Note that if a convex combination `t • a + s • b = e`, then in the unitization
-    `t • (e * a * e)) + s • (e * (1 - b) * e) = 0`. -/
-    have := calc
-      t • (e * (1 - a : A⁺¹) * e) + s • (e * (1 - b) * e) = e - e * (t • a + s • b) * e := by
-        simp [smul_sub, sub_add_eq_add_sub, add_sub, ← add_smul, hts, sub_mul, mul_sub,
-          he.inr.isIdempotentElem.eq, mul_add, add_mul, sub_sub, mul_assoc]
-      _ = 0 := by simp [← inr_smul, ← inr_add, hlin, ← inr_mul, he.isIdempotentElem.eq]
-    have H {q : ℝ} {c : A} (hq : 0 < q) (h0c : 0 ≤ c) (hc1 : ‖c‖ ≤ 1) :
-        0 ≤ q • (e * (1 - c : A⁺¹) * e) := by
-      rw [← smul_zero q, smul_le_smul_iff_of_pos_left hq]
-      exact he.inr.isSelfAdjoint.conjugate_nonneg (sub_nonneg_of_le <|
-        (norm_le_one_iff_of_nonneg (c : A⁺¹) (by simpa)).mp (by simpa [norm_inr]))
-    have := le_add_iff_nonneg_right (t • (e * (1 - a : A⁺¹) * e)) |>.mpr (H h0s hb hb1)
-    have : e * ((1 - a : A⁺¹) * e) = 0 := by rw [← smul_eq_zero_iff_right h0t.ne']; grind
-    have := he.conjugate_of_nonneg_of_le (a := t • a) (by positivity)
-      (by simpa [hlin] using le_add_of_nonneg_right (a := t • a) (by positivity : 0 ≤ s • b))
-    rw [mul_smul_comm, smul_mul_assoc] at this
-    have h : e * (e - a * e) = 0 := by rw [← (inr_injective (R := ℂ)).eq_iff]; simpa [← one_sub_mul]
-    rwa [mul_sub, ← mul_assoc, he.isIdempotentElem, h0t.ne'.isUnit.smul_left_cancel.mp this,
-      sub_eq_zero, eq_comm] at h
-  · /- Now suppose `e` is an extreme point of the nonnegative closed unit ball.
-    So then it is self-adjoint, and so we only need to show `e * e = e`.
-    Note that since `0 ≤ e ≤ 1` in the unitization, we also get `0 ≤ e * (2 - e) = 2 • e - e * e`,
-    and `0 ≤ star (1 - e) * (1 - e) = 1 - 2 • e - e * e` which means `2 • e - e * e` is in the
-    closed unit ball. So `2 • e - e * e` is in the nonnegative closed unit ball.
-    Then using the extremity of `e`, we get `e * e = e` since `e * e` is obviously in the
-    nonnegative closed unit ball, and `e = 2⁻¹ • e * e + 2⁻¹ • (2 • e - e * e)`. -/
-    have := calc
-      0 ≤ (e : A⁺¹) * (2 - e) := by
-        have : (e : A⁺¹) ≤ 1 := norm_le_one_iff_of_nonneg _ (by simpa) |>.mp (by simpa [norm_inr])
-        apply Commute.mul_nonneg (by simpa) (by grw [sub_nonneg, this, one_le_two])
-        simp [commute_iff_eq, mul_sub, sub_mul, mul_two, two_mul]
-      _ = (((2 : ℝ) • e - e * e : A) : A⁺¹) := by simp [mul_sub, two_smul, mul_two]
-    refine ⟨h3 _ (Commute.mul_nonneg h1 h1 rfl) ?_ ((2 : ℝ) • e - e * e) this.of_inr ?_
-      ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← one_div, smul_smul]⟩, h1.isSelfAdjoint⟩
-    · grw [norm_mul_le, h2, one_mul]
-    · rw [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _ this, ← sub_nonneg]
-      calc 0 ≤ star (1 - e : A⁺¹) * (1 - e) := star_mul_self_nonneg _
-        _ = _ := by simp [LE.le.star_eq, h1, mul_sub, sub_mul, two_smul, sub_sub, add_sub]
 
 private lemma CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one [PartialOrder A]
     [StarOrderedRing A] {x y : A} (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) (hy : 0 ≤ y) (hy0 : ‖y‖ ≤ 1) :
@@ -314,8 +266,9 @@ theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_unit
     IsStarProjection (e⁺ : A) := by
   let := spectralOrder A
   let := spectralOrderedRing A
-  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_unitClosedBall]
-  simp only [mem_closedBall_zero_iff, mem_extremePoints_iff_left, mem_setOf_eq] at he ⊢
+  rw [isStarProjection_iff_mem_extremePoints_setOf_nonneg_inter_unitClosedBall]
+  simp only [mem_closedBall_zero_iff, mem_extremePoints_iff_left, mem_setOf_eq,
+    mem_inter_iff] at he ⊢
   refine ⟨⟨posPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
   · grw [norm_posPart_le, he.1.2]
   have hpn := by simpa [sub_eq_iff_eq_add] using posPart_sub_negPart e he.1.1
@@ -331,8 +284,9 @@ theorem isStarProjection_negPart_of_mem_extremePoints_isSelfAdjoint_and_mem_unit
     IsStarProjection (e⁻ : A) := by
   let := spectralOrder A
   let := spectralOrderedRing A
-  rw [isStarProjection_iff_mem_extremePoints_nonneg_and_mem_unitClosedBall]
-  simp only [mem_closedBall_zero_iff, mem_extremePoints_iff_left, mem_setOf_eq] at he ⊢
+  rw [isStarProjection_iff_mem_extremePoints_setOf_nonneg_inter_unitClosedBall]
+  simp only [mem_closedBall_zero_iff, mem_extremePoints_iff_left, mem_setOf_eq,
+    mem_inter_iff] at he ⊢
   refine ⟨⟨negPart_nonneg e, ?_⟩, fun x hx y hy ⟨α, β, hα, hβ, hαβ, h⟩ ↦ ?_⟩
   · grw [norm_negPart_le, he.1.2]
   have hpn := by simpa [sub_eq_iff_eq_add' (c := e), ← sub_eq_iff_eq_add] using
@@ -367,13 +321,13 @@ theorem mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall_iff_isSelfAdjoint
       rw [← posPart_sub_negPart e he.1.1]
       simp [x, mul_add, h1.isIdempotentElem.eq, h2.isIdempotentElem.eq, sub_eq_add_neg, add_mul]
     refine add_eq_left.mp <| he.2 _ ⟨he.1.1.add hx.2, ?_⟩ _ ⟨he.1.1.sub hx.2, ?_⟩ ⟨2⁻¹, 2⁻¹, ?_⟩
-    · grw [he.1.1.norm_add_eq_max this hx.isSelfAdjoint, he.1.2, hx.norm_le, max_self]
-    · grw [he.1.1.norm_sub_eq_max this hx.isSelfAdjoint, he.1.2, hx.norm_le, max_self]
+    · grw [he.1.1.norm_add_eq_max hx.isSelfAdjoint this, he.1.2, hx.norm_le, max_self]
+    · grw [he.1.1.norm_sub_eq_max hx.isSelfAdjoint this, he.1.2, hx.norm_le, max_self]
     simp [← one_div, smul_add, smul_sub, ← two_smul ℝ, smul_smul, mul_one_div_cancel]
   · refine inter_extremePoints_subset_extremePoints_of_subset inter_subset_right
       ⟨⟨he.1, ?_⟩, by simpa using Unitary.coe_mem_extremePoints_unitClosedBall ⟨e, he.2⟩⟩
     nontriviality A
-    simp [he]
+    simp [he, CStarRing.norm_of_mem_unitary]
 
 /-- An alternate statement for
 `mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall_iff_isSelfAdjoint_and_mem_unitary`. -/
