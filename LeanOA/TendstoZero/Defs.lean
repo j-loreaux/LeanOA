@@ -160,9 +160,9 @@ lemma topologicalClosure_range_addMonoidHomOfLE_top (hp : p < ∞) :
   apply le_antisymm
     (AddSubgroup.topologicalClosure_minimal _ (range_addMonoidHomOfLE_top_le_tendstoZero E hp)
       tendstoZero.isClosed)
-  suffices c₀ E ≤ (AddSubgroup.inclusion (lp.monotone (zero_le ∞))).range.topologicalClosure by
+  suffices c₀ E ≤ (AddSubgroup.inclusion (lp.monotone zero_le)).range.topologicalClosure by
     apply this.trans <| AddSubgroup.topologicalClosure_mono ?_
-    rw [← AddSubgroup.inclusion_comp  (lp.monotone (zero_le p)) (lp.monotone hp.le),
+    rw [← AddSubgroup.inclusion_comp  (lp.monotone zero_le) (lp.monotone hp.le),
       AddMonoidHom.range_comp]
     exact AddSubgroup.map_le_range ..
   intro x hx
@@ -220,7 +220,7 @@ lemma hasSum_single (x : c₀ E) :
   filter_upwards [Filter.atTop_basis.mem_of_mem (i := hx.toFinset) trivial] with s hs
   simp only [Metric.mem_closedBall, dist_eq_norm]
   refine lp.norm_le_of_forall_le hε.le fun i ↦ ?_
-  simp only [AddSubgroup.subtype_apply, AddSubgroupClass.coe_sub, AddSubgroup.val_finset_sum,
+  simp only [AddSubgroup.subtype_apply, AddSubgroupClass.coe_sub, AddSubgroup.val_finsetSum,
     coe_single, Pi.sub_apply, Finset.sum_apply, lp.single_apply, Finset.sum_pi_single]
   split_ifs with hi
   · simpa using hε.le
