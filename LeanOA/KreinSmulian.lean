@@ -1,13 +1,9 @@
-module
-
-public import LeanOA.TendstoZero.StrongDual
-public import LeanOA.Mathlib.Analysis.RCLike.Extend
-public import Mathlib.Analysis.InnerProductSpace.Basic
-public import Mathlib.Analysis.LocallyConvex.Separation
-public import Mathlib.Analysis.Normed.Module.WeakDual
-public import Mathlib.Analysis.Convex.NNReal
-
-@[expose] public section
+import LeanOA.TendstoZero.StrongDual
+import LeanOA.Mathlib.Analysis.RCLike.Extend
+import Mathlib.Analysis.InnerProductSpace.Basic
+import Mathlib.Analysis.LocallyConvex.Separation
+import Mathlib.Analysis.Normed.Module.WeakDual
+import Mathlib.Analysis.Convex.NNReal
 
 /-! # Krein-Smulian theorem
 
