@@ -11,32 +11,6 @@ public import LeanOA.LocallyConvexNhdsBasis
 open ContinuousLinearMap Module
 open scoped Topology
 
-open ContinuousLinearMap Module in
-open scoped Topology in
--- this is Theorem 3.2 in Voigt, *Topological Vector Spaces*, used in the proof that the Mackey
--- topology is compatible.
-lemma StrongDual.range_coeLM_eq_sUnion_polar_nhds {𝕜 E : Type*} [NontriviallyNormedField 𝕜]
-    [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
-    [ContinuousSMul 𝕜 E] {ι : Sort*} {p : ι → Prop} {s : ι → Set E}
-    (h : (𝓝 0).HasBasis p s) :
-    (coeLM 𝕜 : StrongDual 𝕜 E →ₗ[𝕜] Dual 𝕜 E).range =
-      ⋃₀ {(LinearMap.id (R := 𝕜) (M := Dual 𝕜 E)).flip.polar (s i) | (i : ι) (_ : p i)} := by
-  ext f
-  simp only [SetLike.mem_coe, LinearMap.mem_range, coeLM_apply, exists_prop, Set.mem_sUnion,
-    Set.mem_setOf_eq, exists_exists_and_eq_and]
-  constructor
-  · rintro ⟨y , rfl⟩
-    have := ContinuousAt.tendsto <| map_continuousAt y 0
-    simp only [map_zero, LinearMap.polar, LinearMap.flip_apply, LinearMap.id_coe, id_eq,
-      Set.mem_setOf_eq, coe_coe] at this ⊢
-    convert Filter.Tendsto.basis_left this h (Metric.closedBall 0 1)
-      <| Metric.closedBall_mem_nhds _ zero_lt_one
-    simp only [Metric.closedBall, dist_zero_right, Set.MapsTo, Set.mem_setOf_eq]
-  · rintro ⟨i, _, hi2⟩
-    have : s i ∈ 𝓝 0 := by apply h.1 (s i) |>.mpr; use i
-    use LinearMap.clmOfExistsBoundedImage f ⟨s _, this, Bornology.isVonNBounded_image _ _ hi2⟩
-    aesop
-
 -- the version in Mathlib has some small defeq abuse. It uses `f : E →SL[σ] F`
 open scoped UniformConvergenceCLM UniformConvergence in
 lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
