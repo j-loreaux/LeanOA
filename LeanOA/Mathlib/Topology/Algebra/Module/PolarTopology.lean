@@ -5,6 +5,7 @@ public import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 public import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 public import LeanOA.LocallyConvexNhdsBasis
+public import Mathlib.Data.Fintype.Order -- only needed for the finite union result
 
 @[expose] public section
 
@@ -379,8 +380,6 @@ lemma seminorm_le_of_subset {s t : Set F} (hs : IsVonNBounded 𝕜 s)
   rw [seminorm_apply_le_iff hs (apply_nonneg _ _)]
   exact fun y hy ↦ seminorm_apply_le ht x (hst hy)
 
-/- The following brittle proof broke. Can fix if we really want it.
-
 lemma seminorm_union {s t : Set F} (hs : IsVonNBounded 𝕜 s) (ht : IsVonNBounded 𝕜 t) :
     seminorm B 𝔖 (s ∪ t) (hs.union ht) = seminorm B 𝔖 s hs ⊔ seminorm B 𝔖 t ht := by
   ext
@@ -417,8 +416,6 @@ lemma seminorm_finite_sUnion {s : Set (Set F)} (hs : s.Finite)
       · have := finite_coe_iff.mpr hfin
         apply Finite.bddAbove_range
       exact range_nonempty_iff_nonempty.mpr h_nonempty
-
--/
 
 lemma continuous_seminorm (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ ·) 𝔖)
       (s : Set F) (hs_mem : s ∈ 𝔖) (hs : IsVonNBounded 𝕜 s) :
