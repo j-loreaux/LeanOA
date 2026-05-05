@@ -12,6 +12,8 @@ public import Mathlib.Data.Fintype.Order -- only needed for the finite union res
 open ContinuousLinearMap Module
 open scoped Topology
 
+section ToBeMoved
+
 -- the version in Mathlib has some small defeq abuse. It uses `f : E →SL[σ] F`
 open scoped UniformConvergenceCLM UniformConvergence in
 lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
@@ -23,6 +25,32 @@ lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
     (nhds 0).HasBasis (fun (Si : Set E × ι) => Si.1 ∈ 𝔖 ∧ p Si.2) fun (Si : Set E × ι) =>
       {f : E →SLᵤ[σ, 𝔖] F | ∀ x ∈ Si.1, f x ∈ b Si.2} :=
   UniformConvergenceCLM.hasBasis_nhds_zero_of_basis σ F 𝔖 h𝔖₁ h𝔖₂ h
+
+
+variable {𝕜 E F : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F]
+variable (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set F))
+
+/-- Upgrade a bilinear map `B : E →ₗ[𝕜] F →ₗ[𝕜] → 𝕜` to a linear map into continuous linear maps
+`B : E →ₗ[𝕜] F →L[𝕜] → 𝕜` (this can be generalized a lot; no need for scalars, also we can
+semilinearize). -/
+noncomputable def _root_.LinearMap.toCLMRight [TopologicalSpace F] (hB : ∀ x, Continuous (B x)) :
+    E →ₗ[𝕜] F →L[𝕜] 𝕜 :=
+  letI e : (F →L[𝕜] 𝕜) ≃ₗ[𝕜] (ContinuousLinearMap.coeLM 𝕜 (M := F) (N₃ := 𝕜) (R := 𝕜)).range :=
+    .ofInjective (ContinuousLinearMap.coeLM 𝕜) fun _ _ ↦ by simp [DFunLike.ext_iff]
+  letI B' : E →ₗ[𝕜] (ContinuousLinearMap.coeLM 𝕜 (M := F) (N₃ := 𝕜) (R := 𝕜)).range :=
+    B.codRestrict  _ (fun x ↦ ⟨⟨B x, hB x⟩, rfl⟩)
+  (LinearEquiv.refl _ _).arrowCongr e.symm B'
+
+lemma _root_.LinearMap.coeLM_toCLMRight_apply [TopologicalSpace F] (hB : ∀ x, Continuous (B x))
+    (x : E) : B.toCLMRight hB x = B x := by
+  simp [← ContinuousLinearMap.coeLM_apply 𝕜, LinearMap.toCLMRight]
+
+@[simp]
+lemma _root_.LinearMap.coe_toCLMRight [TopologicalSpace F] (hB : ∀ x, Continuous (B x))
+    (x : E) : ⇑(B.toCLMRight hB x) = B x := by
+  congrm($(B.coeLM_toCLMRight_apply hB x))
+
+end ToBeMoved
 
 namespace LinearMap
 
@@ -166,26 +194,6 @@ abbrev bilin : F →ₗ[𝕜] PolarTopology B 𝔖 →ₗ[𝕜] 𝕜 :=
 variable {B 𝔖} in
 lemma bilin_apply_apply (y : F) (x : PolarTopology B 𝔖) :
     bilin B 𝔖 y x = B (linearEquiv x) y := rfl
-
-/-- Upgrade a bilinear map `B : E →ₗ[𝕜] F →ₗ[𝕜] → 𝕜` to a linear map into continuous linear maps
-`B : E →ₗ[𝕜] F →L[𝕜] → 𝕜` (this can be generalized a lot; no need for scalars, also we can
-semilinearize). -/
-noncomputable def _root_.LinearMap.toCLMRight [TopologicalSpace F] (hB : ∀ x, Continuous (B x)) :
-    E →ₗ[𝕜] F →L[𝕜] 𝕜 :=
-  letI e : (F →L[𝕜] 𝕜) ≃ₗ[𝕜] (ContinuousLinearMap.coeLM 𝕜 (M := F) (N₃ := 𝕜) (R := 𝕜)).range :=
-    .ofInjective (ContinuousLinearMap.coeLM 𝕜) fun _ _ ↦ by simp [DFunLike.ext_iff]
-  letI B' : E →ₗ[𝕜] (ContinuousLinearMap.coeLM 𝕜 (M := F) (N₃ := 𝕜) (R := 𝕜)).range :=
-    B.codRestrict  _ (fun x ↦ ⟨⟨B x, hB x⟩, rfl⟩)
-  (LinearEquiv.refl _ _).arrowCongr e.symm B'
-
-lemma _root_.LinearMap.coeLM_toCLMRight_apply [TopologicalSpace F] (hB : ∀ x, Continuous (B x))
-    (x : E) : B.toCLMRight hB x = B x := by
-  simp [← ContinuousLinearMap.coeLM_apply 𝕜, LinearMap.toCLMRight]
-
-@[simp]
-lemma _root_.LinearMap.coe_toCLMRight [TopologicalSpace F] (hB : ∀ x, Continuous (B x))
-    (x : E) : ⇑(B.toCLMRight hB x) = B x := by
-  congrm($(B.coeLM_toCLMRight_apply hB x))
 
 variable {B 𝔖} in
 /-- Linear equivalence of `PolarTopology B 𝔖` with `F →ᵤ[𝔖] 𝕜`. -/
