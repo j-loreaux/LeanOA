@@ -32,6 +32,24 @@ lemma _root_.LinearEquiv.IsCompatibleDual (B : E →ₗ[𝕜] F →ₗ[𝕜] �
     ⟨by convert congr($(hB).range)
         simp, by simpa [hB] using e.injective⟩
 
+/-- Can use this to handle the above TODO. -/
+noncomputable def LinearEquiv.Bilin_flip_range (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+    (hB : Function.Injective B.flip) : F ≃ₗ[𝕜] B.flip.range :=
+  let φ := B.flip.rangeRestrict.toFun
+  have hφ : Function.Injective φ := by simpa [φ] using hB
+  let ψ := Classical.choose (Function.Injective.leftInverse φ hφ)
+  have hψ : Function.LeftInverse ψ φ := by
+    simpa [ψ, φ] using Classical.choose_spec
+      (Function.Injective.leftInverse φ hφ)
+  { toFun f := ⟨B.flip f, mem_range_self ..⟩,
+    map_add' _ _ := by ext; simp
+    map_smul' _ _ := by ext; simp
+    invFun := ψ
+    left_inv := hψ
+    right_inv :=Function.RightInverse.leftInverse_of_surjective
+       (Function.LeftInverse.rightInverse hψ) (by simp [Function.Surjective]) }
+
+
 lemma IsCompatibleDual.continuous (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatibleDual]
     (x : F) : Continuous (B.flip x) :=
   have ⟨y, hy⟩ := Submodule.ext_iff.mp h.range_eq_range (B.flip x) |>.mp (B.flip.mem_range_self x)
