@@ -25,58 +25,11 @@ lemma ContinuousLinearMap.coeLM_injective {R M N : Type*} (S : Type*) [Semiring 
     Function.Injective (ContinuousLinearMap.coeLM S : (M →L[R] N) →ₗ[S] M →ₗ[R] N) := by
   simp [Function.Injective, DFunLike.ext_iff]
 
--- TODO: show that any `F ≃ₗ[𝕜] StrongDual 𝕜 E` yields an `IsCompatibleDual` instance.
 lemma _root_.LinearEquiv.IsCompatibleDual (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (e : F ≃ₗ[𝕜] StrongDual 𝕜 E)
     (hB : B.flip = (ContinuousLinearMap.coeLM 𝕜).comp e.toLinearMap) :
     B.IsCompatibleDual :=
     ⟨by convert congr($(hB).range)
         simp, by simpa [hB] using e.injective⟩
-
-/-- Intended to help handle the above TODO. -/
-noncomputable def bilin_flip_range (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
-    (hB : Function.Injective B.flip) : F ≃ₗ[𝕜] B.flip.range :=
-  let φ := B.flip.rangeRestrict.toFun
-  have hφ : Function.Injective φ := by simpa [φ] using hB
-  let ψ := Classical.choose (Function.Injective.leftInverse φ hφ)
-  have hψ : Function.LeftInverse ψ φ := by
-    simpa [ψ, φ] using Classical.choose_spec
-      (Function.Injective.leftInverse φ hφ)
-  { toFun f := ⟨B.flip f, mem_range_self ..⟩,
-    map_add' _ _ := by ext; simp
-    map_smul' _ _ := by ext; simp
-    invFun := ψ
-    left_inv := hψ
-    right_inv :=Function.RightInverse.leftInverse_of_surjective
-       (Function.LeftInverse.rightInverse hψ) (by simp [Function.Surjective]) }
-
-/-
-
-I actually don't think that the above TODO is possible. The problem is that an
-arbitrary identification `e : F ≃ₗ[𝕜] StrongDual 𝕜 E` doesn't seem to be able to guarantee
-us that every element in the codomain will have the form `B(· , f)` for some `f : F`.
-
-noncomputable def StrongDual_to_coeLM_range :
-    StrongDual 𝕜 E ≃ₗ[𝕜] (ContinuousLinearMap.coeLM 𝕜 (M := E) (R := 𝕜) (N₃:= 𝕜)).range where
-      toFun f := (ContinuousLinearMap.coeLM 𝕜).rangeRestrict.toFun f
-      map_add' := by aesop
-      map_smul' := by aesop
-      invFun := by sorry --finish later if this indeed will work.
-      left_inv := sorry
-      right_inv := sorry
-
-variable (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
-    (hB : Function.Injective B.flip) (e : F ≃ₗ[𝕜] StrongDual 𝕜 E)
-
-#check (B.bilin_flip_range hB).symm ≪≫ₗ e ≪≫ₗ StrongDual_to_coeLM_range
-
-open LinearEquiv in
-lemma _root_.LinearEquiv.IsCompatibleDual' (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
-    (hB : Function.Injective B.flip) (e : F ≃ₗ[𝕜] StrongDual 𝕜 E) : B.IsCompatibleDual :=
-      let φ := (B.bilin_flip_range hB).symm ≪≫ₗ e
-      { range_eq_range := sorry
-        injective := sorry }
-
--/
 
 lemma IsCompatibleDual.continuous (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatibleDual]
     (x : F) : Continuous (B.flip x) :=
