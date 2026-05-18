@@ -50,6 +50,12 @@ lemma _root_.LinearMap.coe_toCLMRight [TopologicalSpace F] (hB : ∀ x, Continuo
     (x : E) : ⇑(B.toCLMRight hB x) = B x := by
   congrm($(B.coeLM_toCLMRight_apply hB x))
 
+lemma _root_.Real.sSup_image_nonneg {α : Type*} {f : α → ℝ} {s : Set α} (h : ∀ x ∈ s, 0 ≤ f x) :
+    0 ≤ sSup (f '' s) := by
+  apply Real.sSup_nonneg
+  rintro - ⟨x, hx, rfl⟩
+  exact h x hx
+
 end ToBeMoved
 
 namespace LinearMap
@@ -357,12 +363,6 @@ alias _root_.Bornology.IsVonNBounded.empty := Bornology.isVonNBounded_empty
 lemma seminorm_empty : seminorm B 𝔖 ∅ (.empty ..) = 0 := by
   ext
   simp [seminorm_apply]
-
-lemma _root_.Real.sSup_image_nonneg {α : Type*} {f : α → ℝ} {s : Set α} (h : ∀ x ∈ s, 0 ≤ f x) :
-    0 ≤ sSup (f '' s) := by
-  apply Real.sSup_nonneg
-  rintro - ⟨x, hx, rfl⟩
-  exact h x hx
 
 lemma isLUB_seminorm {s : Set F} (hs : IsVonNBounded 𝕜 s)
     (hs_non : s.Nonempty) (x : PolarTopology B 𝔖) :
