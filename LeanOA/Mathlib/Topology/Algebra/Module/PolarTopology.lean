@@ -30,6 +30,10 @@ lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
 variable {𝕜 E F : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F]
 variable (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (𝔖 : Set (Set F))
 
+
+/- I haven't removed the following, although I put the generalized versions in
+`LeanOA.Mathlib.Topology.Algebra.Module.LinearMap`. We can delete these once others are
+renamed properly and then fix the breakage. -/
 /-- Upgrade a bilinear map `B : E →ₗ[𝕜] F →ₗ[𝕜] → 𝕜` to a linear map into continuous linear maps
 `B : E →ₗ[𝕜] F →L[𝕜] → 𝕜` (this can be generalized a lot; no need for scalars, also we can
 semilinearize). -/
@@ -49,12 +53,6 @@ lemma _root_.LinearMap.coeLM_toCLMRight_apply [TopologicalSpace F] (hB : ∀ x, 
 lemma _root_.LinearMap.coe_toCLMRight [TopologicalSpace F] (hB : ∀ x, Continuous (B x))
     (x : E) : ⇑(B.toCLMRight hB x) = B x := by
   congrm($(B.coeLM_toCLMRight_apply hB x))
-
-lemma _root_.Real.sSup_image_nonneg {α : Type*} {f : α → ℝ} {s : Set α} (h : ∀ x ∈ s, 0 ≤ f x) :
-    0 ≤ sSup (f '' s) := by
-  apply Real.sSup_nonneg
-  rintro - ⟨x, hx, rfl⟩
-  exact h x hx
 
 end ToBeMoved
 
