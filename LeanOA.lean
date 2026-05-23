@@ -45,6 +45,7 @@ public import LeanOA.Mathlib.Misc
 public import LeanOA.Mathlib.Order.Hom.Basic
 public import LeanOA.Mathlib.Topology.Algebra.Module.LinearMap
 public import LeanOA.Mathlib.Topology.Algebra.Module.PolarTopology
+public import LeanOA.Mathlib.Topology.Algebra.Module.Spaces.UniformConvergenceCLM
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
 public import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
