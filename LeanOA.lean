@@ -36,8 +36,10 @@ public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
 public import LeanOA.Mathlib.Topology.Order.LeftRightNhds
 public import LeanOA.Notation
 public import LeanOA.PositiveContinuousLinearMap
+public import LeanOA.Predual
 public import LeanOA.TendstoZero.Defs
 public import LeanOA.TendstoZero.StrongDual
+public import LeanOA.Ultrastrong
 public import LeanOA.Ultraweak.Basic
 public import LeanOA.Ultraweak.Bornology
 public import LeanOA.Ultraweak.ContinuousFunctionalCalculus
