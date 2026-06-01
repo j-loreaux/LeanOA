@@ -22,9 +22,9 @@ abbrev Ultraweak (𝕜 M P : Type*) [RCLike 𝕜] [NormedAddCommGroup M] [Normed
   WeakBilin <| topDualPairing 𝕜 P ∘ₗ (Predual.equivDual (M := M) |>.toLinearEquiv.toLinearMap)
 
 @[inherit_doc]
-scoped[Ultraweak] notation "σ("M ", " P")_" 𝕜:max => Ultraweak 𝕜 M P
+scoped[Ultraweak] notation "σ("M", " P")_" 𝕜:max => Ultraweak 𝕜 M P
 @[inherit_doc]
-scoped[Ultraweak] notation "σ("M ", " P")" => Ultraweak ℂ M P
+scoped[Ultraweak] notation "σ("M", " P")" => Ultraweak ℂ M P
 
 /-! ## Linear structure -/
 
