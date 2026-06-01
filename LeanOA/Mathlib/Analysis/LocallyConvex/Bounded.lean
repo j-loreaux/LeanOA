@@ -29,13 +29,7 @@ lemma isVonNBounded_iff_of_iInf_induced
   obtain ⟨t, ht, htu⟩ := hu i
   specialize hs i t ht
   filter_upwards [hs, isBounded_singleton (x := 0) |>.compl] with c hc hc₀
-  -- alternate proof insteead of hte `calc` block.
-  -- grw [Set.subset_preimage_image (f i) s, hc, IsUnit.mk0 c hc₀ |>.preimage_smul_set .., htu]
-  calc
-    s ⊆ f i ⁻¹' (f i '' s) := Set.subset_preimage_image ..
-    _ ⊆ f i ⁻¹' (c • t) := by gcongr
-    _ = c • f i ⁻¹' t := IsUnit.mk0 c hc₀ |>.preimage_smul_set ..
-    _ ⊆ c • u i := by gcongr
+  grw [Set.subset_preimage_image (f i) s, hc, IsUnit.mk0 c hc₀ |>.preimage_smul_set .., htu]
 
 lemma isVonNBounded_iff_of_iInf_induced'
     (s : Set E) (hs : ∀ i, IsVonNBounded 𝕜 (f i '' s)) :
