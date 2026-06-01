@@ -13,6 +13,7 @@ lemma closedAbsConvexHull_eq_self {𝕜 E : Type*} [SeminormedRing 𝕜]
 
 open scoped ComplexOrder in
 open Module WeakBilin in
+set_option linter.deprecated false in
 -- this is Lemma 5.3 in Voigt, *Topological Vector Spaces*, used in the proof that the Mackey
 -- topology is compatible.
 lemma Module.dualPairing_flip_polar_polar {𝕜 E F : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
@@ -29,7 +30,7 @@ lemma Module.dualPairing_flip_polar_polar {𝕜 E F : Type*} [RCLike 𝕜] [AddC
       ← Set.image_image, LinearEquiv.image_symm_eq_preimage, B₂] at this
     exact linearEquiv 𝕜 (dualPairing 𝕜 F) |>.surjective.preimage_injective this
   have h₁ : B.polar s = (pairing (dualPairing 𝕜 F)).polar (B₂ '' s) := by
-    ext; simp [LinearMap.polar_mem_iff, B₂, pairing]
+    ext; simp [LinearMap.polar_mem_iff, B₂, pairing, dualPairing]
   apply Eq.trans congr((pairing (dualPairing 𝕜 F)).flip.polar $h₁)
   rw [LinearMap.bipolar, closedAbsConvexHull_eq_self]
   · exact hs.image _
@@ -40,6 +41,7 @@ lemma Module.dualPairing_flip_polar_polar {𝕜 E F : Type*} [RCLike 𝕜] [AddC
     apply hs'.image hB₂
   · exact hs_non.image _
 
+set_option linter.deprecated false in
 open ContinuousLinearMap Module in
 open scoped Topology in
 -- this is Theorem 3.2 in Voigt, *Topological Vector Spaces*, used in the proof that the Mackey
@@ -53,7 +55,6 @@ lemma StrongDual.range_coeLM_eq_sUnion_polar_nhds {𝕜 E : Type*} [NormedField 
     -- ⋃₀ (Set.range (fun i : Subtype p ↦ (dualPairing 𝕜 E).flip.polar (s i)))
   sorry
 
-#exit
 -- the version in Mathlib has some small defeq abuse. It uses `f : E →SL[σ] F`
 open scoped UniformConvergenceCLM UniformConvergence in
 lemma UniformConvergenceCLM.hasBasis_nhds_zero_of_basis'
@@ -655,14 +656,6 @@ lemma toMackey_ofMackey (x : Mackey B) : toMackey B (ofMackey x) = x := rfl
 
 @[simp]
 lemma ofMackey_toMackey (x : E) : ofMackey (toMackey B x) = x := rfl
-
-
--- this is available on current master in Mathlib
-theorem IsCompact.isVonNBounded (𝕜 : Type*) {E : Type*} [NormedField 𝕜] [AddCommGroup E]
-    [Module 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E]
-    {s : Set E} (hs : IsCompact s) :
-    Bornology.IsVonNBounded 𝕜 s :=
-  sorry
 
 theorem nonempty_setOf_isCompact_absConvex (𝕜 F : Type*) [NormedField 𝕜]
     [PartialOrder 𝕜] [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F] :
