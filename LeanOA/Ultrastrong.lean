@@ -93,11 +93,8 @@ variable (𝕜 M P) in
 /-- The canonical linear equivalence between `s(M, P)_𝕜` and `M`. -/
 @[expose, simps]
 def linearEquiv : s(M, P)_𝕜 ≃ₗ[𝕜] M where
-  toFun := ofUltrastrong
+  toEquiv := equiv 𝕜 M P
   map_add' _ _ := rfl
   map_smul' _ _ := rfl
-  invFun := toUltrastrong 𝕜 M P
-  left_inv _ := rfl
-  right_inv _ := rfl
 
 end Ultrastrong
