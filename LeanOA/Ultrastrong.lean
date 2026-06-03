@@ -120,7 +120,7 @@ noncomputable def FilterBasis : ModuleFilterBasis ℂ s(M, P) := seminormFamily.
 
 noncomputable instance : TopologicalSpace s(M, P) := FilterBasis.topology'
 
-/-- This is probably a stupid definition, but in case we want `WithSeminorms` ever. -/
+/-- This is probably a stupid definition, but in case we want `WithSeminorms`. -/
 def withSeminorms : WithSeminorms (E := s(M, P)) seminormFamily :=
   { topology_eq_withSeminorms := rfl }
 
