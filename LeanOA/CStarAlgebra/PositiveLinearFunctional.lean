@@ -61,8 +61,12 @@ noncomputable abbrev preGNS'preInnerProdSpace : PreInnerProductSpace.Core ℂ f.
 
 noncomputable instance : SeminormedAddCommGroup f.PreGNS' :=
   InnerProductSpace.Core.toSeminormedAddCommGroup (c := f.preGNS'preInnerProdSpace)
+
 noncomputable instance : InnerProductSpace ℂ f.PreGNS' :=
   InnerProductSpace.ofCore f.preGNS'preInnerProdSpace
+
+noncomputable instance : SeminormedSpace.Core ℂ f.PreGNS' :=
+  InnerProductSpace.Core.toSeminormedSpaceCore (c := f.preGNS'preInnerProdSpace)
 
 lemma preGNS'_inner_def (a b : f.PreGNS') :
     ⟪a, b⟫_ℂ = f (star (f.ofPreGNS' a) * f.ofPreGNS' b) := rfl

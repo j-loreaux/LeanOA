@@ -1,6 +1,11 @@
 module
 
+--public import Mathlib
 public import LeanOA.Predual
+public import LeanOA.Ultraweak.Basic
+public import LeanOA.CStarAlgebra.PositiveLinearFunctional
+public import Mathlib.Analysis.LocallyConvex.WithSeminorms
+public import Mathlib.Analysis.Normed.Module.TransferInstance
 
 public section
 
@@ -96,5 +101,16 @@ def linearEquiv : s(M, P)_𝕜 ≃ₗ[𝕜] M where
   toEquiv := equiv 𝕜 M P
   map_add' _ _ := rfl
   map_smul' _ _ := rfl
+
+variable {𝕜 M P : Type*} [NormedRing M] [PartialOrder M] [StarRing M] [StarOrderedRing M]
+variable [NormedAlgebra ℂ M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
+variable [StarModule ℂ M] [SelfAdjointDecompose M]
+
+open ComplexOrder PositiveLinearMap
+
+noncomputable def SeminormFamily : SeminormFamily ℂ
+  (ι := { f : M →ₚ[ℂ] ℂ // Continuous (f ∘ ofUltraweak (𝕜 := ℂ) (P := P))}) s(M, P) :=
+  fun f ↦ Seminorm.comp (normSeminorm ℂ (f.val.PreGNS'))
+      ((Ultrastrong.linearEquiv ℂ M P).trans f.val.toPreGNS').toLinearMap
 
 end Ultrastrong
