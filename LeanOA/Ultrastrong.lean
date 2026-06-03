@@ -118,6 +118,6 @@ noncomputable def seminormFamily : SeminormFamily ℂ
 
 noncomputable def FilterBasis : ModuleFilterBasis ℂ s(M, P) := seminormFamily.moduleFilterBasis
 
-noncomputable instance TopologicalSpace : TopologicalSpace s(M, P) := FilterBasis.topology'
+noncomputable instance : TopologicalSpace s(M, P) := FilterBasis.topology'
 
 end Ultrastrong
