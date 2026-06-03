@@ -64,6 +64,7 @@ instance : Module 𝕜 (s(M, P)_𝕜) := equiv 𝕜 M P |>.module 𝕜
     (a • x).ofUltrastrong = a • x.ofUltrastrong := rfl
 
 @[simp] lemma toUltrastrong_zero : toUltrastrong 𝕜 M P (0 : M) = 0 := rfl
+
 @[simp] lemma ofUltrastrong_zero : (0 : s(M, P)_𝕜).ofUltrastrong = 0 := rfl
 
 @[simp] lemma toUltrastrong_neg (x : M) :
@@ -102,15 +103,21 @@ def linearEquiv : s(M, P)_𝕜 ≃ₗ[𝕜] M where
   map_add' _ _ := rfl
   map_smul' _ _ := rfl
 
+/-! ## The Topology -/
+
 variable {𝕜 M P : Type*} [NormedRing M] [PartialOrder M] [StarRing M] [StarOrderedRing M]
 variable [NormedAlgebra ℂ M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
 variable [StarModule ℂ M] [SelfAdjointDecompose M]
 
 open ComplexOrder PositiveLinearMap
 
-noncomputable def SeminormFamily : SeminormFamily ℂ
+noncomputable def seminormFamily : SeminormFamily ℂ
   (ι := { f : M →ₚ[ℂ] ℂ // Continuous (f ∘ ofUltraweak (𝕜 := ℂ) (P := P))}) s(M, P) :=
   fun f ↦ Seminorm.comp (normSeminorm ℂ (f.val.PreGNS'))
       ((Ultrastrong.linearEquiv ℂ M P).trans f.val.toPreGNS').toLinearMap
+
+noncomputable def FilterBasis : ModuleFilterBasis ℂ s(M, P) := seminormFamily.moduleFilterBasis
+
+noncomputable abbrev TopologicalSpace : TopologicalSpace s(M, P) := FilterBasis.topology'
 
 end Ultrastrong
