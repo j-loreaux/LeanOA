@@ -102,14 +102,16 @@ variable [StarModule ℂ M] [SelfAdjointDecompose M]
 
 open ComplexOrder PositiveLinearMap
 
+/-- Seminorm family for the ultrastrong topology. -/
 noncomputable def seminormFamily : SeminormFamily ℂ
     (ι := { f : M →ₚ[ℂ] ℂ // Continuous (f ∘ ofUltraweak (𝕜 := ℂ) (P := P))}) s(M, P) :=
   fun f ↦ (normSeminorm ℂ (f.val.PreGNS')).comp
     ((linearEquiv ℂ M P).trans f.val.toPreGNS').toLinearMap
 
-noncomputable def FilterBasis : ModuleFilterBasis ℂ s(M, P) := seminormFamily.moduleFilterBasis
+/-- Filter basis for the seminorm family for the ultrastrong topology. -/
+noncomputable def filterBasis : ModuleFilterBasis ℂ s(M, P) := seminormFamily.moduleFilterBasis
 
-noncomputable instance : TopologicalSpace s(M, P) := FilterBasis.topology'
+noncomputable instance : TopologicalSpace s(M, P) := filterBasis.topology'
 
 /-- This is probably a stupid definition, but in case we want `WithSeminorms`. -/
 def withSeminorms : WithSeminorms (E := s(M, P)) seminormFamily :=
