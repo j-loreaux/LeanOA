@@ -1,6 +1,5 @@
 module
 
---public import Mathlib
 public import LeanOA.Predual
 public import LeanOA.Ultraweak.Basic
 public import LeanOA.CStarAlgebra.PositiveLinearFunctional
@@ -8,7 +7,6 @@ public import Mathlib.Analysis.LocallyConvex.WithSeminorms
 public import Mathlib.Analysis.Normed.Module.TransferInstance
 
 public section
-
 
 /-- Type synonym for `M` with the ultrastrong topology. -/
 @[expose]
@@ -64,14 +62,9 @@ instance : Module 𝕜 (s(M, P)_𝕜) := equiv 𝕜 M P |>.module 𝕜
     (a • x).ofUltrastrong = a • x.ofUltrastrong := rfl
 
 @[simp] lemma toUltrastrong_zero : toUltrastrong 𝕜 M P (0 : M) = 0 := rfl
-
 @[simp] lemma ofUltrastrong_zero : (0 : s(M, P)_𝕜).ofUltrastrong = 0 := rfl
-
-@[simp] lemma toUltrastrong_neg (x : M) :
-    toUltrastrong 𝕜 M P (-x) = -toUltrastrong 𝕜 M P x := rfl
-
-@[simp] lemma ofUltrastrong_neg (x : s(M, P)_𝕜) :
-    (-x).ofUltrastrong = -x.ofUltrastrong := rfl
+@[simp] lemma toUltrastrong_neg (x : M) : toUltrastrong 𝕜 M P (-x) = -toUltrastrong 𝕜 M P x := rfl
+@[simp] lemma ofUltrastrong_neg (x : s(M, P)_𝕜) : (-x).ofUltrastrong = -x.ofUltrastrong := rfl
 
 @[simp] lemma toUltrastrong_sub (x y : M) :
     toUltrastrong 𝕜 M P (x - y) = toUltrastrong 𝕜 M P x - toUltrastrong 𝕜 M P y := rfl
@@ -79,12 +72,10 @@ instance : Module 𝕜 (s(M, P)_𝕜) := equiv 𝕜 M P |>.module 𝕜
 @[simp] lemma ofUltrastrong_sub (x y : s(M, P)_𝕜) :
     (x - y).ofUltrastrong = x.ofUltrastrong - y.ofUltrastrong := rfl
 
-@[simp] lemma toUltrastrong_inj {x y : M} :
-    toUltrastrong 𝕜 M P x = toUltrastrong 𝕜 M P y ↔ x = y :=
+@[simp] lemma toUltrastrong_inj {x y : M} : toUltrastrong 𝕜 M P x = toUltrastrong 𝕜 M P y ↔ x = y :=
   equiv 𝕜 M P |>.symm.injective.eq_iff
 
-@[simp] lemma ofUltrastrong_inj {x y : s(M, P)_𝕜} :
-    x.ofUltrastrong = y.ofUltrastrong ↔ x = y :=
+@[simp] lemma ofUltrastrong_inj {x y : s(M, P)_𝕜} : x.ofUltrastrong = y.ofUltrastrong ↔ x = y :=
   equiv 𝕜 M P |>.injective.eq_iff
 
 @[simp] lemma toUltrastrong_eq_zero {x : M} : toUltrastrong 𝕜 M P x = 0 ↔ x = 0 :=
@@ -105,16 +96,16 @@ def linearEquiv : s(M, P)_𝕜 ≃ₗ[𝕜] M where
 
 /-! ## The Topology -/
 
-variable {𝕜 M P : Type*} [NormedRing M] [PartialOrder M] [StarRing M] [StarOrderedRing M]
+variable {M P : Type*} [NormedRing M] [PartialOrder M] [StarRing M] [StarOrderedRing M]
 variable [NormedAlgebra ℂ M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
 variable [StarModule ℂ M] [SelfAdjointDecompose M]
 
 open ComplexOrder PositiveLinearMap
 
 noncomputable def seminormFamily : SeminormFamily ℂ
-  (ι := { f : M →ₚ[ℂ] ℂ // Continuous (f ∘ ofUltraweak (𝕜 := ℂ) (P := P))}) s(M, P) :=
-  fun f ↦ Seminorm.comp (normSeminorm ℂ (f.val.PreGNS'))
-      ((Ultrastrong.linearEquiv ℂ M P).trans f.val.toPreGNS').toLinearMap
+    (ι := { f : M →ₚ[ℂ] ℂ // Continuous (f ∘ ofUltraweak (𝕜 := ℂ) (P := P))}) s(M, P) :=
+  fun f ↦ (normSeminorm ℂ (f.val.PreGNS')).comp
+    ((linearEquiv ℂ M P).trans f.val.toPreGNS').toLinearMap
 
 noncomputable def FilterBasis : ModuleFilterBasis ℂ s(M, P) := seminormFamily.moduleFilterBasis
 
