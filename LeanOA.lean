@@ -1,5 +1,6 @@
 module  -- shake: keep-all
 
+public import LeanOA.AbsConvex
 public import LeanOA.BlueprintImports
 public import LeanOA.CFC
 public import LeanOA.CStarAlgebra.Extreme
@@ -9,9 +10,12 @@ public import LeanOA.CStarModule.Standard
 public import LeanOA.ComplexOrder
 public import LeanOA.ExtremallyDisconnected
 public import LeanOA.IsUnital
+public import LeanOA.IsWeak
 public import LeanOA.KreinSmulian
+public import LeanOA.LocallyConvexNhdsBasis
 public import LeanOA.Lp.Holder
 public import LeanOA.Lp.lpSpace
+public import LeanOA.Mackey
 public import LeanOA.Masa
 public import LeanOA.Mathlib.Algebra.LinearAlgebra.Span.Defs
 public import LeanOA.Mathlib.Algebra.Order.Module.PositiveLinearMap
@@ -27,10 +31,24 @@ public import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import LeanOA.Mathlib.Analysis.Complex.Basic
+public import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
+public import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
+public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatibleDual
+public import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
+public import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
+public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
+public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
 public import LeanOA.Mathlib.Analysis.RCLike.Extend
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
+public import LeanOA.Mathlib.Data.Real.Archimedean
 public import LeanOA.Mathlib.Misc
 public import LeanOA.Mathlib.Order.Hom.Basic
+public import LeanOA.Mathlib.Topology.Algebra.Module.LinearMap
+public import LeanOA.Mathlib.Topology.Algebra.Module.PolarTopology
+public import LeanOA.Mathlib.Topology.Algebra.Module.Spaces.UniformConvergenceCLM
+public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
+public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
+public import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 public import LeanOA.Mathlib.Topology.Bornology.Basic
 public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
 public import LeanOA.Mathlib.Topology.Order.LeftRightNhds
