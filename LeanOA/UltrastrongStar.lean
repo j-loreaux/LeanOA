@@ -105,7 +105,7 @@ def linearEquiv : s*(M, P)_𝕜 ≃ₗ[𝕜] M where
 
 variable {M P : Type*} [NormedRing M] [PartialOrder M] [StarRing M] [StarOrderedRing M]
 variable [NormedAlgebra ℂ M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
-variable [StarModule ℂ M] [SelfAdjointDecompose M] [NormedStarGroup M]
+variable [StarModule ℂ M] [SelfAdjointDecompose M]
 
 open ComplexOrder PositiveLinearMap
 
@@ -117,7 +117,7 @@ noncomputable def seminormFamily : SeminormFamily ℂ
     ((linearEquiv ℂ M P).trans f.1.val.toPreGNS').toLinearMap else
       (normSeminorm ℂ (f.1.val.PreGNS')).comp <|
         (((linearEquiv ℂ M P).trans <| f.1.val.toPreGNS')).trans
-          (starₗᵢ ℂ (E := M)).toContinuousLinearEquiv.toLinearEquiv |>.toLinearMap
+          (starLinearEquiv ℂ (A := M)) |>.toLinearMap
 
 /-- Filter basis for the seminorm family for the ultrastrong-star topology. -/
 noncomputable def filterBasis : ModuleFilterBasis ℂ s*(M, P) := seminormFamily.moduleFilterBasis
