@@ -15,16 +15,16 @@ def UltrastrongStar (𝕜 M P : Type*) [RCLike 𝕜] [NormedRing M] [StarRing M]
     [NormedAddCommGroup P] [NormedSpace 𝕜 P] [Predual 𝕜 M P] := M
 
 @[inherit_doc]
-scoped[UltrastrongStar] notation "s⋆("M", " P")_" 𝕜:max => UltrastrongStar 𝕜 M P
+scoped[Ultrastrong] notation "s⋆("M", " P")_" 𝕜:max => UltrastrongStar 𝕜 M P
 @[inherit_doc]
-scoped[UltrastrongStar] notation "s⋆("M", " P")" => UltrastrongStar ℂ M P
+scoped[Ultrastrong] notation "s⋆("M", " P")" => UltrastrongStar ℂ M P
+
+open scoped Ultrastrong
 
 /-! ## Linear structure -/
 
 variable {𝕜 M P : Type*} [RCLike 𝕜] [NormedRing M] [StarRing M] [NormedAlgebra 𝕜 M]
   [NormedAddCommGroup P] [NormedSpace 𝕜 P] [Predual 𝕜 M P]
-
-open UltrastrongStar
 
 variable (𝕜 M P) in
 /-- The canonical map from `M` to `s⋆(M, P)_𝕜`. -/
@@ -111,7 +111,7 @@ open ComplexOrder PositiveLinearMap
 
 open Ultraweak in
 /-- Seminorm family for the ultrastrong-star topology. -/
-noncomputable def seminormFamily : SeminormFamily ℂ
+@[expose] noncomputable def seminormFamily : SeminormFamily ℂ
     (ι := { f : M →ₚ[ℂ] ℂ // Continuous (f ∘ ofUltraweak (𝕜 := ℂ) (P := P))} × Fin 2)
     s⋆(M, P) :=
   fun f ↦ if f.2 = 0 then normSeminorm ℂ f.1.val.PreGNS' |>.comp
@@ -121,6 +121,7 @@ noncomputable def seminormFamily : SeminormFamily ℂ
           (starLinearEquiv ℂ (A := M)) |>.toLinearMap
 
 /-- Filter basis for the seminorm family for the ultrastrong-star topology. -/
+@[expose]
 noncomputable def filterBasis : ModuleFilterBasis ℂ s⋆(M, P) := seminormFamily.moduleFilterBasis
 
 noncomputable instance : TopologicalSpace s⋆(M, P) := filterBasis.topology'
