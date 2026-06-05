@@ -517,7 +517,7 @@ lemma continuous_seminorm_comp [TopologicalSpace E] [IsTopologicalAddGroup E]
 
 open LinearMap WithSeminorms
 
-/-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatibleDual` and
+/-- The continuous linear equivalence between `E` satisfiying `B.IsCompatibleDual` and
 `PolarTopology B (nhdsPolars B)`. -/
 def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
     [ContinuousSMul 𝕜 E] [hLCS : LocallyConvexSpace 𝕜 E]
