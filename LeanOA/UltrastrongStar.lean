@@ -112,8 +112,8 @@ open ComplexOrder PositiveLinearMap
 open Ultraweak in
 /-- Seminorm family for the ultrastrong-star topology. -/
 noncomputable def seminormFamily : SeminormFamily ℂ
-    (ι := { f : M →ₚ[ℂ] ℂ // Continuous (f ∘ ofUltraweak (𝕜 := ℂ) (P := P))} × Fin 2) s⋆
-  (M, P) :=
+    (ι := { f : M →ₚ[ℂ] ℂ // Continuous (f ∘ ofUltraweak (𝕜 := ℂ) (P := P))} × Fin 2)
+    s⋆(M, P) :=
   fun f ↦ if f.2 = 0 then normSeminorm ℂ f.1.val.PreGNS' |>.comp
     (linearEquiv ℂ M P |>.trans f.1.val.toPreGNS').toLinearMap else
       normSeminorm ℂ f.1.val.PreGNS' |>.comp <|
