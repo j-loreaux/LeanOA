@@ -9,7 +9,8 @@ public import Mathlib.Analysis.Normed.Module.TransferInstance
 public section
 
 set_option linter.unusedVariables false in
-/-- Type synonym for `M` with the ultrastrong topology. -/
+/-- Type synonym for `M` with the ultrastrong topology.
+Notation for this is `s(M, P)_𝕜` or `s(M, P)` when `𝕜 = ℂ` (this is scped to `Ultrastrong`). -/
 @[expose, nolint unusedArguments]
 def Ultrastrong (𝕜 M P : Type*) [RCLike 𝕜] [NormedRing M] [StarRing M] [NormedAlgebra 𝕜 M]
     [NormedAddCommGroup P] [NormedSpace 𝕜 P] [Predual 𝕜 M P] := M
@@ -117,7 +118,6 @@ noncomputable def filterBasis : ModuleFilterBasis ℂ s(M, P) := seminormFamily.
 
 noncomputable instance : TopologicalSpace s(M, P) := filterBasis.topology'
 
-/-- This is probably a stupid definition, but in case we want `WithSeminorms`. -/
 lemma withSeminorms : WithSeminorms (E := s(M, P)) seminormFamily :=
   { topology_eq_withSeminorms := rfl }
 

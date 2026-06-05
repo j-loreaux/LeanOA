@@ -1,6 +1,7 @@
 module
 
 public import LeanOA.Predual
+public import LeanOA.Ultrastrong
 public import LeanOA.Ultraweak.Basic
 public import LeanOA.CStarAlgebra.PositiveLinearFunctional
 public import Mathlib.Analysis.LocallyConvex.WithSeminorms
@@ -9,7 +10,8 @@ public import Mathlib.Analysis.Normed.Module.TransferInstance
 public section
 
 set_option linter.unusedVariables false in
-/-- Type synonym for `M` with the ultrastrong-star topology. -/
+/-- Type synonym for `M` with the ultrastrong-⋆ topology.
+Notation for this is `s⋆(M, P)_𝕜` or `s⋆(M, P)` when `𝕜 = ℂ` (this is scped to `Ultrastrong`). -/
 @[expose, nolint unusedArguments]
 def UltrastrongStar (𝕜 M P : Type*) [RCLike 𝕜] [NormedRing M] [StarRing M] [NormedAlgebra 𝕜 M]
     [NormedAddCommGroup P] [NormedSpace 𝕜 P] [Predual 𝕜 M P] := M
@@ -95,7 +97,7 @@ instance : Module 𝕜 (s⋆(M, P)_𝕜) := equiv 𝕜 M P |>.module 𝕜
 
 variable (𝕜 M P) in
 /-- The canonical linear equivalence between `s⋆(M, P)_𝕜` and `M`. -/
-@[expose, simps]
+@[expose, simps!]
 def linearEquiv : s⋆(M, P)_𝕜 ≃ₗ[𝕜] M where
   toEquiv := equiv 𝕜 M P
   map_add' _ _ := rfl
@@ -126,8 +128,14 @@ noncomputable def filterBasis : ModuleFilterBasis ℂ s⋆(M, P) := seminormFami
 
 noncomputable instance : TopologicalSpace s⋆(M, P) := filterBasis.topology'
 
-/-- This is probably a stupid definition, but in case we want `WithSeminorms`. -/
 lemma withSeminorms : WithSeminorms (E := s⋆(M, P)) seminormFamily :=
   { topology_eq_withSeminorms := rfl }
+
+/-- Ultrastrong-⋆ topology is stronger than the ultrastrong. -/
+lemma continuous_toUltrastrong_ofUltrastrongStar :
+    Continuous (fun x : s⋆(M, P) ↦ toUltrastrong ℂ M P x.ofUltrastrongStar) :=
+  withSeminorms.continuous_of_isBounded Ultrastrong.withSeminorms
+    ((Ultrastrong.linearEquiv ℂ M P).symm.toLinearMap ∘ₗ linearEquiv ℂ M P)
+    fun i ↦ ⟨{(i, 0)}, 1, fun _ ↦ by simp [Ultrastrong.seminormFamily, seminormFamily]⟩
 
 end UltrastrongStar
