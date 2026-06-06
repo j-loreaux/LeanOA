@@ -445,7 +445,7 @@ open WeakBilin LinearEquiv LinearMap Predual in
   associated to `Ultraweak 𝕜 E`. -/
 instance {𝕜 E Q : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedAddCommGroup Q]
     [NormedSpace 𝕜 E] [NormedSpace 𝕜 Q] [Predual 𝕜 E Q] :
-    pairing (topDualPairing 𝕜 Q ∘ₗ (equivDual (M := E) |>.toLinearEquiv.toLinearMap))
+    pairing (topDualPairing 𝕜 Q ∘ₗ (equivDual (M := E)).toLinearEquiv.toLinearMap)
       |>.IsCompatibleDual :=
   IsCompatibleDual (pairing (topDualPairing 𝕜 Q ∘ₗ equivDual.toLinearEquiv.toLinearMap))
       (rightDualEquiv _ <| (separatingRight_congr_iff equivDual.toLinearEquiv.symm <| refl ..).mpr
