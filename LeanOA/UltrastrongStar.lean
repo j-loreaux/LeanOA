@@ -6,6 +6,7 @@ public import LeanOA.Ultraweak.Basic
 public import LeanOA.CStarAlgebra.PositiveLinearFunctional
 public import Mathlib.Analysis.LocallyConvex.WithSeminorms
 public import Mathlib.Analysis.Normed.Module.TransferInstance
+public import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 
 public section
 
@@ -137,5 +138,20 @@ lemma continuous_toUltrastrong_ofUltrastrongStar :
   withSeminorms.continuous_of_isBounded Ultrastrong.withSeminorms
     ((Ultrastrong.linearEquiv ℂ M P).symm.toLinearMap ∘ₗ linearEquiv ℂ M P)
     fun i ↦ ⟨{(i, 0)}, 1, fun _ ↦ by simp [Ultrastrong.seminormFamily, seminormFamily]⟩
+
+open WeakBilin
+
+instance {𝕜 E Q : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedAddCommGroup Q]
+    [NormedSpace 𝕜 E] [NormedSpace 𝕜 Q] [Predual 𝕜 E Q] :
+    (pairing (topDualPairing 𝕜 Q ∘ₗ (Predual.equivDual (M := E)
+      |>.toLinearEquiv.toLinearMap))).IsCompatibleDual := by
+apply LinearEquiv.IsCompatibleDual <|
+  pairing (topDualPairing 𝕜 Q ∘ₗ (Predual.equivDual |>.toLinearEquiv.toLinearMap))
+· sorry
+· apply LinearMap.rightDualEquiv _ <|
+   (LinearMap.separatingRight_congr_iff (B := topDualPairing 𝕜 Q)
+    (Predual.equivDual).toLinearEquiv.symm <| LinearEquiv.refl 𝕜 Q).mpr
+      topDualPairing_separatingRight
+
 
 end UltrastrongStar
