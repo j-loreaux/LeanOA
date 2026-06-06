@@ -440,15 +440,15 @@ lemma toLinearEquiv_algEquiv : (algEquiv M P).toLinearEquiv = linearEquiv .. := 
 
 end Unital
 
-open WeakBilin LinearEquiv LinearMap in
+open WeakBilin LinearEquiv LinearMap Predual in
 /-- The following is the `IsCompatibleDual` instance for the type-appropriate bilinear form
   associated to `Ultraweak 𝕜 E`. -/
 instance {𝕜 E Q : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedAddCommGroup Q]
     [NormedSpace 𝕜 E] [NormedSpace 𝕜 Q] [Predual 𝕜 E Q] :
-    pairing (topDualPairing 𝕜 Q ∘ₗ (Predual.equivDual (M := E)
-      |>.toLinearEquiv.toLinearMap)) |>.IsCompatibleDual :=
-  IsCompatibleDual (pairing (topDualPairing 𝕜 Q ∘ₗ Predual.equivDual.toLinearEquiv.toLinearMap))
-      (rightDualEquiv _ <| (separatingRight_congr_iff Predual.equivDual.toLinearEquiv.symm
-          <| refl ..).mpr topDualPairing_separatingRight) <| ext_iff₂.mpr fun _ ↦ congrFun rfl
+    pairing (topDualPairing 𝕜 Q ∘ₗ (equivDual (M := E) |>.toLinearEquiv.toLinearMap))
+      |>.IsCompatibleDual :=
+  IsCompatibleDual (pairing (topDualPairing 𝕜 Q ∘ₗ equivDual.toLinearEquiv.toLinearMap))
+      (rightDualEquiv _ <| (separatingRight_congr_iff equivDual.toLinearEquiv.symm <| refl ..).mpr
+        topDualPairing_separatingRight) <| ext_iff₂.mpr fun _ ↦ congrFun rfl
 
 end Ultraweak
