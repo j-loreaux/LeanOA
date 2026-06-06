@@ -139,16 +139,4 @@ lemma continuous_toUltrastrong_ofUltrastrongStar :
     ((Ultrastrong.linearEquiv ℂ M P).symm.toLinearMap ∘ₗ linearEquiv ℂ M P)
     fun i ↦ ⟨{(i, 0)}, 1, fun _ ↦ by simp [Ultrastrong.seminormFamily, seminormFamily]⟩
 
-open WeakBilin in
-instance {𝕜 E Q : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedAddCommGroup Q]
-    [NormedSpace 𝕜 E] [NormedSpace 𝕜 Q] [Predual 𝕜 E Q] :
-    (pairing (topDualPairing 𝕜 Q ∘ₗ (Predual.equivDual (M := E)
-      |>.toLinearEquiv.toLinearMap))).IsCompatibleDual :=
-  LinearEquiv.IsCompatibleDual (pairing (topDualPairing 𝕜 Q ∘ₗ
-    (Predual.equivDual |>.toLinearEquiv.toLinearMap)))
-      (LinearMap.rightDualEquiv _ <|
-        (LinearMap.separatingRight_congr_iff (Predual.equivDual).toLinearEquiv.symm
-          <| LinearEquiv.refl 𝕜 Q).mpr topDualPairing_separatingRight)
-            <| LinearMap.ext_iff₂.mpr fun _ ↦ congrFun rfl
-
 end UltrastrongStar
