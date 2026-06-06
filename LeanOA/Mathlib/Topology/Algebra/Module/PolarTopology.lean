@@ -521,7 +521,9 @@ open LinearMap WithSeminorms
  `B.flip` by `B` since the statement of the def has `B.IsCompatibleDual` and not
  `B.flip.IsCompatibleDual`, but I want to clarify why we originally had the docstring like
  this. I mean, the math doesn't lie, but I'm concerned that there was a good reason before
- for us to have this as `B.flip`. Will keep thinking about it, but wanted to flag it here. -/
+ for us to have this as `B.flip`. Will keep thinking about it, but wanted to flag it here.
+ I wonder if it is perhaps because we made `bilin` above a version of `B.flip` rather than `B`.
+ No `bilin` occurs in the statement below, though... -/
 
 /-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatibleDual` and
 `PolarTopology B (nhdsPolars B)`. -/
