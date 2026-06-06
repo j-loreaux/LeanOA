@@ -517,7 +517,13 @@ lemma continuous_seminorm_comp [TopologicalSpace E] [IsTopologicalAddGroup E]
 
 open LinearMap WithSeminorms
 
-/-- The continuous linear equivalence between `E` satisfiying `B.IsCompatibleDual` and
+/- I've changed the following docstring back to what it was, as I previously replaced
+ `B.flip` by `B` since the statement of the def has `B.IsCompatibleDual` and not
+ `B.flip.IsCompatibleDual`, but I want to clarify why we originally had the docstring like
+ this. I mean, the math doesn't lie, but I'm concerned that there was a good reason before
+ for us to have this as `B.flip`. Will keep thinking about it, but wanted to flag it here. -/
+
+/-- The continuous linear equivalence between `E` satisfiying `B.flip.IsCompatibleDual` and
 `PolarTopology B (nhdsPolars B)`. -/
 def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
     [ContinuousSMul 𝕜 E] [hLCS : LocallyConvexSpace 𝕜 E]
