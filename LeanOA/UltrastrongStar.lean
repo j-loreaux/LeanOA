@@ -104,6 +104,12 @@ def linearEquiv : s⋆(M, P)_𝕜 ≃ₗ[𝕜] M where
   map_add' _ _ := rfl
   map_smul' _ _ := rfl
 
+/-- Variant of `(TopDualPairing 𝕜 P).flip` with
+  the type synonym `s⋆(M, P)_𝕜` in place of `P →L[𝕜] 𝕜`. -/
+abbrev bilin : P →ₗ[𝕜] s⋆(M, P)_𝕜 →ₗ[𝕜] 𝕜 :=
+  ((linearEquiv 𝕜 M P).symm.arrowCongr (.refl _ _))
+    (topDualPairing 𝕜 P ∘ₗ (Predual.equivDual (M := M) |>.toLinearEquiv.toLinearMap)) |>.flip
+
 /-! ## The Topology -/
 
 variable {M P : Type*} [NormedRing M] [PartialOrder M] [StarRing M] [StarOrderedRing M]
