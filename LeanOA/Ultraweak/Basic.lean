@@ -5,6 +5,7 @@ public import Mathlib.Analysis.InnerProductSpace.Basic
 public import Mathlib.Analysis.Normed.Module.WeakDual
 public import LeanOA.Mathlib.Analysis.RCLike.Extend
 public import LeanOA.Predual
+public import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 
 @[expose] public section
 
@@ -438,5 +439,19 @@ variable (M P) in
 lemma toLinearEquiv_algEquiv : (algEquiv M P).toLinearEquiv = linearEquiv .. := rfl
 
 end Unital
+
+open WeakBilin in
+/-- The following is the `IsCompatibleDual` instance for the type-appropriate bilinear form
+  associated to `Ultraweak 𝕜 E`. -/
+instance {𝕜 E Q : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedAddCommGroup Q]
+    [NormedSpace 𝕜 E] [NormedSpace 𝕜 Q] [Predual 𝕜 E Q] :
+    (pairing (topDualPairing 𝕜 Q ∘ₗ (Predual.equivDual (M := E)
+      |>.toLinearEquiv.toLinearMap))).IsCompatibleDual :=
+  LinearEquiv.IsCompatibleDual (pairing (topDualPairing 𝕜 Q ∘ₗ
+    (Predual.equivDual |>.toLinearEquiv.toLinearMap)))
+      (LinearMap.rightDualEquiv _ <|
+        (LinearMap.separatingRight_congr_iff (Predual.equivDual).toLinearEquiv.symm
+          <| LinearEquiv.refl ..).mpr topDualPairing_separatingRight)
+            <| LinearMap.ext_iff₂.mpr fun _ ↦ congrFun rfl
 
 end Ultraweak
