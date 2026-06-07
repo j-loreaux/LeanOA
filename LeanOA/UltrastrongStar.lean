@@ -108,7 +108,7 @@ def linearEquiv : s⋆(M, P)_𝕜 ≃ₗ[𝕜] M where
   the type synonym `s⋆(M, P)_𝕜` in place of `P →L[𝕜] 𝕜`. -/
 abbrev pairing : s⋆(M, P)_𝕜 →ₗ[𝕜] P →ₗ[𝕜] 𝕜 :=
   ((linearEquiv 𝕜 M P).symm.arrowCongr (.refl _ _))
-    (topDualPairing 𝕜 P ∘ₗ (Predual.equivDual (M := M) |>.toLinearEquiv.toLinearMap))
+    (topDualPairing 𝕜 P ∘ₗ (Predual.equivDual |>.toLinearEquiv.toLinearMap))
 
 /-! ## The Topology -/
 
