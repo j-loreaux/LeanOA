@@ -61,6 +61,7 @@ noncomputable abbrev preGNS'preInnerProdSpace : PreInnerProductSpace.Core ℂ f.
 
 noncomputable instance : SeminormedAddCommGroup f.PreGNS' :=
   InnerProductSpace.Core.toSeminormedAddCommGroup (c := f.preGNS'preInnerProdSpace)
+
 noncomputable instance : InnerProductSpace ℂ f.PreGNS' :=
   InnerProductSpace.ofCore f.preGNS'preInnerProdSpace
 

@@ -4,16 +4,10 @@ public import Mathlib.Analysis.CStarAlgebra.Classes
 public import Mathlib.Analysis.InnerProductSpace.Basic
 public import Mathlib.Analysis.Normed.Module.WeakDual
 public import LeanOA.Mathlib.Analysis.RCLike.Extend
+public import LeanOA.Predual
+public import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 
 @[expose] public section
-
-/-- A class which encodes a specified isometric linear isomorpism between `M`
-and the strong dual of `P`, so that we may treat `P` as a predual of `M`. -/
-class Predual (𝕜 M P : Type*) [RCLike 𝕜]
-    [NormedAddCommGroup M] [NormedAddCommGroup P]
-    [NormedSpace 𝕜 M] [NormedSpace 𝕜 P] where
-  /-- A linear isometric equivalence between `M` and the dual of its predual `P`. -/
-  equivDual : M ≃ₗᵢ[𝕜] StrongDual 𝕜 P
 
 
 set_option linter.unusedVariables false in
@@ -29,9 +23,9 @@ abbrev Ultraweak (𝕜 M P : Type*) [RCLike 𝕜] [NormedAddCommGroup M] [Normed
   WeakBilin <| topDualPairing 𝕜 P ∘ₗ (Predual.equivDual (M := M) |>.toLinearEquiv.toLinearMap)
 
 @[inherit_doc]
-scoped[Ultraweak] notation "σ("M ", " P")_" 𝕜:max => Ultraweak 𝕜 M P
+scoped[Ultraweak] notation "σ("M", " P")_" 𝕜:max => Ultraweak 𝕜 M P
 @[inherit_doc]
-scoped[Ultraweak] notation "σ("M ", " P")" => Ultraweak ℂ M P
+scoped[Ultraweak] notation "σ("M", " P")" => Ultraweak ℂ M P
 
 /-! ## Linear structure -/
 
@@ -445,5 +439,22 @@ variable (M P) in
 lemma toLinearEquiv_algEquiv : (algEquiv M P).toLinearEquiv = linearEquiv .. := rfl
 
 end Unital
+
+variable (𝕜 M P : Type*) [RCLike 𝕜] [NormedAddCommGroup M] [NormedAddCommGroup P]
+    [NormedSpace 𝕜 M] [NormedSpace 𝕜 P] [Predual 𝕜 M P]
+
+open LinearEquiv LinearMap Predual
+
+/-- Variant of `TopDualPairing 𝕜 P` with
+  the type synonym `σ(M, P)_𝕜` in place of `P →L[𝕜] 𝕜`. -/
+noncomputable abbrev pairing : σ(M, P)_𝕜 →ₗ[𝕜] P →ₗ[𝕜] 𝕜 :=
+  WeakBilin.pairing (topDualPairing 𝕜 P ∘ₗ equivDual.toLinearEquiv.toLinearMap)
+
+/-- The following is the `IsCompatibleDual` instance for the type-appropriate bilinear form
+  associated to `σ(M, P)_𝕜`. -/
+instance : pairing 𝕜 M P |>.IsCompatibleDual :=
+  IsCompatibleDual (pairing 𝕜 M P)
+      (rightDualEquiv _ <| (separatingRight_congr_iff equivDual.toLinearEquiv.symm <| refl ..).mpr
+        topDualPairing_separatingRight) <| ext_iff₂.mpr fun _ ↦ congrFun rfl
 
 end Ultraweak
