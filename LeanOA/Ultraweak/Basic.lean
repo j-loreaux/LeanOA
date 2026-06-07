@@ -440,20 +440,20 @@ lemma toLinearEquiv_algEquiv : (algEquiv M P).toLinearEquiv = linearEquiv .. := 
 
 end Unital
 
-variable (𝕜 E Q : Type*) [RCLike 𝕜] [NormedAddCommGroup E] [NormedAddCommGroup Q]
-    [NormedSpace 𝕜 E] [NormedSpace 𝕜 Q] [Predual 𝕜 E Q]
+variable (𝕜 M P : Type*) [RCLike 𝕜] [NormedAddCommGroup M] [NormedAddCommGroup P]
+    [NormedSpace 𝕜 M] [NormedSpace 𝕜 P] [Predual 𝕜 M P]
 
 open LinearEquiv LinearMap Predual
 
 /-- Variant of `TopDualPairing 𝕜 P` with
-  the type synonym `σ(E, Q)_𝕜` in place of `P →L[𝕜] 𝕜`. -/
-noncomputable abbrev pairing : σ(E, Q)_𝕜 →ₗ[𝕜] Q →ₗ[𝕜] 𝕜 :=
-  WeakBilin.pairing (topDualPairing 𝕜 Q ∘ₗ (equivDual (M := E)).toLinearEquiv.toLinearMap)
+  the type synonym `σ(M, P)_𝕜` in place of `P →L[𝕜] 𝕜`. -/
+noncomputable abbrev pairing : σ(M, P)_𝕜 →ₗ[𝕜] P →ₗ[𝕜] 𝕜 :=
+  WeakBilin.pairing (topDualPairing 𝕜 P ∘ₗ equivDual.toLinearEquiv.toLinearMap)
 
 /-- The following is the `IsCompatibleDual` instance for the type-appropriate bilinear form
-  associated to `Ultraweak 𝕜 E`. -/
-instance : pairing 𝕜 E Q |>.IsCompatibleDual :=
-  IsCompatibleDual (pairing 𝕜 E Q)
+  associated to `σ(M, P)_𝕜`. -/
+instance : pairing 𝕜 M P |>.IsCompatibleDual :=
+  IsCompatibleDual (pairing 𝕜 M P)
       (rightDualEquiv _ <| (separatingRight_congr_iff equivDual.toLinearEquiv.symm <| refl ..).mpr
         topDualPairing_separatingRight) <| ext_iff₂.mpr fun _ ↦ congrFun rfl
 
