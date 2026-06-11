@@ -27,25 +27,9 @@ namespace PositiveLinearMap
 
 initialize_simps_projections PositiveLinearMap (toFun → apply)
 
-section MulOpposite
--- this section is probably unnecessary
-open MulOpposite
+section Id
 
 variable {R E : Type*} [Semiring R] [AddCommMonoid E] [PartialOrder E] [Module R E]
-
-/-- `MulOpposite.op` as a positive linear map -/
-@[simps!]
-protected def op : E →ₚ[R] Eᵐᵒᵖ where
-  toLinearMap := (opLinearEquiv R).toLinearMap
-  monotone' _ _ h := h
-
-/-- `MulOpposite.unop` as a positive linear map -/
-protected def unop : Eᵐᵒᵖ →ₚ[R] E where
-  toLinearMap := (opLinearEquiv R).symm.toLinearMap
-  monotone' _ _ h := h
-
-@[simp]
-lemma unop_apply (x : Eᵐᵒᵖ) : PositiveLinearMap.unop (R := R) x = unop x := rfl
 
 variable (R E) in
 /-- The identity as a positive linear map. -/
@@ -56,7 +40,7 @@ variable (R E) in
 @[simp] lemma toLinearMap_id : (PositiveLinearMap.id R E).toLinearMap = .id := rfl
 @[simp] lemma toOrderHom_id : (PositiveLinearMap.id R E).toOrderHom = .id := rfl
 
-end MulOpposite
+end Id
 
 section Comp
 -- this section is probably unnecessary (for now)
