@@ -146,7 +146,7 @@ lemma continuous_toUltrastrong_ofUltrastrongStar :
     fun i ↦ ⟨{(i, 0)}, 1, fun _ ↦ by simp [Ultrastrong.seminormFamily, seminormFamily]⟩
 
 @[expose]
-noncomputable instance uniformity : UniformSpace s⋆(M, P) :=
+noncomputable instance : UniformSpace s⋆(M, P) :=
     IsTopologicalAddGroup.rightUniformSpace s⋆(M, P)
 
 end UltrastrongStar

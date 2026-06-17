@@ -128,7 +128,7 @@ lemma withSeminorms : WithSeminorms (E := s(M, P)) seminormFamily :=
   { topology_eq_withSeminorms := rfl }
 
 @[expose]
-noncomputable instance uniformity : UniformSpace s(M, P) :=
+noncomputable instance : UniformSpace s(M, P) :=
     IsTopologicalAddGroup.rightUniformSpace s(M, P)
 
 end Ultrastrong
