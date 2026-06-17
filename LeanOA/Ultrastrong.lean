@@ -127,4 +127,8 @@ noncomputable instance : TopologicalSpace s(M, P) := filterBasis.topology'
 lemma withSeminorms : WithSeminorms (E := s(M, P)) seminormFamily :=
   { topology_eq_withSeminorms := rfl }
 
+@[expose, implicit_reducible]
+noncomputable def uniformity : UniformSpace s(M, P) :=
+    IsTopologicalAddGroup.rightUniformSpace s(M, P)
+
 end Ultrastrong
