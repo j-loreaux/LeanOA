@@ -145,7 +145,6 @@ lemma continuous_toUltrastrong_ofUltrastrongStar :
     ((Ultrastrong.linearEquiv ℂ M P).symm.toLinearMap ∘ₗ linearEquiv ℂ M P)
     fun i ↦ ⟨{(i, 0)}, 1, fun _ ↦ by simp [Ultrastrong.seminormFamily, seminormFamily]⟩
 
-@[expose]
 noncomputable instance : UniformSpace s⋆(M, P) :=
     IsTopologicalAddGroup.rightUniformSpace s⋆(M, P)
 
