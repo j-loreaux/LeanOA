@@ -148,4 +148,15 @@ lemma continuous_toUltrastrong_ofUltrastrongStar :
 noncomputable instance : UniformSpace s⋆(M, P) :=
     IsTopologicalAddGroup.rightUniformSpace s⋆(M, P)
 
+noncomputable instance : IsUniformAddGroup s⋆(M, P) :=
+  isUniformAddGroup_of_addCommGroup
+
+/-
+We have that the uniform structure induced by a family of seminorms is exactly the
+infimum of the ones induced by each seminorm individually. This
+is accessible as:
+`(SeminormFamily.withSeminorms_iff_uniformSpace_eq_iInf <|
+  seminormFamily (M := M) (P := P)).mp withSeminorms`
+-/
+
 end UltrastrongStar
