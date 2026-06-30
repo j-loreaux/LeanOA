@@ -7,6 +7,8 @@ public import LeanOA.PositiveContinuousLinearMap
 public import LeanOA.Ultraweak.SeparatingDual
 public import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 
+import LeanOA.CFC
+
 @[expose] public section
 
 open scoped ComplexOrder
@@ -111,7 +113,8 @@ theorem norm_apply_le_sqrt_opNorm_mul (f : A →P[ℂ] ℂ) (x : A) :
 
 open Topology in
 theorem tendsto_isIncreasingApproximateUnit_nhds_opNorm (f : A →P[ℂ] ℂ) {l : Filter A}
-    (hl : l.IsIncreasingApproximateUnit) : l.Tendsto (‖f ·‖) (𝓝 ‖(f : A →L[ℂ] ℂ)‖) := by
+    (hl : l.IsIncreasingApproximateUnit) : l.Tendsto (f ·) (𝓝 ‖(f : A →L[ℂ] ℂ)‖) := by
+  suffices l.Tendsto (‖f ·‖) (𝓝 ‖(f : A →L[ℂ] ℂ)‖) by sorry
   refine Metric.tendsto_nhds.mpr fun ε hε ↦ ?_
   have h : ∀ᶠ x in l, ‖f x‖ ≤ ‖(f : A →L[ℂ] ℂ)‖ + ε / 2 := by
     filter_upwards [hl.eventually_norm] with x hx
@@ -140,8 +143,97 @@ theorem tendsto_isIncreasingApproximateUnit_nhds_opNorm (f : A →P[ℂ] ℂ) {l
   filter_upwards [h, h2] using by grind [Real.dist_eq]
 
 theorem opNorm_eq_norm_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-    (f : A →P[ℂ] ℂ) : ‖(f : A →L[ℂ] ℂ)‖ = ‖f 1‖ :=
-  tendsto_nhds_unique (f.tendsto_isIncreasingApproximateUnit_nhds_opNorm (.pure_one A))
-    (tendsto_pure_nhds _ _)
+    (f : A →P[ℂ] ℂ) : ‖(f : A →L[ℂ] ℂ)‖ = ‖f 1‖ := by
+  simp [← tendsto_nhds_unique (f.tendsto_isIncreasingApproximateUnit_nhds_opNorm (.pure_one A))
+    (tendsto_pure_nhds _ _)]
 
 end PositiveContinuousLinearMap
+
+namespace ContinuousLinearMap
+
+section unital
+variable {A : Type*} [CStarAlgebra A] {f : A →L[ℂ] ℂ}
+
+lemma im_apply_eq_zero_of_opNorm_eq_map_one (hf : ‖f‖ = f 1) {a : A} (ha : IsSelfAdjoint a) :
+    (f a).im = 0 := by
+  by_cases! Subsingleton A
+  · simp [Subsingleton.eq_zero]
+  have (t : ℝ) := calc (f a).re ^ 2 + ((f a).im + t * ‖f‖) ^ 2
+    _ = ‖f (a + (t * Complex.I) • 1)‖ ^ 2 := by
+      norm_num [Complex.normSq, Complex.sq_norm, ← hf]; ring
+    _ ≤ ‖f‖ ^ 2 * (‖a‖ ^ 2 + t ^ 2) := by
+      grw [f.le_opNorm, mul_pow, mul_le_mul_of_nonneg_left _ (sq_nonneg _)]
+      simp_rw [sq, ← CStarRing.norm_star_mul_self, ha.star_eq]
+      calc _ = ‖a * a + (t * t : ℂ) • 1‖ := by
+            simp [ha.star_eq, mul_add, add_mul, ← smul_assoc, mul_assoc, mul_left_comm]
+        _ ≤ _ := by grw [norm_add_le]; simp
+  contrapose! this
+  by_cases hc : ‖f‖ = 0
+  · exact ⟨0, by simp [hc, sq]; nlinarith [mul_self_pos.mpr this]⟩
+  · refine ⟨(‖f‖ ^ 2 * ‖a‖ ^ 2 - (f a).re ^ 2 - (f a).im ^ 2 + 1) / (2 * (f a).im * ‖f‖), ?_⟩
+    field_simp; grind
+
+theorem monotone_of_opNorm_eq_map_one [PartialOrder A] [StarOrderedRing A] (hf : ‖f‖ = f 1) :
+    Monotone f := monotone_iff_map_nonneg _ |>.mpr fun a ha ↦ by
+  by_cases ha0 : a = 0
+  · simp [ha0]
+  suffices 0 ≤ (f a).re by simp [Complex.le_def, this,
+    im_apply_eq_zero_of_opNorm_eq_map_one hf ha.isSelfAdjoint]
+  set x := ‖a‖⁻¹ • a with hx
+  suffices 0 ≤ (f x).re by simp_all
+  suffices ‖f (1 - x)‖ ≤ ‖f‖ by
+    simp_all [Complex.normSq, Complex.norm_def, -hx, Real.sqrt_le_left, ← hf]
+    nlinarith [norm_nonneg f]
+  grw [f.le_opNorm, mul_le_of_le_one_right (norm_nonneg _)]
+  have : 0 ≤ x := by simp [hx, ha, smul_nonneg]
+  refine CStarAlgebra.mem_Icc_iff_norm_le_one.mp ⟨?_, by simpa⟩ |>.2
+  simp [CStarAlgebra.norm_le_one_iff_of_nonneg x (by simpa) |>.mp (by aesop (add simp norm_smul))]
+
+theorem monotone_iff_opNorm_eq_map_one [PartialOrder A] [StarOrderedRing A] :
+    Monotone f ↔ ‖f‖ = f 1 := by
+  refine ⟨fun hf ↦ ?_, fun hf ↦ monotone_of_opNorm_eq_map_one hf⟩
+  let f' : A →P[ℂ] ℂ := { __ := f, monotone' := hf }
+  calc (‖f‖ : ℂ) = ‖f'.toContinuousLinearMap‖ := rfl
+    _ = _ := by rw [f'.opNorm_eq_norm_map_one]
+    _ = _ := Complex.norm_of_nonneg' (map_nonneg f' zero_le_one)
+
+end unital
+
+-- nonunital
+variable {A} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {f : A →L[ℂ] ℂ}
+
+open Topology in
+lemma im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm {l : Filter A}
+    (hl : l.IsIncreasingApproximateUnit) (hf : l.Tendsto (f ·) (𝓝 ‖f‖)) {a : A}
+    (ha : IsSelfAdjoint a) : (f a).im = 0 := by
+  by_cases! Subsingleton A
+  · simp [Subsingleton.eq_zero]
+  have (t : ℝ) : (f a).re ^ 2 + ((f a).im + t * ‖f‖) ^ 2 ≤ ‖f‖ ^ 2 * (‖a‖ ^ 2 + t ^ 2) := by
+    sorry
+  contrapose! this
+  by_cases hc : ‖f‖ = 0
+  · exact ⟨0, by simp [hc, sq]; nlinarith [mul_self_pos.mpr this]⟩
+  · refine ⟨(‖f‖ ^ 2 * ‖a‖ ^ 2 - (f a).re ^ 2 - (f a).im ^ 2 + 1) / (2 * (f a).im * ‖f‖), ?_⟩
+    field_simp; grind
+
+open Topology in
+theorem monotone_of_tendsto_isIncreasingApproximateUnit_opNorm {l : Filter A}
+    (hl : l.IsIncreasingApproximateUnit) (hf : l.Tendsto (f ·) (𝓝 ‖f‖)) :
+    Monotone f := monotone_iff_map_nonneg _ |>.mpr fun a ha ↦ by
+  by_cases ha0 : a = 0
+  · simp [ha0]
+  suffices 0 ≤ (f a).re by simp [Complex.le_def, this,
+    im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm hl hf ha.isSelfAdjoint]
+  set x := ‖a‖⁻¹ • a with hx
+  suffices 0 ≤ (f x).re by simp_all
+  sorry
+
+open Topology in
+theorem monotone_iff_tendsto_isIncreasingApproximateUnit_opNorm
+    {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
+    Monotone f ↔ l.Tendsto (f ·) (𝓝 ‖f‖) := by
+  refine ⟨fun hf ↦ ?_, monotone_of_tendsto_isIncreasingApproximateUnit_opNorm hl⟩
+  let f' : A →P[ℂ] ℂ := { __ := f, monotone' := hf }
+  exact f'.tendsto_isIncreasingApproximateUnit_nhds_opNorm hl
+
+end ContinuousLinearMap
