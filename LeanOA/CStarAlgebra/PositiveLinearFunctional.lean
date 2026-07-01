@@ -181,7 +181,7 @@ end unital
 variable {A} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {f : A →L[ℂ] ℂ}
 
 open Topology in
-lemma im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm {l : Filter A}
+private lemma im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm {l : Filter A}
     (hl : l.IsIncreasingApproximateUnit) (hf : l.Tendsto (f ·) (𝓝 ‖f‖)) {a : A}
     (ha : IsSelfAdjoint a) : (f a).im = 0 := by
   by_cases! Subsingleton A
@@ -195,9 +195,12 @@ lemma im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm {l : Filter
     field_simp; grind
 
 open Topology in
-theorem monotone_of_tendsto_isIncreasingApproximateUnit_opNorm {l : Filter A}
-    (hl : l.IsIncreasingApproximateUnit) (hf : l.Tendsto (f ·) (𝓝 ‖f‖)) :
-    Monotone f := monotone_iff_map_nonneg _ |>.mpr fun a ha ↦ by
+theorem monotone_iff_tendsto_isIncreasingApproximateUnit_opNorm
+    {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
+    Monotone f ↔ l.Tendsto (f ·) (𝓝 ‖f‖) := by
+  refine ⟨fun hf ↦ ?_, fun hf ↦ monotone_iff_map_nonneg _ |>.mpr fun a ha ↦ ?_⟩
+  · let f' : A →P[ℂ] ℂ := { __ := f, monotone' := hf }
+    exact f'.tendsto_isIncreasingApproximateUnit_nhds_opNorm hl
   by_cases ha0 : a = 0
   · simp [ha0]
   suffices 0 ≤ (f a).re by simp [Complex.le_def, this,
@@ -215,14 +218,6 @@ theorem monotone_of_tendsto_isIncreasingApproximateUnit_opNorm {l : Filter A}
   filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with y hy hy2
   exact CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one hy hy2
     (by simp [hx, smul_nonneg, ha]) (by simp [norm_smul, hx, ha0])
-
-open Topology in
-theorem monotone_iff_tendsto_isIncreasingApproximateUnit_opNorm
-    {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
-    Monotone f ↔ l.Tendsto (f ·) (𝓝 ‖f‖) := by
-  refine ⟨fun hf ↦ ?_, monotone_of_tendsto_isIncreasingApproximateUnit_opNorm hl⟩
-  let f' : A →P[ℂ] ℂ := { __ := f, monotone' := hf }
-  exact f'.tendsto_isIncreasingApproximateUnit_nhds_opNorm hl
 
 theorem monotone_iff_opNorm_eq_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A]
     [StarOrderedRing A] {f : A →L[ℂ] ℂ} : Monotone f ↔ ‖f‖ = f 1 := by
