@@ -256,15 +256,6 @@ theorem CStarAlgebra.isUnital_iff :
   refine ⟨fun h ↦ ⟨1, one_mem_extremePoints_unitClosedBall⟩, fun ⟨x, hx⟩ ↦ ?_⟩
   exact ⟨_, fun y ↦ ⟨ofExtremePtOne_mul hx y, mul_ofExtremePtOne hx y⟩⟩
 
-private lemma CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one [PartialOrder A]
-    [StarOrderedRing A] {x y : A} (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) (hy : 0 ≤ y) (hy0 : ‖y‖ ≤ 1) :
-    ‖x - y‖ ≤ 1 := by
-  rw [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _] at hx0 hy0
-  rw [← norm_inr (𝕜 := ℂ), inr_sub]
-  simpa [sub_eq_add_neg] using (IsSelfAdjoint.one _).neg.norm_le_max_of_le_of_le
-    (by simpa using add_le_add hx.inr (neg_le_neg_iff.mpr hy0))
-    (add_le_add hx0 (by simpa using neg_le_neg hy.inr : -(y : A⁺¹) ≤ 0))
-
 theorem isStarProjection_posPart_of_mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall
     {e : A} (he : e ∈ extremePoints ℝ {x | IsSelfAdjoint x ∧ x ∈ closedBall 0 1}) :
     IsStarProjection (e⁺ : A) := by

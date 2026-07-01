@@ -114,7 +114,9 @@ theorem norm_apply_le_sqrt_opNorm_mul (f : A →P[ℂ] ℂ) (x : A) :
 open Topology in
 theorem tendsto_isIncreasingApproximateUnit_nhds_opNorm (f : A →P[ℂ] ℂ) {l : Filter A}
     (hl : l.IsIncreasingApproximateUnit) : l.Tendsto (f ·) (𝓝 ‖(f : A →L[ℂ] ℂ)‖) := by
-  suffices l.Tendsto (‖f ·‖) (𝓝 ‖(f : A →L[ℂ] ℂ)‖) by sorry
+  have : ∀ᶠ x in l, ‖f x‖ = f x := by
+    filter_upwards [hl.eventually_nonneg] with a ha
+    simp [Complex.norm_of_nonneg' (map_nonneg f ha)]
   refine Metric.tendsto_nhds.mpr fun ε hε ↦ ?_
   have h : ∀ᶠ x in l, ‖f x‖ ≤ ‖(f : A →L[ℂ] ℂ)‖ + ε / 2 := by
     filter_upwards [hl.eventually_norm] with x hx
@@ -140,7 +142,8 @@ theorem tendsto_isIncreasingApproximateUnit_nhds_opNorm (f : A →P[ℂ] ℂ) {l
       refine (Filter.Tendsto.norm ?_).eventually (lt_mem_nhds ha2)
       exact (ContinuousAt.tendsto (by fun_prop)).comp (hl.tendsto_mul_right a)
     filter_upwards [h3, h4] with x _ _ using by nlinarith [norm_nonneg (f x)]
-  filter_upwards [h, h2] using by grind [Real.dist_eq]
+  filter_upwards [this, h, h2] with a ha ha2 ha3
+  rw [← ha]; simp [Complex.dist_eq, ← Complex.ofReal_sub]; grind
 
 theorem opNorm_eq_norm_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     (f : A →P[ℂ] ℂ) : ‖(f : A →L[ℂ] ℂ)‖ = ‖f 1‖ := by
@@ -226,7 +229,17 @@ theorem monotone_of_tendsto_isIncreasingApproximateUnit_opNorm {l : Filter A}
     im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm hl hf ha.isSelfAdjoint]
   set x := ‖a‖⁻¹ • a with hx
   suffices 0 ≤ (f x).re by simp_all
-  sorry
+  suffices ‖‖f‖ - f x‖ ≤ ‖f‖ by
+    simp_all [Complex.normSq, Complex.norm_def, -hx, Real.sqrt_le_left (norm_nonneg f)]
+    nlinarith [norm_nonneg f]
+  suffices ∀ᶠ y in l, ‖f (y - x)‖ ≤ ‖f‖ by
+    convert le_of_tendsto (hf.sub_const (f x) |>.norm) (by simpa using this)
+    exact hl.neBot
+  suffices ∀ᶠ y in l, ‖y - x‖ ≤ 1 by
+    filter_upwards [this] with a ha using by grw [f.le_opNorm, ha, mul_one]
+  filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with y hy hy2
+  exact CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one hy hy2
+    (by simp [hx, smul_nonneg, ha]) (by simp [norm_smul, hx, ha0])
 
 open Topology in
 theorem monotone_iff_tendsto_isIncreasingApproximateUnit_opNorm
