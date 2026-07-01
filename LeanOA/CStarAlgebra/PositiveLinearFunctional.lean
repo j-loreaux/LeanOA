@@ -176,33 +176,8 @@ lemma im_apply_eq_zero_of_opNorm_eq_map_one (hf : ‖f‖ = f 1) {a : A} (ha : I
   · refine ⟨(‖f‖ ^ 2 * ‖a‖ ^ 2 - (f a).re ^ 2 - (f a).im ^ 2 + 1) / (2 * (f a).im * ‖f‖), ?_⟩
     field_simp; grind
 
-theorem monotone_of_opNorm_eq_map_one [PartialOrder A] [StarOrderedRing A] (hf : ‖f‖ = f 1) :
-    Monotone f := monotone_iff_map_nonneg _ |>.mpr fun a ha ↦ by
-  by_cases ha0 : a = 0
-  · simp [ha0]
-  suffices 0 ≤ (f a).re by simp [Complex.le_def, this,
-    im_apply_eq_zero_of_opNorm_eq_map_one hf ha.isSelfAdjoint]
-  set x := ‖a‖⁻¹ • a with hx
-  suffices 0 ≤ (f x).re by simp_all
-  suffices ‖f (1 - x)‖ ≤ ‖f‖ by
-    simp_all [Complex.normSq, Complex.norm_def, -hx, Real.sqrt_le_left, ← hf]
-    nlinarith [norm_nonneg f]
-  grw [f.le_opNorm, mul_le_of_le_one_right (norm_nonneg _)]
-  have : 0 ≤ x := by simp [hx, ha, smul_nonneg]
-  refine CStarAlgebra.mem_Icc_iff_norm_le_one.mp ⟨?_, by simpa⟩ |>.2
-  simp [CStarAlgebra.norm_le_one_iff_of_nonneg x (by simpa) |>.mp (by aesop (add simp norm_smul))]
-
-theorem monotone_iff_opNorm_eq_map_one [PartialOrder A] [StarOrderedRing A] :
-    Monotone f ↔ ‖f‖ = f 1 := by
-  refine ⟨fun hf ↦ ?_, fun hf ↦ monotone_of_opNorm_eq_map_one hf⟩
-  let f' : A →P[ℂ] ℂ := { __ := f, monotone' := hf }
-  calc (‖f‖ : ℂ) = ‖f'.toContinuousLinearMap‖ := rfl
-    _ = _ := by rw [f'.opNorm_eq_norm_map_one]
-    _ = _ := Complex.norm_of_nonneg' (map_nonneg f' zero_le_one)
-
 end unital
 
--- nonunital
 variable {A} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {f : A →L[ℂ] ℂ}
 
 open Topology in
@@ -248,5 +223,11 @@ theorem monotone_iff_tendsto_isIncreasingApproximateUnit_opNorm
   refine ⟨fun hf ↦ ?_, monotone_of_tendsto_isIncreasingApproximateUnit_opNorm hl⟩
   let f' : A →P[ℂ] ℂ := { __ := f, monotone' := hf }
   exact f'.tendsto_isIncreasingApproximateUnit_nhds_opNorm hl
+
+theorem monotone_iff_opNorm_eq_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A]
+    [StarOrderedRing A] {f : A →L[ℂ] ℂ} : Monotone f ↔ ‖f‖ = f 1 := by
+  rw [f.monotone_iff_tendsto_isIncreasingApproximateUnit_opNorm (.pure_one A)]
+  have := tendsto_pure_nhds f 1
+  exact ⟨fun h ↦ tendsto_nhds_unique h this, fun _ ↦ by simp_all⟩
 
 end ContinuousLinearMap
