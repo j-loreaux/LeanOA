@@ -160,37 +160,34 @@ open Topology Filter
 private lemma im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm {l : Filter A}
     (hl : l.IsIncreasingApproximateUnit) (hf : l.Tendsto (f ·) (𝓝 ‖f‖)) {a : A}
     (ha : IsSelfAdjoint a) : (f a).im = 0 := by
-  have (t : ℝ) : (f a).re ^ 2 + ((f a).im + t * ‖f‖) ^ 2 ≤ ‖f‖ ^ 2 * (‖a‖ ^ 2 + t ^ 2) :=
-    let c : ℂ := Complex.I * t
-    calc
-      _ = ‖f a + c * ‖f‖‖ ^ 2 := by simp [c, Complex.normSq, ← Complex.normSq_eq_norm_sq]; ring_nf
-      _ ≤ _ := by
-        suffices (fun x ↦ ‖f (a + c • x)‖ ^ 2) ≤ᶠ[l]
-            (fun x ↦ ‖f‖ ^ 2 * (‖a‖ ^ 2 + t ^ 2 + |t| * ‖a * x - x * a‖)) by
-          convert le_of_tendsto_of_tendsto ?_ ?_ this
-          · exact hl.neBot
-          · simp_rw [map_add, map_smul, smul_eq_mul]
-            apply_rules [Tendsto.pow, Tendsto.norm, Tendsto.const_add, Tendsto.const_mul]
-          · simpa using (hl.tendsto_mul_left a).sub (hl.tendsto_mul_right a)
-              |>.norm |>.const_mul _ |>.const_add _ |>.const_mul _
-        filter_upwards [hl.eventually_isSelfAdjoint, hl.eventually_norm] with x hx hx2
-        suffices ‖a + c • x‖ ^ 2 ≤ ‖a‖ ^ 2 + t ^ 2 + |t| * ‖a * x - x * a‖ by
-          grw [f.le_opNorm]
-          nlinarith [sq_nonneg ‖f‖]
-        calc _ = ‖star (a + c • x) * (a + c • x)‖ := by simp_rw [sq, CStarRing.norm_star_mul_self]
-          _ = ‖a * a + (t ^ 2 : ℂ) • (x * x) + c • (a * x + -(x * a))‖ := by
-            simp [add_mul, mul_add, smul_mul_assoc, mul_smul_comm, smul_smul]
-            simp [c, mul_mul_mul_comm Complex.I]; ring_nf; grind
-          _ ≤ ‖a‖ ^ 2 + t ^ 2 + |t| * ‖a * x - x * a‖ := by
-            grw [add_assoc, sq, norm_add_le, norm_add_le, ← sub_eq_add_neg]
-            simp_rw [sq, ← CStarRing.norm_star_mul_self]
-            grw [add_assoc, ha.star_eq, add_le_add_iff_left, norm_smul, norm_mul_le x, hx2]
-            simp [norm_smul, c]
-  contrapose! this
   by_cases ‖f‖ = 0
   · simp_all
-  · refine ⟨(‖f‖ ^ 2 * ‖a‖ ^ 2 - (f a).re ^ 2 - (f a).im ^ 2 + 1) / (2 * (f a).im * ‖f‖), ?_⟩
+  suffices ∀ (t : ℝ), ‖f a + Complex.I * t * ‖f‖‖ ^ 2 ≤ ‖f‖ ^ 2 * (‖a‖ ^ 2 + t ^ 2) by
+    contrapose! this; conv_rhs => simp [Complex.normSq, ← Complex.normSq_eq_norm_sq]
+    refine ⟨(‖f‖ ^ 2 * ‖a‖ ^ 2 - (f a).re ^ 2 - (f a).im ^ 2 + 1) / (2 * (f a).im * ‖f‖), ?_⟩
     field_simp; grind
+  intro t; let c : ℂ := Complex.I * t
+  suffices (fun x ↦ ‖f (a + c • x)‖ ^ 2) ≤ᶠ[l]
+        (fun x ↦ ‖f‖ ^ 2 * (‖a‖ ^ 2 + t ^ 2 + |t| * ‖a * x - x * a‖)) by
+    convert le_of_tendsto_of_tendsto ?_ ?_ this
+    · exact hl.neBot
+    · simp_rw [map_add, map_smul, smul_eq_mul]
+      apply_rules [Tendsto.pow, Tendsto.norm, Tendsto.const_add, Tendsto.const_mul]
+    · simpa using (hl.tendsto_mul_left a).sub (hl.tendsto_mul_right a)
+        |>.norm |>.const_mul _ |>.const_add _ |>.const_mul _
+  filter_upwards [hl.eventually_isSelfAdjoint, hl.eventually_norm] with x hx hx2
+  suffices ‖a + c • x‖ ^ 2 ≤ ‖a‖ ^ 2 + t ^ 2 + |t| * ‖a * x - x * a‖ by
+    grw [f.le_opNorm]
+    nlinarith [sq_nonneg ‖f‖]
+  calc _ = ‖star (a + c • x) * (a + c • x)‖ := by simp_rw [sq, CStarRing.norm_star_mul_self]
+    _ = ‖a * a + (t ^ 2 : ℂ) • (x * x) + c • (a * x + -(x * a))‖ := by
+      simp [add_mul, mul_add, smul_mul_assoc, mul_smul_comm, smul_smul]
+      simp [c, mul_mul_mul_comm Complex.I]; ring_nf; grind
+    _ ≤ ‖a‖ ^ 2 + t ^ 2 + |t| * ‖a * x - x * a‖ := by
+      grw [add_assoc, sq, norm_add_le, norm_add_le, ← sub_eq_add_neg]
+      simp_rw [sq, ← CStarRing.norm_star_mul_self]
+      grw [add_assoc, ha.star_eq, add_le_add_iff_left, norm_smul, norm_mul_le x, hx2]
+      simp [norm_smul, c]
 
 theorem monotone_iff_tendsto_isIncreasingApproximateUnit_opNorm
     {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
