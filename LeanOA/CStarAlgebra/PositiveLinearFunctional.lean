@@ -174,7 +174,7 @@ private lemma im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm {l 
   by_cases ‖f‖ = 0
   · simp_all
   suffices ∀ (t : ℝ), ‖f a + I * t * ‖f‖‖ ^ 2 ≤ ‖f‖ ^ 2 * (‖a‖ ^ 2 + t ^ 2) by
-    contrapose! this;
+    contrapose! this
     refine ⟨(‖f‖ ^ 2 * ‖a‖ ^ 2 - ‖f a‖ ^ 2 + 1) / (2 * (f a).im * ‖f‖), ?_⟩
     simp [normSq, ← normSq_eq_norm_sq, -ofReal_div]; field_simp; grind
   intro t
