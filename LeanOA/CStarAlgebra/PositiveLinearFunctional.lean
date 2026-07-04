@@ -157,6 +157,17 @@ variable {A} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {f :
 
 open Topology Filter Complex CStarRing
 
+-- name the hypothesis `[b.NeBot]` in `le_of_tendsto_of_tendsto` so that we can do `(hb := proof)`:
+lemma le_of_tendsto_of_tendsto'' {α β : Type*} [TopologicalSpace α] [Preorder α]
+    [t : OrderClosedTopology α] {f g : β → α} {b : Filter β} {a₁ a₂ : α} [hb : b.NeBot]
+    (hf : Tendsto f b (𝓝 a₁)) (hg : Tendsto g b (𝓝 a₂)) (h : f ≤ᶠ[b] g) : a₁ ≤ a₂ :=
+  le_of_tendsto_of_tendsto hf hg h
+
+-- same thing with `le_of_tendsto`
+lemma le_of_tendsto'' {α β : Type*} [TopologicalSpace α] [Preorder α] [ClosedIicTopology α]
+    {f : β → α} {a b : α} {x : Filter β} [hx : x.NeBot] (lim : Tendsto f x (𝓝 a))
+    (h : ∀ᶠ (c : β) in x, f c ≤ b) : a ≤ b := le_of_tendsto lim h
+
 private lemma im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm {l : Filter A}
     (hl : l.IsIncreasingApproximateUnit) (hf : l.Tendsto (f ·) (𝓝 ‖f‖)) {a : A}
     (ha : IsSelfAdjoint a) : (f a).im = 0 := by
@@ -169,8 +180,7 @@ private lemma im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm {l 
   intro t
   suffices (fun x ↦ ‖f (a + (I * t) • x)‖ ^ 2) ≤ᶠ[l]
         (fun x ↦ ‖f‖ ^ 2 * (‖a‖ ^ 2 + t ^ 2 + |t| * ‖a * x - x * a‖)) by
-    convert le_of_tendsto_of_tendsto ?_ ?_ this
-    · exact hl.neBot
+    refine le_of_tendsto_of_tendsto'' (hb := hl.neBot) ?_ ?_ this
     · simp_rw [map_add, map_smul, smul_eq_mul]
       apply_rules [Tendsto.pow, Tendsto.norm, Tendsto.const_add, Tendsto.const_mul]
     · simpa using (hl.tendsto_mul_left a).sub (hl.tendsto_mul_right a)
@@ -201,9 +211,8 @@ theorem monotone_iff_tendsto_isIncreasingApproximateUnit_opNorm
   suffices ‖‖f‖ - f x‖ ≤ ‖f‖ by
     simp_all [Complex.normSq, Complex.norm_def, -hx, Real.sqrt_le_left]
     nlinarith [norm_nonneg f]
-  suffices ∀ᶠ y in l, ‖f (y - x)‖ ≤ ‖f‖ by
-    convert le_of_tendsto (hf.sub_const (f x) |>.norm) (by simpa using this)
-    exact hl.neBot
+  suffices ∀ᶠ y in l, ‖f (y - x)‖ ≤ ‖f‖ from
+    le_of_tendsto'' (hx := hl.neBot) (hf.sub_const (f x) |>.norm) (by simpa using this)
   filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with y hy hy2
   grw [f.le_opNorm, CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one hy hy2
     (by simp [hx, smul_nonneg, ha]) (by simp [norm_smul, hx, ha0]), mul_one]
