@@ -112,8 +112,8 @@ theorem norm_apply_le_sqrt_opNorm_mul (f : A →P[ℂ] ℂ) (x : A) :
     CStarRing.norm_star_mul_self, he2, one_mul, mul_one]
 
 open Topology in
-theorem tendsto_isIncreasingApproximateUnit_nhds_opNorm (f : A →P[ℂ] ℂ) {l : Filter A}
-    (hl : l.IsIncreasingApproximateUnit) : l.Tendsto (f ·) (𝓝 ‖(f : A →L[ℂ] ℂ)‖) := by
+theorem tendsto_nhds_opNorm (f : A →P[ℂ] ℂ) {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
+    l.Tendsto (f ·) (𝓝 ‖(f : A →L[ℂ] ℂ)‖) := by
   have : ∀ᶠ x in l, ‖f x‖ = f x := by
     filter_upwards [hl.eventually_nonneg] with a ha
     simp [Complex.norm_of_nonneg' (map_nonneg f ha)]
@@ -147,8 +147,7 @@ theorem tendsto_isIncreasingApproximateUnit_nhds_opNorm (f : A →P[ℂ] ℂ) {l
 
 theorem opNorm_eq_norm_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     (f : A →P[ℂ] ℂ) : ‖(f : A →L[ℂ] ℂ)‖ = ‖f 1‖ := by
-  simp [← tendsto_nhds_unique (f.tendsto_isIncreasingApproximateUnit_nhds_opNorm (.pure_one A))
-    (tendsto_pure_nhds _ _)]
+  simp [← tendsto_nhds_unique (f.tendsto_nhds_opNorm (.pure_one A)) (tendsto_pure_nhds _ _)]
 
 end PositiveContinuousLinearMap
 
@@ -157,20 +156,20 @@ variable {A} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {f :
 
 open Topology Filter Complex CStarRing
 
--- name the hypothesis `[b.NeBot]` in `le_of_tendsto_of_tendsto` so that we can do `(hb := proof)`:
-lemma le_of_tendsto_of_tendsto'' {α β : Type*} [TopologicalSpace α] [Preorder α]
+-- name the hypothesis `[b.NeBot]` in `le_of_tendsto_of_tendsto` so that we can do `(hb := proof)`
+-- without needing to use `convert ..; exact ..` or `have := hl.neBot; exact ..`:
+private lemma le_of_tendsto_of_tendsto'' {α β : Type*} [TopologicalSpace α] [Preorder α]
     [t : OrderClosedTopology α] {f g : β → α} {b : Filter β} {a₁ a₂ : α} [hb : b.NeBot]
     (hf : Tendsto f b (𝓝 a₁)) (hg : Tendsto g b (𝓝 a₂)) (h : f ≤ᶠ[b] g) : a₁ ≤ a₂ :=
   le_of_tendsto_of_tendsto hf hg h
 
 -- same thing with `le_of_tendsto`
-lemma le_of_tendsto'' {α β : Type*} [TopologicalSpace α] [Preorder α] [ClosedIicTopology α]
+private lemma le_of_tendsto'' {α β : Type*} [TopologicalSpace α] [Preorder α] [ClosedIicTopology α]
     {f : β → α} {a b : α} {x : Filter β} [hx : x.NeBot] (lim : Tendsto f x (𝓝 a))
     (h : ∀ᶠ (c : β) in x, f c ≤ b) : a ≤ b := le_of_tendsto lim h
 
-private lemma im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm {l : Filter A}
-    (hl : l.IsIncreasingApproximateUnit) (hf : l.Tendsto (f ·) (𝓝 ‖f‖)) {a : A}
-    (ha : IsSelfAdjoint a) : (f a).im = 0 := by
+private lemma im_apply_eq_zero_of_tendsto_opNorm {l : Filter A} (hl : l.IsIncreasingApproximateUnit)
+    (hf : l.Tendsto (f ·) (𝓝 ‖f‖)) {a : A} (ha : IsSelfAdjoint a) : (f a).im = 0 := by
   by_cases ‖f‖ = 0
   · simp_all
   suffices ∀ (t : ℝ), ‖f a + I * t * ‖f‖‖ ^ 2 ≤ ‖f‖ ^ 2 * (‖a‖ ^ 2 + t ^ 2) by
@@ -186,40 +185,38 @@ private lemma im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm {l 
     · simpa using (hl.tendsto_mul_left a).sub (hl.tendsto_mul_right a)
         |>.norm |>.const_mul _ |>.const_add _ |>.const_mul _
   filter_upwards [hl.eventually_isSelfAdjoint, hl.eventually_norm] with x hx hx2
-  grw [f.le_opNorm, mul_pow, mul_le_mul_iff_of_pos_left (by simp_all)]
-  calc _ = ‖star (a + (I * t) • x) * (a + (I * t) • x)‖ := by simp_rw [sq, norm_star_mul_self]
+  grw [f.le_opNorm, mul_pow, mul_le_mul_iff_of_pos_left (by simp_all), sq, ← norm_star_mul_self]
+  calc
     _ = ‖a * a + (t ^ 2 : ℂ) • (x * x) + (I * t) • (a * x + -(x * a))‖ := by
-      simp [add_mul, mul_add, smul_mul_assoc, mul_smul_comm, smul_smul, mul_mul_mul_comm I]
-      ring_nf; grind
-    _ ≤ ‖a‖ ^ 2 + t ^ 2 + |t| * ‖a * x - x * a‖ := by
+      simp [add_mul, mul_add, smul_mul_assoc, mul_smul_comm, smul_smul, mul_mul_mul_comm]
+      grind [sq]
+  _ ≤ ‖a‖ ^ 2 + t ^ 2 + |t| * ‖a * x - x * a‖ := by
       grw [add_assoc, sq, norm_add_le, norm_add_le, ← sub_eq_add_neg, sq, ← norm_star_mul_self,
         add_assoc, ha.star_eq, add_le_add_iff_left, norm_smul, norm_mul_le x, hx2]
       simp [norm_smul, sq]
 
-theorem monotone_iff_tendsto_isIncreasingApproximateUnit_opNorm
-    {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
+theorem monotone_iff_tendsto_opNorm {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
     Monotone f ↔ l.Tendsto (f ·) (𝓝 ‖f‖) := by
   refine ⟨fun hf ↦ ?_, fun hf ↦ monotone_iff_map_nonneg _ |>.mpr fun a ha ↦ ?_⟩
   · let f' : A →P[ℂ] ℂ := { __ := f, monotone' := hf }
-    exact f'.tendsto_isIncreasingApproximateUnit_nhds_opNorm hl
+    exact f'.tendsto_nhds_opNorm hl
   by_cases ha0 : a = 0
   · simp [ha0]
   suffices 0 ≤ (f a).re by simp [Complex.le_def, this,
-    im_apply_eq_zero_of_tendsto_isIncreasingApproximateUnit_opNorm hl hf ha.isSelfAdjoint]
+    im_apply_eq_zero_of_tendsto_opNorm hl hf ha.isSelfAdjoint]
   set x := ‖a‖⁻¹ • a with hx
   suffices 0 ≤ (f x).re by simp_all
   suffices ‖‖f‖ - f x‖ ≤ ‖f‖ by
     simp_all [Complex.normSq, Complex.norm_def, -hx, Real.sqrt_le_left]
     nlinarith [norm_nonneg f]
-  suffices ∀ᶠ y in l, ‖f (y - x)‖ ≤ ‖f‖ from
-    le_of_tendsto'' (hx := hl.neBot) (hf.sub_const (f x) |>.norm) (by simpa using this)
+  refine le_of_tendsto'' (hx := hl.neBot) (hf.sub_const (f x) |>.norm) ?_
   filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with y hy hy2
-  grw [f.le_opNorm, CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one hy hy2
+  grw [← map_sub, f.le_opNorm, CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one hy hy2
     (by simp [hx, smul_nonneg, ha]) (by simp [norm_smul, hx, ha0]), mul_one]
 
 theorem monotone_iff_opNorm_eq_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A]
     [StarOrderedRing A] {f : A →L[ℂ] ℂ} : Monotone f ↔ ‖f‖ = f 1 := by
-  rw [f.monotone_iff_tendsto_isIncreasingApproximateUnit_opNorm (.pure_one A)]
+  rw [f.monotone_iff_tendsto_opNorm (.pure_one A)]
   have := tendsto_pure_nhds f 1
   exact ⟨fun h ↦ tendsto_nhds_unique h this, fun h ↦ by simpa [h]⟩
 
