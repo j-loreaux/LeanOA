@@ -141,4 +141,24 @@ is accessible as:
   seminormFamily (M := M) (P := P)).mp withSeminorms`
 -/
 
+/-- The following is a primitive attempt to prove that the ultrastrong topology is
+stronger than the ultraweak. Note that there is a hold up here, in that there seems
+to be a need for a Jordan decomposition for the predual that we don't yet have access to.
+Maybe it's a good idea to see if we can prove that directly, and to then use it here to
+give a short proof of this continuity. In Sakai, however, the problem is approached
+differently, using extreme points etc. We keep this here as a stub in case the other
+approach faces difficulties and proves to be equally hard. -/
+theorem bar : Continuous ((toUltraweak ℂ P).comp (ofUltrastrong (𝕜 := ℂ) (M := M) (P:= P))) := by
+  apply WithSeminorms.continuous_of_isBounded
+     (Ultrastrong.withSeminorms)
+      (LinearMap.weakBilin_withSeminorms (Ultraweak.pairing ℂ M P))
+        ((Ultraweak.linearEquiv ℂ M P).toLinearMap.comp
+          (Ultrastrong.linearEquiv (𝕜 := ℂ) (M := M) (P:= P)).toLinearMap)
+  intro φ
+  sorry -- Now all we need is to prove IsBounded, however note the issue with postive
+  --functionals here.
+
+/- To induce the natural Star on dual objects, we should use starLinearEquiv. This makes
+me wonder if we should have a starContinuousLinearEquiv for ContinuousStar. -/
+
 end Ultrastrong

@@ -248,7 +248,6 @@ theorem CStarAlgebra.ofExtremePtOne_mul {x : A} (hx : x ∈ extremePoints ℝ (c
 
 attribute [local instance] IsUnital.toCStarAlgebra in
 /-- A C⋆-algebra is unital iff there exists an extreme point of the closed unit ball.
-
 To upgrade a non-unital C⋆-algebra to a unital one, use `IsUnital.toCStarAlgebra`. -/
 theorem CStarAlgebra.isUnital_iff :
     IsUnital A ↔ (extremePoints ℝ (closedBall (0 : A) 1)).Nonempty := by
