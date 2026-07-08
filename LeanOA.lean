@@ -34,7 +34,6 @@ public import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
-public import LeanOA.Mathlib.Analysis.RCLike.Extend
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 public import LeanOA.Mathlib.Data.Real.Archimedean
 public import LeanOA.Mathlib.Misc

@@ -3,7 +3,7 @@ module
 public import Mathlib.Analysis.CStarAlgebra.Classes
 public import Mathlib.Analysis.InnerProductSpace.Basic
 public import Mathlib.Analysis.Normed.Module.WeakDual
-public import LeanOA.Mathlib.Analysis.RCLike.Extend
+public import Mathlib.Analysis.RCLike.Extend
 
 @[expose] public section
 

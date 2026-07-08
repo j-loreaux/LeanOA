@@ -1,7 +1,7 @@
 module
 
 public import LeanOA.Ultraweak.OrderClosed
-public import LeanOA.Mathlib.Analysis.RCLike.Extend
+public import Mathlib.Analysis.RCLike.Extend
 public import Mathlib.Analysis.Complex.Basic
 
 @[expose] public section
