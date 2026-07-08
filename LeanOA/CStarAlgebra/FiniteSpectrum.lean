@@ -53,7 +53,7 @@ instance [TotallySeparatedSpace A] [CompactSpace A] : CStarAlgebra.FiniteSpectru
     have : .range toContinuousMap ⊆ {x : C(A, ℝ) | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} :=
       fun _ ⟨f, hf⟩ ↦ by simp [← hf, spectrum_eq_range, range_finite, IsSelfAdjoint]
     apply closure_mono this
-    simpa using Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
+    simpa using! Subalgebra.ext_iff.mp (subalgebra_topologicalClosure_eq_top_of_separatesPoints _
       (separatesPoints_range_toContinuousMapAlgHom ℝ)) y
 
 variable [NonUnitalRing A] [StarRing A] [Module ℝ A] [IsScalarTower ℝ A A] [SMulCommClass ℝ A A]

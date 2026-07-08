@@ -127,7 +127,7 @@ lemma instSupConvergenceClass : SupConvergenceClass ℂ where
       refine tendsto_atTop_isLUB (monotone_re.comp (Subtype.mono_coe s)) ?_
       simpa [← Function.comp_def, Set.range_comp] using h.image_re
     have h₂ : Tendsto (fun x : s ↦ im x) atTop (𝓝 (im z)) := by
-      convert tendsto_const_nhds (x := z.im) using 3 with ⟨x, hx⟩
+      convert! tendsto_const_nhds (x := z.im) using 3 with ⟨x, hx⟩
       exact h.1 hx |>.2
     convert (continuous_ofReal.tendsto _ |>.comp h₁).add
       ((continuous_ofReal.tendsto _ |>.comp h₂).const_mul I)

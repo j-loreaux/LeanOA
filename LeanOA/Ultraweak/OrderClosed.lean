@@ -77,11 +77,11 @@ lemma IsSelfAdjoint.max_norm_add_sub_algebraMap_ge
     |c| + r ≤ max ‖x + algebraMap ℝ A r‖ ‖x - algebraMap ℝ A r‖ := by
   obtain (hc' | hc') := le_total 0 c
   · apply le_max_of_le_left
-    convert norm_apply_le_norm_cfc (fun y : ℝ ↦ y + r) x hc using 1
+    convert! norm_apply_le_norm_cfc (fun y : ℝ ↦ y + r) x hc using 1
     · simp [abs_of_nonneg (a := c + r) (by positivity), abs_of_nonneg hc']
     · rw [cfc_add .., cfc_const .., cfc_id' ..]
   · apply le_max_of_le_right
-    convert norm_apply_le_norm_cfc (fun y : ℝ ↦ -y + r) x hc using 1
+    convert! norm_apply_le_norm_cfc (fun y : ℝ ↦ -y + r) x hc using 1
     · rw [abs_of_nonpos hc', Real.norm_eq_abs, abs_of_nonneg]
       positivity [neg_nonneg.mpr hc']
     · rw [cfc_add _ (- ·) _, cfc_neg_id .., cfc_const .., norm_sub_rev]
@@ -128,9 +128,9 @@ lemma isClosed_setOf_isSelfAdjoint : IsClosed {x : σ(M, P) | IsSelfAdjoint x} :
     IsSelfAdjoint.max_norm_add_sub_algebraMap_ge (ℑ (ofUltraweak x)).2 c hc n (by positivity)]
   trans max ‖ofUltraweak x + I • algebraMap ℝ M n‖ ‖ofUltraweak x - I • algebraMap ℝ M n‖
   · apply max_le_max
-    · convert imaginaryPart.norm_le (ofUltraweak x + I • algebraMap ℝ M n) using 1
+    · convert! imaginaryPart.norm_le (ofUltraweak x + I • algebraMap ℝ M n) using 1
       simp [IsSelfAdjoint.coe_realPart]
-    · convert imaginaryPart.norm_le (ofUltraweak x - I • algebraMap ℝ M n) using 1
+    · convert! imaginaryPart.norm_le (ofUltraweak x - I • algebraMap ℝ M n) using 1
       simp [IsSelfAdjoint.coe_realPart]
   /- `fun m : σ(M, P) ↦ m + I • n` stays within the closed ball of radius `√(1 + n ^ 2)`
   and converges to `x + I • n` along the filter `l`. -/
@@ -145,7 +145,7 @@ lemma isClosed_setOf_isSelfAdjoint : IsClosed {x : σ(M, P) | IsSelfAdjoint x} :
     simpa using this _ _ inferInstance (tendsto_inf.mp (h₃ n) |>.1) (tendsto_inf.mp (h₃ n) |>.2)
   · have := isClosed_iff_forall_filter.mp <| isClosed_closedBall ℂ P (0 : M) (√(1 + n ^ 2))
     simpa [sub_eq_add_neg] using this _ _ inferInstance
-      (by simpa only [even_two, Even.neg_pow] using (tendsto_inf.mp (h₃ (-n)) |>.1))
+      (by simpa only [even_two, Even.neg_pow] using! (tendsto_inf.mp (h₃ (-n)) |>.1))
       (tendsto_inf.mp (h₃ (-n)) |>.2)
 
 variable [PartialOrder M] [StarOrderedRing M]
@@ -163,7 +163,7 @@ lemma isClosed_nonneg : IsClosed {x : σ(M, P) | 0 ≤ x} := by
     intro x ⟨hx_nonneg, hx_norm⟩
     refine ⟨x - 1, ⟨by aesop, ?_⟩, by simp⟩
     have := SpectrumRestricts.nnreal_iff_nnnorm (t := 1) hx_nonneg.isSelfAdjoint.ofUltraweak
-      (by simpa [S] using hx_norm) |>.mp <| SpectrumRestricts.nnreal_of_nonneg hx_nonneg
+      (by simpa [S] using! hx_norm) |>.mp <| SpectrumRestricts.nnreal_of_nonneg hx_nonneg
     simpa [norm_sub_rev, S] using NNReal.coe_le_coe.mpr this
   have h₂ : (1 : σ(M, P)) +ᵥ M_sa ∩ S ⊆ N := by
     rintro - ⟨x, ⟨hx_sa, hx⟩, rfl⟩
@@ -173,7 +173,7 @@ lemma isClosed_nonneg : IsClosed {x : σ(M, P) | 0 ≤ x} := by
       quasispectrumRestricts_iff_spectrumRestricts]
     refine ⟨by aesop, ?_⟩
     rw [SpectrumRestricts.nnreal_iff_nnnorm (t := 1 + 1)]
-    · simpa using norm_sub_le .. |>.trans <| by simpa [S] using hx
+    · simpa using! norm_sub_le .. |>.trans <| by simpa [S] using hx
     · aesop
     · exact norm_add_le .. |>.trans <| by simpa [S] using hx
   have h₃ : IsClosed ((1 : σ(M, P)) +ᵥ M_sa ∩ S) :=

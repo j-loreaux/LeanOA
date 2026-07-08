@@ -86,7 +86,7 @@ theorem IsCompatibleDual.isCompact_polar {𝕜 E F : Type*} [NontriviallyNormedF
     [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [ProperSpace 𝕜] [TopologicalSpace F]
     (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatibleDual] [hB : B.flip.IsWeak] {s : Set E}
     (s_nhds : s ∈ 𝓝 0) : IsCompact (B.polar s) := by
-  simpa [ContinuousLinearEquiv.image_eq_preimage_symm] using
+  simpa [ContinuousLinearEquiv.image_eq_preimage_symm] using!
     WeakDual.isCompact_polar' _ s_nhds |>.image h.weakDualCLE'.symm.continuous
 
 instance {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E]
@@ -202,7 +202,7 @@ lemma isUniformInducing_toUniformConvergenceCLM :
 instance : ContinuousConstSMul 𝕜 (PolarTopology B 𝔖) :=
   isUniformInducing_toUniformConvergenceCLM B 𝔖 |>.isInducing.continuousConstSMul id <| by simp
 
-protected theorem continuousSMul [IsTopologicalAddGroup F] [ContinuousSMul 𝕜 F] [TopologicalSpace E]
+protected theorem continuousSMul
     (h𝔖 : ∀ S ∈ 𝔖, Bornology.IsVonNBounded 𝕜 S) : ContinuousSMul 𝕜 (PolarTopology B 𝔖) := by
   have : ContinuousSMul 𝕜 (F →Lᵤ[𝕜, 𝔖] 𝕜) :=
     UniformConvergenceCLM.continuousSMul (σ := RingHom.id 𝕜) (E := F) (F := 𝕜) _ h𝔖

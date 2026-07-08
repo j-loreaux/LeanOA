@@ -1,6 +1,6 @@
 module
 
-public import Mathlib.Topology.Algebra.Module.LinearMap
+public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Basic
 
 @[expose] public section
 

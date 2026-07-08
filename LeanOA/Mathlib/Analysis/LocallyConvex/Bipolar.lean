@@ -150,7 +150,7 @@ theorem flip_polar_polar [TopologicalSpace E] [hB : B.IsWeak] {s : Set E}
       one_smul]
   have re_g_a_lt_one {a : _} (ha : a ∈ closedAbsConvexHull 𝕜 s) :
     RCLike.re (g a) < 1 := by
-    rw [fg, ContinuousLinearMap.coe_smul', Pi.smul_apply, RCLike.smul_re, one_div,
+    rw [fg, FunLike.coe_smul, Pi.smul_apply, RCLike.smul_re, one_div,
       ← (inv_mul_cancel₀ (lt_iff_le_and_ne.mp f_zero_lt_u).2.symm)]
     exact mul_lt_mul_of_pos_left ((hf₁ _) ha) (inv_pos_of_pos f_zero_lt_u)
   -- The dual embedding is surjective, let `f₀` be the element of `F` corresponding to `g`
@@ -176,8 +176,7 @@ theorem flip_polar_polar [TopologicalSpace E] [hB : B.IsWeak] {s : Set E}
     rw [← RCLike.re_ofReal_mul]
     congr
     simp only [map_inv₀, ← u_smul_g_eq_f, ← hf₀, LinearMap.IsWeak.eval, coe_mk, AddHom.coe_mk,
-      ContinuousLinearMap.coe_smul', ContinuousLinearMap.coe_mk', Pi.smul_apply,
-      Algebra.mul_smul_comm]
+      FunLike.coe_smul, ContinuousLinearMap.coe_mk', Pi.smul_apply, Algebra.mul_smul_comm]
     rw [← smul_eq_mul, ← smul_assoc]
     norm_cast
     simp only [smul_eq_mul, mul_inv_cancel₀ (ne_of_lt f_zero_lt_u).symm, map_one, one_mul]
@@ -248,8 +247,8 @@ theorem toWeakSpace_symm_closedAbsConvexHull_eq {𝕜 E : Type*} [RCLike 𝕜] [
 open ComplexOrder in
 theorem _root_.ContinuousLinearEquiv.closedAbsConvexHull_image {𝕜 E F : Type*} [RCLike 𝕜]
     [AddCommGroup E] [AddCommGroup F]
-    [Module 𝕜 E] [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
-    [Module 𝕜 F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [TopologicalSpace F] [IsTopologicalAddGroup F]
+    [Module 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [Module 𝕜 F] [TopologicalSpace F] [IsTopologicalAddGroup F]
     [ContinuousSMul 𝕜 E] [ContinuousSMul 𝕜 F]
     {s : Set E} (f : E ≃L[𝕜] F) :
     f '' (closedAbsConvexHull 𝕜 s) = closedAbsConvexHull 𝕜 (f '' s)
