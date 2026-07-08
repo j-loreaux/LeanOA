@@ -156,8 +156,9 @@ variable {A} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {f :
 
 open Topology Filter Complex CStarRing
 
-private lemma im_apply_eq_zero_of_tendsto_opNorm {l : Filter A} (hl : l.IsIncreasingApproximateUnit)
-    (hf : l.Tendsto (f ·) (𝓝 ‖f‖)) {a : A} (ha : IsSelfAdjoint a) : (f a).im = 0 := by
+private lemma im_apply_eq_zero_of_tendsto_nhds_opNorm {l : Filter A}
+    (hl : l.IsIncreasingApproximateUnit) (hf : l.Tendsto (f ·) (𝓝 ‖f‖)) {a : A}
+    (ha : IsSelfAdjoint a) : (f a).im = 0 := by
   by_cases ‖f‖ = 0
   · simp_all
   suffices ∀ (t : ℝ), ‖f a + I * t * ‖f‖‖ ^ 2 ≤ ‖f‖ ^ 2 * (‖a‖ ^ 2 + t ^ 2) by
@@ -183,20 +184,17 @@ private lemma im_apply_eq_zero_of_tendsto_opNorm {l : Filter A} (hl : l.IsIncrea
         add_assoc, ha.star_eq, add_le_add_iff_left, norm_smul, norm_mul_le x, hx2, hx2]
       simp [norm_smul, sq]
 
-theorem monotone_iff_tendsto_opNorm {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
+theorem monotone_iff_tendsto_nhds_opNorm {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
     Monotone f ↔ l.Tendsto (f ·) (𝓝 ‖f‖) := by
   refine ⟨fun hf ↦ ?_, fun hf ↦ monotone_iff_map_nonneg _ |>.mpr fun a ha ↦ ?_⟩
-  · let f' : A →P[ℂ] ℂ := { __ := f, monotone' := hf }
-    exact f'.tendsto_nhds_opNorm hl
+  · exact (.mk₀ f (monotone_iff_map_nonneg _ |>.mp hf) : _ →P[ℂ] _).tendsto_nhds_opNorm hl
   by_cases ha0 : a = 0
   · simp [ha0]
   suffices 0 ≤ (f a).re by simp [Complex.le_def, this,
-    im_apply_eq_zero_of_tendsto_opNorm hl hf ha.isSelfAdjoint]
+    im_apply_eq_zero_of_tendsto_nhds_opNorm hl hf ha.isSelfAdjoint]
   set x := ‖a‖⁻¹ • a with hx
   suffices 0 ≤ (f x).re by simp_all
-  suffices ‖‖f‖ - f x‖ ≤ ‖f‖ by
-    simp_all [Complex.normSq, Complex.norm_def, -hx, Real.sqrt_le_left]
-    nlinarith [norm_nonneg f]
+  suffices ‖‖f‖ - f x‖ ≤ ‖f‖ by grw [← re_le_norm] at this; simpa
   refine le_of_tendsto (hx := hl.neBot) (hf.sub_const (f x) |>.norm) ?_
   filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with y hy hy2
   grw [← map_sub, f.le_opNorm, CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one hy hy2
@@ -204,7 +202,7 @@ theorem monotone_iff_tendsto_opNorm {l : Filter A} (hl : l.IsIncreasingApproxima
 
 theorem monotone_iff_opNorm_eq_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A]
     [StarOrderedRing A] {f : A →L[ℂ] ℂ} : Monotone f ↔ ‖f‖ = f 1 := by
-  rw [f.monotone_iff_tendsto_opNorm (.pure_one A)]
+  rw [f.monotone_iff_tendsto_nhds_opNorm (.pure_one A)]
   have := tendsto_pure_nhds f 1
   exact ⟨fun h ↦ tendsto_nhds_unique h this, fun h ↦ by simpa [h]⟩
 
