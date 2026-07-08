@@ -88,7 +88,7 @@ lemma preGNS'_norm_def' (f : A →ₚ[ℂ] ℂ) (a : f.PreGNS') :
 
 lemma cauchy_schwarz_star_mul (f : A →ₚ[ℂ] ℂ) (x y : A) :
     ‖f (star x * y)‖ ≤ √‖f (star x * x)‖ * √‖f (star y * y)‖ := by
-  simpa [preGNS'_inner_def, preGNS'_norm_def'] using
+  simpa [preGNS'_inner_def, preGNS'_norm_def'] using!
     norm_inner_le_norm (f.toPreGNS' x) (f.toPreGNS' y)
 
 lemma cauchy_schwarz_mul_star (f : A →ₚ[ℂ] ℂ) (x y : A) :
@@ -109,7 +109,7 @@ theorem norm_apply_le_sqrt_opNorm_mul (f : A →P[ℂ] ℂ) (x : A) :
   grw [← he1.star_eq, Function.comp_apply, ← f.coe_toPositiveLinearMap,
     f.toPositiveLinearMap.cauchy_schwarz_star_mul, f.coe_toPositiveLinearMap,
     ← f.coe_toContinuousLinearMap, f.toContinuousLinearMap.le_opNorm (star e * e),
-    CStarRing.norm_star_mul_self, he2, one_mul, mul_one]
+    CStarRing.norm_star_mul_self, he2, he2, one_mul, mul_one]
 
 open Topology in
 theorem tendsto_nhds_opNorm (f : A →P[ℂ] ℂ) {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
@@ -137,7 +137,7 @@ theorem tendsto_nhds_opNorm (f : A →P[ℂ] ℂ) {l : Filter A} (hl : l.IsIncre
         ← f.coe_toContinuousLinearMap, f.toContinuousLinearMap.le_opNorm (star a * a),
         CStarRing.norm_star_mul_self, ← mul_assoc]
       refine mul_le_of_le_one_right (by positivity) ?_
-      grw [mem_closedBall_zero_iff.mp ha1, one_mul]
+      grw [mem_closedBall_zero_iff.mp ha1, mem_closedBall_zero_iff.mp ha1, one_mul]
     have h4 : ∀ᶠ x in l, ‖(f : A →L[ℂ] ℂ)‖ - ε / 4 < ‖f (x * a)‖ := by
       refine (Filter.Tendsto.norm ?_).eventually (lt_mem_nhds ha2)
       exact (ContinuousAt.tendsto (by fun_prop)).comp (hl.tendsto_mul_right a)

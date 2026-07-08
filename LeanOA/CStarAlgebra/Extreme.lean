@@ -127,7 +127,7 @@ theorem star_self_conjugate_eq_self_of_mem_extremePoints_unitClosedBall {a : A}
   closed unit ball since `2⁻¹ • (2 • |a| - |a| * |a|) + 2⁻¹ • (a * |a|) = a`
   (and clearly `a * |a|` is in the closed unit ball since `a` is). -/
   refine @h _ ?_ ((2 : ℝ) • a - a * abs a) ?_ ⟨2⁻¹, 2⁻¹, by simp [smul_sub, ← two_mul]⟩
-  · grw [norm_mul_le, norm_abs, ha, one_mul]
+  · grw [norm_mul_le, norm_abs, ha, ha, one_mul]
   · /- To show this inequality (i.e., `‖2 • a - a * |a|‖ ≤ 1`), we first
     show equality with `‖2 • |a| - |a| * |a|‖` (using the C⋆-identity), and then pass to the
     continuous functional calculus where we then use `norm_cfcₙ_le` to show the rest
@@ -197,7 +197,8 @@ private theorem eq_zero_of_eq_sub_of_mem_closedBall_of_mem_extremePoints_unitClo
   have hmax : ‖p + star a * a‖ ≤ 1 := by
     rw [hp, IsSelfAdjoint.star_mul_self x |>.norm_add_eq_max (.star_mul_self a) hpa, sup_le_iff]
     simp only [CStarRing.norm_star_mul_self]
-    grw [mem_closedBall_zero_iff.mp hx.1, mem_closedBall_zero_iff.mp ha, one_mul, and_self]
+    grw [mem_closedBall_zero_iff.mp hx.1, mem_closedBall_zero_iff.mp hx.1,
+      mem_closedBall_zero_iff.mp ha, mem_closedBall_zero_iff.mp ha, one_mul, and_self]
   have : ‖x + a‖ ≤ 1 := sq_le_one_iff₀ (by positivity) |>.mp <| by grind
   /- Using `hxa` and `hax`, cross terms vanish and we have
   `‖x - a‖ * ‖x - a‖ = ‖p + star a * a‖ ≤ 1`. -/

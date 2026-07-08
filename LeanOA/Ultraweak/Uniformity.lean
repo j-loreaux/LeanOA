@@ -3,7 +3,6 @@ module
 public import LeanOA.Ultraweak.Bornology
 public import LeanOA.Ultraweak.SeparatingDual
 public import LeanOA.WeakDual.UniformSpace
-public import LeanOA.Mathlib.Topology.Bornology.Basic
 
 @[expose] public section
 
@@ -46,7 +45,7 @@ open Filter Set Bornology
 variable (P) in
 /-- The map `toUltraweak` as a positive continuous linear map. -/
 @[simps]
-def toUltraweakPosCLM : M →P[ℂ] σ(M, P) where
+noncomputable def toUltraweakPosCLM : M →P[ℂ] σ(M, P) where
   toFun m := toUltraweak ℂ P m
   map_add' := by simp
   map_smul' := by simp
@@ -99,8 +98,8 @@ private lemma cauchy_weakE_iff_forall_posCLM {l : Filter (WeakE M P)} :
   | mem φ hφ => obtain ⟨φ, hφ, rfl⟩ := hφ; exact h φ
   | zero => exact h 0
   | add φ ψ hφ hψ ihφ ihψ =>
-    simpa using (ihφ.prod ihψ).mono (tendsto_map.prodMk tendsto_map) |>.map uniformContinuous_add
-  | smul a φ hφ ihφ => simpa using ihφ.map <| uniformContinuous_const_smul a
+    simpa using! (ihφ.prod ihψ).mono (tendsto_map.prodMk tendsto_map) |>.map uniformContinuous_add
+  | smul a φ hφ ihφ => simpa using! ihφ.map <| uniformContinuous_const_smul a
 
 private lemma tendsto_weakE_iff_forall_posCLM {α : Type*} [TopologicalSpace α]
     {l : Filter α} (x : WeakE M P) {f : α → WeakE M P} :
@@ -170,14 +169,14 @@ lemma cauchy_of_forall_posCLM_of_eventually {l : Filter σ(M, P)} {r : ℝ}
       𝓟 (weakEEquiv M P ⁻¹' (Metric.closedBall (0 : M) r)) :=
     map_mono hlr |>.trans <|
       mapsTo_weakEEquiv_symm_comp_ofUltraweak_preimage_closedBall M P r |>.tendsto
-  simpa using key.map_of_le (uniformContinuousOn_toUltraweak_comp_weakEEquiv M P r) hlr'
+  simpa using! key.map_of_le (uniformContinuousOn_toUltraweak_comp_weakEEquiv M P r) hlr'
 
 /-- A bounded filter `l` in `σ(M, P)` is cauchy if and only if `map φ l` is cauchy in `ℂ`
 for every positive continuous linear functional `φ`. -/
 lemma cauchy_of_forall_posCLM_of_disjoint {l : Filter σ(M, P)}
     (hl_bdd : Disjoint l (cobounded σ(M, P))) (hl : ∀ φ : σ(M, P) →P[ℂ] ℂ, Cauchy (map φ l)) :
     Cauchy l := by
-  obtain ⟨s, hsl, hs⟩ := exists_isBounded_of_disjoint hl_bdd
+  obtain ⟨s, hsl, hs⟩ := hl_bdd.exists_isBounded
   obtain ⟨r, hr⟩ := isBounded_image_ofUltraweak.mpr hs |>.subset_closedBall 0
   refine cauchy_of_forall_posCLM_of_eventually (r := r) ?_ hl
   filter_upwards [mem_of_superset hsl (by simpa using hr)] using by simp
@@ -214,7 +213,7 @@ lemma tendsto_of_forall_posCLM_of_eventually {r : ℝ} (hfl : ∀ᶠ x in l, ‖
         ((weakEEquiv M P).symm (ofUltraweak x))) := by
     rw [tendsto_nhdsWithin_iff]
     refine ⟨key, by simpa using hfl'⟩
-  simpa using this.comp key2
+  simpa using! this.comp key2
 
 /-- If `f : α → σ(M, P)` is eventually bounded along a filter `l`, and for every
 positive continuous linear functional `φ : σ(M, P) →P[ℂ] ℂ`, `φ ∘ f` converges to `φ x`,
@@ -222,7 +221,7 @@ then `f` converges to `x`. -/
 lemma tendsto_of_forall_posCLM_of_disjoint (hfl : Disjoint (map f l) (cobounded σ(M, P)))
     (hf : ∀ φ : σ(M, P) →P[ℂ] ℂ, Tendsto (fun m ↦ φ (f m)) l (𝓝 (φ x))) :
     Tendsto f l (𝓝 x) := by
-  obtain ⟨s, hsl, hs⟩ := exists_isBounded_of_disjoint hfl
+  obtain ⟨s, hsl, hs⟩ := hfl.exists_isBounded
   obtain ⟨r, hr⟩ := isBounded_image_ofUltraweak.mpr hs |>.subset_closedBall 0
   refine tendsto_of_forall_posCLM_of_eventually (r := r) ?_ hf
   filter_upwards [mem_of_superset (mem_map.mp hsl) (preimage_mono <| by simpa using hr)]
@@ -254,7 +253,7 @@ lemma continuousOn_of_forall_posCLM (hfl : IsBounded (f '' s))
     (hf : ∀ φ : σ(M, P) →P[ℂ] ℂ, ContinuousOn (φ ∘ f) s) :
     ContinuousOn f s :=
   fun x hx ↦ continuousWithinAt_of_forall_posCLM
-    (hfl.disjoint_cobounded_of_mem <| image_mem_map self_mem_nhdsWithin) (hf · x hx)
+    (hfl.disjoint_cobounded <| image_mem_map self_mem_nhdsWithin) (hf · x hx)
 
 /-- If `f : α → σ(M, P)` is bounded function, and for every positive continuous linear
 functional `φ : σ(M, P) →P[ℂ] ℂ`, `φ ∘ f` is continuous, then `f` is continuous.

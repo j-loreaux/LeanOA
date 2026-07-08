@@ -135,7 +135,6 @@ protected lemma IsCompact.closedAbsConvexHull {𝕜 E : Type*} [RCLike 𝕜] [Ad
     intro x hx
     obtain ⟨r, hr, ⟨x, hx', rfl⟩⟩ := by simpa only [mem_balancedHull_iff] using hx
     have hr' := RCLike.closedBall_subset_two_smul_convexHull 𝕜 (by simpa using hr)
-    simp only at hr'
     let f : 𝕜 →ₗ[𝕜] E := LinearMap.toSpanSingleton 𝕜 E x
     have hr'' : r • x ∈ f '' (2 • convexHull ℝ ({-1, 1, -I, I} : Set 𝕜)) := ⟨r, hr', rfl⟩
     rw [Set.image_nsmul, ← LinearMap.coe_toAffineMap,

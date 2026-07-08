@@ -55,7 +55,7 @@ def MemStandard (x : Π i, E i) : Prop := Summable fun i ↦ ⟪x i, x i⟫_A
 
 lemma MemStandard.subtype {x : Π i, E i} (hx : MemStandard A x) (s : Set ι) :
     MemStandard A (fun i : s ↦ x i) := by
-  simpa [Function.comp_def] using Summable.subtype hx s
+  simpa [Function.comp_def] using! Summable.subtype hx s
 
 lemma MemStandard.of_memℓp {x : Π i, E i} (hx : Memℓp (‖x ·‖) 2) :
     MemStandard A x :=
@@ -107,12 +107,9 @@ lemma MemStandard.sub {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard
 lemma MemStandard.summable_inner {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard A y) :
     Summable fun i ↦ ⟪x i, y i⟫_A := by
   conv in ⟪x _, y _⟫_A => rw [polarization']
-  apply_rules (config := { transparency := .reducible })
-    [Summable.const_smul, Summable.add, Summable.sub]
-  · exact hy.add hx
-  · exact hy.sub hx
-  · exact hy.add (hx.complex_smul _)
-  · exact hy.sub (hx.complex_smul _)
+  refine .const_smul _ (.sub (.add (.sub (hy.add hx) (hy.sub hx))
+    (.const_smul _ (hy.add (hx.complex_smul _))))
+    (.const_smul _ (hy.sub (hx.complex_smul _))))
 
 variable (A E) in
 /-- The standard C⋆-module. -/
@@ -143,7 +140,7 @@ def toPi (x : ℓ²(A, E)) : Π i, E i := Subtype.val x
 
 instance : DFunLike ℓ²(A, E) ι (fun i ↦ E i) where
   coe := Standard.toPi
-  coe_injective' := Subtype.val_injective
+  coe_injective := Subtype.val_injective
 
 @[ext] lemma ext {x y : ℓ²(A, E)} (h : ∀ i, x i = y i) : x = y := DFunLike.ext _ _ h
 
@@ -205,7 +202,7 @@ noncomputable instance : CStarModule A ℓ²(A, E) where
   inner_smul_right_complex {c x y} := by
     simpa only [coe_smul, Pi.smul_apply, inner_smul_right_complex, inner_def]
       using x.summable_inner y |>.tsum_const_smul c
-  star_inner x y := by simpa using (starL ℂ).map_tsum (f := fun i ↦ ⟪x i, y i⟫_A)
+  star_inner x y := by simpa using! (starL ℂ).map_tsum (f := fun i ↦ ⟪x i, y i⟫_A)
   norm_eq_sqrt_norm_inner_self _ := rfl
 
 noncomputable instance : NormedAddCommGroup ℓ²(A, E) := normedAddCommGroup A
@@ -311,7 +308,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
               rw [← Real.mul_self_sqrt hε8.le]
               refine mul_le_mul ?_ (by rwa [← norm_neg, neg_sub]) (by positivity) (by positivity)
               simp only [x', norm_def]
-              convert Real.sqrt_le_sqrt hxN.le using 3
+              convert! Real.sqrt_le_sqrt hxN.le using 3
               rw [tsum_eq_sum fun i (hi : i ∉ t) ↦ by simp [hi]]
               congr! 2 with i hi
               all_goals simp [hi]

@@ -37,8 +37,8 @@ namespace OrderHom
 
 variable {α : Type*} [Preorder α]
 
-instance : Mul (α →o α) where mul f g := f.comp g
-instance : One (α →o α) where one := .id
+instance instMul : Mul (α →o α) where mul f g := f.comp g
+instance instOne : One (α →o α) where one := .id
 
 @[simp] lemma mul_apply (f g : α →o α) (x : α) : (f * g) x = f (g x) := rfl
 @[simp] lemma one_apply (x : α) : (1 : α →o α) x = x := rfl
@@ -46,7 +46,7 @@ instance : One (α →o α) where one := .id
 lemma mul_eq_comp (f g : α →o α) : (f * g : α →o α) = f.comp g := rfl
 lemma one_eq_id : (1 : α →o α) = .id := rfl
 
-instance : Monoid (α →o α) where
+instance instMonoid : Monoid (α →o α) where
   mul_assoc f g h := by simp [DFunLike.ext_iff]
   one_mul f := by simp [DFunLike.ext_iff]
   mul_one f := by simp [DFunLike.ext_iff]
@@ -57,9 +57,9 @@ namespace OrderIso
 
 variable {α : Type*} [Preorder α]
 
-instance : Mul (α ≃o α) where mul f g := g.trans f
-instance : One (α ≃o α) where one := refl α
-instance : Inv (α ≃o α) where inv := symm
+instance instMul : Mul (α ≃o α) where mul f g := g.trans f
+instance instOne : One (α ≃o α) where one := refl α
+instance instInv : Inv (α ≃o α) where inv := symm
 
 @[simp] lemma mul_apply (f g : α ≃o α) (x : α) : (f * g) x = f (g x) := rfl
 @[simp] lemma one_apply (x : α) : (1 : α ≃o α) x = x := rfl
@@ -69,7 +69,7 @@ lemma mul_eq_trans (f g : α ≃o α) : (f * g : α ≃o α) = g.trans f := rfl
 lemma one_eq_refl : (1 : α ≃o α) = refl α := rfl
 lemma inv_eq_symm (f : α ≃o α) : f⁻¹ = f.symm := rfl
 
-instance : Group (α ≃o α) where
+instance instGroup : Group (α ≃o α) where
   mul_assoc f g h := by simp [DFunLike.ext_iff]
   one_mul f := by simp [DFunLike.ext_iff]
   mul_one f := by simp [DFunLike.ext_iff]

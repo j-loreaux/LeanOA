@@ -1,6 +1,6 @@
 module
 
-public import LeanOA.Mathlib.Algebra.Order.Star.Basic
+public import Mathlib.Algebra.Order.Star.Basic
 public import Mathlib.Analysis.RCLike.ContinuousMap
 public import Mathlib.Topology.ContinuousMap.ContinuousSqrt
 public import Mathlib.Topology.ExtremallyDisconnected
