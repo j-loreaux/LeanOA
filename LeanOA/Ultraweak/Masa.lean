@@ -3,9 +3,7 @@ module
 public import LeanOA.ExtremallyDisconnected
 public import LeanOA.Masa
 public import LeanOA.Ultraweak.LUB
-public import LeanOA.Mathlib.Algebra.Star.Unitary
 public import Mathlib.LinearAlgebra.Span.Defs
-public import Mathlib.Algebra.Order.Monoid.Submonoid -- it makes no sense that this import is necessary
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 public import Mathlib.Analysis.CStarAlgebra.Unitary.Span
 
@@ -136,8 +134,8 @@ lemma IsMasa.extremallyDisconnected_characterSpace (S : StarSubalgebra ℂ M) [h
     this set coincides with `f '' s`, since the latter is a subset of `S` which is commutative.
     Thus `v * u * star v` coincides with the supremum of `f '' s`, which is `u`. -/
     lift v to unitary S using hv
-    refine .symm <| (commute_unitary_iff_mul_mul_star
-      (u := Unitary.map (⟨S.subtype.toRingHom, by simp⟩ : S →⋆* M) v) |>.mpr ?_)
+    refine .symm <| (commute_unitary_iff_star_right_conjugate
+      (u := (Unitary.map (⟨S.subtype.toRingHom, by simp⟩ : S →⋆* M) v : M)) (by grind) |>.mpr ?_)
     have h_image : conjOrderHom (v : M) '' (f '' s) = f '' s := by
       convert Set.image_id (f '' s) using 1
       apply Set.EqOn.image_eq
