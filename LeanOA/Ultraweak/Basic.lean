@@ -235,7 +235,7 @@ lemma toUltraweak_star (x : M) :
 
 variable (M P) in
 /-- The canonical StarRing equivalence between `σ(M, P)` and `M`. -/
-@[simps]
+@[simps, nolint defsWithUnderscore]
 noncomputable def ofUltraweak_starRingEquiv' : σ(M, P) ≃⋆+* M where
   toFun := ofUltraweak
   invFun := toUltraweak ℂ P

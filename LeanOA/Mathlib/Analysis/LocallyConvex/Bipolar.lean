@@ -247,8 +247,8 @@ theorem toWeakSpace_symm_closedAbsConvexHull_eq {𝕜 E : Type*} [RCLike 𝕜] [
 open ComplexOrder in
 theorem _root_.ContinuousLinearEquiv.closedAbsConvexHull_image {𝕜 E F : Type*} [RCLike 𝕜]
     [AddCommGroup E] [AddCommGroup F]
-    [Module 𝕜 E] [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
-    [Module 𝕜 F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [TopologicalSpace F] [IsTopologicalAddGroup F]
+    [Module 𝕜 E] [Module ℝ E] [TopologicalSpace E] [IsTopologicalAddGroup E]
+    [Module 𝕜 F] [Module ℝ F] [TopologicalSpace F] [IsTopologicalAddGroup F]
     [ContinuousSMul 𝕜 E] [ContinuousSMul 𝕜 F]
     {s : Set E} (f : E ≃L[𝕜] F) :
     f '' (closedAbsConvexHull 𝕜 s) = closedAbsConvexHull 𝕜 (f '' s)

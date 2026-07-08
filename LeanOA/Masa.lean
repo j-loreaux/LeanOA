@@ -99,32 +99,35 @@ namespace IsMulCommutative
 variable {R : Type*}
 
 @[to_additive]
-instance (priority := 100) [Mul R] [Subsingleton R] : IsMulCommutative R where
+instance (priority := 100) instOfSubsingleton [Mul R] [Subsingleton R] :
+    IsMulCommutative R where
   is_comm := ⟨fun _ _ ↦ Subsingleton.elim ..⟩
 
 /-- A nonunital seminiormed ring with commutative multiplication is a commutative nonunital
 seminormed ring. -/
-scoped instance (priority := 50) [NonUnitalSeminormedRing R] [IsMulCommutative R] :
-    NonUnitalSeminormedCommRing R where
+scoped instance (priority := 50) instNonUnitalSeminormedCommRing [NonUnitalSeminormedRing R]
+    [IsMulCommutative R] : NonUnitalSeminormedCommRing R where
 
 /-- A seminormed ring with commutative multiplication is a commutative seminormed ring. -/
-scoped instance (priority := 50) [SeminormedRing R] [IsMulCommutative R] :
+scoped instance (priority := 50) instSeminormedCommRing [SeminormedRing R] [IsMulCommutative R] :
     SeminormedCommRing R where
 
 /-- A nonunital normed ring with commutative multiplication is a commutative nonunital normed
 ring. -/
-scoped instance (priority := 50) [NonUnitalNormedRing R] [IsMulCommutative R] :
-    NonUnitalNormedCommRing R where
+scoped instance (priority := 50) instNonUnitalNormedCommRing [NonUnitalNormedRing R]
+    [IsMulCommutative R] : NonUnitalNormedCommRing R where
 
 /-- A normed ring with commutative multiplication is a commutative normed ring. -/
-scoped instance (priority := 50) [NormedRing R] [IsMulCommutative R] : NormedCommRing R where
+scoped instance (priority := 50) instNormedCommRing [NormedRing R] [IsMulCommutative R] :
+    NormedCommRing R where
 
 /-- A nonunital C⋆-algebra with commutative multiplication is a commutative nonunital C⋆-algebra. -/
-scoped instance (priority := 50) [NonUnitalCStarAlgebra R] [IsMulCommutative R] :
-    NonUnitalCommCStarAlgebra R where
+scoped instance (priority := 50) instNonUnitalCommCStarAlgebra [NonUnitalCStarAlgebra R]
+    [IsMulCommutative R] : NonUnitalCommCStarAlgebra R where
 
 /-- A C⋆-algebra with commutative multiplication is a commutative C⋆-algebra. -/
-scoped instance (priority := 50) [CStarAlgebra R] [IsMulCommutative R] : CommCStarAlgebra R where
+scoped instance (priority := 50) instCommCStarAlgebra [CStarAlgebra R] [IsMulCommutative R] :
+    CommCStarAlgebra R where
 
 end IsMulCommutative
 

@@ -23,7 +23,7 @@ lemma single_def [DiscreteTopology A] [DecidableEq A] [Zero Y] [Zero A]
 
 /-- The star algebra equivalence between `C(Y, R)₉` and `C(X, R)₀` given by precomposing
 with a homeomorphism `X ≃ₜ Y` mapping `0` to `0`. -/
-@[simps!]
+@[simps!, nolint defsWithUnderscore]
 def starAlgEquiv_precomp {X Y : Type*} (R : Type*) [Zero X] [Zero Y]
     [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace R]
     [CommSemiring R] [StarRing R] [IsTopologicalSemiring R] [ContinuousStar R]

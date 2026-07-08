@@ -48,7 +48,7 @@ open AffineMap in
 -- this can be generalized in Mathlib
 theorem Convex.closure_subset_image_homothety_interior_of_one_lt'
     {𝕜 E : Type*} [Field 𝕜] [PartialOrder 𝕜] [PosMulReflectLT 𝕜]
-    [IsOrderedRing 𝕜] [TopologicalSpace 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
+    [IsOrderedRing 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
     [IsTopologicalAddGroup E] [ContinuousConstSMul 𝕜 E] {s : Set E} (hs : Convex 𝕜 s)
     {x : E} (hx : x ∈ interior s) (t : 𝕜) (ht : 1 < t) :
     closure s ⊆ homothety x t '' interior s := by
@@ -61,8 +61,7 @@ theorem Convex.closure_subset_image_homothety_interior_of_one_lt'
   exact lineMap_mem_openSegment _ _ _ ⟨inv_pos_of_pos (by grind), inv_lt_one_of_one_lt₀ (by grind)⟩
 
 theorem AffineMap.bijective_homothety {R V P : Type*} [AddCommGroup V] [TopologicalSpace V]
-    [AddTorsor V P] [TopologicalSpace P] [IsTopologicalAddTorsor P] [Field R] [Module R V]
-    [ContinuousConstSMul R V] (x : P) (t : R) (ht : t ≠ 0) :
+    [AddTorsor V P] [TopologicalSpace P] [Field R] [Module R V] (x : P) (t : R) (ht : t ≠ 0) :
     Function.Bijective (AffineMap.homothety x t) := by
   lift t to Rˣ using IsUnit.mk0 t ht
   exact AffineEquiv.homothetyUnitsMulHom x t |>.bijective
