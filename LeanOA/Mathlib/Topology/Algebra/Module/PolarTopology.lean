@@ -86,7 +86,7 @@ theorem IsCompatibleDual.isCompact_polar {𝕜 E F : Type*} [NontriviallyNormedF
     [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [ProperSpace 𝕜] [TopologicalSpace F]
     (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [h : B.IsCompatibleDual] [hB : B.flip.IsWeak] {s : Set E}
     (s_nhds : s ∈ 𝓝 0) : IsCompact (B.polar s) := by
-  simpa [ContinuousLinearEquiv.image_eq_preimage_symm] using
+  simpa [ContinuousLinearEquiv.image_eq_preimage_symm] using!
     WeakDual.isCompact_polar' _ s_nhds |>.image h.weakDualCLE'.symm.continuous
 
 instance {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E]

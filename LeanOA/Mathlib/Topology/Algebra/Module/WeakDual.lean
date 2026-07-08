@@ -79,7 +79,8 @@ theorem WeakDual.isCompact_polar' [ProperSpace 𝕜] {s : Set E} (s_nhds : s ∈
       simpa using Continuous.continuousAt (by fun_prop) (by simpa)
     obtain ⟨c, hc0, hc⟩ := NormedField.exists_norm_lt 𝕜 hε
     refine ⟨1 / ‖c‖, fun φ hφ ↦ ?_⟩
-    simpa only [le_div_iff₀ hc0, mul_comm, ← norm_smul, map_smul] using hφ _ (h (by simpa using hc))
+    simpa only [le_div_iff₀ hc0, mul_comm, ← norm_smul, map_smul]
+      using! hφ _ (h (by simpa using hc))
   exact (isCompact_univ_pi <| fun i ↦ ProperSpace.isCompact_closedBall 0 (r i)).of_isClosed_subset
     (isClosed_image_polar_of_mem_nhds' 𝕜 s_nhds) hr
 

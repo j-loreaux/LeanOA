@@ -4,7 +4,7 @@ public import LeanOA.ExtremallyDisconnected
 public import LeanOA.Masa
 public import LeanOA.Ultraweak.LUB
 public import LeanOA.Mathlib.Algebra.Star.Unitary
-public import LeanOA.Mathlib.Algebra.LinearAlgebra.Span.Defs
+public import Mathlib.LinearAlgebra.Span.Defs
 public import Mathlib.Algebra.Order.Monoid.Submonoid -- it makes no sense that this import is necessary
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 public import Mathlib.Analysis.CStarAlgebra.Unitary.Span
