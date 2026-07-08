@@ -13,7 +13,7 @@ lemma isBounded_norm_iff' {E : Type*} [SeminormedGroup E] {s : Set E} :
   refine ⟨fun hs ↦ ?_, lipschitzWith_one_norm'.isBounded_image⟩
   rw [isBounded_iff_forall_norm_le']
   rw [isBounded_iff_bddBelow_bddAbove] at hs
-  simpa [BddAbove, upperBounds] using hs.2
+  simpa [BddAbove, upperBounds] using! hs.2
 
 alias ⟨IsBounded.of_norm', IsBounded.norm'⟩ := isBounded_norm_iff'
 

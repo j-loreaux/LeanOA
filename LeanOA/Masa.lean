@@ -94,216 +94,40 @@ instance StarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
   let := s.commSemiringTopologicalClosure mul_comm'
   ⟨⟨mul_comm⟩⟩
 
-@[to_additive]
-theorem Subsemigroup.isMulCommutative_iSup {A : Type*} [Semigroup A] {ι : Type*}
-    {S : ι → Subsemigroup A} [hS : ∀ i, IsMulCommutative (S i)]
-    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subsemigroup A) := by
-  refine .of_setLike_mul_comm ?_
-  simp_rw [← SetLike.mem_coe, coe_iSup_of_directed dir, Set.mem_iUnion,
-    SetLike.mem_coe, forall_exists_index]
-  intro a i ha b j hb
-  obtain ⟨k, hik, hjk⟩ := dir i j
-  exact setLike_mul_comm (hik ha) (hjk hb)
-
-@[to_additive]
-theorem Subgroup.isMulCommutative_iSup {A : Type*} [Group A] {ι : Type*} [Nonempty ι]
-    {S : ι → Subgroup A} [hS : ∀ i, IsMulCommutative (S i)]
-    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subgroup A) := by
-  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    Subsemigroup.coe_iSup_of_directed dir] using Subsemigroup.isMulCommutative_iSup dir
-
-@[to_additive]
-theorem Submonoid.isMulCommutative_iSup {A : Type*} [Monoid A] {ι : Type*} [Nonempty ι]
-    {S : ι → Submonoid A} [hS : ∀ i, IsMulCommutative (S i)]
-    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Submonoid A) := by
-  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    Subsemigroup.coe_iSup_of_directed dir] using Subsemigroup.isMulCommutative_iSup dir
-
-theorem NonUnitalSubsemiring.isMulCommutative_iSup {A : Type*} [NonUnitalSemiring A]
-    {ι : Type*} [Nonempty ι] {S : ι → NonUnitalSubsemiring A} [hS : ∀ i, IsMulCommutative (S i)]
-    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
-    IsMulCommutative (⨆ i, S i : NonUnitalSubsemiring A) := by
-  refine .of_setLike_mul_comm ?_
-  simp_rw [← SetLike.mem_coe, coe_iSup_of_directed dir, Set.mem_iUnion,
-    SetLike.mem_coe, forall_exists_index]
-  intro a i ha b j hb
-  obtain ⟨k, hik, hjk⟩ := dir i j
-  exact setLike_mul_comm (hik ha) (hjk hb)
-
-theorem Subsemiring.isMulCommutative_iSup {A : Type*} [Semiring A] {ι : Type*} [Nonempty ι]
-    {S : ι → Subsemiring A} [hS : ∀ i, IsMulCommutative (S i)]
-    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subsemiring A) := by
-  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    Subsemigroup.coe_iSup_of_directed dir] using Subsemigroup.isMulCommutative_iSup dir
-
-theorem NonUnitalSubring.isMulCommutative_iSup {A : Type*}
-    [NonUnitalRing A] {ι : Type*} [Nonempty ι] {S : ι → NonUnitalSubring A}
-    [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
-    IsMulCommutative (⨆ i, S i : NonUnitalSubring A) := by
-  have := NonUnitalSubsemiring.isMulCommutative_iSup dir
-  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    NonUnitalSubsemiring.coe_iSup_of_directed dir]
-
-theorem Subring.isMulCommutative_iSup {A : Type*} [Ring A] {ι : Type*} [Nonempty ι]
-    {S : ι → Subring A} [hS : ∀ i, IsMulCommutative (S i)]
-    (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) : IsMulCommutative (⨆ i, S i : Subring A) := by
-  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    Subsemigroup.coe_iSup_of_directed dir] using Subsemigroup.isMulCommutative_iSup dir
-
-theorem NonUnitalSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
-    [NonUnitalSemiring A] [Module R A] {ι : Type*} [IsScalarTower R A A]
-    [SMulCommClass R A A] [Nonempty ι] {S : ι → NonUnitalSubalgebra R A}
-    [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
-    IsMulCommutative (⨆ i, S i : NonUnitalSubalgebra R A) := by
-  have := NonUnitalSubsemiring.isMulCommutative_iSup dir
-  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    NonUnitalSubsemiring.coe_iSup_of_directed dir]
-
-theorem NonUnitalStarSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
-    [NonUnitalSemiring A] [StarRing A] [Module R A] {ι : Type*} [StarRing R] [IsScalarTower R A A]
-    [SMulCommClass R A A] [StarModule R A] [Nonempty ι] {S : ι → NonUnitalStarSubalgebra R A}
-    [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
-    IsMulCommutative (⨆ i, S i : NonUnitalStarSubalgebra R A) := by
-  have := NonUnitalSubsemiring.isMulCommutative_iSup dir
-  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    NonUnitalSubsemiring.coe_iSup_of_directed dir]
-
-theorem StarSubalgebra.coe_iSup_of_directed {R A : Type*} [CommSemiring R]
-    [Semiring A] [StarRing A] [Algebra R A] {ι : Type*} [StarRing R]
-    [StarModule R A] [Nonempty ι] {S : ι → StarSubalgebra R A}
-    (dir : Directed (· ≤ ·) S) : ↑(iSup S) = ⋃ i, (S i : Set A) :=
-  let K : StarSubalgebra R A :=
-    { __ := NonUnitalStarSubalgebra.copy _ _ (NonUnitalStarSubalgebra.coe_iSup_of_directed
-        (S := fun i ↦ (S i).toNonUnitalStarSubalgebra) dir).symm
-      algebraMap_mem' x :=
-        let ⟨i⟩ := ‹Nonempty ι›
-        Set.mem_iUnion.mpr ⟨i, algebraMap_mem (S i) x⟩ }
-  have : iSup S = K := le_antisymm (iSup_le fun i ↦ le_iSup (fun i ↦ (S i : Set A)) i)
-    (Set.iUnion_subset fun _ ↦ le_iSup S _)
-  this.symm ▸ rfl
-
-theorem Subalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
-    [Semiring A] [Algebra R A] {ι : Type*} [Nonempty ι] {S : ι → Subalgebra R A}
-    [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
-    IsMulCommutative (⨆ i, S i : Subalgebra R A) := by
-  have dir' : Directed (fun x1 x2 ↦ x1 ≤ x2) (fun i ↦ (S i).toNonUnitalSubalgebra) := dir
-  have := NonUnitalSubalgebra.isMulCommutative_iSup dir'
-  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    NonUnitalSubalgebra.coe_iSup_of_directed dir']
-
-theorem StarSubalgebra.isMulCommutative_iSup {R A : Type*} [CommSemiring R]
-    [Semiring A] [StarRing A] [Algebra R A] {ι : Type*} [StarRing R]
-    [StarModule R A] [Nonempty ι] {S : ι → StarSubalgebra R A}
-    [hS : ∀ i, IsMulCommutative (S i)] (dir : Directed (fun x1 x2 ↦ x1 ≤ x2) S) :
-    IsMulCommutative (⨆ i, S i : StarSubalgebra R A) := by
-  have dir' : Directed (fun x1 x2 ↦ x1 ≤ x2) (fun i ↦ (S i).toNonUnitalSubalgebra) := dir
-  have := NonUnitalSubalgebra.isMulCommutative_iSup dir'
-  simpa [isMulCommutative_iff, ← SetLike.mem_coe, coe_iSup_of_directed dir,
-    NonUnitalSubalgebra.coe_iSup_of_directed dir']
-
-@[to_additive]
-instance Subsemigroup.instIsMulCommutative_iSup {A : Type*}
-    [Semigroup A] {ι : Type*} [Preorder ι] [IsDirectedOrder ι]
-    {S : ι →o Subsemigroup A} [hS : ∀ i, IsMulCommutative (S i)] :
-    IsMulCommutative (⨆ i, S i : Subsemigroup A) :=
-  Subsemigroup.isMulCommutative_iSup S.monotone.directed_le
-
-@[to_additive]
-instance Submonoid.instIsMulCommutative_iSup {A : Type*}
-    [Monoid A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
-    {S : ι →o Submonoid A} [hS : ∀ i, IsMulCommutative (S i)] :
-    IsMulCommutative (⨆ i, S i : Submonoid A) :=
-  Submonoid.isMulCommutative_iSup S.monotone.directed_le
-
-@[to_additive]
-instance Subgroup.instIsMulCommutative_iSup {A : Type*}
-    [Group A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
-    {S : ι →o Subgroup A} [hS : ∀ i, IsMulCommutative (S i)] :
-    IsMulCommutative (⨆ i, S i : Subgroup A) :=
-  Subgroup.isMulCommutative_iSup S.monotone.directed_le
-
-instance NonUnitalSubsemiring.instIsMulCommutative_iSup {A : Type*}
-    [NonUnitalSemiring A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
-    {S : ι →o NonUnitalSubsemiring A} [hS : ∀ i, IsMulCommutative (S i)] :
-    IsMulCommutative (⨆ i, S i : NonUnitalSubsemiring A) :=
-  NonUnitalSubsemiring.isMulCommutative_iSup S.monotone.directed_le
-
-instance NonUnitalSubring.instIsMulCommutative_iSup {A : Type*}
-    [NonUnitalRing A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
-    {S : ι →o NonUnitalSubring A} [hS : ∀ i, IsMulCommutative (S i)] :
-    IsMulCommutative (⨆ i, S i : NonUnitalSubring A) :=
-  NonUnitalSubring.isMulCommutative_iSup S.monotone.directed_le
-
-instance Subsemiring.instIsMulCommutative_iSup {A : Type*}
-    [Semiring A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
-    {S : ι →o Subsemiring A} [hS : ∀ i, IsMulCommutative (S i)] :
-    IsMulCommutative (⨆ i, S i : Subsemiring A) :=
-  Subsemiring.isMulCommutative_iSup S.monotone.directed_le
-
-instance Subring.instIsMulCommutative_iSup {A : Type*}
-    [Ring A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
-    {S : ι →o Subring A} [hS : ∀ i, IsMulCommutative (S i)] :
-    IsMulCommutative (⨆ i, S i : Subring A) :=
-  Subring.isMulCommutative_iSup S.monotone.directed_le
-
-instance NonUnitalSubalgebra.instIsMulCommutative_iSup {R A : Type*} [CommSemiring R]
-    [NonUnitalSemiring A] [Module R A] {ι : Type*} [IsScalarTower R A A]
-    [SMulCommClass R A A] [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
-    {S : ι →o NonUnitalSubalgebra R A} [hS : ∀ i, IsMulCommutative (S i)] :
-    IsMulCommutative (⨆ i, S i : NonUnitalSubalgebra R A) :=
-  NonUnitalSubalgebra.isMulCommutative_iSup S.monotone.directed_le
-
-theorem NonUnitalStarSubalgebra.instIsMulCommutative_iSup {R A : Type*} [CommSemiring R]
-    [NonUnitalSemiring A] [StarRing A] [Module R A] {ι : Type*} [StarRing R] [IsScalarTower R A A]
-    [SMulCommClass R A A] [StarModule R A] [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
-    {S : ι →o NonUnitalStarSubalgebra R A} [hS : ∀ i, IsMulCommutative (S i)] :
-    IsMulCommutative (⨆ i, S i : NonUnitalStarSubalgebra R A) :=
-  NonUnitalStarSubalgebra.isMulCommutative_iSup S.monotone.directed_le
-
-instance Subalgebra.instIsMulCommutative_iSup {R A : Type*} [CommSemiring R]
-    [Semiring A] [Algebra R A] {ι : Type*} [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
-    {S : ι →o Subalgebra R A} [hS : ∀ i, IsMulCommutative (S i)] :
-    IsMulCommutative (⨆ i, S i : Subalgebra R A) :=
-  Subalgebra.isMulCommutative_iSup S.monotone.directed_le
-
-theorem StarSubalgebra.instIsMulCommutative_iSup {R A : Type*} [CommSemiring R]
-    [Semiring A] [StarRing A] [Algebra R A] {ι : Type*} [StarRing R]
-    [StarModule R A] [Nonempty ι] [Preorder ι] [IsDirectedOrder ι]
-    {S : ι →o StarSubalgebra R A} [hS : ∀ i, IsMulCommutative (S i)] :
-    IsMulCommutative (⨆ i, S i : StarSubalgebra R A) :=
-  StarSubalgebra.isMulCommutative_iSup S.monotone.directed_le
-
 namespace IsMulCommutative
 
 variable {R : Type*}
 
 @[to_additive]
-instance (priority := 100) [Mul R] [Subsingleton R] : IsMulCommutative R where
+instance (priority := 100) instOfSubsingleton [Mul R] [Subsingleton R] :
+    IsMulCommutative R where
   is_comm := ⟨fun _ _ ↦ Subsingleton.elim ..⟩
 
 /-- A nonunital seminiormed ring with commutative multiplication is a commutative nonunital
 seminormed ring. -/
-scoped instance (priority := 50) [NonUnitalSeminormedRing R] [IsMulCommutative R] :
-    NonUnitalSeminormedCommRing R where
+scoped instance (priority := 50) instNonUnitalSeminormedCommRing [NonUnitalSeminormedRing R]
+    [IsMulCommutative R] : NonUnitalSeminormedCommRing R where
 
 /-- A seminormed ring with commutative multiplication is a commutative seminormed ring. -/
-scoped instance (priority := 50) [SeminormedRing R] [IsMulCommutative R] :
+scoped instance (priority := 50) instSeminormedCommRing [SeminormedRing R] [IsMulCommutative R] :
     SeminormedCommRing R where
 
 /-- A nonunital normed ring with commutative multiplication is a commutative nonunital normed
 ring. -/
-scoped instance (priority := 50) [NonUnitalNormedRing R] [IsMulCommutative R] :
-    NonUnitalNormedCommRing R where
+scoped instance (priority := 50) instNonUnitalNormedCommRing [NonUnitalNormedRing R]
+    [IsMulCommutative R] : NonUnitalNormedCommRing R where
 
 /-- A normed ring with commutative multiplication is a commutative normed ring. -/
-scoped instance (priority := 50) [NormedRing R] [IsMulCommutative R] : NormedCommRing R where
+scoped instance (priority := 50) instNormedCommRing [NormedRing R] [IsMulCommutative R] :
+    NormedCommRing R where
 
 /-- A nonunital C⋆-algebra with commutative multiplication is a commutative nonunital C⋆-algebra. -/
-scoped instance (priority := 50) [NonUnitalCStarAlgebra R] [IsMulCommutative R] :
-    NonUnitalCommCStarAlgebra R where
+scoped instance (priority := 50) instNonUnitalCommCStarAlgebra [NonUnitalCStarAlgebra R]
+    [IsMulCommutative R] : NonUnitalCommCStarAlgebra R where
 
 /-- A C⋆-algebra with commutative multiplication is a commutative C⋆-algebra. -/
-scoped instance (priority := 50) [CStarAlgebra R] [IsMulCommutative R] : CommCStarAlgebra R where
+scoped instance (priority := 50) instCommCStarAlgebra [CStarAlgebra R] [IsMulCommutative R] :
+    CommCStarAlgebra R where
 
 end IsMulCommutative
 

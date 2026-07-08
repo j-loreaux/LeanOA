@@ -10,6 +10,7 @@ variable {𝕜 E F E' F' : Type*}
   [AddCommMonoid E] [Module 𝕜 E] [AddCommMonoid F] [Module 𝕜 F]
   [AddCommMonoid E'] [Module 𝕜 E'] [AddCommMonoid F'] [Module 𝕜 F']
   (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+
 namespace WeakBilin
 
 /-- The canonical linear equivalence (over `𝕝`) between `WeakBilin (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)`
@@ -57,7 +58,7 @@ protected noncomputable def congr (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) (e : 
   continuous_toFun := by
     apply continuous_of_continuous_eval' B' fun y' ↦ ?_
     simp_rw [pairing_apply]
-    simpa [← hB] using WeakBilin.eval_continuous' B _
+    simpa [← hB] using! WeakBilin.eval_continuous' B _
   continuous_invFun := by
     apply continuous_of_continuous_eval' B fun y ↦ ?_
     simp_rw [pairing_apply]

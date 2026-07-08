@@ -68,7 +68,7 @@ variable {B} in
 /-- The coercion `(fun x y => B x y) : E → (F → 𝕜)` is an embedding. -/
 theorem isEmbedding (hB_inj : Function.Injective B) :
     IsEmbedding (B · ·) := by
-  convert (LinearMap.coe_injective.comp hB_inj |>.isEmbedding_induced)
+  convert! (LinearMap.coe_injective.comp hB_inj |>.isEmbedding_induced)
   exact hB.eq_induced
 
 variable {B} in

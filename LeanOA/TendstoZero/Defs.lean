@@ -68,7 +68,7 @@ instance isClosed : IsClosed (c₀ E : Set (lp E ∞)) := by
   simp_rw [this]
   refine LipschitzWith.uniformEquicontinuous _ 1 (fun i ↦ ?_)
     |>.equicontinuous.isClosed_setOf_tendsto continuous_const
-  simpa using lp.isometry_single i |>.lipschitz.comp <| lp.lipschitzWith_one_eval ∞ i
+  simpa using! lp.isometry_single i |>.lipschitz.comp <| lp.lipschitzWith_one_eval ∞ i
 
 noncomputable instance : SMul 𝕜 (c₀ E) where
   smul k x := ⟨k • x, squeeze_zero (fun _ ↦ by positivity)

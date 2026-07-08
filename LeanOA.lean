@@ -1,4 +1,4 @@
-module  -- shake: keep-all
+module  -- shake: keep-all --deprecated_module: ignore
 
 public import LeanOA.AbsConvex
 public import LeanOA.BlueprintImports
@@ -17,12 +17,7 @@ public import LeanOA.Lp.Holder
 public import LeanOA.Lp.lpSpace
 public import LeanOA.Mackey
 public import LeanOA.Masa
-public import LeanOA.Mathlib.Algebra.LinearAlgebra.Span.Defs
-public import LeanOA.Mathlib.Algebra.Order.Module.PositiveLinearMap
-public import LeanOA.Mathlib.Algebra.Order.Star.Basic
 public import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
-public import LeanOA.Mathlib.Algebra.Star.StarAlgHom
-public import LeanOA.Mathlib.Algebra.Star.Unitary
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
@@ -38,7 +33,6 @@ public import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
-public import LeanOA.Mathlib.Analysis.RCLike.Extend
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 public import LeanOA.Mathlib.Data.Real.Archimedean
 public import LeanOA.Mathlib.Misc
@@ -49,9 +43,7 @@ public import LeanOA.Mathlib.Topology.Algebra.Module.Spaces.UniformConvergenceCL
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
 public import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
-public import LeanOA.Mathlib.Topology.Bornology.Basic
 public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
-public import LeanOA.Mathlib.Topology.Order.LeftRightNhds
 public import LeanOA.Notation
 public import LeanOA.PositiveContinuousLinearMap
 public import LeanOA.TendstoZero.Defs

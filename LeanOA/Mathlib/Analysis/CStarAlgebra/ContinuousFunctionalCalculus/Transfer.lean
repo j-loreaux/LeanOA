@@ -1,7 +1,7 @@
 module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
-public import LeanOA.Mathlib.Algebra.Star.StarAlgHom
+public import Mathlib.Algebra.Star.StarAlgHom
 public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
 
 @[expose] public section
@@ -108,7 +108,7 @@ lemma AlgEquiv.quasispectrum_eq {F R A B : Type*} [CommSemiring R] [NonUnitalRin
   let e := StarAlgEquivClass.toStarAlgEquiv f
   apply subset_antisymm
   · exact NonUnitalAlgHom.quasispectrum_apply_subset' R e a
-  · simpa using NonUnitalAlgHom.quasispectrum_apply_subset' R e.symm (e a)
+  · simpa using! NonUnitalAlgHom.quasispectrum_apply_subset' R e.symm (e a)
 
 /-- The non-unital star algebra homomorphism underlying
 `NonUnitalContinuousFunctionalCalculus.transfer`.  The proof that this is equal to that one is
