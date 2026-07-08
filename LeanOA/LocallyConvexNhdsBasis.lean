@@ -60,8 +60,8 @@ theorem Convex.closure_subset_image_homothety_interior_of_one_lt'
   rw [homothety_eq_lineMap]
   exact lineMap_mem_openSegment _ _ _ ⟨inv_pos_of_pos (by grind), inv_lt_one_of_one_lt₀ (by grind)⟩
 
-theorem AffineMap.bijective_homothety {R V P : Type*} [AddCommGroup V] [TopologicalSpace V]
-    [AddTorsor V P] [TopologicalSpace P] [Field R] [Module R V] (x : P) (t : R) (ht : t ≠ 0) :
+theorem AffineMap.bijective_homothety {R V P : Type*} [AddCommGroup V]
+    [AddTorsor V P] [Field R] [Module R V] (x : P) (t : R) (ht : t ≠ 0) :
     Function.Bijective (AffineMap.homothety x t) := by
   lift t to Rˣ using IsUnit.mk0 t ht
   exact AffineEquiv.homothetyUnitsMulHom x t |>.bijective
