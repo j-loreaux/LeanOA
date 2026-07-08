@@ -187,18 +187,16 @@ private lemma im_apply_eq_zero_of_tendsto_nhds_opNorm {l : Filter A}
 theorem monotone_iff_tendsto_nhds_opNorm {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
     Monotone f ↔ l.Tendsto (f ·) (𝓝 ‖f‖) := by
   refine ⟨fun hf ↦ ?_, fun hf ↦ monotone_iff_map_nonneg _ |>.mpr fun a ha ↦ ?_⟩
-  · exact (.mk₀ f (monotone_iff_map_nonneg _ |>.mp hf) : _ →P[ℂ] _).tendsto_nhds_opNorm hl
+  · exact ({ __ := f, monotone' := hf } : _ →P[ℂ] _).tendsto_nhds_opNorm hl
   by_cases ha0 : a = 0
   · simp [ha0]
-  suffices 0 ≤ (f a).re by simp [Complex.le_def, this,
-    im_apply_eq_zero_of_tendsto_nhds_opNorm hl hf ha.isSelfAdjoint]
-  set x := ‖a‖⁻¹ • a with hx
-  suffices 0 ≤ (f x).re by simp_all
-  suffices ‖‖f‖ - f x‖ ≤ ‖f‖ by grw [← re_le_norm] at this; simpa
-  refine le_of_tendsto (hx := hl.neBot) (hf.sub_const (f x) |>.norm) ?_
+  suffices 0 ≤ (f (‖a‖⁻¹ • a)).re by simpa [Complex.le_def, ha0,
+    im_apply_eq_zero_of_tendsto_nhds_opNorm hl hf ha.isSelfAdjoint] using this
+  suffices ‖‖f‖ - f (‖a‖⁻¹ • a)‖ ≤ ‖f‖ by grw [← re_le_norm] at this; simpa
+  refine le_of_tendsto (hx := hl.neBot) (hf.sub_const (f _) |>.norm) ?_
   filter_upwards [hl.eventually_nonneg, hl.eventually_norm] with y hy hy2
   grw [← map_sub, f.le_opNorm, CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one hy hy2
-    (by simp [hx, smul_nonneg, ha]) (by simp [norm_smul, hx, ha0]), mul_one]
+    (by simp [smul_nonneg, ha]) (by simp [norm_smul, ha0]), mul_one]
 
 theorem monotone_iff_opNorm_eq_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A]
     [StarOrderedRing A] {f : A →L[ℂ] ℂ} : Monotone f ↔ ‖f‖ = f 1 := by
