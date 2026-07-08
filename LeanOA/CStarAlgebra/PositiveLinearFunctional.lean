@@ -111,12 +111,11 @@ theorem norm_apply_le_sqrt_opNorm_mul (f : A →P[ℂ] ℂ) (x : A) :
     ← f.coe_toContinuousLinearMap, f.toContinuousLinearMap.le_opNorm (star e * e),
     CStarRing.norm_star_mul_self, he2, he2, one_mul, mul_one]
 
-open Topology in
+open Topology Complex in
 theorem tendsto_nhds_opNorm (f : A →P[ℂ] ℂ) {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
     l.Tendsto (f ·) (𝓝 ‖(f : A →L[ℂ] ℂ)‖) := by
-  have : ∀ᶠ x in l, ‖f x‖ = f x := by
-    filter_upwards [hl.eventually_nonneg] with a ha
-    simp [Complex.norm_of_nonneg' (map_nonneg f ha)]
+  suffices l.Tendsto (‖f ·‖) (𝓝 ‖(f : A →L[ℂ] ℂ)‖) from this.ofReal.congr' <| by
+    filter_upwards [hl.eventually_nonneg] using by simp_all [norm_of_nonneg' (f.map_nonneg _)]
   refine Metric.tendsto_nhds.mpr fun ε hε ↦ ?_
   have h : ∀ᶠ x in l, ‖f x‖ ≤ ‖(f : A →L[ℂ] ℂ)‖ + ε / 2 := by
     filter_upwards [hl.eventually_norm] with x hx
@@ -142,12 +141,11 @@ theorem tendsto_nhds_opNorm (f : A →P[ℂ] ℂ) {l : Filter A} (hl : l.IsIncre
       refine (Filter.Tendsto.norm ?_).eventually (lt_mem_nhds ha2)
       exact (ContinuousAt.tendsto (by fun_prop)).comp (hl.tendsto_mul_right a)
     filter_upwards [h3, h4] with x _ _ using by nlinarith [norm_nonneg (f x)]
-  filter_upwards [this, h, h2] with a ha ha2 ha3
-  rw [← ha]; simp [Complex.dist_eq, ← Complex.ofReal_sub]; grind
+  filter_upwards [h, h2] using by grind [Real.dist_eq]
 
-theorem opNorm_eq_norm_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-    (f : A →P[ℂ] ℂ) : ‖(f : A →L[ℂ] ℂ)‖ = ‖f 1‖ := by
-  simp [← tendsto_nhds_unique (f.tendsto_nhds_opNorm (.pure_one A)) (tendsto_pure_nhds _ _)]
+theorem ofReal_opNorm_eq_map_one {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+    (f : A →P[ℂ] ℂ) : ‖(f : A →L[ℂ] ℂ)‖ = f 1 :=
+  tendsto_nhds_unique (f.tendsto_nhds_opNorm (.pure_one A)) (tendsto_pure_nhds _ _)
 
 end PositiveContinuousLinearMap
 
