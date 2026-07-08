@@ -104,7 +104,6 @@ lemma MemStandard.sub {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard
   rw [sub_eq_add_neg]
   exact hx.add hy.neg
 
--- set_option maxHeartbeats 400000 in
 lemma MemStandard.summable_inner {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard A y) :
     Summable fun i ↦ ⟪x i, y i⟫_A := by
   conv in ⟪x _, y _⟫_A => rw [polarization']
