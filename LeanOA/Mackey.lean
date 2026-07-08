@@ -246,7 +246,7 @@ instance [IsTopologicalAddGroup F] [Module ℝ F] [IsScalarTower ℝ 𝕜 F] [T1
       simp only [LinearMap.mem_ker, LinearMap.ext_iff, LinearMap.flip_apply,
         LinearEquiv.arrowCongr_apply, LinearEquiv.symm_symm, LinearEquiv.refl_apply,
         LinearMap.zero_apply, Submodule.mem_bot] at hx ⊢
-      apply ((flip_separatingLeft.mp <| IsWeak.separatingLeft_of_t1Space B.flip) x)
+      apply (flip_separatingLeft.mp <| IsWeak.separatingLeft_of_t1Space B.flip) x
       exact hx
     · intro hx
       simp at hx
