@@ -3,7 +3,6 @@ module
 public import LeanOA.Ultraweak.Bornology
 public import LeanOA.Ultraweak.SeparatingDual
 public import LeanOA.WeakDual.UniformSpace
-public import LeanOA.Mathlib.Topology.Bornology.Basic
 
 @[expose] public section
 
@@ -254,7 +253,7 @@ lemma continuousOn_of_forall_posCLM (hfl : IsBounded (f '' s))
     (hf : ∀ φ : σ(M, P) →P[ℂ] ℂ, ContinuousOn (φ ∘ f) s) :
     ContinuousOn f s :=
   fun x hx ↦ continuousWithinAt_of_forall_posCLM
-    (hfl.disjoint_cobounded_of_mem <| image_mem_map self_mem_nhdsWithin) (hf · x hx)
+    (hfl.disjoint_cobounded <| image_mem_map self_mem_nhdsWithin) (hf · x hx)
 
 /-- If `f : α → σ(M, P)` is bounded function, and for every positive continuous linear
 functional `φ : σ(M, P) →P[ℂ] ℂ`, `φ ∘ f` is continuous, then `f` is continuous.
