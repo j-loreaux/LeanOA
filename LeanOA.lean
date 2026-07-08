@@ -18,7 +18,6 @@ public import LeanOA.Lp.lpSpace
 public import LeanOA.Mackey
 public import LeanOA.Masa
 public import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
-public import LeanOA.Mathlib.Algebra.Star.StarAlgHom
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order

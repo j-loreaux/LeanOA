@@ -1,7 +1,7 @@
 module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
-public import LeanOA.Mathlib.Algebra.Star.StarAlgHom
+public import Mathlib.Algebra.Star.StarAlgHom
 public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
 
 @[expose] public section

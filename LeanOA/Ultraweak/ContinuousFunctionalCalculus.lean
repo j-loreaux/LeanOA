@@ -3,6 +3,7 @@ module
 public import LeanOA.Ultraweak.Basic
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Transfer
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+public import Mathlib.Algebra.Star.Subalgebra
 
 @[expose] public section
 
@@ -22,7 +23,7 @@ instance : NonUnitalContinuousFunctionalCalculus ℂ σ(M, P) IsStarNormal :=
   .transfer (starAlgEquiv M P).symm continuous_toUltraweak (fun _ ↦ Iff.rfl)
 
 instance : NonUnitalContinuousFunctionalCalculus ℝ σ(M, P) IsSelfAdjoint :=
-  .transfer ((starAlgEquiv M P).symm.restrictScalars' ℝ) continuous_toUltraweak (fun _ ↦ Iff.rfl)
+  .transfer ((starAlgEquiv M P).symm.restrictScalars ℝ) continuous_toUltraweak (fun _ ↦ Iff.rfl)
 
 @[simp]
 lemma toUltraweak_cfcₙ_complex (f : ℂ → ℂ) (m : M) :
@@ -38,7 +39,7 @@ lemma ofUltraweak_cfcₙ_complex (f : ℂ → ℂ) (m : σ(M, P)) :
 @[simp]
 lemma toUltraweak_cfcₙ_real (f : ℝ → ℝ) (m : M) :
     toUltraweak ℂ P (cfcₙ f m) = cfcₙ f (toUltraweak ℂ P m) :=
-  Eq.symm <| cfcₙ_eq_cfcₙ_transfer ((starAlgEquiv M P).symm.restrictScalars' ℝ)
+  Eq.symm <| cfcₙ_eq_cfcₙ_transfer ((starAlgEquiv M P).symm.restrictScalars ℝ)
     continuous_toUltraweak (fun _ ↦ Iff.rfl) ..
 
 @[simp]
@@ -49,7 +50,7 @@ lemma ofUltraweak_cfcₙ_real (f : ℝ → ℝ) (m : σ(M, P)) :
 variable [PartialOrder M] [StarOrderedRing M]
 
 instance : NonUnitalContinuousFunctionalCalculus ℝ≥0 σ(M, P) (0 ≤ ·) :=
-  .transfer ((starAlgEquiv M P).symm.restrictScalars' ℝ≥0) continuous_toUltraweak (fun _ ↦ Iff.rfl)
+  .transfer ((starAlgEquiv M P).symm.restrictScalars ℝ≥0) continuous_toUltraweak (fun _ ↦ Iff.rfl)
 
 /- The lemmas `{to,of}Ultraweak_cfcₙ_nnreal` require a `ContinuousMapZero.UniqueHom ℝ≥0 σ(M, P)`
 instace, which requires that `σ(M, P)` is a topological algebra. So, we cannot establish those
@@ -65,7 +66,7 @@ instance : ContinuousFunctionalCalculus ℂ σ(M, P) IsStarNormal :=
   .transfer (starAlgEquiv M P).symm continuous_toUltraweak (fun _ ↦ Iff.rfl)
 
 instance : ContinuousFunctionalCalculus ℝ σ(M, P) IsSelfAdjoint :=
-  .transfer ((starAlgEquiv M P).symm.restrictScalars' ℝ) continuous_toUltraweak (fun _ ↦ Iff.rfl)
+  .transfer ((starAlgEquiv M P).symm.restrictScalars ℝ) continuous_toUltraweak (fun _ ↦ Iff.rfl)
 
 @[simp]
 lemma toUltraweak_cfc_complex (f : ℂ → ℂ) (m : M) :
@@ -81,7 +82,7 @@ lemma ofUltraweak_cfc_complex (f : ℂ → ℂ) (m : σ(M, P)) :
 @[simp]
 lemma toUltraweak_cfc_real (f : ℝ → ℝ) (m : M) :
     toUltraweak ℂ P (cfc f m) = cfc f (toUltraweak ℂ P m) :=
-  Eq.symm <| cfc_eq_cfc_transfer ((starAlgEquiv M P).symm.restrictScalars' ℝ)
+  Eq.symm <| cfc_eq_cfc_transfer ((starAlgEquiv M P).symm.restrictScalars ℝ)
     continuous_toUltraweak (fun _ ↦ Iff.rfl) ..
 
 @[simp]
@@ -92,7 +93,7 @@ lemma ofUltraweak_cfc_real (f : ℝ → ℝ) (m : σ(M, P)) :
 variable [PartialOrder M] [StarOrderedRing M]
 
 instance : ContinuousFunctionalCalculus ℝ≥0 σ(M, P) (0 ≤ ·) :=
-  .transfer ((starAlgEquiv M P).symm.restrictScalars' ℝ≥0) continuous_toUltraweak (fun _ ↦ Iff.rfl)
+  .transfer ((starAlgEquiv M P).symm.restrictScalars ℝ≥0) continuous_toUltraweak (fun _ ↦ Iff.rfl)
 
 /- The lemmas `{to,of}Ultraweak_cfc_nnreal` require a `ContinuousMap.UniqueHom ℝ≥0 σ(M, P)`
 instace, which requires that `σ(M, P)` is a topological algebra. So, we cannot establish those

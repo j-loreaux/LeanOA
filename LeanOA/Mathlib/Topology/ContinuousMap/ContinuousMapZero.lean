@@ -1,7 +1,7 @@
 module
 
 public import Mathlib.Topology.ContinuousMap.ContinuousMapZero
-public import LeanOA.Mathlib.Algebra.Star.StarAlgHom
+public import Mathlib.Algebra.Star.StarAlgHom
 
 @[expose] public section
 
@@ -29,7 +29,7 @@ def starAlgEquiv_precomp {X Y : Type*} (R : Type*) [Zero X] [Zero Y]
     [CommSemiring R] [StarRing R] [IsTopologicalSemiring R] [ContinuousStar R]
     (f : X ≃ₜ Y) (hf : f 0 = 0) :
     C(Y, R)₀ ≃⋆ₐ[R] C(X, R)₀ :=
-  StarAlgEquiv.ofHomInv'
+  .ofNonUnitalStarAlgHom
     (nonUnitalStarAlgHom_precomp R ⟨f, hf⟩)
     (nonUnitalStarAlgHom_precomp R ⟨f.symm, by simpa using congr(f.symm $hf.symm)⟩)
     (by ext; simp) (by ext; simp)
