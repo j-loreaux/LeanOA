@@ -8,6 +8,7 @@ public import LeanOA.CStarAlgebra.FiniteSpectrum
 public import LeanOA.CStarAlgebra.PositiveLinearFunctional
 public import LeanOA.CStarModule.Standard
 public import LeanOA.ComplexOrder
+public import LeanOA.Complexification
 public import LeanOA.ExtremallyDisconnected
 public import LeanOA.IsUnital
 public import LeanOA.IsWeak
