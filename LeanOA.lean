@@ -5,10 +5,10 @@ public import LeanOA.BlueprintImports
 public import LeanOA.CFC
 public import LeanOA.CStarAlgebra.Extreme
 public import LeanOA.CStarAlgebra.FiniteSpectrum
+public import LeanOA.CStarAlgebra.FromUnitization
 public import LeanOA.CStarAlgebra.PositiveLinearFunctional
 public import LeanOA.CStarModule.Standard
 public import LeanOA.ComplexOrder
-public import LeanOA.Complexification
 public import LeanOA.ExtremallyDisconnected
 public import LeanOA.IsUnital
 public import LeanOA.IsWeak
@@ -27,6 +27,7 @@ public import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import LeanOA.Mathlib.Analysis.Complex.Basic
+public import LeanOA.Mathlib.Analysis.InnerProductSpace.Complexification
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
 public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatibleDual
