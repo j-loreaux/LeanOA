@@ -13,7 +13,8 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
 
 In this file we define the complexification of an inner product space. So we can essentially
 extend a `𝕜`-space `E` to a `ℂ`-space `E × E`, and extend operators to its complexification
-in order to use `ℂ`-results.
+in order to use `ℂ`-results. We (informally) think of `(x, y) : Complexification 𝕜 E` as
+`x + I • y`.
 
 In particular, `ℂ`-scalar multiplication is given by
 `α • (x, y) = (ℜ α • x - ℑ α • y, ℜ α • y + ℑ α • x)`
@@ -21,7 +22,9 @@ and the `ℂ`-inner product is given by
 `⟪(x, y), (z, w)⟫_ℂ = ℜ ⟪x, z⟫_𝕜 + ℜ ⟪y, w⟫_𝕜 + (ℜ (⟪x, w⟫_𝕜 - ⟪y, z⟫_𝕜)) * I`.
 
 * `ContinuousLinearMap.toComplexification`: The complexification of an operator `T`, which is
-  defined as `x ↦ (T x.re, T x.im)`. -/
+  defined as `x ↦ (T x.re, T x.im)`.
+
+-/
 
 public section
 
@@ -69,6 +72,25 @@ variable [NormedAddCommGroup E]
 @[simp] lemma re_neg (v : Complexification 𝕜 E) : (-v).re = -v.re := rfl
 @[simp] lemma im_neg (v : Complexification 𝕜 E) : (-v).im = -v.im := rfl
 
+-- or the other way around??
+@[simp] lemma mk_neg_neg (x y : E) : mk 𝕜 (-x) (-y) = -mk 𝕜 x y := by ext <;> simp
+
+@[simp] lemma mk_zero_left_add_mk_zero_left (x y : E) : mk 𝕜 0 x + mk 𝕜 0 y = mk 𝕜 0 (x + y) := by
+  ext <;> simp
+@[simp] lemma mk_zero_right_add_mk_zero_right (x y : E) : mk 𝕜 x 0 + mk 𝕜 y 0 = mk 𝕜 (x + y) 0 := by
+  ext <;> simp
+@[simp] lemma mk_zero_left_sub_mk_zero_left (x y : E) : mk 𝕜 0 x - mk 𝕜 0 y = mk 𝕜 0 (x - y) := by
+  ext <;> simp
+@[simp] lemma mk_zero_right_sub_mk_zero_right (x y : E) : mk 𝕜 x 0 - mk 𝕜 y 0 = mk 𝕜 (x - y) 0 := by
+  ext <;> simp
+
+@[simp] lemma mk_zero_right_add_mk_zero_left (x y : E) : mk 𝕜 x 0 + mk 𝕜 0 y = mk 𝕜 x y := by
+  ext <;> simp
+
+-- bad lemma?
+@[simp] lemma mk_zero_left_add_mk_zero_right (x y : E) : mk 𝕜 0 x + mk 𝕜 y 0 = mk 𝕜 y x := by
+  simp [add_comm]
+
 lemma norm_sq_eq (v : Complexification 𝕜 E) : ‖v‖ ^ 2 = ‖v.re‖ ^ 2 + ‖v.im‖ ^ 2 :=
   WithLp.prod_norm_sq_eq_of_L2 v
 lemma norm_eq (v : Complexification 𝕜 E) : ‖v‖ = √(‖v.re‖ ^ 2 + ‖v.im‖ ^ 2) :=
@@ -76,6 +98,37 @@ lemma norm_eq (v : Complexification 𝕜 E) : ‖v‖ = √(‖v.re‖ ^ 2 + ‖
 
 @[simp] lemma norm_mk_zero_right (x : E) : ‖mk 𝕜 x 0‖ = ‖x‖ := by simp [norm_eq]
 @[simp] lemma norm_mk_zero_left (x : E) : ‖mk 𝕜 0 x‖ = ‖x‖ := by simp [norm_eq]
+
+lemma norm_re_le (x : Complexification 𝕜 E) : ‖x.re‖ ≤ ‖x‖ := by
+  rw [norm_eq, Real.le_sqrt (norm_nonneg _) (by positivity)]
+  simp
+
+lemma norm_im_le (x : Complexification 𝕜 E) : ‖x.im‖ ≤ ‖x‖ := by
+  rw [norm_eq, Real.le_sqrt (norm_nonneg _) (by positivity)]
+  simp
+
+lemma lipschitzWith_re : LipschitzWith 1 (Complexification.re (𝕜 := 𝕜) (E := E)) :=
+  .of_dist_le_mul fun v w ↦ by simpa [dist_eq_norm] using norm_re_le (v - w)
+lemma lipschitzWith_im : LipschitzWith 1 (Complexification.im (𝕜 := 𝕜) (E := E)) :=
+  .of_dist_le_mul fun v w ↦ by simpa [dist_eq_norm] using norm_im_le (v - w)
+
+@[fun_prop] lemma continuous_re : Continuous (Complexification.re (𝕜 := 𝕜) (E := E)) :=
+  lipschitzWith_re.continuous
+@[fun_prop] lemma continuous_im : Continuous (Complexification.im (𝕜 := 𝕜) (E := E)) :=
+  lipschitzWith_im.continuous
+
+lemma isometry_mk_zero_right : Isometry (mk 𝕜 · (0 : E)) :=
+  .of_dist_eq fun x y ↦ by simp [dist_eq_norm]
+lemma isometry_mk_zero_left : Isometry (mk 𝕜 (0 : E) ·) :=
+  .of_dist_eq fun x y ↦ by simp [dist_eq_norm]
+
+@[fun_prop] lemma continuous_mk_zero_right : Continuous (mk 𝕜 · (0 : E)) :=
+  isometry_mk_zero_right.continuous
+@[fun_prop] lemma continuous_mk_zero_left : Continuous (mk 𝕜 (0 : E) ·) :=
+  isometry_mk_zero_left.continuous
+@[fun_prop] lemma continuous_mk : Continuous fun p : E × E ↦ mk 𝕜 p.1 p.2 := by
+  conv in mk 𝕜 _ _ => rw [← mk_zero_left_add_mk_zero_right]
+  fun_prop
 
 variable [RCLike 𝕜] [InnerProductSpace 𝕜 E]
 
@@ -109,8 +162,7 @@ lemma norm_smul_eq (z : ℂ) (v : Complexification 𝕜 E) : ‖z • v‖ = ‖
     inner_smul_left, inner_smul_right, inner_re_symm v.im v.re]
   grind
 
-instance : NormedSpace ℂ (Complexification 𝕜 E) where
-  norm_smul_le z v := (norm_smul_eq z v).le
+instance : NormedSpace ℂ (Complexification 𝕜 E) where norm_smul_le z v := (norm_smul_eq z v).le
 
 noncomputable instance : Inner ℂ (Complexification 𝕜 E) where
   inner v w := ⟨RCLike.re (⟪v.re, w.re⟫_𝕜 + ⟪v.im, w.im⟫_𝕜),
@@ -139,20 +191,11 @@ variable {F G : Type*} [RCLike 𝕜]
 open Complexification
 
 /-- Complexification of a continuous linear map between inner product spaces. -/
-@[expose] noncomputable def toComplexification (T : E →L[𝕜] F) :
-    Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F :=
-  LinearMap.mkContinuous
-    { toFun v := .mk 𝕜 (T v.re) (T v.im)
-      map_add' _ _ := by ext <;> simp
-      map_smul' _ _ := by ext <;> simp }
-    ‖T‖ fun v ↦ by
-      refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
-      simp only [mul_pow, norm_sq_eq, mul_add, LinearMap.coe_mk, AddHom.coe_mk, re_mk, im_mk]
-      grw [T.le_opNorm, T.le_opNorm]
-      simp [mul_pow]
-
-@[simp] lemma toComplexification_apply (T : E →L[𝕜] F) (v) :
-  T.toComplexification v = .mk 𝕜 (T v.re) (T v.im) := rfl
+@[expose, simps] noncomputable def toComplexification (T : E →L[𝕜] F) :
+    Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F where
+  toFun v := .mk 𝕜 (T v.re) (T v.im)
+  map_add' _ _ := by ext <;> simp
+  map_smul' _ _ := by ext <;> simp
 
 @[simp] lemma toComplexification_zero : (0 : E →L[𝕜] F).toComplexification = 0 := by ext <;> simp
 
@@ -179,9 +222,13 @@ open Complexification
     (S * T).toComplexification = S.toComplexification * T.toComplexification := by simp [mul_def]
 
 @[simp] lemma norm_toComplexification (T : E →L[𝕜] F) : ‖T.toComplexification‖ = ‖T‖ := by
-  refine le_antisymm (LinearMap.mkContinuous_norm_le _ (norm_nonneg T) _) ?_
-  refine opNorm_le_bound _ (norm_nonneg _) fun x ↦ ?_
-  simpa using T.toComplexification.le_opNorm (.mk 𝕜 x 0)
+  refine le_antisymm ((opNorm_le_iff (norm_nonneg _)).mpr fun _ ↦ ?_) ?_
+  · refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
+    simp only [mul_pow, norm_sq_eq, mul_add, toComplexification_apply, re_mk, im_mk]
+    grw [T.le_opNorm, T.le_opNorm]
+    simp [mul_pow]
+  · refine opNorm_le_bound _ (norm_nonneg _) fun x ↦ ?_
+    simpa using T.toComplexification.le_opNorm (.mk 𝕜 x 0)
 
 @[simp] lemma nnnorm_toComplexification (T : E →L[𝕜] F) : ‖T.toComplexification‖₊ = ‖T‖₊ := by
   ext; simp
@@ -225,7 +272,7 @@ alias ⟨_, _root_.IsIdempotentElem.toComplexification⟩ := isIdempotentElem_to
   simp [Function.Bijective]
 
 lemma isometry_toComplexification : Isometry (toComplexification (𝕜 := 𝕜) (E := E) (F := F)) :=
-  .of_dist_eq fun S T ↦ by simp [dist_eq_norm, ← toComplexification_sub]
+  .of_dist_eq <| by simp [dist_eq_norm, ← toComplexification_sub]
 
 @[fun_prop] lemma continuous_toComplexification :
     Continuous (toComplexification (𝕜 := 𝕜) (E := E) (F := F)) :=
@@ -306,6 +353,6 @@ lemma ContinuousLinearMap.spectralRadius_eq_nnnorm' {T : E →L[𝕜] E} (hT : I
   simp only [spectralRadius, spectrum_toComplexification, Set.mem_preimage, iSup₂_le_iff]
   exact fun r hr ↦ le_iSup₂_of_le (algebraMap ℝ 𝕜 r) hr (by simp)
 
-lemma ContinuouisLinearMap.spectralRadius_toComplexification {T : E →L[𝕜] E}
+lemma ContinuousLinearMap.spectralRadius_toComplexification {T : E →L[𝕜] E}
     (hT : IsSelfAdjoint T) : spectralRadius ℂ T.toComplexification = spectralRadius 𝕜 T := by
   simp [hT.toComplexification.spectralRadius_eq_nnnorm, spectralRadius_eq_nnnorm' hT]
