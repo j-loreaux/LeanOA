@@ -290,14 +290,14 @@ open ContinuousLinearMap Complexification
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
 
-lemma IsIdempotentElem.isSelfAdjoint_iff_isStarNormal' {T : E →L[𝕜] E}
+-- golf of `ContinuousLinearMap.IsIdempotentElem.isSelfAdjoint_iff_isStarNormal`:
+lemma ContinuousLinearMap.IsIdempotentElem.isSelfAdjoint_iff_isStarNormal' {T : E →L[𝕜] E}
     (hT : IsIdempotentElem T) : IsSelfAdjoint T ↔ IsStarNormal T := by
   rw [← isSelfAdjoint_toComplexification_iff, ← isStarNormal_toComplexification_iff,
     hT.toComplexification.isSelfAdjoint_iff_isStarNormal]
 
-open scoped NNReal ENNReal
-
-lemma spectralRadius_eq_nnnorm {T : E →L[𝕜] E} (hT : IsSelfAdjoint T) :
+-- golf of `ContinuousLinearMap.spectralRadius_eq_nnnorm`:
+lemma ContinuousLinearMap.spectralRadius_eq_nnnorm' {T : E →L[𝕜] E} (hT : IsSelfAdjoint T) :
     spectralRadius 𝕜 T = ‖T‖₊ := by
   nontriviality E
   refine le_antisymm (spectrum.spectralRadius_le_nnnorm T) ?_
@@ -305,3 +305,7 @@ lemma spectralRadius_eq_nnnorm {T : E →L[𝕜] E} (hT : IsSelfAdjoint T) :
     ← hT.toComplexification.spectrumRestricts.spectralRadius_eq]
   simp only [spectralRadius, spectrum_toComplexification, Set.mem_preimage, iSup₂_le_iff]
   exact fun r hr ↦ le_iSup₂_of_le (algebraMap ℝ 𝕜 r) hr (by simp)
+
+lemma ContinuouisLinearMap.spectralRadius_toComplexification {T : E →L[𝕜] E}
+    (hT : IsSelfAdjoint T) : spectralRadius ℂ T.toComplexification = spectralRadius 𝕜 T := by
+  simp [hT.toComplexification.spectralRadius_eq_nnnorm, spectralRadius_eq_nnnorm' hT]
