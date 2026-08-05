@@ -212,6 +212,7 @@ example : Complexification ℝ ℝ ≃ₗᵢ[ℂ] ℂ where
   left_inv _ := by simp
   right_inv _ := by simp
 
+/-- Complexification of a submodule, i.e., `(a, b) ∈ K.complexification ↔ a ∈ K ∧ b ∈ K`. -/
 @[expose]
 def _root_.Submodule.complexification (K : Submodule 𝕜 E) : Submodule ℂ (Complexification 𝕜 E) where
   carrier := {v | v.re ∈ K } ∩ { v | v.im ∈ K}
