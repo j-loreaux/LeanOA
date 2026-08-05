@@ -163,8 +163,12 @@ lemma norm_smul_eq (z : ℂ) (v : Complexification 𝕜 E) : ‖z • v‖ = ‖
 instance : NormedSpace ℂ (Complexification 𝕜 E) where norm_smul_le z v := (norm_smul_eq z v).le
 
 noncomputable instance : Inner ℂ (Complexification 𝕜 E) where
-  inner v w := ⟨RCLike.re (⟪v.re, w.re⟫_𝕜 + ⟪v.im, w.im⟫_𝕜),
-    RCLike.re (⟪v.re, w.im⟫_𝕜 - ⟪v.im, w.re⟫_𝕜)⟩
+  inner v w := .mk (RCLike.re (⟪v.re, w.re⟫_𝕜 + ⟪v.im, w.im⟫_𝕜))
+    (RCLike.re (⟪v.re, w.im⟫_𝕜 - ⟪v.im, w.re⟫_𝕜))
+
+lemma inner_def (v w : Complexification 𝕜 E) :
+    inner ℂ v w = RCLike.re (⟪v.re, w.re⟫_𝕜 + ⟪v.im, w.im⟫_𝕜) +
+      RCLike.re (⟪v.re, w.im⟫_𝕜 - ⟪v.im, w.re⟫_𝕜) * .I := by simp [inner, Complex.mk_eq_add_mul_I]
 
 @[simp] lemma re_inner (v w : Complexification 𝕜 E) :
     (⟪v, w⟫_ℂ).re = RCLike.re (⟪v.re, w.re⟫_𝕜 + ⟪v.im, w.im⟫_𝕜) := rfl
@@ -194,6 +198,12 @@ variable (𝕜 E) in
 
 @[simp] lemma inner_conj_conj (x y) : inner ℂ (conj 𝕜 E x) (conj 𝕜 E y) = inner ℂ y x := by
   simp [Complex.ext_iff, inner_re_symm, sub_eq_add_neg, add_comm, conj_apply]
+
+lemma inner_conj_left (x y) : inner ℂ (conj 𝕜 E x) y = inner ℂ (conj 𝕜 E y) x := by
+  simp [Complex.ext_iff, inner_re_symm, sub_eq_add_neg, add_comm, conj_apply]
+
+lemma inner_conj_right (x y) : inner ℂ x (conj 𝕜 E y) = inner ℂ y (conj 𝕜 E x) := by
+  rw [← inner_conj_symm, inner_conj_left]; simp
 
 @[simp] lemma conj_eq_self_iff (x) : conj 𝕜 E x = x ↔ x.im = 0 := by
   simp only [conj_apply, Complexification.ext_iff, re_mk, im_mk, true_and]
@@ -235,22 +245,14 @@ variable {F G : Type*} [RCLike 𝕜]
 open Complexification
 
 /-- Complexification of a continuous linear map between inner product spaces. -/
-@[expose, simps] noncomputable def toComplexification (T : E →L[𝕜] F) :
-    Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F where
-  toFun v := .mk 𝕜 (T v.re) (T v.im)
+@[expose, simps apply_apply] noncomputable def toComplexification :
+    (E →L[𝕜] F) →+ Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F where
+  toFun T :=
+    { toFun v := .mk 𝕜 (T v.re) (T v.im)
+      map_add' _ _ := by ext <;> simp
+      map_smul' _ _ := by ext <;> simp }
   map_add' _ _ := by ext <;> simp
-  map_smul' _ _ := by ext <;> simp
-
-@[simp] lemma toComplexification_zero : (0 : E →L[𝕜] F).toComplexification = 0 := by ext <;> simp
-
-@[simp] lemma toComplexification_add (S T : E →L[𝕜] F) :
-    (S + T).toComplexification = S.toComplexification + T.toComplexification := by ext <;> simp
-
-@[simp] lemma toComplexification_sub (S T : E →L[𝕜] F) :
-    (S - T).toComplexification = S.toComplexification - T.toComplexification := by ext <;> simp
-
-@[simp] lemma toComplexification_neg (T : E →L[𝕜] F) :
-    (-T).toComplexification = -T.toComplexification := by ext <;> simp
+  map_zero' := by ext <;> simp
 
 @[simp] lemma toComplexification_id :
     (ContinuousLinearMap.id 𝕜 E).toComplexification = .id ℂ (Complexification 𝕜 E) := by
@@ -265,18 +267,18 @@ open Complexification
 @[simp] lemma toComplexification_mul (S T : E →L[𝕜] E) :
     (S * T).toComplexification = S.toComplexification * T.toComplexification := by simp [mul_def]
 
-@[simp] lemma norm_toComplexification (T : E →L[𝕜] F) : ‖T.toComplexification‖ = ‖T‖ := by
+@[simp] lemma opNorm_toComplexification (T : E →L[𝕜] F) : ‖T.toComplexification‖ = ‖T‖ := by
   refine le_antisymm ((opNorm_le_iff (norm_nonneg _)).mpr fun _ ↦ ?_) ?_
   · refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
-    simp only [mul_pow, norm_sq_eq, mul_add, toComplexification_apply, re_mk, im_mk]
+    simp only [mul_pow, norm_sq_eq, mul_add, toComplexification_apply_apply, re_mk, im_mk]
     grw [T.le_opNorm, T.le_opNorm]
     simp [mul_pow]
   · refine opNorm_le_bound _ (norm_nonneg _) fun x ↦ ?_
     simpa using T.toComplexification.le_opNorm (.mk 𝕜 x 0)
 
-@[simp] lemma nnnorm_toComplexification (T : E →L[𝕜] F) : ‖T.toComplexification‖₊ = ‖T‖₊ := by
+@[simp] lemma opNNNorm_toComplexification (T : E →L[𝕜] F) : ‖T.toComplexification‖₊ = ‖T‖₊ := by
   ext; simp
-@[simp] lemma enorm_toComplexification (T : E →L[𝕜] F) : ‖T.toComplexification‖ₑ = ‖T‖ₑ := by
+@[simp] lemma opENorm_toComplexification (T : E →L[𝕜] F) : ‖T.toComplexification‖ₑ = ‖T‖ₑ := by
   simp [enorm_eq_nnnorm]
 
 lemma toComplexification_injective :
@@ -316,19 +318,17 @@ alias ⟨_, _root_.IsIdempotentElem.toComplexification⟩ := isIdempotentElem_to
   simp [Function.Bijective]
 
 lemma isometry_toComplexification : Isometry (toComplexification (𝕜 := 𝕜) (E := E) (F := F)) :=
-  .of_dist_eq <| by simp [dist_eq_norm, ← toComplexification_sub]
+  .of_dist_eq <| by simp [dist_eq_norm, ← map_sub]
+
+@[simp] lemma isometry_toComplexification_iff {T : E →L[𝕜] F} :
+    Isometry T.toComplexification ↔ Isometry T := by
+  simp only [AddMonoidHomClass.isometry_iff_norm]
+  refine ⟨fun h x ↦ by simpa using h (.mk 𝕜 x 0), fun h v ↦ ?_⟩
+  simp [← sq_eq_sq₀, norm_sq_eq, h]
 
 @[fun_prop] lemma continuous_toComplexification :
     Continuous (toComplexification (𝕜 := 𝕜) (E := E) (F := F)) :=
   isometry_toComplexification.continuous
-
-lemma lipschitzWith_toComplexification :
-    LipschitzWith 1 (toComplexification (𝕜 := 𝕜) (E := E) (F := F)) :=
-  isometry_toComplexification.lipschitz
-
-lemma isClosedEmbedding_toComplexification [CompleteSpace F] :
-    Topology.IsClosedEmbedding (toComplexification (𝕜 := 𝕜) (E := E) (F := F)) :=
-  isometry_toComplexification.isClosedEmbedding
 
 @[simp] lemma ker_toComplexification (T : E →L[𝕜] F) :
     T.toComplexification.ker = T.ker.complexification := by
@@ -337,7 +337,7 @@ lemma isClosedEmbedding_toComplexification [CompleteSpace F] :
 @[simp] lemma range_toComplexification (T : E →L[𝕜] F) :
    T.toComplexification.range = T.range.complexification := by
   ext x
-  simp only [LinearMap.mem_range, coe_coe, toComplexification_apply, Complexification.ext_iff,
+  simp only [LinearMap.mem_range, coe_coe, toComplexification_apply_apply, Complexification.ext_iff,
     re_mk, im_mk, Submodule.complexification, Submodule.mem_mk, AddSubmonoid.mem_mk,
     AddSubsemigroup.mem_mk, Set.mem_inter_iff, Set.mem_setOf_eq]
   refine ⟨fun ⟨y, hy⟩ ↦ ?_, ?_⟩
@@ -378,7 +378,7 @@ instance (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] :
   refine (K.complexification.eq_starProjection_of_mem_of_inner_eq_zero (by simp) ?_).symm
   intro w hw
   have : v - K.starProjection.toComplexification v ∈ K.complexificationᗮ := by simp
-  simp [-toComplexification_apply, inner_eq_zero_symm (y := w), this _ hw]
+  simp [-toComplexification_apply_apply, inner_eq_zero_symm (y := w), this _ hw]
 
 variable [CompleteSpace E] [CompleteSpace F]
 
@@ -419,7 +419,7 @@ alias ⟨_, _root_.IsStarNormal.toComplexification⟩ := isStarNormal_toComplexi
 protected lemma IsSelfAdjoint.norm_add_eq_max {S T : E →L[𝕜] E}
     (hS : IsSelfAdjoint S) (hT : IsSelfAdjoint T) (h : S * T = 0) :
     ‖S + T‖ = max ‖S‖ ‖T‖ := by
-  rw [← norm_toComplexification (S + T), toComplexification_add,
+  rw [← opNorm_toComplexification (S + T), map_add,
     hS.toComplexification.norm_add_eq_max hT.toComplexification
       (by simp [← toComplexification_mul, h])]
   simp
@@ -438,15 +438,15 @@ lemma ContinuousLinearMap.IsIdempotentElem.isSelfAdjoint_iff_isStarNormal' {T : 
     hT.toComplexification.isSelfAdjoint_iff_isStarNormal]
 
 -- golf of `ContinuousLinearMap.spectralRadius_eq_nnnorm`:
-lemma ContinuousLinearMap.spectralRadius_eq_nnnorm' {T : E →L[𝕜] E} (hT : IsSelfAdjoint T) :
+lemma ContinuousLinearMap.spectralRadius_eq_opNNNorm {T : E →L[𝕜] E} (hT : IsSelfAdjoint T) :
     spectralRadius 𝕜 T = ‖T‖₊ := by
   nontriviality E
   refine le_antisymm (spectrum.spectralRadius_le_nnnorm T) ?_
-  rw [← nnnorm_toComplexification, ← hT.toComplexification.spectralRadius_eq_nnnorm,
+  rw [← opNNNorm_toComplexification, ← hT.toComplexification.spectralRadius_eq_nnnorm,
     ← hT.toComplexification.spectrumRestricts.spectralRadius_eq]
   simp only [spectralRadius, spectrum_toComplexification, Set.mem_preimage, iSup₂_le_iff]
   exact fun r hr ↦ le_iSup₂_of_le (algebraMap ℝ 𝕜 r) hr (by simp)
 
 lemma ContinuousLinearMap.spectralRadius_toComplexification {T : E →L[𝕜] E}
     (hT : IsSelfAdjoint T) : spectralRadius ℂ T.toComplexification = spectralRadius 𝕜 T := by
-  simp [hT.toComplexification.spectralRadius_eq_nnnorm, spectralRadius_eq_nnnorm' hT]
+  simp [hT.toComplexification.spectralRadius_eq_nnnorm, spectralRadius_eq_opNNNorm hT]
