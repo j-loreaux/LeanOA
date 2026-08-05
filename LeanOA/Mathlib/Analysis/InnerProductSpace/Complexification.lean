@@ -180,7 +180,7 @@ noncomputable instance : InnerProductSpace ℂ (Complexification 𝕜 E) where
 
 variable (𝕜 E) in
 /-- conjugation -/
-@[expose, simps apply] def conj : Complexification 𝕜 E ≃ₗᵢ⋆[ℂ] Complexification 𝕜 E where
+@[expose, simps -isSimp apply] def conj : Complexification 𝕜 E ≃ₗᵢ⋆[ℂ] Complexification 𝕜 E where
   toFun v := .mk 𝕜 v.re (-v.im)
   invFun v := .mk 𝕜 v.re (-v.im)
   map_add' := by simp [add_comm]
@@ -190,9 +190,10 @@ variable (𝕜 E) in
   right_inv _ := by simp
 
 @[simp] lemma symm_conj : (conj 𝕜 E).symm = conj 𝕜 E := rfl
+@[simp] lemma conj_conj (x) : conj 𝕜 E (conj 𝕜 E x) = x := by simp [conj_apply]
 
 @[simp] lemma inner_conj_conj (x y) : inner ℂ (conj 𝕜 E x) (conj 𝕜 E y) = inner ℂ y x := by
-  simp [Complex.ext_iff, inner_re_symm, sub_eq_add_neg, add_comm]
+  simp [Complex.ext_iff, inner_re_symm, sub_eq_add_neg, add_comm, conj_apply]
 
 @[simp] lemma conj_eq_self_iff (x) : conj 𝕜 E x = x ↔ x.im = 0 := by
   simp only [conj_apply, Complexification.ext_iff, re_mk, im_mk, true_and]
