@@ -5,7 +5,6 @@ public import LeanOA.BlueprintImports
 public import LeanOA.CFC
 public import LeanOA.CStarAlgebra.Extreme
 public import LeanOA.CStarAlgebra.FiniteSpectrum
-public import LeanOA.CStarAlgebra.FromUnitization
 public import LeanOA.CStarAlgebra.PositiveLinearFunctional
 public import LeanOA.CStarModule.Standard
 public import LeanOA.ComplexOrder
