@@ -71,25 +71,13 @@ variable [NormedAddCommGroup E]
 @[simp] lemma im_sub (v w : Complexification 𝕜 E) : (v - w).im = v.im - w.im := rfl
 @[simp] lemma re_neg (v : Complexification 𝕜 E) : (-v).re = -v.re := rfl
 @[simp] lemma im_neg (v : Complexification 𝕜 E) : (-v).im = -v.im := rfl
+@[simp] lemma mk_zero_zero : mk 𝕜 (0 : E) 0 = 0 := rfl
+@[simp] lemma neg_mk (x y : E) : -mk 𝕜 x y = mk 𝕜 (-x) (-y) := by ext <;> simp
 
--- or the other way around??
-@[simp] lemma mk_neg_neg (x y : E) : mk 𝕜 (-x) (-y) = -mk 𝕜 x y := by ext <;> simp
-
-@[simp] lemma mk_zero_left_add_mk_zero_left (x y : E) : mk 𝕜 0 x + mk 𝕜 0 y = mk 𝕜 0 (x + y) := by
+@[simp] lemma mk_add_mk (x y z w : E) : mk 𝕜 x y + mk 𝕜 z w = mk 𝕜 (x + z) (y + w) := by
   ext <;> simp
-@[simp] lemma mk_zero_right_add_mk_zero_right (x y : E) : mk 𝕜 x 0 + mk 𝕜 y 0 = mk 𝕜 (x + y) 0 := by
-  ext <;> simp
-@[simp] lemma mk_zero_left_sub_mk_zero_left (x y : E) : mk 𝕜 0 x - mk 𝕜 0 y = mk 𝕜 0 (x - y) := by
-  ext <;> simp
-@[simp] lemma mk_zero_right_sub_mk_zero_right (x y : E) : mk 𝕜 x 0 - mk 𝕜 y 0 = mk 𝕜 (x - y) 0 := by
-  ext <;> simp
-
-@[simp] lemma mk_zero_right_add_mk_zero_left (x y : E) : mk 𝕜 x 0 + mk 𝕜 0 y = mk 𝕜 x y := by
-  ext <;> simp
-
--- bad lemma?
-@[simp] lemma mk_zero_left_add_mk_zero_right (x y : E) : mk 𝕜 0 x + mk 𝕜 y 0 = mk 𝕜 y x := by
-  simp [add_comm]
+@[simp] lemma mk_sub_mk (x y z w : E) : mk 𝕜 x y - mk 𝕜 z w = mk 𝕜 (x - z) (y - w) := by
+  simp [sub_eq_add_neg]
 
 lemma norm_sq_eq (v : Complexification 𝕜 E) : ‖v‖ ^ 2 = ‖v.re‖ ^ 2 + ‖v.im‖ ^ 2 :=
   WithLp.prod_norm_sq_eq_of_L2 v
@@ -127,13 +115,17 @@ lemma isometry_mk_zero_left : Isometry (mk 𝕜 (0 : E) ·) :=
 @[fun_prop] lemma continuous_mk_zero_left : Continuous (mk 𝕜 (0 : E) ·) :=
   isometry_mk_zero_left.continuous
 @[fun_prop] lemma continuous_mk : Continuous fun p : E × E ↦ mk 𝕜 p.1 p.2 := by
-  conv in mk 𝕜 _ _ => rw [← mk_zero_left_add_mk_zero_right]
+  conv in mk 𝕜 _ _ => rw [show mk 𝕜 p.1 p.2 = mk 𝕜 p.1 0 + mk 𝕜 0 p.2 by simp]
   fun_prop
 
 variable [RCLike 𝕜] [InnerProductSpace 𝕜 E]
 
 instance : SMul ℂ (Complexification 𝕜 E) where
   smul z v := .mk 𝕜 ((z.re : 𝕜) • v.re - (z.im : 𝕜) • v.im) ((z.im : 𝕜) • v.re + (z.re : 𝕜) • v.im)
+
+lemma smul_def (z : ℂ) (v : Complexification 𝕜 E) :
+    z • v = .mk 𝕜 ((z.re : 𝕜) • v.re - (z.im : 𝕜) • v.im) ((z.im : 𝕜) • v.re + (z.re : 𝕜) • v.im) :=
+  rfl
 
 @[simp] lemma re_smul (z : ℂ) (v : Complexification 𝕜 E) :
     (z • v).re = (z.re : 𝕜) • v.re - (z.im : 𝕜) • v.im := rfl
@@ -153,6 +145,12 @@ instance : Module ℂ (Complexification 𝕜 E) where
 
 @[simp] lemma im_real_smul (r : ℝ) (v : Complexification 𝕜 E) : (r • v).im = (r : 𝕜) • v.im := by
   simp [RCLike.real_smul_eq_coe_smul (K := ℂ) r, -Complex.coe_smul]
+
+@[simp] lemma I_smul (v : Complexification 𝕜 E) : Complex.I • v = mk 𝕜 (-v.im) v.re := by
+  ext <;> simp
+
+/-- `(x, y) = (x, 0) + I • (y, 0)`. -/
+lemma mk_eq_add_I_smul (x y : E) : mk 𝕜 x y = mk 𝕜 x 0 + Complex.I • mk 𝕜 y 0 := by simp
 
 lemma norm_smul_eq (z : ℂ) (v : Complexification 𝕜 E) : ‖z • v‖ = ‖z‖ * ‖v‖ := by
   rw [← sq_eq_sq₀ (norm_nonneg _) (by positivity)]
@@ -179,6 +177,50 @@ noncomputable instance : InnerProductSpace ℂ (Complexification 𝕜 E) where
   add_left _ _ _ := by simp [Complex.ext_iff, inner_add_left]; grind
   smul_left _ _ _ := by
     simp [Complex.ext_iff, inner_sub_left, inner_add_left, inner_smul_left]; grind
+
+variable (𝕜 E) in
+/-- conjugation -/
+@[expose, simps apply] def conj : Complexification 𝕜 E ≃ₗᵢ⋆[ℂ] Complexification 𝕜 E where
+  toFun v := .mk 𝕜 v.re (-v.im)
+  invFun v := .mk 𝕜 v.re (-v.im)
+  map_add' := by simp [add_comm]
+  map_smul' _ _ := by ext <;> simp [RCLike.algebraMap_eq_ofReal, add_comm]
+  norm_map' := by simp [norm_eq]
+  left_inv _ := by simp
+  right_inv _ := by simp
+
+@[simp] lemma symm_conj : (conj 𝕜 E).symm = conj 𝕜 E := rfl
+
+@[simp] lemma inner_conj_conj (x y) : inner ℂ (conj 𝕜 E x) (conj 𝕜 E y) = inner ℂ y x := by
+  simp [Complex.ext_iff, inner_re_symm, sub_eq_add_neg, add_comm]
+
+@[simp] lemma conj_eq_self_iff (x) : conj 𝕜 E x = x ↔ x.im = 0 := by
+  simp only [conj_apply, Complexification.ext_iff, re_mk, im_mk, true_and]
+  rw [eq_comm, ← sub_eq_zero]
+  simp [← two_smul 𝕜]
+
+/-- The complexification of `ℝ` is equivalent to `ℂ`. -/
+example : Complexification ℝ ℝ ≃ₗᵢ[ℂ] ℂ where
+  toFun x := x.re + x.im * Complex.I
+  invFun x := .mk ℝ x.re x.im
+  map_add' _ _ := by simp [add_mul]; grind
+  map_smul' z _ := by
+    rw [← Complex.re_add_im z]
+    simp [add_mul, mul_add, -Complex.re_add_im, mul_mul_mul_comm _ Complex.I]
+    grind
+  norm_map' := by simp [norm_eq, Complex.norm_def, Complex.normSq, sq]
+  left_inv _ := by simp
+  right_inv _ := by simp
+
+@[expose]
+def _root_.Submodule.complexification (K : Submodule 𝕜 E) : Submodule ℂ (Complexification 𝕜 E) where
+  carrier := {v | v.re ∈ K } ∩ { v | v.im ∈ K}
+  add_mem' := by aesop
+  zero_mem' := by simp
+  smul_mem' := by aesop
+
+@[simp] lemma _root_.Submodule.mem_complexification {K : Submodule 𝕜 E} (x : Complexification 𝕜 E) :
+    x ∈ K.complexification ↔ x.re ∈ K ∧ x.im ∈ K := by simp [Submodule.complexification]
 
 end Complexification
 
@@ -285,6 +327,56 @@ lemma lipschitzWith_toComplexification :
 lemma isClosedEmbedding_toComplexification [CompleteSpace F] :
     Topology.IsClosedEmbedding (toComplexification (𝕜 := 𝕜) (E := E) (F := F)) :=
   isometry_toComplexification.isClosedEmbedding
+
+@[simp] lemma ker_toComplexification (T : E →L[𝕜] F) :
+    T.toComplexification.ker = T.ker.complexification := by
+  ext; simp [Complexification.ext_iff]
+
+@[simp] lemma range_toComplexification (T : E →L[𝕜] F) :
+   T.toComplexification.range = T.range.complexification := by
+  ext x
+  simp only [LinearMap.mem_range, coe_coe, toComplexification_apply, Complexification.ext_iff,
+    re_mk, im_mk, Submodule.complexification, Submodule.mem_mk, AddSubmonoid.mem_mk,
+    AddSubsemigroup.mem_mk, Set.mem_inter_iff, Set.mem_setOf_eq]
+  refine ⟨fun ⟨y, hy⟩ ↦ ?_, ?_⟩
+  · simp [← hy.1, ← hy.2]
+  simp only [and_imp, forall_exists_index]
+  exact fun y hy z hz ↦ ⟨.mk 𝕜 y z, by simp [hy, hz]⟩
+
+-- move earlier (maybe remove ... hmmm)
+lemma _root_.Submodule.mem_orthogonal_iff_re_inner_eq_zero
+    {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+    (K : Submodule 𝕜 E) (y : E) :
+    y ∈ Kᗮ ↔ ∀ u ∈ K, RCLike.re ⟪u, y⟫_𝕜 = 0 := by
+  simp only [Submodule.mem_orthogonal]
+  refine ⟨fun hy u hu ↦ by simp_all, fun h u hu ↦ ?_⟩
+  simpa [inner_smul_left, RCLike.conj_mul, -inner_conj_symm] using
+    h (⟪u, y⟫_𝕜 • u) (K.smul_mem _ hu)
+
+@[simp] lemma _root_.Submodule.orthogonal_complexification (K : Submodule 𝕜 E) :
+    K.complexificationᗮ = Kᗮ.complexification := by
+  ext v
+  simp only [Submodule.mem_complexification, Submodule.mem_orthogonal_iff_re_inner_eq_zero, and_imp]
+  refine ⟨fun h ↦ ⟨fun u hu ↦ ?_, fun u hu ↦ ?_⟩, by aesop (add simp [Complex.ext_iff])⟩
+  · simpa using h (.mk 𝕜 u 0) (by simpa)
+  · simpa using h (.mk 𝕜 0 u) (by simp) (by simpa)
+
+instance (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] :
+    K.complexification.HasOrthogonalProjection where
+  exists_orthogonal v :=
+    have ⟨a, ha, hva⟩ := ‹K.HasOrthogonalProjection›.exists_orthogonal v.re
+    have ⟨b, hb, hvb⟩ := ‹K.HasOrthogonalProjection›.exists_orthogonal v.im
+    ⟨.mk 𝕜 a b, by simp [ha, hb], by simp [hva, hvb]⟩
+
+-- or the other way around?
+@[simp] lemma _root_.Submodule.toComplexification_starProjection (K : Submodule 𝕜 E)
+    [K.HasOrthogonalProjection] :
+    K.starProjection.toComplexification = K.complexification.starProjection := by
+  ext1 v
+  refine (K.complexification.eq_starProjection_of_mem_of_inner_eq_zero (by simp) ?_).symm
+  intro w hw
+  have : v - K.starProjection.toComplexification v ∈ K.complexificationᗮ := by simp
+  simp [-toComplexification_apply, inner_eq_zero_symm (y := w), this _ hw]
 
 variable [CompleteSpace E] [CompleteSpace F]
 
