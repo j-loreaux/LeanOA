@@ -9,6 +9,7 @@ public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.CStarAlgebra.Projection
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
+public import Mathlib.LinearAlgebra.Trace
 
 /-! # Complexification of inner product spaces
 
@@ -49,7 +50,7 @@ set_option linter.unusedVariables false in
 This is a type synonym of `WithLp 2 (E × E)`, with the same norm. -/
 @[expose, nolint unusedArguments] def Complexification (𝕜 E : Type*) : Type _ := WithLp 2 (E × E)
 
-variable {𝕜 E : Type*} {Eₗ Fₗ : Type*}
+variable {𝕜 E F G : Type*} {Eₗ Fₗ : Type*}
   [NormedAddCommGroup Eₗ] [NormedAddCommGroup Fₗ] [InnerProductSpace ℝ Eₗ] [InnerProductSpace ℝ Fₗ]
 
 noncomputable instance [NormedAddCommGroup E] : NormedAddCommGroup (Complexification 𝕜 E) :=
@@ -360,7 +361,7 @@ end Real
 end Complexification
 
 namespace ContinuousLinearMap
-variable {F G : Type*} [RCLike 𝕜]
+variable [RCLike 𝕜]
   [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
   [NormedAddCommGroup G] [InnerProductSpace 𝕜 G]
@@ -522,6 +523,11 @@ lemma exists_toComplexification_eq_iff {T : Complexification ℝ Eₗ →L[ℂ] 
   simp +singlePass only [this]
   ext <;> simp
 
+lemma toMatrix_complexification_toComplexification {ι₁ ι₂} [Fintype ι₁] [Finite ι₂] [DecidableEq ι₁]
+    (T : Eₗ →L[ℝ] Fₗ) (b₁ : Module.Basis ι₁ ℝ Eₗ) (b₂ : Module.Basis ι₂ ℝ Fₗ) :
+    T.toComplexification.toMatrix b₁.complexification b₂.complexification =
+      (T.toMatrix b₁ b₂).map (algebraMap ℝ ℂ) := by ext; simp [LinearMap.toMatrix_apply]
+
 variable [CompleteSpace E] [CompleteSpace F]
 
 @[simp] lemma adjoint_toComplexification (T : E →L[𝕜] F) :
@@ -587,7 +593,7 @@ lemma ContinuousLinearMap.spectralRadius_eq_opNNNorm {T : E →L[𝕜] E} (hT : 
   rw [← opNNNorm_toComplexification, ← hT.toComplexification.spectralRadius_eq_nnnorm,
     ← hT.toComplexification.spectrumRestricts.spectralRadius_eq]
   simp only [spectralRadius, spectrum_toComplexification, Set.mem_preimage, iSup₂_le_iff]
-  exact fun r hr ↦ le_iSup₂_of_le (algebraMap ℝ 𝕜 r) hr (by simp)
+  exact fun r hr ↦ le_iSup₂_of_le _ hr (by simp)
 
 lemma ContinuousLinearMap.spectralRadius_toComplexification {T : E →L[𝕜] E}
     (hT : IsSelfAdjoint T) : spectralRadius ℂ T.toComplexification = spectralRadius 𝕜 T := by
