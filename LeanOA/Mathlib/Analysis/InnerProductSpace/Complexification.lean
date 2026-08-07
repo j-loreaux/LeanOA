@@ -14,14 +14,27 @@ public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 
 In this file we define the complexification of an inner product space. So we can essentially
 extend a `𝕜`-space `E` to a `ℂ`-space `E × E`, and extend operators to its complexification
-in order to use `ℂ`-results. We (informally) think of `(x, y) : Complexification 𝕜 E` as
-`x + I • y`.
+in order to use `ℂ`-results. We call the first component the "real part" (`Complexification.re`)
+and the second the "imaginary part" (`Complexification.im`).
+This way, we can (informally) think of `(x, y) : Complexification 𝕜 E` as `x + I • y`.
 
 In particular, `ℂ`-scalar multiplication is given by
 `α • (x, y) = (ℜ α • x - ℑ α • y, ℜ α • y + ℑ α • x)`
 and the `ℂ`-inner product is given by
-`⟪(x, y), (z, w)⟫_ℂ = ℜ ⟪x, z⟫_𝕜 + ℜ ⟪y, w⟫_𝕜 + (ℜ (⟪x, w⟫_𝕜 - ⟪y, z⟫_𝕜)) * I`.
+`⟪(x, y), (z, w)⟫_ℂ = ℜ (⟪x, z⟫_𝕜 + ⟪y, w⟫_𝕜) + (ℜ (⟪x, w⟫_𝕜 - ⟪y, z⟫_𝕜)) * I`.
 
+The complexification space of a real space `E` is equivalent to `ℂ ⊗[ℝ] E` (see
+`Complexification.toTensor`.) And so the complexification of a tensor product is the tensor product
+of the complexifications (see `TensorProduct.complexificationLinearEquiv`).
+
+## Main definitions and results
+
+* `Complexification.instSMul`: Complex scalar multiplication on complexifications.
+* `Complexification.instInnerProductSpace`: The complex inner product space on complexifications.
+* `Submodule.complexification`: The complexification of a submodule.
+* `Complexification.conj`: Conjugation on complexification, i.e., `(x, y) ↦ (x, -y)`.
+* `Complexification.realLinearIsometryEquivComplex`: The complexification of
+  `ℝ` is equivalent to `ℂ`.
 * `ContinuousLinearMap.toComplexification`: The complexification of an operator `T`, which is
   defined as `x ↦ (T x.re, T x.im)`.
 
@@ -121,7 +134,7 @@ lemma isometry_mk_zero_left : Isometry (mk 𝕜 (0 : E) ·) :=
 
 variable [RCLike 𝕜] [InnerProductSpace 𝕜 E]
 
-instance : SMul ℂ (Complexification 𝕜 E) where
+instance instSMul : SMul ℂ (Complexification 𝕜 E) where
   smul z v := .mk 𝕜 ((z.re : 𝕜) • v.re - (z.im : 𝕜) • v.im) ((z.im : 𝕜) • v.re + (z.re : 𝕜) • v.im)
 
 lemma smul_def (z : ℂ) (v : Complexification 𝕜 E) :
@@ -165,7 +178,7 @@ lemma norm_smul_eq (z : ℂ) (v : Complexification 𝕜 E) : ‖z • v‖ = ‖
 
 instance : NormedSpace ℂ (Complexification 𝕜 E) where norm_smul_le z v := (norm_smul_eq z v).le
 
-noncomputable instance : Inner ℂ (Complexification 𝕜 E) where
+noncomputable instance instInner : Inner ℂ (Complexification 𝕜 E) where
   inner v w := .mk (RCLike.re (⟪v.re, w.re⟫_𝕜 + ⟪v.im, w.im⟫_𝕜))
     (RCLike.re (⟪v.re, w.im⟫_𝕜 - ⟪v.im, w.re⟫_𝕜))
 
@@ -178,7 +191,7 @@ lemma inner_def (v w : Complexification 𝕜 E) :
 @[simp] lemma im_inner (v w : Complexification 𝕜 E) :
     (⟪v, w⟫_ℂ).im = RCLike.re (⟪v.re, w.im⟫_𝕜 - ⟪v.im, w.re⟫_𝕜) := rfl
 
-noncomputable instance : InnerProductSpace ℂ (Complexification 𝕜 E) where
+noncomputable instance instInnerProductSpace : InnerProductSpace ℂ (Complexification 𝕜 E) where
   norm_sq_eq_re_inner v := by simp [norm_sq_eq, RCLike.re_to_complex]
   conj_inner_symm _ _ := by simp [Complex.ext_iff, inner_re_symm]
   add_left _ _ _ := by simp [Complex.ext_iff, inner_add_left]; grind
