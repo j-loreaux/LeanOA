@@ -9,7 +9,6 @@ public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.CStarAlgebra.Projection
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
-public import Mathlib.LinearAlgebra.Trace
 
 /-! # Complexification of inner product spaces
 
