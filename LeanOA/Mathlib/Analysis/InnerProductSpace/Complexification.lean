@@ -179,24 +179,17 @@ lemma norm_smul_eq (z : ℂ) (v : Complexification 𝕜 E) : ‖z • v‖ = ‖
 
 instance : NormedSpace ℂ (Complexification 𝕜 E) where norm_smul_le z v := (norm_smul_eq z v).le
 
-/-- The real part of a complexification as a continuous linear map. -/
-@[expose, simps] def reL : Complexification 𝕜 E →SL[algebraMap ℝ 𝕜] E where
+/-- The real part of a complexification of a real space as a real continuous linear map. -/
+@[expose, simps] def reL : Complexification ℝ Eₗ →L[ℝ] Eₗ where
   toFun x := x.re
   map_add' := by simp
   map_smul' := by simp
 
-/-- The imaginary part of a complexification as a continuous linear map. -/
-@[expose, simps] def imL : Complexification 𝕜 E →SL[algebraMap ℝ 𝕜] E where
+/-- The imaginary part of a complexification of a real space as a real continuous linear map. -/
+@[expose, simps] def imL : Complexification ℝ Eₗ →L[ℝ] Eₗ where
   toFun x := x.im
   map_add' := by simp
   map_smul' := by simp
-
--- or just remove the above and keep the real versions?
-/-- The real part of a complexification as a real continuous linear map. -/
-@[expose, simps!] noncomputable def reL' : Complexification ℝ Eₗ →L[ℝ] Eₗ := reL
-
-/-- The imaginary part of a complexification as a real continuous linear map. -/
-@[expose, simps!] noncomputable def imL' : Complexification ℝ Eₗ →L[ℝ] Eₗ := imL
 
 noncomputable instance instInner : Inner ℂ (Complexification 𝕜 E) where
   inner v w := .mk (RCLike.re (⟪v.re, w.re⟫_𝕜 + ⟪v.im, w.im⟫_𝕜))
@@ -518,7 +511,7 @@ lemma exists_toComplexification_eq_iff {T : Complexification ℝ Eₗ →L[ℂ] 
       (conj ℝ Fₗ).toContinuousLinearEquiv.toContinuousLinearMap ∘SL T ∘SL
         (conj ℝ Eₗ).toContinuousLinearEquiv.toContinuousLinearMap = T := by
   refine ⟨fun ⟨S, hS⟩ ↦ by ext <;> simp [← hS, conj_apply], fun h ↦ ?_⟩
-  refine ⟨reL' ∘SL T.restrictScalars ℝ ∘SL (inclusion Eₗ).toContinuousLinearMap, ext fun v ↦ ?_⟩
+  refine ⟨reL ∘SL T.restrictScalars ℝ ∘SL (inclusion Eₗ).toContinuousLinearMap, ext fun v ↦ ?_⟩
   conv_rhs => rw [← mk_re_im v, mk_eq_add_I_smul]
   simp only [map_add, map_smul]
   have (x : Eₗ) : T (.mk ℝ x 0) = .mk ℝ (T (.mk ℝ x 0)).re 0 := by
