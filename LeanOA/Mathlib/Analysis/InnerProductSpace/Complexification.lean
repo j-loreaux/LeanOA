@@ -493,13 +493,9 @@ lemma exists_toComplexification_eq_iff
   refine ⟨fun ⟨S, hS⟩ ↦ by ext <;> simp [← hS, conj_apply], fun h ↦ ?_⟩
   -- make this a def? and then a lemma for `conj ∘ T ∘ conj = T → T = (T (.mk ℝ · 0)).re`?
   let S : Eₗ →L[ℝ] Fₗ :=
-    { toFun x := (T (.mk ℝ x 0)).re
-      map_add' _ _ := by simp [← re_add, ← map_add]
-      map_smul' z _ := by
-        simp only [RingHom.id_apply]
-        conv_rhs => rw [RCLike.real_smul_eq_coe_smul (K := ℝ) z]
-        rw [← re_real_smul, ← Complex.coe_smul, ← map_smul, smul_def]
-        simp }
+    { toFun x := ((T.restrictScalars ℝ ∘SL (inclusion Eₗ).toContinuousLinearMap) x).re
+      map_add' := by simp [← re_add, ← map_add]
+      map_smul' := by simp }
   refine ⟨S, ContinuousLinearMap.ext fun v ↦ ?_⟩
   conv_rhs => rw [← mk_re_im v, mk_eq_add_I_smul]
   simp only [map_add, map_smul, S]
