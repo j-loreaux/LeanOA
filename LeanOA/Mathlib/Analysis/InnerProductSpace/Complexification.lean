@@ -8,6 +8,7 @@ module
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.CStarAlgebra.Projection
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
+public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 
 /-! # Complexification of inner product spaces
 
@@ -32,7 +33,7 @@ open scoped InnerProductSpace
 
 set_option linter.unusedVariables false in
 /-- The complexification of an inner product space.
-This is a type synonym of `WithLp 2 (E × E)`. -/
+This is a type synonym of `WithLp 2 (E × E)`, with the same norm. -/
 @[expose, nolint unusedArguments] def Complexification (𝕜 E : Type*) : Type _ := WithLp 2 (E × E)
 
 variable {𝕜 E : Type*}
@@ -149,6 +150,8 @@ instance : Module ℂ (Complexification 𝕜 E) where
 @[simp] lemma I_smul (v : Complexification 𝕜 E) : Complex.I • v = mk 𝕜 (-v.im) v.re := by
   ext <;> simp
 
+lemma I_smul_mk (x y : E) : Complex.I • (mk 𝕜 x y) = mk 𝕜 (-y) x := I_smul _
+
 /-- `(x, y) = (x, 0) + I • (y, 0)`. -/
 lemma mk_eq_add_I_smul (x y : E) : mk 𝕜 x y = mk 𝕜 x 0 + Complex.I • mk 𝕜 y 0 := by simp
 
@@ -183,7 +186,7 @@ noncomputable instance : InnerProductSpace ℂ (Complexification 𝕜 E) where
     simp [Complex.ext_iff, inner_sub_left, inner_add_left, inner_smul_left]; grind
 
 variable (𝕜 E) in
-/-- conjugation -/
+/-- Conjugation on the complexification space, given by `(x, y) ↦ (x, -y)`. -/
 @[expose, simps -isSimp apply] def conj : Complexification 𝕜 E ≃ₗᵢ⋆[ℂ] Complexification 𝕜 E where
   toFun v := .mk 𝕜 v.re (-v.im)
   invFun v := .mk 𝕜 v.re (-v.im)
@@ -195,6 +198,10 @@ variable (𝕜 E) in
 
 @[simp] lemma symm_conj : (conj 𝕜 E).symm = conj 𝕜 E := rfl
 @[simp] lemma conj_conj (x) : conj 𝕜 E (conj 𝕜 E x) = x := by simp [conj_apply]
+@[simp] lemma conj_mk (x y : E) : conj 𝕜 E (.mk 𝕜 x y) = .mk 𝕜 x (-y) := rfl
+
+lemma conj_I_smul (x) : conj 𝕜 E (Complex.I • x) = -Complex.I • conj 𝕜 E x := by
+  simp [conj_apply]
 
 @[simp] lemma inner_conj_conj (x y) : inner ℂ (conj 𝕜 E x) (conj 𝕜 E y) = inner ℂ y x := by
   simp [Complex.ext_iff, inner_re_symm, sub_eq_add_neg, add_comm, conj_apply]
@@ -205,13 +212,13 @@ lemma inner_conj_left (x y) : inner ℂ (conj 𝕜 E x) y = inner ℂ (conj 𝕜
 lemma inner_conj_right (x y) : inner ℂ x (conj 𝕜 E y) = inner ℂ y (conj 𝕜 E x) := by
   rw [← inner_conj_symm, inner_conj_left]; simp
 
-@[simp] lemma conj_eq_self_iff (x) : conj 𝕜 E x = x ↔ x.im = 0 := by
+@[simp] lemma conj_eq_self_iff {x} : conj 𝕜 E x = x ↔ x.im = 0 := by
   simp only [conj_apply, Complexification.ext_iff, re_mk, im_mk, true_and]
   rw [eq_comm, ← sub_eq_zero]
   simp [← two_smul 𝕜]
 
 /-- The complexification of `ℝ` is equivalent to `ℂ`. -/
-example : Complexification ℝ ℝ ≃ₗᵢ[ℂ] ℂ where
+def realLinearIsometryEquivComplex : Complexification ℝ ℝ ≃ₗᵢ[ℂ] ℂ where
   toFun x := x.re + x.im * Complex.I
   invFun x := .mk ℝ x.re x.im
   map_add' _ _ := by simp [add_mul]; grind
@@ -226,13 +233,105 @@ example : Complexification ℝ ℝ ≃ₗᵢ[ℂ] ℂ where
 /-- Complexification of a submodule, i.e., `(a, b) ∈ K.complexification ↔ a ∈ K ∧ b ∈ K`. -/
 @[expose]
 def _root_.Submodule.complexification (K : Submodule 𝕜 E) : Submodule ℂ (Complexification 𝕜 E) where
-  carrier := {v | v.re ∈ K } ∩ { v | v.im ∈ K}
+  carrier := { v | v.re ∈ K } ∩ { v | v.im ∈ K }
   add_mem' := by aesop
   zero_mem' := by simp
   smul_mem' := by aesop
 
 @[simp] lemma _root_.Submodule.mem_complexification {K : Submodule 𝕜 E} (x : Complexification 𝕜 E) :
     x ∈ K.complexification ↔ x.re ∈ K ∧ x.im ∈ K := by simp [Submodule.complexification]
+
+section Real
+variable {Eₗ Fₗ : Type*} [NormedAddCommGroup Eₗ] [NormedAddCommGroup Fₗ] [InnerProductSpace ℝ Eₗ]
+  [InnerProductSpace ℝ Fₗ]
+
+variable (Eₗ) in
+/-- The inclusion map of a real space into its complexification as a linear isometry, given by
+`x ↦ (x, 0)`. -/
+@[expose, simps] def inclusion : Eₗ →ₗᵢ[ℝ] Complexification ℝ Eₗ where
+  toFun x := .mk ℝ x 0
+  map_add' := by simp
+  map_smul' _ _ := by ext <;> simp
+  norm_map' := by simp
+
+/-- A submodule `U` over the complexificationn of a real space is a complexified submodule
+(i.e., there exists a real submodule `S` such that `S.complexification = U`)
+iff `U` is closed under conjugation. -/
+lemma _root_.Submodule.exists_complexification_eq_iff (U : Submodule ℂ (Complexification ℝ Eₗ)) :
+    (∃ S : Submodule ℝ Eₗ, S.complexification = U) ↔ ∀ v ∈ U, conj ℝ Eₗ v ∈ U := by
+  refine ⟨fun ⟨S, hS⟩ v hv ↦ by simpa [← hS, conj_apply] using hv, fun h ↦ ?_⟩
+  refine ⟨(U.restrictScalars ℝ).comap (inclusion Eₗ).toLinearMap, Submodule.ext fun x ↦ ?_⟩
+  simp only [Submodule.mem_complexification, Submodule.mem_comap, LinearIsometry.coe_toLinearMap,
+    inclusion_apply, Submodule.restrictScalars_mem]
+  refine ⟨fun h2 ↦ ?_, fun h2 ↦ ⟨?_, ?_⟩⟩
+  · rw [← mk_re_im x, mk_eq_add_I_smul]
+    exact add_mem h2.1 (Submodule.smul_mem _ _ h2.2)
+  · convert Submodule.smul_mem _ (2 : ℂ)⁻¹ (add_mem h2 (h _ h2))
+    simp [conj_apply, Complexification.ext_iff, ← two_smul ℝ]
+  · convert Submodule.smul_mem _ (2 * Complex.I)⁻¹ (sub_mem h2 (h _ h2))
+    simp [Complexification.ext_iff, conj_apply, ← two_smul ℝ]
+
+open TensorProduct
+
+/-- The complexification of a real space `Eₗ` is `ℂ`-linearly equivalent to `ℂ ⊗[ℝ] Eₗ`. -/
+@[expose] noncomputable def toTensor : Complexification ℝ Eₗ ≃ₗ[ℂ] ℂ ⊗[ℝ] Eₗ := .symm
+  { toLinearMap := AlgebraTensorModule.lift (.toSpanSingleton ℂ _ (inclusion Eₗ).toLinearMap)
+    invFun v := 1 ⊗ₜ v.re + Complex.I ⊗ₜ v.im
+    right_inv _ := by simp
+    left_inv x := by
+      induction x using TensorProduct.induction_on with
+      | zero => simp
+      | tmul z x =>
+        conv_rhs => rw [← Complex.re_add_im z]
+        simp [-Complex.re_add_im, add_tmul, smul_def, smul_tmul']
+      | add _ _ h1 h2 =>
+        conv_rhs => rw [← h1, ← h2]
+        simp [tmul_add]
+        grind }
+
+@[simp] lemma toTensor_apply (v : Complexification ℝ Eₗ) : v.toTensor = 1 ⊗ₜ v.re + .I ⊗ₜ v.im :=
+  rfl
+
+@[simp] lemma symm_toTensor_tmul (z : ℂ) (x : Eₗ) :
+    toTensor.symm (z ⊗ₜ x) = .mk ℝ (z.re • x) (z.im • x) := by simp [smul_def, toTensor]
+
+/-- The rank of the complexification of a real space over `ℂ` is equal to the rank of the original
+space over `ℝ`. -/
+@[simp] lemma rank_eq : Module.rank ℂ (Complexification ℝ Eₗ) = Module.rank ℝ Eₗ := by
+  simp [toTensor.rank_eq]
+
+@[simp] lemma finrank_eq : Module.finrank ℂ (Complexification ℝ Eₗ) = Module.finrank ℝ Eₗ := by
+  simp [toTensor.finrank_eq]
+
+/-- The complexication of a basis, given by `b.complexification i = (b i, 0)`. -/
+@[expose] noncomputable def _root_.Module.Basis.complexification {ι} (b : Module.Basis ι ℝ Eₗ) :
+    Module.Basis ι ℂ (Complexification ℝ Eₗ) := (b.baseChange ℂ).map toTensor.symm
+
+@[simp] lemma _root_.Module.Basis.complexification_apply {ι} (b : Module.Basis ι ℝ Eₗ) (i : ι) :
+    b.complexification i = .mk ℝ (b i) 0 := by simp [Module.Basis.complexification]
+
+@[simp] lemma _root_.Module.Basis.complexification_repr_apply {ι} (b : Module.Basis ι ℝ Eₗ) (v) :
+    b.complexification.repr v = (b.baseChange ℂ).repr (1 ⊗ₜ[ℝ] v.re) +
+      (b.baseChange ℂ).repr (Complex.I ⊗ₜ[ℝ] v.im)  := by simp [Module.Basis.complexification]
+
+/-- Complexifying `ℝ`-tensor products of real spaces is equivalent to `ℂ`-tensor products
+of the complexification of each of those spaces. -/
+@[expose, simps! -isSimp] noncomputable def _root_.TensorProduct.complexificationLinearEquiv :
+    Complexification ℝ (Eₗ ⊗[ℝ] Fₗ) ≃ₗ[ℂ] Complexification ℝ Eₗ ⊗[ℂ] Complexification ℝ Fₗ :=
+  toTensor ≪≫ₗ
+    (AlgebraTensorModule.assoc ..).symm ≪≫ₗ
+    (AlgebraTensorModule.cancelBaseChange ..).symm ≪≫ₗ
+    (TensorProduct.congr toTensor.symm toTensor.symm)
+
+@[simp] lemma _root_.TensorProduct.complexificationLinearEquiv_mk_tmul (x : Eₗ) (y : Fₗ) :
+    TensorProduct.complexificationLinearEquiv (.mk ℝ (x ⊗ₜ y) 0) =
+      .mk ℝ x 0 ⊗ₜ .mk ℝ y 0 := by simp [TensorProduct.complexificationLinearEquiv_apply]
+
+@[simp] lemma _root_.TensorProduct.symm_complexificationLinearEquiv_mk_tmul_mk (x : Eₗ) (y : Fₗ) :
+    TensorProduct.complexificationLinearEquiv.symm (.mk ℝ x 0 ⊗ₜ .mk ℝ y 0) =
+      .mk ℝ (x ⊗ₜ y) 0 := by simp [TensorProduct.complexificationLinearEquiv_symm_apply]
+
+end Real
 
 end Complexification
 
@@ -380,10 +479,42 @@ instance (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] :
   have : v - K.starProjection.toComplexification v ∈ K.complexificationᗮ := by simp
   simp [-toComplexification_apply_apply, inner_eq_zero_symm (y := w), this _ hw]
 
+-- do we want `conj ∘ T ∘ conj` as a definition?
+/-- An operator `T` on a complexification space of a real space is a complexified operator
+(i.e., there exists a real operator `S` such that `S.toComplexification = T`)
+iff `conj ∘ T ∘ conj = T`. -/
+lemma exists_toComplexification_eq_iff
+    {Eₗ Fₗ : Type*} [NormedAddCommGroup Eₗ] [NormedAddCommGroup Fₗ]
+    [InnerProductSpace ℝ Eₗ] [InnerProductSpace ℝ Fₗ]
+    {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ} :
+    (∃ S : Eₗ →L[ℝ] Fₗ, S.toComplexification = T) ↔
+      (conj ℝ Fₗ).toContinuousLinearEquiv.toContinuousLinearMap ∘SL T ∘SL
+        (conj ℝ Eₗ).toContinuousLinearEquiv.toContinuousLinearMap = T := by
+  refine ⟨fun ⟨S, hS⟩ ↦ by ext <;> simp [← hS, conj_apply], fun h ↦ ?_⟩
+  -- make this a def? and then a lemma for `conj ∘ T ∘ conj = T → T = (T (.mk ℝ · 0)).re`?
+  let S : Eₗ →L[ℝ] Fₗ :=
+    { toFun x := (T (.mk ℝ x 0)).re
+      map_add' _ _ := by simp [← re_add, ← map_add]
+      map_smul' z _ := by
+        simp only [RingHom.id_apply]
+        conv_rhs => rw [RCLike.real_smul_eq_coe_smul (K := ℝ) z]
+        rw [← re_real_smul, ← Complex.coe_smul, ← map_smul, smul_def]
+        simp }
+  refine ⟨S, ContinuousLinearMap.ext fun v ↦ ?_⟩
+  conv_rhs => rw [← mk_re_im v, mk_eq_add_I_smul]
+  simp only [map_add, map_smul, S]
+  have (x : Eₗ) : T (.mk ℝ x 0) = .mk ℝ (T (.mk ℝ x 0)).re 0 := by
+    refine Complexification.ext rfl ?_
+    rw [im_mk, ← conj_eq_self_iff]
+    conv_rhs => rw [← h]
+    simp
+  simp +singlePass only [this]
+  ext <;> simp
+
 variable [CompleteSpace E] [CompleteSpace F]
 
 @[simp] lemma adjoint_toComplexification (T : E →L[𝕜] F) :
-    adjoint T.toComplexification = (adjoint T).toComplexification := by
+    T.toComplexification.adjoint = T.adjoint.toComplexification := by
   simp [eq_comm, eq_adjoint_iff, Complex.ext_iff, adjoint_inner_left]
 
 @[simp] lemma star_toComplexification (T : E →L[𝕜] E) :
