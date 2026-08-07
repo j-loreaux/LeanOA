@@ -49,7 +49,8 @@ set_option linter.unusedVariables false in
 This is a type synonym of `WithLp 2 (E × E)`, with the same norm. -/
 @[expose, nolint unusedArguments] def Complexification (𝕜 E : Type*) : Type _ := WithLp 2 (E × E)
 
-variable {𝕜 E : Type*}
+variable {𝕜 E : Type*} {Eₗ Fₗ : Type*}
+  [NormedAddCommGroup Eₗ] [NormedAddCommGroup Fₗ] [InnerProductSpace ℝ Eₗ] [InnerProductSpace ℝ Fₗ]
 
 noncomputable instance [NormedAddCommGroup E] : NormedAddCommGroup (Complexification 𝕜 E) :=
   inferInstanceAs (NormedAddCommGroup (WithLp 2 (E × E)))
@@ -178,6 +179,25 @@ lemma norm_smul_eq (z : ℂ) (v : Complexification 𝕜 E) : ‖z • v‖ = ‖
 
 instance : NormedSpace ℂ (Complexification 𝕜 E) where norm_smul_le z v := (norm_smul_eq z v).le
 
+/-- The real part of a complexification as a continuous linear map. -/
+@[expose, simps] def reL : Complexification 𝕜 E →SL[algebraMap ℝ 𝕜] E where
+  toFun x := x.re
+  map_add' := by simp
+  map_smul' := by simp
+
+/-- The imaginary part of a complexification as a continuous linear map. -/
+@[expose, simps] def imL : Complexification 𝕜 E →SL[algebraMap ℝ 𝕜] E where
+  toFun x := x.im
+  map_add' := by simp
+  map_smul' := by simp
+
+-- or just remove the above and keep the real versions?
+/-- The real part of a complexification as a real continuous linear map. -/
+@[expose, simps!] noncomputable def reL' : Complexification ℝ Eₗ →L[ℝ] Eₗ := reL
+
+/-- The imaginary part of a complexification as a real continuous linear map. -/
+@[expose, simps!] noncomputable def imL' : Complexification ℝ Eₗ →L[ℝ] Eₗ := imL
+
 noncomputable instance instInner : Inner ℂ (Complexification 𝕜 E) where
   inner v w := .mk (RCLike.re (⟪v.re, w.re⟫_𝕜 + ⟪v.im, w.im⟫_𝕜))
     (RCLike.re (⟪v.re, w.im⟫_𝕜 - ⟪v.im, w.re⟫_𝕜))
@@ -255,8 +275,6 @@ def _root_.Submodule.complexification (K : Submodule 𝕜 E) : Submodule ℂ (Co
     x ∈ K.complexification ↔ x.re ∈ K ∧ x.im ∈ K := by simp [Submodule.complexification]
 
 section Real
-variable {Eₗ Fₗ : Type*} [NormedAddCommGroup Eₗ] [NormedAddCommGroup Fₗ] [InnerProductSpace ℝ Eₗ]
-  [InnerProductSpace ℝ Fₗ]
 
 variable (Eₗ) in
 /-- The inclusion map of a real space into its complexification as a linear isometry, given by
@@ -492,26 +510,17 @@ instance (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] :
   have : v - K.starProjection.toComplexification v ∈ K.complexificationᗮ := by simp
   simp [-toComplexification_apply_apply, inner_eq_zero_symm (y := w), this _ hw]
 
--- do we want `conj ∘ T ∘ conj` as a definition?
 /-- An operator `T` on a complexification space of a real space is a complexified operator
 (i.e., there exists a real operator `S` such that `S.toComplexification = T`)
 iff `conj ∘ T ∘ conj = T`. -/
-lemma exists_toComplexification_eq_iff
-    {Eₗ Fₗ : Type*} [NormedAddCommGroup Eₗ] [NormedAddCommGroup Fₗ]
-    [InnerProductSpace ℝ Eₗ] [InnerProductSpace ℝ Fₗ]
-    {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ} :
+lemma exists_toComplexification_eq_iff {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ} :
     (∃ S : Eₗ →L[ℝ] Fₗ, S.toComplexification = T) ↔
       (conj ℝ Fₗ).toContinuousLinearEquiv.toContinuousLinearMap ∘SL T ∘SL
         (conj ℝ Eₗ).toContinuousLinearEquiv.toContinuousLinearMap = T := by
   refine ⟨fun ⟨S, hS⟩ ↦ by ext <;> simp [← hS, conj_apply], fun h ↦ ?_⟩
-  -- make this a def? and then a lemma for `conj ∘ T ∘ conj = T → T = (T (.mk ℝ · 0)).re`?
-  let S : Eₗ →L[ℝ] Fₗ :=
-    { toFun x := ((T.restrictScalars ℝ ∘SL (inclusion Eₗ).toContinuousLinearMap) x).re
-      map_add' := by simp [← re_add, ← map_add]
-      map_smul' := by simp }
-  refine ⟨S, ContinuousLinearMap.ext fun v ↦ ?_⟩
+  refine ⟨reL' ∘SL T.restrictScalars ℝ ∘SL (inclusion Eₗ).toContinuousLinearMap, ext fun v ↦ ?_⟩
   conv_rhs => rw [← mk_re_im v, mk_eq_add_I_smul]
-  simp only [map_add, map_smul, S]
+  simp only [map_add, map_smul]
   have (x : Eₗ) : T (.mk ℝ x 0) = .mk ℝ (T (.mk ℝ x 0)).re 0 := by
     refine Complexification.ext rfl ?_
     rw [im_mk, ← conj_eq_self_iff]
