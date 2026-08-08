@@ -36,6 +36,10 @@ of the complexifications (see `TensorProduct.complexificationLinearEquiv`).
 * `ContinuousLinearMap.toComplexification`: The complexification of an operator `T`, which is
   defined as `x ↦ (T x.re, T x.im)`.
 
+## References
+
+[roman_advanced_linear_algebra], [wikipedia_complexification], [conrad_complexification]
+
 -/
 
 public section
@@ -278,7 +282,9 @@ variable (Eₗ) in
 
 /-- A submodule `U` over the complexificationn of a real space is a complexified submodule
 (i.e., there exists a real submodule `S` such that `S.complexification = U`)
-iff `U` is closed under conjugation. -/
+iff `U` is closed under conjugation.
+
+This is Chapter 1, Exercise 26 in [roman_advanced_linear_algebra]. -/
 lemma _root_.Submodule.exists_complexification_eq_iff (U : Submodule ℂ (Complexification ℝ Eₗ)) :
     (∃ S : Submodule ℝ Eₗ, S.complexification = U) ↔ ∀ v ∈ U, conj ℝ Eₗ v ∈ U := by
   refine ⟨fun ⟨S, hS⟩ v hv ↦ by simpa [← hS, conj_apply] using hv, fun h ↦ ?_⟩
@@ -524,8 +530,9 @@ An opeartor is equal to its conjugate iff it is a complexified operator
     S.toComplexification.conjugate = S.toComplexification := by ext1; simp [conj_apply]
 
 /-- An operator `T` on a complexification space of a real space is a complexified operator
-(i.e., there exists a real operator `S` such that `S.toComplexification = T`)
-iff `conj ∘ T ∘ conj = T`. -/
+(i.e., there exists a real operator `S` such that `S.toComplexification = T`) iff `T.conjugate = T`.
+
+This is Chapter 2, Exercise 32 in [roman_advanced_linear_algebra]. -/
 lemma exists_toComplexification_eq_iff {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ} :
     (∃ S : Eₗ →L[ℝ] Fₗ, S.toComplexification = T) ↔ T.conjugate = T := by
   refine ⟨fun ⟨S, hS⟩ ↦ by simp [← hS], fun h ↦ ?_⟩
