@@ -5,9 +5,7 @@ Authors: Monica Omar
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
-public import Mathlib.Analysis.CStarAlgebra.Projection
-public import Mathlib.Analysis.InnerProductSpace.Adjoint
+public import LeanOA.Mathlib.Analysis.InnerProductSpace.Orthogonal
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 
 /-! # Complexification of inner product spaces
@@ -367,6 +365,7 @@ variable [RCLike 𝕜]
 
 open Complexification
 
+-- do we want this for `LinearMap` as well?
 /-- Complexification of a continuous linear map between inner product spaces. -/
 @[expose, simps apply_apply] noncomputable def toComplexification :
     (E →L[𝕜] F) →+ Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F where
@@ -468,16 +467,6 @@ lemma isometry_toComplexification : Isometry (toComplexification (𝕜 := 𝕜) 
   simp only [and_imp, forall_exists_index]
   exact fun y hy z hz ↦ ⟨.mk 𝕜 y z, by simp [hy, hz]⟩
 
--- move earlier (maybe remove ... hmmm)
-lemma _root_.Submodule.mem_orthogonal_iff_re_inner_eq_zero
-    {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-    (K : Submodule 𝕜 E) (y : E) :
-    y ∈ Kᗮ ↔ ∀ u ∈ K, RCLike.re ⟪u, y⟫_𝕜 = 0 := by
-  simp only [Submodule.mem_orthogonal]
-  refine ⟨fun hy u hu ↦ by simp_all, fun h u hu ↦ ?_⟩
-  simpa [inner_smul_left, RCLike.conj_mul, -inner_conj_symm] using
-    h (⟪u, y⟫_𝕜 • u) (K.smul_mem _ hu)
-
 @[simp] lemma _root_.Submodule.orthogonal_complexification (K : Submodule 𝕜 E) :
     K.complexificationᗮ = Kᗮ.complexification := by
   ext v
@@ -503,14 +492,43 @@ instance (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] :
   have : v - K.starProjection.toComplexification v ∈ K.complexificationᗮ := by simp
   simp [-toComplexification_apply_apply, inner_eq_zero_symm (y := w), this _ hw]
 
+/-- Conjugation of a complexified operator given by `T ↦ conj ∘ T ∘ conj`.
+
+An opeartor is equal to its conjugate iff it is a complexified operator
+(see `exists_toComplexification_eq_iff`). -/
+@[expose, simps! apply_apply] noncomputable def conjugate :
+    (Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F) ≃ₗᵢ⋆[ℂ]
+      (Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F) where
+  __ := (conj 𝕜 E).toContinuousLinearEquiv.arrowCongrEquivₛₗ (conj 𝕜 F).toContinuousLinearEquiv
+  norm_map' x := by simpa using! opNorm_comp_linearIsometryEquiv _ (conj 𝕜 E).symm
+
+@[simp] lemma conjugate_conjugate (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F) :
+    T.conjugate.conjugate = T := by ext1; simp
+
+@[simp] lemma symm_conjugate : conjugate (𝕜 := 𝕜) (E := E) (F := F).symm = conjugate := rfl
+
+@[simp] lemma conjugate_id :
+    (ContinuousLinearMap.id ℂ (Complexification 𝕜 E)).conjugate = .id ℂ _ := by ext1; simp
+
+@[simp] lemma conjugate_one :
+    (1 : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).conjugate = 1 := conjugate_id
+
+@[simp] lemma conjugate_comp (S : Complexification 𝕜 F →L[ℂ] Complexification 𝕜 G)
+    (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F) :
+    (S ∘SL T).conjugate = S.conjugate ∘SL T.conjugate := by ext1; simp
+
+@[simp] lemma conjugate_mul (S T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E) :
+    (S * T).conjugate = S.conjugate * T.conjugate := conjugate_comp _ _
+
+@[simp] lemma conjugate_toComplexification (S : E →L[𝕜] F) :
+    S.toComplexification.conjugate = S.toComplexification := by ext1; simp [conj_apply]
+
 /-- An operator `T` on a complexification space of a real space is a complexified operator
 (i.e., there exists a real operator `S` such that `S.toComplexification = T`)
 iff `conj ∘ T ∘ conj = T`. -/
 lemma exists_toComplexification_eq_iff {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ} :
-    (∃ S : Eₗ →L[ℝ] Fₗ, S.toComplexification = T) ↔
-      (conj ℝ Fₗ).toContinuousLinearEquiv.toContinuousLinearMap ∘SL T ∘SL
-        (conj ℝ Eₗ).toContinuousLinearEquiv.toContinuousLinearMap = T := by
-  refine ⟨fun ⟨S, hS⟩ ↦ by ext <;> simp [← hS, conj_apply], fun h ↦ ?_⟩
+    (∃ S : Eₗ →L[ℝ] Fₗ, S.toComplexification = T) ↔ T.conjugate = T := by
+  refine ⟨fun ⟨S, hS⟩ ↦ by simp [← hS], fun h ↦ ?_⟩
   refine ⟨reL ∘SL T.restrictScalars ℝ ∘SL (inclusion Eₗ).toContinuousLinearMap, ext fun v ↦ ?_⟩
   conv_rhs => rw [← mk_re_im v, mk_eq_add_I_smul]
   simp only [map_add, map_smul]
@@ -521,6 +539,26 @@ lemma exists_toComplexification_eq_iff {T : Complexification ℝ Eₗ →L[ℂ] 
     simp
   simp +singlePass only [this]
   ext <;> simp
+
+/-- Decomplexifying an operator on the complexification of real spaces.
+If `T.conjugate = T` then `T.ofComplexification.toComplexification = T`, otherwise we let it
+equal zero (junk value). -/
+noncomputable def ofComplexification (T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ) :
+    Eₗ →L[ℝ] Fₗ :=
+  open Classical in
+  if h : T.conjugate = T then (exists_toComplexification_eq_iff.mpr h).choose else 0
+
+@[simp] lemma ofCompletxification_toComplexification (T : Eₗ →L[ℝ] Fₗ) :
+    T.toComplexification.ofComplexification = T := by
+  ext; simp [ofComplexification]
+
+lemma toComplexification_ofComplexification {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ}
+    (hT : T.conjugate = T) : T.ofComplexification.toComplexification = T := by
+  simp only [ofComplexification, hT, dif_pos]
+  exact (exists_toComplexification_eq_iff.mpr hT).choose_spec
+
+lemma ofComplexification_of_neg {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ}
+    (hT : T.conjugate ≠ T) : T.ofComplexification = 0 := by simp [ofComplexification, hT]
 
 lemma toMatrix_complexification_toComplexification {ι₁ ι₂} [Fintype ι₁] [Finite ι₂] [DecidableEq ι₁]
     (T : Eₗ →L[ℝ] Fₗ) (b₁ : Module.Basis ι₁ ℝ Eₗ) (b₂ : Module.Basis ι₂ ℝ Fₗ) :
@@ -563,37 +601,14 @@ alias ⟨_, _root_.IsStarNormal.toComplexification⟩ := isStarNormal_toComplexi
   congr! 1
   simp [Algebra.algebraMap_eq_smul_one, ContinuousLinearMap.ext_iff, Complexification.ext_iff]
 
-protected lemma IsSelfAdjoint.norm_add_eq_max {S T : E →L[𝕜] E}
-    (hS : IsSelfAdjoint S) (hT : IsSelfAdjoint T) (h : S * T = 0) :
-    ‖S + T‖ = max ‖S‖ ‖T‖ := by
-  rw [← opNorm_toComplexification (S + T), map_add,
-    hS.toComplexification.norm_add_eq_max hT.toComplexification
-      (by simp [← toComplexification_mul, h])]
-  simp
+lemma spectrum_toComplexification_real [CompleteSpace Eₗ] (T : Eₗ →L[ℝ] Eₗ) :
+    spectrum ℝ T.toComplexification = spectrum ℝ T := by simp
+
+@[simp] lemma conjugate_adjoint (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F) :
+    T.adjoint.conjugate = T.conjugate.adjoint := by
+  simp [eq_adjoint_iff, inner_conj_left (T.adjoint _), adjoint_inner_right, inner_conj_right (T _)]
+
+@[simp] lemma conjugate_star (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E) :
+    (star T).conjugate = star T.conjugate := conjugate_adjoint _
 
 end ContinuousLinearMap
-
-open ContinuousLinearMap Complexification
--- golfs of current results using complexification
-
-variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
-
--- golf of `ContinuousLinearMap.IsIdempotentElem.isSelfAdjoint_iff_isStarNormal`:
-lemma ContinuousLinearMap.IsIdempotentElem.isSelfAdjoint_iff_isStarNormal' {T : E →L[𝕜] E}
-    (hT : IsIdempotentElem T) : IsSelfAdjoint T ↔ IsStarNormal T := by
-  rw [← isSelfAdjoint_toComplexification_iff, ← isStarNormal_toComplexification_iff,
-    hT.toComplexification.isSelfAdjoint_iff_isStarNormal]
-
--- golf of `ContinuousLinearMap.spectralRadius_eq_nnnorm`:
-lemma ContinuousLinearMap.spectralRadius_eq_opNNNorm {T : E →L[𝕜] E} (hT : IsSelfAdjoint T) :
-    spectralRadius 𝕜 T = ‖T‖₊ := by
-  nontriviality E
-  refine le_antisymm (spectrum.spectralRadius_le_nnnorm T) ?_
-  rw [← opNNNorm_toComplexification, ← hT.toComplexification.spectralRadius_eq_nnnorm,
-    ← hT.toComplexification.spectrumRestricts.spectralRadius_eq]
-  simp only [spectralRadius, spectrum_toComplexification, Set.mem_preimage, iSup₂_le_iff]
-  exact fun r hr ↦ le_iSup₂_of_le _ hr (by simp)
-
-lemma ContinuousLinearMap.spectralRadius_toComplexification {T : E →L[𝕜] E}
-    (hT : IsSelfAdjoint T) : spectralRadius ℂ T.toComplexification = spectralRadius 𝕜 T := by
-  simp [hT.toComplexification.spectralRadius_eq_nnnorm, spectralRadius_eq_opNNNorm hT]
