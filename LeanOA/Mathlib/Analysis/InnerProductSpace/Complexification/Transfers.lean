@@ -2,6 +2,7 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.CStarAlgebra.Projection
+public import Mathlib.Analysis.InnerProductSpace.Positive
 public import LeanOA.Mathlib.Analysis.InnerProductSpace.Complexification.Basic
 
 /-! Transfering results from C⋆-algebras to `𝕜` and `ℝ` Hilbert spaces via complexification
@@ -64,14 +65,12 @@ This is used in the continuous functional calculus. -/
 private noncomputable def cfcRealHomAux {T : Eₗ →L[ℝ] Eₗ}
     (hT : IsSelfAdjoint T) : C(spectrum ℝ T.toComplexification, ℝ) →⋆ₐ[ℝ] (Eₗ →L[ℝ] Eₗ) where
   toFun g := (cfcHom hT.toComplexification g).ofComplexification
-  map_one' := by simp [← toComplexification_inj]
-  map_zero' := by simp [← toComplexification_inj]
-  map_add' _ _ := by simp [← toComplexification_inj, hT]
+  map_one' := by simp
+  map_zero' := by simp
+  map_add' _ _ := by simp
   map_mul' _ _ := by simp [← toComplexification_inj, hT]
   map_star' _ := by simp [← toComplexification_inj, hT, ← star_toComplexification, ← map_star]
-  commutes' _ := by
-    rw [← toComplexification_inj, toComplexification_ofComplexification (by simp [hT])]
-    ext <;> simp [Algebra.algebraMap_eq_smul_one]
+  commutes' _ := by simp [Algebra.algebraMap_eq_smul_one]
 
 private lemma toComplexification_cfcRealHomAux {T : Eₗ →L[ℝ] Eₗ} (hT : IsSelfAdjoint T)
     (g : C(spectrum ℝ T.toComplexification, ℝ)) :

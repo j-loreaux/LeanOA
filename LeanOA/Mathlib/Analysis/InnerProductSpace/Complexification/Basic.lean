@@ -51,8 +51,9 @@ set_option linter.unusedVariables false in
 This is a type synonym of `WithLp 2 (E × E)`, with the same norm. -/
 @[expose, nolint unusedArguments] def Complexification (𝕜 E : Type*) : Type _ := WithLp 2 (E × E)
 
-variable {𝕜 E F G : Type*} {Eₗ Fₗ : Type*}
-  [NormedAddCommGroup Eₗ] [NormedAddCommGroup Fₗ] [InnerProductSpace ℝ Eₗ] [InnerProductSpace ℝ Fₗ]
+variable {𝕜 E F G : Type*} {Eₗ Fₗ Gₗ : Type*}
+  [NormedAddCommGroup Eₗ] [NormedAddCommGroup Fₗ] [NormedAddCommGroup Gₗ]
+  [InnerProductSpace ℝ Eₗ] [InnerProductSpace ℝ Fₗ] [InnerProductSpace ℝ Gₗ]
 
 noncomputable instance [NormedAddCommGroup E] : NormedAddCommGroup (Complexification 𝕜 E) :=
   inferInstanceAs (NormedAddCommGroup (WithLp 2 (E × E)))
@@ -529,14 +530,32 @@ An opeartor is equal to its conjugate iff it is a complexified operator
 @[simp] lemma conjugate_toComplexification (S : E →L[𝕜] F) :
     S.toComplexification.conjugate = S.toComplexification := by ext1; simp [conj_apply]
 
+/-- Decomplexifying an operator on the complexification of real spaces. -/
+@[expose, simps! apply_apply] noncomputable def ofComplexification :
+    (Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ) →ₗ[ℝ] (Eₗ →L[ℝ] Fₗ) where
+  toFun T := reL ∘SL T.restrictScalars ℝ ∘SL (inclusion Eₗ).toContinuousLinearMap
+  map_add' := by simp
+  map_smul' := by simp
+
+@[simp] lemma ofCompletxification_toComplexification (T : Eₗ →L[ℝ] Fₗ) :
+    T.toComplexification.ofComplexification = T := by ext; simp
+
+@[simp] lemma ofComplexification_id :
+    (.id ℂ _ : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Eₗ).ofComplexification = .id ℝ _ := by
+  ext; simp
+
+@[simp] lemma ofComplexification_one :
+    (1 : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Eₗ).ofComplexification = 1 :=
+  ofComplexification_id
+
 /-- An operator `T` on a complexification space of a real space is a complexified operator
 (i.e., there exists a real operator `S` such that `S.toComplexification = T`) iff `T.conjugate = T`.
 
 This is Chapter 2, Exercise 32 in [roman_advanced_linear_algebra]. -/
-lemma exists_toComplexification_eq_iff {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ} :
-    (∃ S : Eₗ →L[ℝ] Fₗ, S.toComplexification = T) ↔ T.conjugate = T := by
-  refine ⟨fun ⟨S, hS⟩ ↦ by simp [← hS], fun h ↦ ?_⟩
-  refine ⟨reL ∘SL T.restrictScalars ℝ ∘SL (inclusion Eₗ).toContinuousLinearMap, ext fun v ↦ ?_⟩
+lemma toComplexification_ofComplexification_eq_self_iff
+    {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ} :
+    T.ofComplexification.toComplexification = T ↔ T.conjugate = T := by
+  refine ⟨fun hS ↦ by rw [← hS]; simp, fun h ↦ ext fun v ↦ ?_⟩
   conv_rhs => rw [← mk_re_im v, mk_eq_add_I_smul]
   simp only [map_add, map_smul]
   have (x : Eₗ) : T (.mk ℝ x 0) = .mk ℝ (T (.mk ℝ x 0)).re 0 := by
@@ -547,25 +566,9 @@ lemma exists_toComplexification_eq_iff {T : Complexification ℝ Eₗ →L[ℂ] 
   simp +singlePass only [this]
   ext <;> simp
 
-/-- Decomplexifying an operator on the complexification of real spaces.
-If `T.conjugate = T` then `T.ofComplexification.toComplexification = T`, otherwise we let it
-equal zero (junk value). -/
-noncomputable def ofComplexification (T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ) :
-    Eₗ →L[ℝ] Fₗ :=
-  open Classical in
-  if h : T.conjugate = T then (exists_toComplexification_eq_iff.mpr h).choose else 0
-
-@[simp] lemma ofCompletxification_toComplexification (T : Eₗ →L[ℝ] Fₗ) :
-    T.toComplexification.ofComplexification = T := by
-  ext; simp [ofComplexification]
-
 lemma toComplexification_ofComplexification {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ}
-    (hT : T.conjugate = T) : T.ofComplexification.toComplexification = T := by
-  simp only [ofComplexification, hT, dif_pos]
-  exact (exists_toComplexification_eq_iff.mpr hT).choose_spec
-
-lemma ofComplexification_of_neg {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ}
-    (hT : T.conjugate ≠ T) : T.ofComplexification = 0 := by simp [ofComplexification, hT]
+    (hT : T.conjugate = T) : T.ofComplexification.toComplexification = T :=
+  toComplexification_ofComplexification_eq_self_iff.mpr hT
 
 lemma toMatrix_complexification_toComplexification {ι₁ ι₂} [Fintype ι₁] [Finite ι₂] [DecidableEq ι₁]
     (T : Eₗ →L[ℝ] Fₗ) (b₁ : Module.Basis ι₁ ℝ Eₗ) (b₂ : Module.Basis ι₂ ℝ Fₗ) :
