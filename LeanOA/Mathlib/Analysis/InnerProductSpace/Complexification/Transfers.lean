@@ -57,23 +57,20 @@ theorem conjugate_cfcHom_toComplexification {T : Eₗ →L[ℝ] Eₗ} (hT : IsSe
   conv_lhs => rw [← conjugateStarAlgEquiv_comp_cfcHom_toComplexification hT]
   simp [conjugateStarAlgEquiv_apply]
 
+attribute [local simp] toComplexification_ofComplexification conjugate_cfcHom_toComplexification in
 /-- The real star algebra homomorphism between `C(spectrum ℝ T.toComplexification, ℝ)` and
 `Eₗ →L[ℝ] Eₗ`.
 This is used in the continuous functional calculus. -/
 private noncomputable def cfcRealHomAux {T : Eₗ →L[ℝ] Eₗ}
     (hT : IsSelfAdjoint T) : C(spectrum ℝ T.toComplexification, ℝ) →⋆ₐ[ℝ] (Eₗ →L[ℝ] Eₗ) where
   toFun g := (cfcHom hT.toComplexification g).ofComplexification
-  map_one' := toComplexification_inj.mp <| by simp [toComplexification_ofComplexification]
-  map_zero' := toComplexification_inj.mp <| by simp [toComplexification_ofComplexification]
-  map_add' _ _ := toComplexification_inj.mp <| by
-    simp [toComplexification_ofComplexification, conjugate_cfcHom_toComplexification, hT]
-  map_mul' _ _ := toComplexification_inj.mp <| by
-    simp [toComplexification_ofComplexification, conjugate_cfcHom_toComplexification, hT]
-  map_star' _ := toComplexification_inj.mp <| by
-    simp [toComplexification_ofComplexification, conjugate_cfcHom_toComplexification, hT,
-      ← star_toComplexification, ← map_star]
+  map_one' := toComplexification_inj.mp <| by simp
+  map_zero' := toComplexification_inj.mp <| by simp
+  map_add' _ _ := toComplexification_inj.mp <| by simp [hT]
+  map_mul' _ _ := toComplexification_inj.mp <| by simp [hT]
+  map_star' _ := toComplexification_inj.mp <| by simp [hT, ← star_toComplexification, ← map_star]
   commutes' _ := toComplexification_inj.mp <| by
-    rw [toComplexification_ofComplexification (by simp [conjugate_cfcHom_toComplexification hT])]
+    rw [toComplexification_ofComplexification (by simp [hT])]
     ext <;> simp [Algebra.algebraMap_eq_smul_one]
 
 private lemma toComplexification_cfcRealHomAux {T : Eₗ →L[ℝ] Eₗ} (hT : IsSelfAdjoint T)
