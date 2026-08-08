@@ -64,13 +64,13 @@ This is used in the continuous functional calculus. -/
 private noncomputable def cfcRealHomAux {T : Eₗ →L[ℝ] Eₗ}
     (hT : IsSelfAdjoint T) : C(spectrum ℝ T.toComplexification, ℝ) →⋆ₐ[ℝ] (Eₗ →L[ℝ] Eₗ) where
   toFun g := (cfcHom hT.toComplexification g).ofComplexification
-  map_one' := toComplexification_inj.mp <| by simp
-  map_zero' := toComplexification_inj.mp <| by simp
-  map_add' _ _ := toComplexification_inj.mp <| by simp [hT]
-  map_mul' _ _ := toComplexification_inj.mp <| by simp [hT]
-  map_star' _ := toComplexification_inj.mp <| by simp [hT, ← star_toComplexification, ← map_star]
-  commutes' _ := toComplexification_inj.mp <| by
-    rw [toComplexification_ofComplexification (by simp [hT])]
+  map_one' := by simp [← toComplexification_inj]
+  map_zero' := by simp [← toComplexification_inj]
+  map_add' _ _ := by simp [← toComplexification_inj, hT]
+  map_mul' _ _ := by simp [← toComplexification_inj, hT]
+  map_star' _ := by simp [← toComplexification_inj, hT, ← star_toComplexification, ← map_star]
+  commutes' _ := by
+    rw [← toComplexification_inj, toComplexification_ofComplexification (by simp [hT])]
     ext <;> simp [Algebra.algebraMap_eq_smul_one]
 
 private lemma toComplexification_cfcRealHomAux {T : Eₗ →L[ℝ] Eₗ} (hT : IsSelfAdjoint T)
