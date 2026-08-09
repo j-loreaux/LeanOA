@@ -60,7 +60,7 @@ theorem conjugate_cfcHom_toComplexification {T : E →L[𝕜] E} (hT : IsSelfAdj
   conv_lhs => rw [← conjugateStarAlgEquiv_comp_cfcHom_toComplexification hT]
   simp [conjugateStarAlgEquiv_apply]
 
-lemma commute_cfcHom_mulI [NormedSpace ℝ E] (T : E →L[𝕜] E) (hT : IsSelfAdjoint T)
+lemma commute_cfcHom_mulI (T : E →L[𝕜] E) (hT : IsSelfAdjoint T)
     (g : C(spectrum ℝ T.toComplexification, ℝ)) :
     Commute (cfcHom hT.toComplexification g)
       ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification := by
