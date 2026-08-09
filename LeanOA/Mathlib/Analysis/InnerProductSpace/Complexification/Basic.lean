@@ -553,14 +553,20 @@ noncomputable def ofComplexification [Module ℝ E] [IsScalarTower ℝ 𝕜 E]
       intro x
       simpa [S] using congr(($hT (.mk 𝕜 x 0)).re) }
 
-@[simp] lemma ofComplexification_id [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (h) :
-    (.id ℂ _ : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).ofComplexification 𝕜 h =
+@[simp] lemma ofComplexification_zero [Module ℝ E] [IsScalarTower ℝ 𝕜 E]
+    [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F] :
+    (0 : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F).ofComplexification 𝕜 (by simp) = 0 := by
+  ext; simp
+
+@[simp] lemma ofComplexification_id [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+    (.id ℂ _ : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).ofComplexification 𝕜 (by simp) =
       .id _ _ := by
   ext; simp
 
-@[simp] lemma ofComplexification_one [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (h) :
-    (1 : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).ofComplexification 𝕜 h = 1 :=
-  ofComplexification_id _
+@[simp] lemma ofComplexification_one [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+    (1 : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).ofComplexification 𝕜
+      (by simp [one_def]) = 1 :=
+  ofComplexification_id
 
 @[simp] lemma ofComplexification_toComplexification
     [Module ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F]
