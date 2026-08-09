@@ -6,6 +6,7 @@ Authors: Monica Omar
 module
 
 public import LeanOA.Mathlib.Analysis.InnerProductSpace.Orthogonal
+public import Mathlib.Analysis.InnerProductSpace.Positive
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 
 /-! # Complexification of inner product spaces
@@ -182,14 +183,16 @@ lemma norm_smul_eq (z : ℂ) (v : Complexification 𝕜 E) : ‖z • v‖ = ‖
 
 instance : NormedSpace ℂ (Complexification 𝕜 E) where norm_smul_le z v := (norm_smul_eq z v).le
 
+variable (𝕜 E) in
 /-- The real part of a complexification of a real space as a real continuous linear map. -/
-@[expose, simps] def reL : Complexification ℝ Eₗ →L[ℝ] Eₗ where
+@[expose, simps] def reL [Module ℝ E] [IsScalarTower ℝ 𝕜 E] : Complexification 𝕜 E →L[ℝ] E where
   toFun x := x.re
   map_add' := by simp
   map_smul' := by simp
 
+variable (𝕜 E) in
 /-- The imaginary part of a complexification of a real space as a real continuous linear map. -/
-@[expose, simps] def imL : Complexification ℝ Eₗ →L[ℝ] Eₗ where
+@[expose, simps] def imL [Module ℝ E] [IsScalarTower ℝ 𝕜 E] : Complexification 𝕜 E →L[ℝ] E where
   toFun x := x.im
   map_add' := by simp
   map_smul' := by simp
@@ -272,11 +275,12 @@ def _root_.Submodule.complexification (K : Submodule 𝕜 E) : Submodule ℂ (Co
 
 section Real
 
-variable (Eₗ) in
+variable (𝕜 E) in
 /-- The inclusion map of a real space into its complexification as a linear isometry, given by
 `x ↦ (x, 0)`. -/
-@[expose, simps] def inclusion : Eₗ →ₗᵢ[ℝ] Complexification ℝ Eₗ where
-  toFun x := .mk ℝ x 0
+@[expose, simps] def inclusion [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+    E →ₗᵢ[ℝ] Complexification 𝕜 E where
+  toFun x := .mk 𝕜 x 0
   map_add' := by simp
   map_smul' _ _ := by ext <;> simp
   norm_map' := by simp
@@ -289,7 +293,7 @@ This is Chapter 1, Exercise 26 in [roman_advanced_linear_algebra]. -/
 lemma _root_.Submodule.exists_complexification_eq_iff (U : Submodule ℂ (Complexification ℝ Eₗ)) :
     (∃ S : Submodule ℝ Eₗ, S.complexification = U) ↔ ∀ v ∈ U, conj ℝ Eₗ v ∈ U := by
   refine ⟨fun ⟨S, hS⟩ v hv ↦ by simpa [← hS, conj_apply] using hv, fun h ↦ ?_⟩
-  refine ⟨(U.restrictScalars ℝ).comap (inclusion Eₗ).toLinearMap, Submodule.ext fun x ↦ ?_⟩
+  refine ⟨(U.restrictScalars ℝ).comap (inclusion ℝ Eₗ).toLinearMap, Submodule.ext fun x ↦ ?_⟩
   simp only [Submodule.mem_complexification, Submodule.mem_comap, LinearIsometry.coe_toLinearMap,
     inclusion_apply, Submodule.restrictScalars_mem]
   refine ⟨fun h2 ↦ ?_, fun h2 ↦ ⟨?_, ?_⟩⟩
@@ -304,7 +308,7 @@ open TensorProduct
 
 /-- The complexification of a real space `Eₗ` is `ℂ`-linearly equivalent to `ℂ ⊗[ℝ] Eₗ`. -/
 @[expose] noncomputable def toTensor : Complexification ℝ Eₗ ≃ₗ[ℂ] ℂ ⊗[ℝ] Eₗ := .symm
-  { toLinearMap := AlgebraTensorModule.lift (.toSpanSingleton ℂ _ (inclusion Eₗ).toLinearMap)
+  { toLinearMap := AlgebraTensorModule.lift (.toSpanSingleton ℂ _ (inclusion ℝ Eₗ).toLinearMap)
     invFun v := 1 ⊗ₜ v.re + Complex.I ⊗ₜ v.im
     right_inv _ := by simp
     left_inv x := by
@@ -530,35 +534,60 @@ An opeartor is equal to its conjugate iff it is a complexified operator
 @[simp] lemma conjugate_toComplexification (S : E →L[𝕜] F) :
     S.toComplexification.conjugate = S.toComplexification := by ext1; simp [conj_apply]
 
+variable (𝕜) in
 /-- Decomplexifying an operator on the complexification of real spaces. -/
-@[expose, simps! apply_apply] noncomputable def ofComplexification :
-    (Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ) →ₗ[ℝ] (Eₗ →L[ℝ] Fₗ) where
-  toFun T := reL ∘SL T.restrictScalars ℝ ∘SL (inclusion Eₗ).toContinuousLinearMap
+@[expose, simps! apply_apply] noncomputable def ofComplexification
+    [NormedSpace ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F] :
+    (Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F) →ₗ[ℝ] (E →L[ℝ] F) where
+  toFun T := reL 𝕜 F ∘SL T.restrictScalars ℝ ∘SL (inclusion 𝕜 E).toContinuousLinearMap
   map_add' := by simp
   map_smul' := by simp
 
-@[simp] lemma ofCompletxification_toComplexification (T : Eₗ →L[ℝ] Fₗ) :
-    T.toComplexification.ofComplexification = T := by ext; simp
+@[simp] lemma ofCompletxification_toComplexification
+    [NormedSpace ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F]
+    (T : E →L[𝕜] F) :
+    T.toComplexification.ofComplexification 𝕜 = T.restrictScalars ℝ := by ext; simp
 
-@[simp] lemma ofComplexification_id :
-    (.id ℂ _ : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Eₗ).ofComplexification = .id ℝ _ := by
+@[simp] lemma ofComplexification_id [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+    (.id ℂ _ : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).ofComplexification 𝕜 = .id _ _ := by
   ext; simp
 
-@[simp] lemma ofComplexification_one :
-    (1 : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Eₗ).ofComplexification = 1 :=
+@[simp] lemma ofComplexification_one [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+    (1 : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).ofComplexification 𝕜 = 1 :=
   ofComplexification_id
+
+variable (𝕜) in
+/-- A version of `ofComplexification` but for `𝕜`. -/
+@[expose, simps!]
+noncomputable def ofComplexificationK [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+    [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
+    (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F)
+    (hT : T ∘SL ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification =
+      ((RCLike.I : 𝕜) • (1 : F →L[𝕜] F)).toComplexification ∘SL T) :
+    E →L[𝕜] F where
+  __ := (T.ofComplexification 𝕜).toAddMonoidHom
+  map_smul' a x := by
+    suffices ∀ x, T.ofComplexification 𝕜 ((RCLike.I : 𝕜) • x) =
+        (RCLike.I : 𝕜) • T.ofComplexification 𝕜 x by
+      rw [← RCLike.re_add_im a, add_smul, mul_smul]
+      simp [-ofComplexification_apply_apply, this, -RCLike.re_add_im, add_smul, mul_smul]
+    intro x
+    simpa using congr(($hT (.mk 𝕜 x 0)).re)
 
 /-- An operator `T` on a complexification space of a real space is a complexified operator
 (i.e., there exists a real operator `S` such that `S.toComplexification = T`) iff `T.conjugate = T`.
 
 This is Chapter 2, Exercise 32 in [roman_advanced_linear_algebra]. -/
-lemma toComplexification_ofComplexification_eq_self_iff
-    {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ} :
-    T.ofComplexification.toComplexification = T ↔ T.conjugate = T := by
+lemma toComplexification_ofComplexificationK_eq_self_iff
+    [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
+    {T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F}
+    (h : T ∘SL ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification =
+      ((RCLike.I : 𝕜) • (1 : F →L[𝕜] F)).toComplexification ∘SL T) :
+    (T.ofComplexificationK 𝕜 h).toComplexification = T ↔ T.conjugate = T := by
   refine ⟨fun hS ↦ by rw [← hS]; simp, fun h ↦ ext fun v ↦ ?_⟩
   conv_rhs => rw [← mk_re_im v, mk_eq_add_I_smul]
   simp only [map_add, map_smul]
-  have (x : Eₗ) : T (.mk ℝ x 0) = .mk ℝ (T (.mk ℝ x 0)).re 0 := by
+  have (x : E) : T (.mk 𝕜 x 0) = .mk 𝕜 (T (.mk 𝕜 x 0)).re 0 := by
     refine Complexification.ext rfl ?_
     rw [im_mk, ← conj_eq_self_iff]
     conv_rhs => rw [← h]
@@ -566,9 +595,8 @@ lemma toComplexification_ofComplexification_eq_self_iff
   simp +singlePass only [this]
   ext <;> simp
 
-lemma toComplexification_ofComplexification {T : Complexification ℝ Eₗ →L[ℂ] Complexification ℝ Fₗ}
-    (hT : T.conjugate = T) : T.ofComplexification.toComplexification = T :=
-  toComplexification_ofComplexification_eq_self_iff.mpr hT
+alias ⟨_, toComplexification_ofComplexificationK⟩ :=
+  toComplexification_ofComplexificationK_eq_self_iff
 
 lemma toMatrix_complexification_toComplexification {ι₁ ι₂} [Fintype ι₁] [Finite ι₂] [DecidableEq ι₁]
     (T : Eₗ →L[ℝ] Fₗ) (b₁ : Module.Basis ι₁ ℝ Eₗ) (b₂ : Module.Basis ι₂ ℝ Fₗ) :
@@ -589,6 +617,8 @@ variable [CompleteSpace E] [CompleteSpace F]
     IsSelfAdjoint T.toComplexification ↔ IsSelfAdjoint T := by simp [isSelfAdjoint_iff]
 
 alias ⟨_, _root_.IsSelfAdjoint.toComplexification⟩ := isSelfAdjoint_toComplexification_iff
+
+attribute [aesop safe apply] IsSelfAdjoint.toComplexification
 
 @[simp] lemma isStarNormal_toComplexification_iff {T : E →L[𝕜] E} :
     IsStarNormal T.toComplexification ↔ IsStarNormal T := by
@@ -611,8 +641,8 @@ alias ⟨_, _root_.IsStarNormal.toComplexification⟩ := isStarNormal_toComplexi
   congr! 1
   simp [Algebra.algebraMap_eq_smul_one, ContinuousLinearMap.ext_iff, Complexification.ext_iff]
 
-lemma spectrum_toComplexification_real [CompleteSpace Eₗ] (T : Eₗ →L[ℝ] Eₗ) :
-    spectrum ℝ T.toComplexification = spectrum ℝ T := by simp
+lemma spectrum_toComplexification_real [Algebra ℝ (E →L[𝕜] E)] [IsScalarTower ℝ 𝕜 (E →L[𝕜] E)]
+    (T : E →L[𝕜] E) : spectrum ℝ T.toComplexification = spectrum ℝ T := by simp
 
 @[simp] lemma conjugate_adjoint (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F) :
     T.adjoint.conjugate = T.conjugate.adjoint := by
@@ -620,5 +650,16 @@ lemma spectrum_toComplexification_real [CompleteSpace Eₗ] (T : Eₗ →L[ℝ] 
 
 @[simp] lemma conjugate_star (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E) :
     (star T).conjugate = star T.conjugate := conjugate_adjoint _
+
+@[simp] lemma isPositive_toComplexification_iff {T : E →L[𝕜] E} :
+    T.toComplexification.IsPositive ↔ T.IsPositive := by
+  simp only [isPositive_def', isSelfAdjoint_toComplexification_iff, reApplyInnerSelf_apply,
+    toComplexification_apply_apply, RCLike.re_to_complex, re_inner, re_mk, im_mk, map_add,
+    and_congr_right_iff]
+  refine fun _ ↦ ⟨fun hT x ↦ ?_, fun hT x ↦ add_nonneg (hT x.re) (hT x.im)⟩
+  simpa using hT (.mk 𝕜 x 0)
+
+@[simp] lemma toComplexification_le_toComplexification_iff {S T : E →L[𝕜] E} :
+    S.toComplexification ≤ T.toComplexification ↔ S ≤ T := by simp [le_def, ← map_sub]
 
 end ContinuousLinearMap
