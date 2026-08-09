@@ -60,7 +60,7 @@ theorem conjugate_cfcHom_toComplexification {T : E →L[𝕜] E} (hT : IsSelfAdj
   conv_lhs => rw [← conjugateStarAlgEquiv_comp_cfcHom_toComplexification hT]
   simp [conjugateStarAlgEquiv_apply]
 
-lemma commute_cfcHom_mulI (T : E →L[𝕜] E) (hT : IsSelfAdjoint T)
+private lemma commute_cfcHom_mulI (T : E →L[𝕜] E) (hT : IsSelfAdjoint T)
     (g : C(spectrum ℝ T.toComplexification, ℝ)) :
     Commute (cfcHom hT.toComplexification g)
       ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification := by
@@ -88,7 +88,8 @@ private lemma toComplexification_cfcRealHomAux [NormedSpace ℝ E] [IsScalarTowe
   refine toComplexification_ofComplexificationK ?_ (conjugate_cfcHom_toComplexification hT g)
   exact commute_cfcHom_mulI T hT g
 
-instance [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (a : E →L[𝕜] E) :
+-- set it to private local because I'm not sure this is a good instance
+private local instance [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (a : E →L[𝕜] E) :
     CompactSpace ↑(spectrum ℝ a) := by
   rw [← spectrum_toComplexification_real]
   infer_instance

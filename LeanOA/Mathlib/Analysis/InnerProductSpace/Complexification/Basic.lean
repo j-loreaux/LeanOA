@@ -278,7 +278,7 @@ section Real
 variable (𝕜 E) in
 /-- The inclusion map of a real space into its complexification as a linear isometry, given by
 `x ↦ (x, 0)`. -/
-@[expose, simps] def inclusion [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+@[expose, simps] def inclusion [Module ℝ E] [IsScalarTower ℝ 𝕜 E] :
     E →ₗᵢ[ℝ] Complexification 𝕜 E where
   toFun x := .mk 𝕜 x 0
   map_add' := by simp
@@ -537,14 +537,14 @@ An opeartor is equal to its conjugate iff it is a complexified operator
 variable (𝕜) in
 /-- Decomplexifying an operator on the complexification of real spaces. -/
 @[expose, simps! apply_apply] noncomputable def ofComplexification
-    [NormedSpace ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F] :
+    [Module ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F] :
     (Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F) →ₗ[ℝ] (E →L[ℝ] F) where
   toFun T := reL 𝕜 F ∘SL T.restrictScalars ℝ ∘SL (inclusion 𝕜 E).toContinuousLinearMap
   map_add' := by simp
   map_smul' := by simp
 
 @[simp] lemma ofCompletxification_toComplexification
-    [NormedSpace ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F]
+    [Module ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F]
     (T : E →L[𝕜] F) :
     T.toComplexification.ofComplexification 𝕜 = T.restrictScalars ℝ := by ext; simp
 
@@ -559,7 +559,7 @@ variable (𝕜) in
 variable (𝕜) in
 /-- A version of `ofComplexification` but for `𝕜`. -/
 @[expose, simps!]
-noncomputable def ofComplexificationK [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+noncomputable def ofComplexificationK [Module ℝ E] [IsScalarTower ℝ 𝕜 E]
     [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
     (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F)
     (hT : T ∘SL ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification =
@@ -574,29 +574,46 @@ noncomputable def ofComplexificationK [NormedSpace ℝ E] [IsScalarTower ℝ �
     intro x
     simpa using congr(($hT (.mk 𝕜 x 0)).re)
 
-/-- An operator `T` on a complexification space of a real space is a complexified operator
-(i.e., there exists a real operator `S` such that `S.toComplexification = T`) iff `T.conjugate = T`.
+@[simp] lemma ofCompletxificationK_toComplexification
+    [Module ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F]
+    (T : E →L[𝕜] F) (h) :
+    T.toComplexification.ofComplexificationK 𝕜 h = T := by ext; simp
 
-This is Chapter 2, Exercise 32 in [roman_advanced_linear_algebra]. -/
-lemma toComplexification_ofComplexificationK_eq_self_iff
-    [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
+@[simp] lemma restrictScalars_ofComplexificationK
+    [Module ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F]
+    (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F) (h) :
+    (T.ofComplexificationK 𝕜 h).restrictScalars ℝ = T.ofComplexification 𝕜 := rfl
+
+lemma toComplexification_ofComplexificationK
+    [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
     {T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F}
     (h : T ∘SL ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification =
-      ((RCLike.I : 𝕜) • (1 : F →L[𝕜] F)).toComplexification ∘SL T) :
-    (T.ofComplexificationK 𝕜 h).toComplexification = T ↔ T.conjugate = T := by
-  refine ⟨fun hS ↦ by rw [← hS]; simp, fun h ↦ ext fun v ↦ ?_⟩
+      ((RCLike.I : 𝕜) • (1 : F →L[𝕜] F)).toComplexification ∘SL T)
+    (hT : T.conjugate = T) :
+    (T.ofComplexificationK 𝕜 h).toComplexification = T := by
+  ext1 v
   conv_rhs => rw [← mk_re_im v, mk_eq_add_I_smul]
   simp only [map_add, map_smul]
   have (x : E) : T (.mk 𝕜 x 0) = .mk 𝕜 (T (.mk 𝕜 x 0)).re 0 := by
     refine Complexification.ext rfl ?_
     rw [im_mk, ← conj_eq_self_iff]
-    conv_rhs => rw [← h]
+    conv_rhs => rw [← hT]
     simp
   simp +singlePass only [this]
   ext <;> simp
 
-alias ⟨_, toComplexification_ofComplexificationK⟩ :=
-  toComplexification_ofComplexificationK_eq_self_iff
+/-- An operator `T` on a complexification space of a real space is a complexified operator
+(i.e., there exists a real operator `S` such that `S.toComplexification = T`) iff `T.conjugate = T`.
+
+This is Chapter 2, Exercise 32 in [roman_advanced_linear_algebra]. -/
+lemma exists_toComplexification_eq_iff
+    [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
+    {T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F} :
+    (∃ S : E →L[𝕜] F, S.toComplexification = T) ↔ T.conjugate = T ∧
+      T ∘SL ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification =
+        ((RCLike.I : 𝕜) • (1 : F →L[𝕜] F)).toComplexification ∘SL T := by
+  refine ⟨fun ⟨S, hS⟩ ↦ ?_, fun ⟨h1, h2⟩ ↦ ⟨_, toComplexification_ofComplexificationK h2 h1⟩⟩
+  simp [← hS, ContinuousLinearMap.ext_iff]
 
 lemma toMatrix_complexification_toComplexification {ι₁ ι₂} [Fintype ι₁] [Finite ι₂] [DecidableEq ι₁]
     (T : Eₗ →L[ℝ] Fₗ) (b₁ : Module.Basis ι₁ ℝ Eₗ) (b₂ : Module.Basis ι₂ ℝ Fₗ) :
