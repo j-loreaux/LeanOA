@@ -534,7 +534,6 @@ An opeartor is equal to its conjugate iff it is a complexified operator
 @[simp] lemma conjugate_toComplexification (S : E →L[𝕜] F) :
     S.toComplexification.conjugate = S.toComplexification := by ext1; simp [conj_apply]
 
-variable (𝕜) in
 /-- Decomplexifying an operator on complexifications given that it commutes with
 `(RCLike.I • 1).toComplexification`. -/
 @[expose, simps!]
@@ -555,28 +554,28 @@ noncomputable def ofComplexification [Module ℝ E] [IsScalarTower ℝ 𝕜 E]
 
 @[simp] lemma ofComplexification_zero [Module ℝ E] [IsScalarTower ℝ 𝕜 E]
     [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F] :
-    (0 : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F).ofComplexification 𝕜 (by simp) = 0 := by
+    (0 : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F).ofComplexification (by simp) = 0 := by
   ext; simp
 
 @[simp] lemma ofComplexification_id [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
-    (.id ℂ _ : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).ofComplexification 𝕜 (by simp) =
+    (.id ℂ _ : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).ofComplexification (by simp) =
       .id _ _ := by
   ext; simp
 
 @[simp] lemma ofComplexification_one [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
-    (1 : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).ofComplexification 𝕜
-      (by simp [one_def]) = 1 :=
+    (1 : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).ofComplexification (by simp [one_def]) =
+      1 :=
   ofComplexification_id
 
 @[simp] lemma ofComplexification_toComplexification
     [Module ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F]
     (T : E →L[𝕜] F) (h) :
-    T.toComplexification.ofComplexification 𝕜 h = T := by ext; simp
+    T.toComplexification.ofComplexification h = T := by ext; simp
 
 @[simp] lemma restrictScalars_ofComplexification
     [Module ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F]
     (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F) (h) :
-    (T.ofComplexification 𝕜 h).restrictScalars ℝ =
+    (T.ofComplexification h).restrictScalars ℝ =
       reL 𝕜 F ∘SL T.restrictScalars ℝ ∘SL (inclusion 𝕜 E).toContinuousLinearMap := rfl
 
 lemma toComplexification_ofComplexification
@@ -585,7 +584,7 @@ lemma toComplexification_ofComplexification
     (h : T ∘SL ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification =
       ((RCLike.I : 𝕜) • (1 : F →L[𝕜] F)).toComplexification ∘SL T)
     (hT : T.conjugate = T) :
-    (T.ofComplexification 𝕜 h).toComplexification = T := by
+    (T.ofComplexification h).toComplexification = T := by
   ext1 v
   conv_rhs => rw [← mk_re_im v, mk_eq_add_I_smul]
   simp only [map_add, map_smul]

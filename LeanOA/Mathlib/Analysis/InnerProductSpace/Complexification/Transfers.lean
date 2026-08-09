@@ -73,7 +73,7 @@ attribute [local simp] toComplexification_ofComplexification conjugate_cfcHom_to
 This is used in the continuous functional calculus. -/
 private noncomputable def cfcHomAux [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {T : E →L[𝕜] E}
     (hT : IsSelfAdjoint T) : C(spectrum ℝ T.toComplexification, ℝ) →⋆ₐ[ℝ] (E →L[𝕜] E) where
-  toFun g := (cfcHom hT.toComplexification g).ofComplexification 𝕜
+  toFun g := (cfcHom hT.toComplexification g).ofComplexification
     (commute_cfcHom_toComplexification_algebraMapCLM_I _ hT _)
   map_one' := by ext; simp
   map_zero' := by ext; simp
