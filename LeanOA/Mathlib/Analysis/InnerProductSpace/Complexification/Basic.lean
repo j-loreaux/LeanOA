@@ -649,6 +649,14 @@ alias ⟨_, _root_.IsStarNormal.toComplexification⟩ := isStarNormal_toComplexi
 lemma spectrum_toComplexification_real [Algebra ℝ (E →L[𝕜] E)] [IsScalarTower ℝ 𝕜 (E →L[𝕜] E)]
     (T : E →L[𝕜] E) : spectrum ℝ T.toComplexification = spectrum ℝ T := by simp
 
+@[simp] lemma quasispectrum_toComplexification (T : E →L[𝕜] E) :
+    quasispectrum ℝ T.toComplexification = algebraMap ℝ 𝕜 ⁻¹' quasispectrum 𝕜 T := by
+  simp [quasispectrum_eq_spectrum_union_zero, Set.ext_iff]
+
+lemma quasispectrum_toComplexification_real [Algebra ℝ (E →L[𝕜] E)]
+    [IsScalarTower ℝ 𝕜 (E →L[𝕜] E)] (T : E →L[𝕜] E) :
+    quasispectrum ℝ T.toComplexification = quasispectrum ℝ T := by simp
+
 @[simp] lemma conjugate_adjoint (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F) :
     T.adjoint.conjugate = T.conjugate.adjoint := by
   simp [eq_adjoint_iff, inner_conj_left (T.adjoint _), adjoint_inner_right, inner_conj_right (T _)]
@@ -663,6 +671,9 @@ lemma spectrum_toComplexification_real [Algebra ℝ (E →L[𝕜] E)] [IsScalarT
     and_congr_right_iff]
   refine fun _ ↦ ⟨fun hT x ↦ ?_, fun hT x ↦ add_nonneg (hT x.re) (hT x.im)⟩
   simpa using hT (.mk 𝕜 x 0)
+
+@[simp] lemma toComplexification_nonneg_iff {T : E →L[𝕜] E} :
+    0 ≤ T.toComplexification ↔ 0 ≤ T := by simp [nonneg_iff_isPositive]
 
 @[simp] lemma toComplexification_le_toComplexification_iff {S T : E →L[𝕜] E} :
     S.toComplexification ≤ T.toComplexification ↔ S ≤ T := by simp [le_def, ← map_sub]

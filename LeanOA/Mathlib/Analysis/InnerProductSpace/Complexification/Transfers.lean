@@ -152,4 +152,47 @@ instance instIsometricCFCReal [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
 instance [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
     StarOrderedRing (E →L[𝕜] E) := ContinuousLinearMap.instStarOrderedRingRCLike
 
+variable (𝕜 E) in
+/-- `toComplexification` as a star algebra homomorphism. -/
+@[expose, simps! apply] noncomputable def toComplexificationStarAlgHom
+    [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+    (E →L[𝕜] E) →⋆ₐ[ℝ] (Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E) where
+  __ := toComplexification
+  map_one' := by simp
+  map_mul' := by simp
+  commutes' _ := by ext <;> simp
+  map_star' := by simp
+
+@[fun_prop] lemma continuous_toComplexificationStarAlgHom [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+    Continuous (toComplexificationStarAlgHom 𝕜 E) := continuous_toComplexification
+
+-- TODO: generalize `f : ℝ → ℝ` to any ring `R → R`?
+@[simp] lemma toComplexification_cfc [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (f : ℝ → ℝ)
+    (T : E →L[𝕜] E) : (cfc f T).toComplexification = cfc f T.toComplexification := by
+  by_cases hT : IsSelfAdjoint T
+  · by_cases hfT : ContinuousOn f (spectrum ℝ T)
+    · simpa using (toComplexificationStarAlgHom 𝕜 E).map_cfc f T
+    · simp [cfc_apply_of_not_continuousOn, hfT]
+  · simp [cfc_apply_of_not_predicate, hT]
+
+-- TODO: generalize `f : ℝ → ℝ` to any ring `R → R`?
+@[simp] lemma toComplexification_cfcₙ [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (f : ℝ → ℝ)
+    (T : E →L[𝕜] E) : (cfcₙ f T).toComplexification = cfcₙ f T.toComplexification := by
+  by_cases hf0 : f 0 = 0
+  · by_cases hT : IsSelfAdjoint T
+    · by_cases hf : ContinuousOn f (quasispectrum ℝ T)
+      · rw [cfcₙ_eq_cfc, cfcₙ_eq_cfc (hf := by simpa), toComplexification_cfc]
+      · simp [cfcₙ_apply_of_not_continuousOn, hf]
+    · simp [cfcₙ_apply_of_not_predicate, hT]
+  · simp [cfcₙ_apply_of_not_map_zero, hf0]
+
+@[simp] lemma toComplexification_sqrt [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (T : E →L[𝕜] E) :
+    (CFC.sqrt T).toComplexification = CFC.sqrt T.toComplexification := by
+  by_cases h : 0 ≤ T
+  · rw [CFC.sqrt_eq_real_sqrt .., CFC.sqrt_eq_real_sqrt ..]; simp
+  · simp [CFC.sqrt_of_not_nonneg, h]
+
+@[simp] lemma toComplexification_abs [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (T : E →L[𝕜] E) :
+    (CFC.abs T).toComplexification = CFC.abs T.toComplexification := by simp [CFC.abs]
+
 end ContinuousLinearMap
