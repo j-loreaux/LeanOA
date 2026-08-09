@@ -535,13 +535,14 @@ An opeartor is equal to its conjugate iff it is a complexified operator
     S.toComplexification.conjugate = S.toComplexification := by ext1; simp [conj_apply]
 
 variable (𝕜) in
-/-- Decomplexifying an operator on the complexification of real spaces. -/
+/-- Decomplexifying an operator on complexifications given that it commutes with
+`(RCLike.I • 1).toComplexification`. -/
 @[expose, simps!]
 noncomputable def ofComplexification [Module ℝ E] [IsScalarTower ℝ 𝕜 E]
     [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
     (T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F)
-    (hT : T ∘SL ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification =
-      ((RCLike.I : 𝕜) • (1 : F →L[𝕜] F)).toComplexification ∘SL T) :
+    (hT : T ∘SL (algebraMapCLM 𝕜 (E →L[𝕜] E) RCLike.I).toComplexification =
+      (algebraMapCLM 𝕜 (F →L[𝕜] F) RCLike.I).toComplexification ∘SL T) :
     E →L[𝕜] F :=
   let S := reL 𝕜 F ∘SL T.restrictScalars ℝ ∘SL (inclusion 𝕜 E).toContinuousLinearMap
   { __ := S.toAddMonoidHom
@@ -561,7 +562,7 @@ noncomputable def ofComplexification [Module ℝ E] [IsScalarTower ℝ 𝕜 E]
     (1 : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 E).ofComplexification 𝕜 h = 1 :=
   ofComplexification_id _
 
-@[simp] lemma ofCompletxification_toComplexification
+@[simp] lemma ofComplexification_toComplexification
     [Module ℝ E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 E] [IsScalarTower ℝ 𝕜 F]
     (T : E →L[𝕜] F) (h) :
     T.toComplexification.ofComplexification 𝕜 h = T := by ext; simp

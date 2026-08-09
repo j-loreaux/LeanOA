@@ -7,10 +7,10 @@ public import LeanOA.Mathlib.Analysis.InnerProductSpace.Complexification.Basic
 
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
 
-/-! Transfering results from C⋆-algebras to `𝕜` and `ℝ` Hilbert spaces via complexification
+/-! Transfering results from C⋆-algebras to `𝕜` Hilbert spaces via complexification
 
-In particular, we provide the continuous functional calculus for `Eₗ →L[ℝ] Eₗ`
-(see `ContinuousLinearMap.instCFCReal` and `ContinuousLinearMap.instIsometricCFCReal`). -/
+In particular, we provide the continuous functional calculus for `E →L[𝕜] E`
+(see `ContinuousLinearMap.instCFC` and `ContinuousLinearMap.instIsometricCFC`). -/
 
 public section
 
@@ -60,10 +60,10 @@ theorem conjugate_cfcHom_toComplexification {T : E →L[𝕜] E} (hT : IsSelfAdj
   conv_lhs => rw [← conjugateStarAlgEquiv_comp_cfcHom_toComplexification hT]
   simp [conjugateStarAlgEquiv_apply]
 
-private lemma commute_cfcHom_mulI (T : E →L[𝕜] E) (hT : IsSelfAdjoint T)
-    (g : C(spectrum ℝ T.toComplexification, ℝ)) :
+private lemma commute_cfcHom_toComplexification_algebraMapCLM_I (T : E →L[𝕜] E)
+    (hT : IsSelfAdjoint T) (g : C(spectrum ℝ T.toComplexification, ℝ)) :
     Commute (cfcHom hT.toComplexification g)
-      ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification := by
+      (algebraMapCLM 𝕜 (E →L[𝕜] E) RCLike.I).toComplexification := by
   refine hT.toComplexification.commute_cfcHom _ ?_ g
   simp [commute_iff_eq, ContinuousLinearMap.ext_iff]
 
@@ -71,9 +71,10 @@ attribute [local simp] toComplexification_ofComplexification conjugate_cfcHom_to
 /-- The real star algebra homomorphism between `C(spectrum ℝ T.toComplexification, ℝ)` and
 `Eₗ →L[ℝ] Eₗ`.
 This is used in the continuous functional calculus. -/
-private noncomputable def cfcRealHomAux [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {T : E →L[𝕜] E}
+private noncomputable def cfcHomAux [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {T : E →L[𝕜] E}
     (hT : IsSelfAdjoint T) : C(spectrum ℝ T.toComplexification, ℝ) →⋆ₐ[ℝ] (E →L[𝕜] E) where
-  toFun g := (cfcHom hT.toComplexification g).ofComplexification 𝕜 (commute_cfcHom_mulI T hT _)
+  toFun g := (cfcHom hT.toComplexification g).ofComplexification 𝕜
+    (commute_cfcHom_toComplexification_algebraMapCLM_I _ hT _)
   map_one' := by ext; simp
   map_zero' := by ext; simp
   map_add' _ _ := by ext; simp
@@ -81,14 +82,13 @@ private noncomputable def cfcRealHomAux [NormedSpace ℝ E] [IsScalarTower ℝ �
   map_star' _ := by simp [← toComplexification_inj, hT, ← star_toComplexification, ← map_star]
   commutes' _ := by ext; simp [Algebra.algebraMap_eq_smul_one]
 
-private lemma toComplexification_cfcRealHomAux [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+private lemma toComplexification_cfcHomAux [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
     {T : E →L[𝕜] E} (hT : IsSelfAdjoint T)
     (g : C(spectrum ℝ T.toComplexification, ℝ)) :
-    (cfcRealHomAux hT g).toComplexification = cfcHom hT.toComplexification g := by
+    (cfcHomAux hT g).toComplexification = cfcHom hT.toComplexification g := by
   refine toComplexification_ofComplexification ?_ (conjugate_cfcHom_toComplexification hT g)
-  exact commute_cfcHom_mulI T hT g
+  exact commute_cfcHom_toComplexification_algebraMapCLM_I T hT g
 
--- set it to private local because I'm not sure this is a good instance
 instance [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (a : E →L[𝕜] E) :
     CompactSpace ↑(spectrum ℝ a) := by
   rw [← spectrum_toComplexification_real]
@@ -104,17 +104,17 @@ instance instCFC [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
     exact ContinuousFunctionalCalculus.spectrum_nonempty _ hT.toComplexification
   exists_cfc_of_predicate T hT := by
     rw [← spectrum_toComplexification_real]
-    refine ⟨cfcRealHomAux hT, ?_, fun x y hxy ↦ ?_, ?_, fun x ↦ ?_, fun x ↦ ?_⟩
+    refine ⟨cfcHomAux hT, ?_, fun x y hxy ↦ ?_, ?_, fun x ↦ ?_, fun x ↦ ?_⟩
     · rw [isometry_toComplexification.isEmbedding.continuous_iff]
       eta_expand
-      simp only [Function.comp_apply, toComplexification_cfcRealHomAux]
+      simp only [Function.comp_apply, toComplexification_cfcHomAux]
       fun_prop
-    · rwa [← toComplexification_inj, toComplexification_cfcRealHomAux,
-        toComplexification_cfcRealHomAux, (cfcHom_injective hT.toComplexification).eq_iff] at hxy
-    · rw [← toComplexification_inj, toComplexification_cfcRealHomAux, cfcHom_id ..]
-    · rw [← spectrum_toComplexification_real, toComplexification_cfcRealHomAux]
+    · rwa [← toComplexification_inj, toComplexification_cfcHomAux,
+        toComplexification_cfcHomAux, (cfcHom_injective hT.toComplexification).eq_iff] at hxy
+    · rw [← toComplexification_inj, toComplexification_cfcHomAux, cfcHom_id ..]
+    · rw [← spectrum_toComplexification_real, toComplexification_cfcHomAux]
       exact cfcHom_map_spectrum ..
-    · rw [← isSelfAdjoint_toComplexification_iff, toComplexification_cfcRealHomAux]
+    · rw [← isSelfAdjoint_toComplexification_iff, toComplexification_cfcHomAux]
       exact cfcHom_predicate ..
 
 -- golf of `ContinuousLinearMap.IsIdempotentElem.isSelfAdjoint_iff_isStarNormal`:
@@ -137,7 +137,7 @@ lemma spectralRadius_toComplexification {T : E →L[𝕜] E}
     (hT : IsSelfAdjoint T) : spectralRadius ℂ T.toComplexification = spectralRadius 𝕜 T := by
   simp [hT.toComplexification.spectralRadius_eq_nnnorm, spectralRadius_eq_opNNNorm hT]
 
-instance instIsometricCFCReal [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+instance instIsometricCFC [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
     IsometricContinuousFunctionalCalculus ℝ (E →L[𝕜] E) IsSelfAdjoint where
   isometric T hT := (AddMonoidHomClass.isometry_iff_norm _).mpr fun x ↦ by
     suffices ‖cfcHom hT x‖₊ = ‖x‖₊ from congr($this)
