@@ -67,13 +67,13 @@ private lemma commute_cfcHom_mulI (T : E →L[𝕜] E) (hT : IsSelfAdjoint T)
   refine hT.toComplexification.commute_cfcHom _ ?_ g
   simp [commute_iff_eq, ContinuousLinearMap.ext_iff]
 
-attribute [local simp] toComplexification_ofComplexificationK conjugate_cfcHom_toComplexification in
+attribute [local simp] toComplexification_ofComplexification conjugate_cfcHom_toComplexification in
 /-- The real star algebra homomorphism between `C(spectrum ℝ T.toComplexification, ℝ)` and
 `Eₗ →L[ℝ] Eₗ`.
 This is used in the continuous functional calculus. -/
 private noncomputable def cfcRealHomAux [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {T : E →L[𝕜] E}
     (hT : IsSelfAdjoint T) : C(spectrum ℝ T.toComplexification, ℝ) →⋆ₐ[ℝ] (E →L[𝕜] E) where
-  toFun g := (cfcHom hT.toComplexification g).ofComplexificationK 𝕜 (commute_cfcHom_mulI T hT _)
+  toFun g := (cfcHom hT.toComplexification g).ofComplexification 𝕜 (commute_cfcHom_mulI T hT _)
   map_one' := by ext; simp
   map_zero' := by ext; simp
   map_add' _ _ := by ext; simp
@@ -85,11 +85,11 @@ private lemma toComplexification_cfcRealHomAux [NormedSpace ℝ E] [IsScalarTowe
     {T : E →L[𝕜] E} (hT : IsSelfAdjoint T)
     (g : C(spectrum ℝ T.toComplexification, ℝ)) :
     (cfcRealHomAux hT g).toComplexification = cfcHom hT.toComplexification g := by
-  refine toComplexification_ofComplexificationK ?_ (conjugate_cfcHom_toComplexification hT g)
+  refine toComplexification_ofComplexification ?_ (conjugate_cfcHom_toComplexification hT g)
   exact commute_cfcHom_mulI T hT g
 
 -- set it to private local because I'm not sure this is a good instance
-private local instance [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (a : E →L[𝕜] E) :
+instance [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (a : E →L[𝕜] E) :
     CompactSpace ↑(spectrum ℝ a) := by
   rw [← spectrum_toComplexification_real]
   infer_instance
