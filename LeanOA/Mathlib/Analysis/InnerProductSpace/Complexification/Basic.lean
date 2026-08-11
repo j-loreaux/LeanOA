@@ -581,8 +581,8 @@ noncomputable def ofComplexification [Module ℝ E] [IsScalarTower ℝ 𝕜 E]
 lemma toComplexification_ofComplexification
     [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
     {T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F}
-    (h : T ∘SL ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification =
-      ((RCLike.I : 𝕜) • (1 : F →L[𝕜] F)).toComplexification ∘SL T)
+    (h : T ∘SL (algebraMapCLM 𝕜 (E →L[𝕜] E) RCLike.I).toComplexification =
+      (algebraMapCLM 𝕜 (F →L[𝕜] F) RCLike.I).toComplexification ∘SL T)
     (hT : T.conjugate = T) :
     (T.ofComplexification h).toComplexification = T := by
   ext1 v
@@ -604,8 +604,8 @@ lemma exists_toComplexification_eq_iff
     [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
     {T : Complexification 𝕜 E →L[ℂ] Complexification 𝕜 F} :
     (∃ S : E →L[𝕜] F, S.toComplexification = T) ↔ T.conjugate = T ∧
-      T ∘SL ((RCLike.I : 𝕜) • (1 : E →L[𝕜] E)).toComplexification =
-        ((RCLike.I : 𝕜) • (1 : F →L[𝕜] F)).toComplexification ∘SL T := by
+      T ∘SL (algebraMapCLM 𝕜 (E →L[𝕜] E) RCLike.I).toComplexification =
+        (algebraMapCLM 𝕜 (F →L[𝕜] F) RCLike.I).toComplexification ∘SL T := by
   refine ⟨fun ⟨S, hS⟩ ↦ ?_, fun ⟨h1, h2⟩ ↦ ⟨_, toComplexification_ofComplexification h2 h1⟩⟩
   simp [← hS, ContinuousLinearMap.ext_iff]
 
