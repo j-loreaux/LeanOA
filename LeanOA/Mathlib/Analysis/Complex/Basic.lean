@@ -24,3 +24,22 @@ lemma subset_slitPlane_of_subset_sphere {r : ℝ} {s : Set ℂ} (hs : s ⊆ sphe
   simpa using (hs hz).symm
 
 end Complex
+
+section RealImaginaryPart
+
+open scoped ComplexStarModule
+
+variable {M : Type*} [AddCommGroup M] [StarAddMonoid M] [Module ℂ M] [StarModule ℂ M]
+    [TopologicalSpace M] [ContinuousSMul ℂ M] [ContinuousStar M] [IsTopologicalAddGroup M]
+
+@[fun_prop]
+lemma continuous_realPart : Continuous (ℜ : M → selfAdjoint M) := by
+  simp_rw [continuous_induced_rng, Function.comp_def, realPart_apply_coe, ← Complex.coe_smul]
+  fun_prop
+
+@[fun_prop]
+lemma continuous_imaginaryPart : Continuous (ℑ : M → selfAdjoint M) := by
+  simp_rw [continuous_induced_rng, Function.comp_def, imaginaryPart_apply_coe, ← Complex.coe_smul]
+  fun_prop
+
+end RealImaginaryPart

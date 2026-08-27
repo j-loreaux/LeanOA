@@ -2,98 +2,20 @@ module
 
 public import LeanOA.Corner
 public import LeanOA.CFC
+public import LeanOA.Mathlib.Algebra.Group.Idempotent
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+public import LeanOA.Mathlib.Data.Set.Function
 public import LeanOA.Ultraweak.OrderClosed
 public import LeanOA.Ultraweak.ContinuousStar
-public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 
 @[expose] public section
 
-section RealImaginaryPart
-
-open scoped ComplexStarModule
-
-variable {M : Type*} [AddCommGroup M] [StarAddMonoid M] [Module ℂ M] [StarModule ℂ M]
-    [TopologicalSpace M] [ContinuousSMul ℂ M] [ContinuousStar M] [IsTopologicalAddGroup M]
-
-@[fun_prop]
-lemma continuous_realPart : Continuous (ℜ : M → selfAdjoint M) := by
-  simp_rw [continuous_induced_rng, Function.comp_def, realPart_apply_coe]
-  fun_prop
-
-@[fun_prop]
-lemma continuous_imaginaryPart : Continuous (ℑ : M → selfAdjoint M) := by
-  simp_rw [continuous_induced_rng, Function.comp_def, imaginaryPart_apply_coe]
-  fun_prop
-
-end RealImaginaryPart
-
-variable {A M P : Type*}
+variable {M P : Type*}
     [NormedAddCommGroup P] [NormedSpace ℂ P] [CompleteSpace P]
     [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M] [Predual ℂ M P]
-    [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 open NonUnitalStarSubalgebra Metric Ultraweak Set
 open scoped Ultraweak NNReal
-
-lemma IsStarProjection.mem_image_mul_mul_nonneg_inter_unitClosedBall_iff
-    {e : A} (he : IsStarProjection e) :
-    (e * · * e) '' ({x | 0 ≤ x} ∩ closedBall 0 1) = Icc 0 e ∩ closedBall 0 1 := by
-  ext x
-  constructor
-  · rintro ⟨x, ⟨hx₀, hx₁⟩, rfl⟩
-    refine ⟨⟨?_, ?_⟩, ?_⟩ <;> simp only [mem_closedBall, dist_zero_right] at hx₁ ⊢
-    · exact he.isSelfAdjoint.conjugate_nonneg hx₀
-    · rw (occs := [1]) [← he.isSelfAdjoint.star_eq]
-      grw [CStarAlgebra.star_left_conjugate_le_norm_smul hx₀.isSelfAdjoint,
-        he.isSelfAdjoint.star_eq, he.isIdempotentElem.eq, hx₁, one_smul]
-      exact he.nonneg
-    · grw [norm_mul₃_le, hx₁, he.norm_le]
-      simpa using he.norm_le
-  · rintro ⟨⟨hx₀, hxe⟩, hx₁⟩
-    exact ⟨x, ⟨hx₀, hx₁⟩, he.conjugate_of_nonneg_of_le hx₀ hxe⟩
-
-open CStarAlgebra in
-lemma isSelfAdjoint_and_norm_le_iff {x : A} {r : ℝ} :
-    IsSelfAdjoint x ∧ ‖x‖ ≤ r ↔ ∃ y z, (0 ≤ y ∧ ‖y‖ ≤ r) ∧ (0 ≤ z ∧ ‖z‖ ≤ r) ∧ x = y - z := by
-  constructor
-  · rintro ⟨hx, hxr⟩
-    exact ⟨x⁺, x⁻,
-      ⟨by cfc_tac, (norm_posPart_le x).trans hxr⟩,
-      ⟨by cfc_tac, (norm_negPart_le x).trans hxr⟩,
-      (CFC.posPart_sub_negPart _ hx).symm⟩
-  · rintro ⟨y, z, ⟨hy, hyr⟩, ⟨hz, hzr⟩, rfl⟩
-    refine ⟨by cfc_tac, ?_⟩
-    grw [hz.isSelfAdjoint.neg.norm_le_max_of_le_of_le (c := y), hyr, norm_neg, hzr, max_self]
-    all_goals simpa
-
-open CStarAlgebra in
-lemma isSelfAdjoint_and_norm_lt_iff {x : A} {r : ℝ} :
-    IsSelfAdjoint x ∧ ‖x‖ < r ↔ ∃ y z, (0 ≤ y ∧ ‖y‖ < r) ∧ (0 ≤ z ∧ ‖z‖ < r) ∧ x = y - z := by
-  constructor
-  · rintro ⟨hx, hxr⟩
-    exact ⟨x⁺, x⁻,
-      ⟨by cfc_tac, (norm_posPart_le x).trans_lt hxr⟩,
-      ⟨by cfc_tac, (norm_negPart_le x).trans_lt hxr⟩,
-      (CFC.posPart_sub_negPart _ hx).symm⟩
-  · rintro ⟨y, z, ⟨hy, hyr⟩, ⟨hz, hzr⟩, rfl⟩
-    refine ⟨by cfc_tac, ?_⟩
-    grw [hz.isSelfAdjoint.neg.norm_le_max_of_le_of_le (c := y) (by simpa) (by simpa)]
-    simp_all
-
-open Pointwise in
-lemma setOf_isSelfAdjoint_inter_closedBall_eq {r : ℝ} :
-    {x : A | IsSelfAdjoint x} ∩ closedBall 0 r =
-      {x | 0 ≤ x} ∩ closedBall 0 r - {x | 0 ≤ x} ∩ closedBall 0 r := by
-  ext
-  simp [isSelfAdjoint_and_norm_le_iff, Set.mem_sub]
-  grind
-
-open Pointwise in
-lemma setOf_isSelfAdjoint_inter_ball_eq {r : ℝ} :
-    {x : A | IsSelfAdjoint x} ∩ ball 0 r = {x | 0 ≤ x} ∩ ball 0 r - {x | 0 ≤ x} ∩ ball 0 r := by
-  ext
-  simp [isSelfAdjoint_and_norm_lt_iff, Set.mem_sub]
-  grind
 
 open Pointwise in
 -- the proof of this is inlined in the theorem below.
@@ -105,25 +27,23 @@ example (e : M) :
   have e_mul_e : (e * · * e) = LinearMap.mulLeftRight ℂ ⟨e, e⟩ := rfl
   rw [e_mul_e, ← Set.image_sub, setOf_isSelfAdjoint_inter_closedBall_eq]
 
-lemma IsStarProjection.idempotent_mul_mul {M : Type*} [Semigroup M] [StarMul M]
-    {e : M} (he : IsStarProjection e) :
-    (e * · * e) ∘ (e * · * e) = (e * · * e) := by
-  ext; simp [mul_assoc, he.isIdempotentElem.mul_mul_self, he.isIdempotentElem.mul_self_mul]
-
-/-- If `f` is an idempotent function which maps sets `s` and `t` to themselves, then
-`f '' (s ∩ t) = (f '' s) ∩ t`. -/
-lemma Set.MapsTo.image_inter_of_idempotent {α : Type*} {s t : Set α} {f : α → α}
-    (hf : f ∘ f = f) (hfs : MapsTo f s s) (hft : MapsTo f t t) :
-    f '' (s ∩ t) = (f '' s) ∩ t := by
-  apply subset_antisymm (fun _ _ ↦ by aesop)
-  rintro - ⟨⟨x, hx, rfl⟩, hxt⟩
-  exact ⟨f x, ⟨hfs hx, hxt⟩, congr($hf x)⟩
-
 open scoped ComplexStarModule Pointwise in
 lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarProjection e) :
     IsClosed (corner ℂ e : Set σ(M, P)) := by
   /- By the Krein–Smulian theorem, it suffices to prove that the corner intersected with the
-  closed unit ball is closed. -/
+  closed unit ball is closed.
+
+  Letting `B := closedBall 0 1`, `Ms := {x | IsSelfAdjoint x}` and `P := {x | 0 ≤ x}`, the
+  sketch of the full argument is as follows. We must show `((e * · * e) '' M) ∩ S` is
+  ultraweakly closed, but it suffices to restrict to selfadjoint elements and show that
+  `((e * · * e) '' Ms) ∩ S` is ultraweakly closed. We have the following chain of inequalities:
+  ```lean
+  calc ((e * · * e) '' Ms) ∩ S = (e * · * e) '' (Ms ∩ S)
+    _ = (e * · * e) '' (P ∩ S) - (e * · * e) '' (P ∩ S)
+    _ = Icc 0 e ∩ S - Icc 0 e ∩ S
+  ```
+  Since subtraction is continuous, `S` is ultraweakly compact and `Icc 0 e` is closed, this is
+  the continuous image of a compact set, and therefore closed. -/
   apply Ultraweak.krein_smulian_of_submodule ((corner ℂ e).toSubmodule.restrictScalars ℝ≥0)
   simp only [Submodule.coe_restrictScalars, Submodule.coe_set_mk,
     NonUnitalSubsemiring.coe_toAddSubmonoid, NonUnitalSubalgebra.coe_toNonUnitalSubsemiring,
@@ -170,7 +90,7 @@ lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarP
   `star y = y` such that `e * y * e = e * x * e`. -/
   calc (e * · * e) '' {x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' B
     _ = (e * · * e) '' ({x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' B) := by
-      apply Eq.symm <| Set.MapsTo.image_inter_of_idempotent he.idempotent_mul_mul
+      apply Eq.symm <| Set.MapsTo.image_inter_of_idempotent he.isIdempotentElem.idempotent_mul_mul
         (fun x hx ↦ by simpa [he.isSelfAdjoint.star_eq] using hx.conjugate e) (fun x hx ↦ ?_)
       simp only [mem_preimage, mem_closedBall, dist_zero_right, ofUltraweak_mul, B] at hx ⊢
       grw [norm_mul₃_le, hx, he.norm_le]

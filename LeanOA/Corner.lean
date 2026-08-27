@@ -35,9 +35,9 @@ def corner (a : A) : NonUnitalStarSubalgebra R A where
 
 lemma mem_corner_iff {a x : A} : x ∈ corner R a ↔ ∃ y, a * y * star a = x := Iff.rfl
 
-lemma IsSelfAdjoint.mem_corner_ifff {a : A} (ha : IsSelfAdjoint a) {x : A} :
+lemma IsSelfAdjoint.mem_corner_iff {a : A} (ha : IsSelfAdjoint a) {x : A} :
     x ∈ corner R a ↔ ∃ y, a * y * a = x := by
-  simp only [mem_corner_iff, ha.star_eq]
+  simp only [NonUnitalStarSubalgebra.mem_corner_iff, ha.star_eq]
 
 variable (R) in
 lemma mem_corner (a x : A) : a * x * star a ∈ corner R a := ⟨x, rfl⟩

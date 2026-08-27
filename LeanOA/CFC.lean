@@ -95,6 +95,54 @@ theorem IsSelfAdjoint.norm_le_max_of_le_of_le {A : Type*} [NonUnitalCStarAlgebra
       (CStarAlgebra.norm_posPart_mono hbc hb)
     _ ≤ max ‖a‖ ‖c‖ := max_le_max (by simp) (by simp)
 
+section IsSelfAdjoint
+
+open CStarAlgebra Metric Set
+open scoped Pointwise
+
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+
+lemma isSelfAdjoint_and_norm_le_iff {x : A} {r : ℝ} :
+    IsSelfAdjoint x ∧ ‖x‖ ≤ r ↔ ∃ y z, (0 ≤ y ∧ ‖y‖ ≤ r) ∧ (0 ≤ z ∧ ‖z‖ ≤ r) ∧ x = y - z := by
+  constructor
+  · rintro ⟨hx, hxr⟩
+    exact ⟨x⁺, x⁻,
+      ⟨by cfc_tac, (norm_posPart_le x).trans hxr⟩,
+      ⟨by cfc_tac, (norm_negPart_le x).trans hxr⟩,
+      (CFC.posPart_sub_negPart _ hx).symm⟩
+  · rintro ⟨y, z, ⟨hy, hyr⟩, ⟨hz, hzr⟩, rfl⟩
+    refine ⟨by cfc_tac, ?_⟩
+    grw [hz.isSelfAdjoint.neg.norm_le_max_of_le_of_le (c := y), hyr, norm_neg, hzr, max_self]
+    all_goals simpa
+
+lemma isSelfAdjoint_and_norm_lt_iff {x : A} {r : ℝ} :
+    IsSelfAdjoint x ∧ ‖x‖ < r ↔ ∃ y z, (0 ≤ y ∧ ‖y‖ < r) ∧ (0 ≤ z ∧ ‖z‖ < r) ∧ x = y - z := by
+  constructor
+  · rintro ⟨hx, hxr⟩
+    exact ⟨x⁺, x⁻,
+      ⟨by cfc_tac, (norm_posPart_le x).trans_lt hxr⟩,
+      ⟨by cfc_tac, (norm_negPart_le x).trans_lt hxr⟩,
+      (CFC.posPart_sub_negPart _ hx).symm⟩
+  · rintro ⟨y, z, ⟨hy, hyr⟩, ⟨hz, hzr⟩, rfl⟩
+    refine ⟨by cfc_tac, ?_⟩
+    grw [hz.isSelfAdjoint.neg.norm_le_max_of_le_of_le (c := y) (by simpa) (by simpa)]
+    simp_all
+
+lemma setOf_isSelfAdjoint_inter_closedBall_eq {r : ℝ} :
+    {x : A | IsSelfAdjoint x} ∩ closedBall 0 r =
+      {x | 0 ≤ x} ∩ closedBall 0 r - {x | 0 ≤ x} ∩ closedBall 0 r := by
+  ext
+  simp [isSelfAdjoint_and_norm_le_iff, Set.mem_sub]
+  grind
+
+lemma setOf_isSelfAdjoint_inter_ball_eq {r : ℝ} :
+    {x : A | IsSelfAdjoint x} ∩ ball 0 r = {x | 0 ≤ x} ∩ ball 0 r - {x | 0 ≤ x} ∩ ball 0 r := by
+  ext
+  simp [isSelfAdjoint_and_norm_lt_iff, Set.mem_sub]
+  grind
+
+end IsSelfAdjoint
+
 open scoped ComplexStarModule in
 /-- A set in a non-unital C⋆-algebra which is bounded above and below is
 bounded in norm. -/

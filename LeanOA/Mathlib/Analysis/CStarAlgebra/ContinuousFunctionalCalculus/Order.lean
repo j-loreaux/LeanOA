@@ -56,3 +56,21 @@ lemma CStarAlgebra.self_le_nnrpow_of_nonneg_of_norm_le_one {e : A} (he0 : 0 ≤ 
 lemma CStarAlgebra.self_le_sqrt_of_nonneg_of_norm_le_one {e : A} (he0 : 0 ≤ e) (he1 : ‖e‖ ≤ 1) :
     e ≤ CFC.sqrt e :=
   CFC.sqrt_eq_nnrpow e ▸ self_le_nnrpow_of_nonneg_of_norm_le_one he0 he1 (by simp) (by simp)
+
+open Metric Set in
+lemma IsStarProjection.mem_image_mul_mul_nonneg_inter_unitClosedBall_iff
+    {e : A} (he : IsStarProjection e) :
+    (e * · * e) '' ({x | 0 ≤ x} ∩ closedBall 0 1) = Icc 0 e ∩ closedBall 0 1 := by
+  ext x
+  constructor
+  · rintro ⟨x, ⟨hx₀, hx₁⟩, rfl⟩
+    refine ⟨⟨?_, ?_⟩, ?_⟩ <;> simp only [mem_closedBall, dist_zero_right] at hx₁ ⊢
+    · exact he.isSelfAdjoint.conjugate_nonneg hx₀
+    · rw (occs := [1]) [← he.isSelfAdjoint.star_eq]
+      grw [CStarAlgebra.star_left_conjugate_le_norm_smul hx₀.isSelfAdjoint,
+        he.isSelfAdjoint.star_eq, he.isIdempotentElem.eq, hx₁, one_smul]
+      exact he.nonneg
+    · grw [norm_mul₃_le, hx₁, he.norm_le]
+      simpa using he.norm_le
+  · rintro ⟨⟨hx₀, hxe⟩, hx₁⟩
+    exact ⟨x, ⟨hx₀, hx₁⟩, he.conjugate_of_nonneg_of_le hx₀ hxe⟩
