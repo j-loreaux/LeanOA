@@ -1,11 +1,13 @@
-import LeanOA.ExtremallyDisconnected
-import LeanOA.Masa
-import LeanOA.Ultraweak.LUB
-import LeanOA.Mathlib.Algebra.Star.Unitary
-import LeanOA.Mathlib.Algebra.LinearAlgebra.Span.Defs
-import Mathlib.Algebra.Order.Monoid.Submonoid -- it makes no sense that this import is necessary
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
-import Mathlib.Analysis.CStarAlgebra.Unitary.Span
+module
+
+public import LeanOA.ExtremallyDisconnected
+public import LeanOA.Masa
+public import LeanOA.Ultraweak.LUB
+public import Mathlib.LinearAlgebra.Span.Defs
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
+public import Mathlib.Analysis.CStarAlgebra.Unitary.Span
+
+@[expose] public section
 
 section IsSelfAdjoint
 
@@ -24,7 +26,7 @@ instance {S : Type*} [SetLike S A] [NonUnitalSubringClass S A] [SMulMemClass S �
   · let r : A := CFC.sqrt (x : A)
     have hr : r ∈ s := by
       simp only [r, CFC.sqrt, cfcₙ_nnreal_eq_real _ (x : A) hx]
-      exact cfcₙ_mem s _ x.1 x.2
+      exact cfcₙ_mem _ x.2
     refine ⟨⟨r, hr⟩, Subtype.ext ?_⟩
     simp [r, (CFC.sqrt_nonneg (x : A)).star_eq, CFC.sqrt_mul_sqrt_self (x : A)]
   · rintro ⟨x, rfl⟩
@@ -132,8 +134,8 @@ lemma IsMasa.extremallyDisconnected_characterSpace (S : StarSubalgebra ℂ M) [h
     this set coincides with `f '' s`, since the latter is a subset of `S` which is commutative.
     Thus `v * u * star v` coincides with the supremum of `f '' s`, which is `u`. -/
     lift v to unitary S using hv
-    refine .symm <| (commute_unitary_iff_mul_mul_star
-      (u := Unitary.map (⟨S.subtype.toRingHom, by simp⟩ : S →⋆* M) v) |>.mpr ?_)
+    refine .symm <| (commute_unitary_iff_star_right_conjugate
+      (u := (Unitary.map (⟨S.subtype.toRingHom, by simp⟩ : S →⋆* M) v : M)) (by grind) |>.mpr ?_)
     have h_image : conjOrderHom (v : M) '' (f '' s) = f '' s := by
       convert Set.image_id (f '' s) using 1
       apply Set.EqOn.image_eq

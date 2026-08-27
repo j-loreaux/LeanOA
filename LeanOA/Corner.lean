@@ -1,5 +1,9 @@
-import Mathlib.Topology.Algebra.StarSubalgebra
-import Mathlib.Algebra.Star.StarProjection
+module
+
+public import Mathlib.Topology.Algebra.StarSubalgebra
+public import Mathlib.Algebra.Star.StarProjection
+
+@[expose] public section
 
 open Set
 

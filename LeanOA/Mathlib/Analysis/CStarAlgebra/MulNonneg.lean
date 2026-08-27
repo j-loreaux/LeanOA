@@ -1,4 +1,8 @@
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+module
+
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+
+@[expose] public section
 
 lemma CStarAlgebra.prod_nonneg_of_commute
     {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]

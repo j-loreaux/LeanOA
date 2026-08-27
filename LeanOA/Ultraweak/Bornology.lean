@@ -1,4 +1,8 @@
-import LeanOA.Ultraweak.Basic
+module
+
+public import LeanOA.Ultraweak.Basic
+
+@[expose] public section
 
 variable {𝕜 M P : Type*} [RCLike 𝕜]
     [NormedAddCommGroup M] [NormedSpace 𝕜 M]

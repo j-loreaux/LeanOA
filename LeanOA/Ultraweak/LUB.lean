@@ -1,12 +1,16 @@
-import LeanOA.Ultraweak.Uniformity
-import LeanOA.ComplexOrder
-import LeanOA.Mathlib.Algebra.Order.Star.Basic
-import LeanOA.Mathlib.Analysis.Complex.Basic
-import LeanOA.CFC
-import LeanOA.Ultraweak.ContinuousFunctionalCalculus
-import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
-import LeanOA.CStarAlgebra.PositiveLinearFunctional
-import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
+module
+
+public import LeanOA.Ultraweak.Uniformity
+public import LeanOA.ComplexOrder
+public import LeanOA.Mathlib.Analysis.Complex.Basic
+public import LeanOA.CFC
+public import LeanOA.Ultraweak.ContinuousFunctionalCalculus
+public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
+public import LeanOA.CStarAlgebra.PositiveLinearFunctional
+public import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
+public import Mathlib.Algebra.Order.Star.Basic
+
+@[expose] public section
 
 /-! # `σ(M, P)` is a conditionally complete partial order
 
@@ -77,7 +81,7 @@ lemma DirectedOn.exists_isLUB (s : Set σ(M, P)) (hs : DirectedOn (· ≤ ·) s)
   refine ⟨x, ?_, hx⟩
   /- Since the net is increasing, and the topology on `σ(M, P)` is order closed, the
   limit is the least upper bound. -/
-  simpa [setOf] using isLUB_of_tendsto_atTop (β := s) (Subtype.mono_coe (· ∈ s)) hx
+  simpa [setOf] using! isLUB_of_tendsto_atTop (β := s) (Subtype.mono_coe (· ∈ s)) hx
 
 /-- `σ(M, P)` is a conditionally complete partial order. Since this is only dependent upon the
 order, not the topology, the same is true of `M`. -/
@@ -122,7 +126,7 @@ private theorem isLUB_star_right_conjugate_aux (a u : σ(M, P)) (s : Set σ(M, P
     simpa using (tendsto_sub_nhds_zero_iff.mpr h₁ |>.neg)
   have h₂ : Tendsto (fun x : s ↦ √‖φ (u - x)‖) atTop (𝓝 0) := by
     have := Real.continuous_sqrt.comp' continuous_norm |>.comp' (map_continuous φ)
-    simpa [- map_sub] using this.tendsto _ |>.comp <| h₁
+    simpa [- map_sub] using! this.tendsto _ |>.comp <| h₁
   /- The map `x ↦ √‖φ (a * (u - x) * star a)‖` is eventually bounded because `φ` is norm
   continuous (since it is ultraweakly continuous), and it argument is eventually smaller than the
   nonnegative element `a * (u - x₀) * star a`, where `x₀ ∈ s` is arbitrary. -/
@@ -200,7 +204,7 @@ lemma DirectedOn.isLUB_star_right_conjugate (a u : σ(M, P)) (s : Set σ(M, P))
     simp_rw +singlePass [tendsto_iff_norm_sub_tendsto_zero, norm_sub_rev,
       ← map_sub, ← mul_sub, ← sub_mul] at h₃ ⊢
     apply h₃.congr fun x ↦ ?_
-    convert norm_star (φ ((u - x) * star a))
+    convert! norm_star (φ ((u - x) * star a))
     rw [← map_star φ, star_mul, star_star, (sub_nonneg.mpr (h.1 x.prop)).star_eq]
   /- Obviously there is some `z : ℂ` so that `z + a` is invertible.
   So we note that `fun x ↦ φ ((z + a) * x * star (z + a))` tends to `(z + a) * u * star (z + a)`
@@ -211,7 +215,7 @@ lemma DirectedOn.isLUB_star_right_conjugate (a u : σ(M, P)) (s : Set σ(M, P))
   of `fun x ↦ φ (a * x * star a)` to `φ (a * u * star a)`. -/
   obtain ⟨z, hz⟩ : ∃ z : ℂ, IsUnit (algebraMap ℂ σ(M, P) z + a) := by
     suffices spectrum ℂ (-a) ≠ Set.univ by simpa [Set.ne_univ_iff_exists_notMem, spectrum.mem_iff]
-    simpa using spectrum.isCompact (starAlgEquiv M P (-a)) |>.ne_univ
+    simpa using! spectrum.isCompact (starAlgEquiv M P (-a)) |>.ne_univ
   have key (x : σ(M, P)) : φ (a * x * star a) =
       φ ((algebraMap ℂ σ(M, P) z + a) * x * star (algebraMap ℂ σ(M, P) z + a)) -
       (z * star z * φ x + star z * φ (a * x) + z * φ (x * star a)) := by

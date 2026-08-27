@@ -1,4 +1,8 @@
-import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
+module
+
+public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
+
+@[expose] public section
 
 open scoped NNReal
 

@@ -1,8 +1,12 @@
-import LeanOA.Corner
-import LeanOA.CFC
-import LeanOA.Ultraweak.OrderClosed
-import LeanOA.Ultraweak.ContinuousStar
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+module
+
+public import LeanOA.Corner
+public import LeanOA.CFC
+public import LeanOA.Ultraweak.OrderClosed
+public import LeanOA.Ultraweak.ContinuousStar
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+
+@[expose] public section
 
 section RealImaginaryPart
 
@@ -44,7 +48,7 @@ lemma IsStarProjection.mem_image_mul_mul_nonneg_inter_unitClosedBall_iff
         he.isSelfAdjoint.star_eq, he.isIdempotentElem.eq, hx₁, one_smul]
       exact he.nonneg
     · grw [norm_mul₃_le, hx₁, he.norm_le]
-      simp
+      simpa using he.norm_le
   · rintro ⟨⟨hx₀, hxe⟩, hx₁⟩
     exact ⟨x, ⟨hx₀, hx₁⟩, he.conjugate_of_nonneg_of_le hx₀ hxe⟩
 
@@ -163,7 +167,8 @@ lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarP
       apply Eq.symm <| Set.MapsTo.image_inter_of_idempotent he.idempotent_mul_mul
         (fun x hx ↦ by simpa [he.isSelfAdjoint.star_eq] using hx.conjugate e) (fun x hx ↦ ?_)
       simp only [mem_preimage, mem_closedBall, dist_zero_right, ofUltraweak_mul, B] at hx ⊢
-      grw [norm_mul₃_le, hx, he.norm_le, mul_one, mul_one]
+      grw [norm_mul₃_le, hx, he.norm_le]
+      simpa using he.norm_le
     _ = ofUltraweak ⁻¹' ((ofUltraweak e * · * ofUltraweak e) '' ({x | IsSelfAdjoint x} ∩ B)) := rfl
     _ = ofUltraweak ⁻¹' (Icc 0 (ofUltraweak e) ∩ B - Icc 0 (ofUltraweak e) ∩ B) := by
       have he' : IsStarProjection (ofUltraweak e) := he

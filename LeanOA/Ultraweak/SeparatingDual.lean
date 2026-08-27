@@ -1,17 +1,14 @@
-import LeanOA.Ultraweak.ContinuousStar
-import LeanOA.PositiveContinuousLinearMap
-import Mathlib.Analysis.LocallyConvex.WeakDual
-import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+module
+
+public import LeanOA.Ultraweak.ContinuousStar
+public import LeanOA.PositiveContinuousLinearMap
+public import Mathlib.Analysis.LocallyConvex.WeakDual
+public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+
+@[expose] public section
 
 open scoped Ultraweak ComplexOrder ComplexStarModule
-
-instance CFC.instSelfAdjointDecompose {A : Type*} [NonUnitalRing A] [Module ℝ A]
-    [SMulCommClass ℝ A A] [IsScalarTower ℝ A A] [StarRing A] [TopologicalSpace A]
-    [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint] [PartialOrder A]
-    [StarOrderedRing A] : SelfAdjointDecompose A where
-  exists_nonneg_sub_nonnpos {a} ha :=
-    ⟨a⁺, a⁻, CFC.posPart_nonneg a, CFC.negPart_nonneg a, (posPart_sub_negPart a ha).symm⟩
 
 namespace Ultraweak
 
@@ -65,8 +62,8 @@ lemma exists_positiveCLM_apply_lt_zero (a : σ(M, P)) (ha₁ : IsSelfAdjoint a) 
   simpa [hφ_sa, ha₁]
 
 instance : SelfAdjointDecompose σ(M, P) where
-  exists_nonneg_sub_nonnpos {a} ha := by
-    have ⟨_, _, _, _, key⟩ := ha.ofUltraweak.exists_nonneg_sub_nonpos
+  exists_nonneg_sub_nonneg {a} ha := by
+    have ⟨_, _, _, _, key⟩ := ha.ofUltraweak.exists_nonneg_sub_nonneg
     replace key := by simpa using congr(toUltraweak ℂ P $key)
     exact ⟨_, _, by simpa, by simpa, key⟩
 

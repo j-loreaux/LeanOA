@@ -1,6 +1,11 @@
-import Mathlib.Analysis.CStarAlgebra.Classes
-import Mathlib.Analysis.InnerProductSpace.Basic
-import Mathlib.Analysis.Normed.Module.WeakDual
+module
+
+public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.Analysis.InnerProductSpace.Basic
+public import Mathlib.Analysis.Normed.Module.WeakDual
+public import Mathlib.Analysis.RCLike.Extend
+
+@[expose] public section
 
 /-- A class which encodes a specified isometric linear isomorpism between `M`
 and the strong dual of `P`, so that we may treat `P` as a predual of `M`. -/
@@ -216,7 +221,7 @@ variable [NonUnitalNormedRing M] [NormedSpace ℂ M]
 variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
 
 /-- The nonunital ring structure on `σ(M, P)` it inherits from `M`. -/
-scoped instance : NonUnitalRing σ(M, P) := inferInstanceAs (NonUnitalRing M)
+noncomputable scoped instance : NonUnitalRing σ(M, P) := inferInstanceAs (NonUnitalRing M)
 
 @[simp]
 lemma ofUltraweak_mul (x y : σ(M, P)) :
@@ -256,7 +261,7 @@ lemma toUltraweak_star (x : M) :
 
 variable (M P) in
 /-- The canonical StarRing equivalence between `σ(M, P)` and `M`. -/
-@[simps]
+@[simps, nolint defsWithUnderscore]
 noncomputable def ofUltraweak_starRingEquiv' : σ(M, P) ≃⋆+* M where
   toFun := ofUltraweak
   invFun := toUltraweak ℂ P
@@ -401,9 +406,9 @@ variable [CStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual �
 
 -- We don't want these intances to pollute `WeakBilin`, so we scope them to `Ultraweak`.
 /-- The ring structure on `σ(M, P)` it inherits from `M`. -/
-scoped instance : Ring σ(M, P) := inferInstanceAs (Ring M)
+noncomputable scoped instance : Ring σ(M, P) := inferInstanceAs (Ring M)
 /-- The algebra structure on `σ(M, P)` it inherits from `M`. -/
-scoped instance : Algebra ℂ σ(M, P) := inferInstanceAs (Algebra ℂ M)
+noncomputable scoped instance : Algebra ℂ σ(M, P) := inferInstanceAs (Algebra ℂ M)
 
 @[simp]
 lemma ofUltraweak_one : ofUltraweak (1 : σ(M, P)) = (1 : M) := rfl

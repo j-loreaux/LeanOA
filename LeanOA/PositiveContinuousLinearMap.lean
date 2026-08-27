@@ -1,8 +1,11 @@
-import Mathlib.Topology.Algebra.Module.LinearMap
-import Mathlib.Algebra.Order.Star.Basic
-import Mathlib.Analysis.Complex.Basic
-import LeanOA.Mathlib.Algebra.Order.Module.PositiveLinearMap
+module
 
+public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Basic
+public import Mathlib.Algebra.Order.Module.PositiveLinearMap
+public import Mathlib.Algebra.Order.Star.Basic
+public import Mathlib.Analysis.Complex.Basic
+
+@[expose] public section
 
 namespace PositiveLinearMap
 
@@ -14,7 +17,7 @@ variable {R E₁ E₂ : Type*} [Semiring R]
 
 lemma map_isSelfAdjoint (f : E₁ →ₚ[R] E₂) {a : E₁} (ha : IsSelfAdjoint a) :
     IsSelfAdjoint (f a) := by
-  obtain ⟨b, c, hb, hc, rfl⟩ := ha.exists_nonneg_sub_nonpos
+  obtain ⟨b, c, hb, hc, rfl⟩ := ha.exists_nonneg_sub_nonneg
   cfc_tac
 
 section StarHomClass
@@ -72,11 +75,11 @@ variable {R E₁ E₂ E₃ : Type*} [Semiring R]
 
 instance : FunLike (E₁ →P[R] E₂) E₁ E₂ where
   coe f := f.toFun
-  coe_injective' f g h := by
+  coe_injective f g h := by
     cases f
     cases g
     congr
-    apply DFunLike.coe_injective'
+    apply DFunLike.coe_injective
     exact h
 
 instance : ContinuousLinearMapClass (E₁ →P[R] E₂) R E₁ E₂ where
@@ -121,7 +124,7 @@ variable {F : Type*} [FunLike F E₁ E₂] [ContinuousLinearMapClass F R E₁ E�
 
 /-- Reinterpret an element of a type of positive linear maps as a positive linear map. -/
 def ofClass (f : F) : E₁ →P[R] E₂ where
-  toPositiveLinearMap := f
+  toPositiveLinearMap := PositiveLinearMap.ofClass f
   cont := map_continuous f
 
 @[simp]
@@ -166,7 +169,9 @@ lemma zero_apply (x : E₁) : (0 : E₁ →P[R] E₂) x = 0 :=
 
 variable (R E₁) in
 /-- The identity as a positive continuous linear map. -/
-@[simps!] protected def id : E₁ →P[R] E₁ where __ := PositiveLinearMap.id R E₁
+@[simps!] protected def id : E₁ →P[R] E₁ where
+    toPositiveLinearMap := PositiveLinearMap.id R E₁
+    cont := continuous_id
 
 @[simp] lemma toContinuousLinearMap_id :
     (PositiveContinuousLinearMap.id R E₁).toContinuousLinearMap = .id R E₁ := rfl

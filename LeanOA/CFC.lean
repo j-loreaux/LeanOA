@@ -1,9 +1,13 @@
-import LeanOA.Mathlib.Algebra.Order.Star.Basic
-import LeanOA.Mathlib.Analysis.Complex.Basic
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart.Isometric
+module
 
-lemma CFC.mul_self_eq_zero_iff {R A : Type*} {p : A → Prop} [Semifield R] [Nontrivial R]
+public import LeanOA.Mathlib.Analysis.Complex.Basic
+public import Mathlib.Algebra.Order.Star.Basic
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart.Isometric
+
+@[expose] public section
+
+lemma CFC.mul_self_eq_zero_iff {R A : Type*} {p : A → Prop} [Semifield R]
     [StarRing R] [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A]
     [StarRing A] [TopologicalSpace A] [Module R A] [IsScalarTower R A A] [SMulCommClass R A A]
     [NonUnitalContinuousFunctionalCalculus R A p] (a : A) (ha : p a := by cfc_tac) :

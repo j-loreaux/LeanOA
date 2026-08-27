@@ -1,4 +1,8 @@
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+module
+
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+
+@[expose] public section
 
 open Complex ComplexStarModule
 

@@ -1,4 +1,8 @@
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+module
+
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+
+@[expose] public section
 
 variable {ι A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 

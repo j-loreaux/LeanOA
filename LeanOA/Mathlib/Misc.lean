@@ -1,23 +1,18 @@
-import Mathlib.Analysis.Convex.Extreme
-import Mathlib.Analysis.Normed.Module.Normalize
-import Mathlib.Analysis.Normed.Algebra.Spectrum
-import Mathlib.Analysis.Normed.Operator.NormedSpace
-import Mathlib.Topology.Algebra.Module.FiniteDimension
+module
+
+public import Mathlib.Analysis.Convex.Extreme
+public import Mathlib.Analysis.Normed.Module.Normalize
+public import Mathlib.Analysis.Normed.Algebra.Spectrum
+public import Mathlib.Analysis.Normed.Operator.NormedSpace
+public import Mathlib.Topology.Algebra.Module.FiniteDimension
+
+@[expose] public section
 
 -- `Analysis.Normed.Module.Basic`
 @[simp]
 lemma norm_smul_norm_inv_smul {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] (x : E) :
     ‖x‖ • ‖x‖⁻¹ • x = x :=
   NormedSpace.norm_smul_normalize x
-
-lemma ContinuousLinearMap.norm_postcomp_le {𝕜₁ 𝕜₂ 𝕜₃ : Type*} [NontriviallyNormedField 𝕜₁]
-    [NontriviallyNormedField 𝕜₂] [NontriviallyNormedField 𝕜₃] {σ : 𝕜₁ →+* 𝕜₂} {τ : 𝕜₂ →+* 𝕜₃}
-    {ρ : 𝕜₁ →+* 𝕜₃} [RingHomCompTriple σ τ ρ] [RingHomIsometric σ] [RingHomIsometric τ]
-    [RingHomIsometric ρ] {E F G : Type*} [SeminormedAddCommGroup E]
-    [NormedSpace 𝕜₁ E] [SeminormedAddCommGroup F] [NormedSpace 𝕜₂ F] [SeminormedAddCommGroup G]
-    [NormedSpace 𝕜₃ G] (L : F →SL[τ] G) :
-    ‖L.postcomp (σ := σ) E‖ ≤ ‖L‖ :=
-  L.postcomp (σ := σ) E |>.opNorm_le_bound (by positivity) <| opNorm_comp_le L
 
 -- I think this instance is not terribly crazy.
 instance {𝕜 A : Type*} [RCLike 𝕜] [Norm A] [MulAction 𝕜 A] [SMul ℤ A]

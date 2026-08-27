@@ -1,6 +1,10 @@
-import LeanOA.Ultraweak.OrderClosed
-import LeanOA.Mathlib.Analysis.RCLike.Extend
-import Mathlib.Analysis.Complex.Basic
+module
+
+public import LeanOA.Ultraweak.OrderClosed
+public import Mathlib.Analysis.RCLike.Extend
+public import Mathlib.Analysis.Complex.Basic
+
+@[expose] public section
 
 open scoped NNReal Topology
 
@@ -89,7 +93,8 @@ instance : ContinuousStar σ(M, P) where
   continuous_star := by
     -- It suffices to show that the `ℝ`-linear `realPart` map is continuous
     suffices Continuous ((selfAdjoint.submodule ℝ σ(M, P)).subtype.comp (realPart)) by
-      convert (this.const_smul (2 : ℝ)).sub continuous_id using 2 with x
+      convert! (this.const_smul (2 : ℝ)).sub continuous_id using 2
+      ext x
       -- `change` is necessary to see through the defeq between `selfAdjoint.submodule ℝ σ(M, P)
       -- and `selfAdjoint σ(M, P)`. To do this correctly, we would need to set up a linear
       -- equivalence between them.
@@ -115,7 +120,7 @@ instance : ContinuousStar σ(M, P) where
     is precisely `realPart x`. -/
     refine Ultraweak.isCompact_closedBall ℂ P (0 : M) 1
       |>.inter_right Ultraweak.isClosed_setOf_isSelfAdjoint
-      |>.tendsto_nhds_of_unique_mapClusterPt (by simpa using h₁)
+      |>.tendsto_nhds_of_unique_mapClusterPt (by simpa using! h₁)
       fun y ⟨_, (hy : IsSelfAdjoint y)⟩ hxy ↦ ?_
     /- Extract an ultrafilter `l` smaller than
     `𝓝[ofUltraweak ⁻¹' Metric.closedBall 0 1] x` such that `realPart` converges
@@ -134,6 +139,6 @@ instance : ContinuousStar σ(M, P) where
           simp
     simpa only [eq_comm (a := y), map_sub, AddSubgroupClass.coe_sub, hy.coe_realPart,
       realPart_I_smul, hz.imaginaryPart, neg_zero, ZeroMemClass.coe_zero, sub_eq_zero]
-      using congr((ℜ $hxyz : σ(M, P))).symm
+      using! congr((ℜ $hxyz : σ(M, P))).symm
 
 end Ultraweak

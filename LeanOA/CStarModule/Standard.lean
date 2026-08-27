@@ -3,11 +3,15 @@ Copyright (c) 2024 Jireh Loreaux. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jireh Loreaux
 -/
-import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-import Mathlib.Analysis.CStarAlgebra.Module.Defs
-import Mathlib.Analysis.Normed.Lp.lpSpace
+module
+
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+public import Mathlib.Analysis.CStarAlgebra.Module.Defs
+public import Mathlib.Analysis.Normed.Lp.lpSpace
+
+@[expose] public section
 
 /-! # The standard C⋆-module
 
@@ -51,7 +55,7 @@ def MemStandard (x : Π i, E i) : Prop := Summable fun i ↦ ⟪x i, x i⟫_A
 
 lemma MemStandard.subtype {x : Π i, E i} (hx : MemStandard A x) (s : Set ι) :
     MemStandard A (fun i : s ↦ x i) := by
-  simpa [Function.comp_def] using Summable.subtype hx s
+  simpa [Function.comp_def] using! Summable.subtype hx s
 
 lemma MemStandard.of_memℓp {x : Π i, E i} (hx : Memℓp (‖x ·‖) 2) :
     MemStandard A x :=
@@ -103,12 +107,9 @@ lemma MemStandard.sub {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard
 lemma MemStandard.summable_inner {x y : Π i, E i} (hx : MemStandard A x) (hy : MemStandard A y) :
     Summable fun i ↦ ⟪x i, y i⟫_A := by
   conv in ⟪x _, y _⟫_A => rw [polarization']
-  apply_rules (config := { transparency := .reducible })
-    [Summable.const_smul, Summable.add, Summable.sub]
-  · exact hy.add hx
-  · exact hy.sub hx
-  · exact hy.add (hx.complex_smul _)
-  · exact hy.sub (hx.complex_smul _)
+  refine .const_smul _ (.sub (.add (.sub (hy.add hx) (hy.sub hx))
+    (.const_smul _ (hy.add (hx.complex_smul _))))
+    (.const_smul _ (hy.sub (hx.complex_smul _))))
 
 variable (A E) in
 /-- The standard C⋆-module. -/
@@ -139,7 +140,7 @@ def toPi (x : ℓ²(A, E)) : Π i, E i := Subtype.val x
 
 instance : DFunLike ℓ²(A, E) ι (fun i ↦ E i) where
   coe := Standard.toPi
-  coe_injective' := Subtype.val_injective
+  coe_injective := Subtype.val_injective
 
 @[ext] lemma ext {x y : ℓ²(A, E)} (h : ∀ i, x i = y i) : x = y := DFunLike.ext _ _ h
 
@@ -201,7 +202,7 @@ noncomputable instance : CStarModule A ℓ²(A, E) where
   inner_smul_right_complex {c x y} := by
     simpa only [coe_smul, Pi.smul_apply, inner_smul_right_complex, inner_def]
       using x.summable_inner y |>.tsum_const_smul c
-  star_inner x y := by simpa using (starL ℂ).map_tsum (f := fun i ↦ ⟪x i, y i⟫_A)
+  star_inner x y := by simpa using! (starL ℂ).map_tsum (f := fun i ↦ ⟪x i, y i⟫_A)
   norm_eq_sqrt_norm_inner_self _ := rfl
 
 noncomputable instance : NormedAddCommGroup ℓ²(A, E) := normedAddCommGroup A
@@ -246,7 +247,7 @@ theorem tendsto_of_tendsto_pi {F : ℕ → ℓ²(A, E)} (hF : CauchySeq F) {f : 
   apply norm_add_le _ _ |>.trans ?_
   gcongr
   · apply le_of_tendsto (f := fun l ↦ ‖∑ x ∈ s, ⟪(F n - F l) x, (F n - F l) x⟫_A‖) (x := atTop)
-    · refine tendsto_norm.comp <| tendsto_finset_sum s fun i hi ↦ ?_
+    · refine tendsto_norm.comp <| tendsto_finsetSum s fun i hi ↦ ?_
       rw [tendsto_pi_nhds] at hf
       have := tendsto_const_nhds (x := F n i) |>.sub (hf i)
       refine (continuous_inner.tendsto _).comp (this.prodMk_nhds this)
@@ -276,7 +277,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
       simp only [Function.comp_def, tendsto_pi_nhds] at hy
       refine lt_of_le_of_lt ?_ (half_lt_self hε)
       refine le_of_tendsto (f := fun n ↦ ‖∑ i ∈ t, ⟪x n i, x n i⟫_A‖) (x := atTop) ?_ ?_
-      · exact tendsto_norm.comp <| tendsto_finset_sum t fun i hi ↦
+      · exact tendsto_norm.comp <| tendsto_finsetSum t fun i hi ↦
           (continuous_inner.tendsto _).comp ((hy i).prodMk_nhds (hy i))
       · filter_upwards [Ici_mem_atTop N] with m hm
         replace hN := norm_neg_add (x N) (x m) ▸ (hN N le_rfl m hm).le
@@ -307,7 +308,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
               rw [← Real.mul_self_sqrt hε8.le]
               refine mul_le_mul ?_ (by rwa [← norm_neg, neg_sub]) (by positivity) (by positivity)
               simp only [x', norm_def]
-              convert Real.sqrt_le_sqrt hxN.le using 3
+              convert! Real.sqrt_le_sqrt hxN.le using 3
               rw [tsum_eq_sum fun i (hi : i ∉ t) ↦ by simp [hi]]
               congr! 2 with i hi
               all_goals simp [hi]
