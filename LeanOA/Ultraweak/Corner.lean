@@ -15,19 +15,8 @@ variable {M P : Type*}
     [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M] [Predual ℂ M P]
 
 open NonUnitalStarSubalgebra Metric Ultraweak Set
-open scoped Ultraweak NNReal
+open scoped Ultraweak NNReal ComplexStarModule Pointwise
 
-open Pointwise in
--- the proof of this is inlined in the theorem below.
-example (e : M) :
-    letI S := closedBall 0 1
-    letI Ms := {x | IsSelfAdjoint x}
-    letI P := {x | 0 ≤ x}
-    (e * · * e) '' (Ms ∩ S) = (e * · * e) '' (P ∩ S) - (e * · * e) '' (P ∩ S) := by
-  have e_mul_e : (e * · * e) = LinearMap.mulLeftRight ℂ ⟨e, e⟩ := rfl
-  rw [e_mul_e, ← Set.image_sub, setOf_isSelfAdjoint_inter_closedBall_eq]
-
-open scoped ComplexStarModule Pointwise in
 lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarProjection e) :
     IsClosed (corner ℂ e : Set σ(M, P)) := by
   /- By the Krein–Smulian theorem, it suffices to prove that the corner intersected with the
