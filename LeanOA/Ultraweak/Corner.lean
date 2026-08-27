@@ -120,7 +120,6 @@ lemma Set.MapsTo.image_inter_of_idempotent {α : Type*} {s t : Set α} {f : α �
   exact ⟨f x, ⟨hfs hx, hxt⟩, congr($hf x)⟩
 
 open scoped ComplexStarModule Pointwise in
-open Filter in
 lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarProjection e) :
     IsClosed (corner ℂ e : Set σ(M, P)) := by
   apply Ultraweak.krein_smulian_of_submodule ((corner ℂ e).toSubmodule.restrictScalars ℝ≥0)
@@ -128,35 +127,31 @@ lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarP
     NonUnitalSubsemiring.coe_toAddSubmonoid, NonUnitalSubalgebra.coe_toNonUnitalSubsemiring,
     coe_toNonUnitalSubalgebra, corner_carrier, he.isSelfAdjoint.star_eq]
   set B := closedBall (0 : M) 1
-  suffices IsClosed ((e * · * e) '' {x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' B) by
-    rw [isClosed_iff_forall_filter] at this ⊢
-    intro x l hl_neBot hl hlx
-    obtain ⟨⟨y, -, hxy⟩, -⟩ := this (ℜ x : σ(M, P)) (map ((ℜ ·) : σ(M, P) → σ(M, P)) l)
-      inferInstance
-      (by
-        simp only [le_principal_iff, Filter.mem_map] at hl ⊢
-        filter_upwards [hl] with m hm
-        obtain ⟨⟨x, rfl⟩, hx⟩ := hm
-        simp only [Set.preimage_inter, Set.mem_inter_iff, Set.mem_preimage, Set.mem_image,
-          Set.mem_setOf_eq, mem_closedBall, dist_zero_right, B] at hx ⊢
-        refine ⟨⟨ℜ x, (ℜ x).2, ?_⟩, realPart.norm_le _ |>.trans hx⟩
-        simp [realPart_apply_coe, ← mul_assoc, he.isSelfAdjoint.star_eq, mul_add, add_mul])
-      (by grw [hlx]; apply Continuous.tendsto; fun_prop)
-    obtain ⟨⟨z, -, hxz⟩, -⟩ := this (ℑ x : σ(M, P)) (map ((ℑ ·) : σ(M, P) → σ(M, P)) l)
-      inferInstance
-      (by
-        simp only [le_principal_iff, Filter.mem_map] at hl ⊢
-        filter_upwards [hl] with m hm
-        obtain ⟨⟨x, rfl⟩, hx⟩ := hm
-        simp only [Set.preimage_inter, Set.mem_inter_iff, Set.mem_preimage, Set.mem_image,
-          Set.mem_setOf_eq, mem_closedBall, dist_zero_right, B] at hx ⊢
-        refine ⟨⟨ℑ x, (ℑ x).2, ?_⟩, imaginaryPart.norm_le _ |>.trans hx⟩
-        simp [imaginaryPart_apply_coe, ← mul_assoc, he.isSelfAdjoint.star_eq, mul_sub, sub_mul])
-      (by grw [hlx]; apply Continuous.tendsto; fun_prop)
+  suffices hS : IsClosed ((e * · * e) '' {x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' B) by
+    have hmapsTo {f : σ(M, P) → σ(M, P)} (hsa : ∀ y : σ(M, P), IsSelfAdjoint (f y))
+        (hcomm : ∀ y : σ(M, P), f (e * y * e) = e * f y * e)
+        (hnorm : ∀ y : σ(M, P), ‖ofUltraweak (f y)‖ ≤ ‖ofUltraweak y‖) :
+        MapsTo f ((range fun x ↦ e * x * e) ∩ ofUltraweak ⁻¹' B)
+          ((e * · * e) '' {x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' B) := by
+      rintro - ⟨⟨y, rfl⟩, hy⟩
+      simp only [mem_preimage, mem_closedBall, dist_zero_right, B] at hy
+      exact ⟨⟨f y, hsa y, (hcomm y).symm⟩, by simpa [B] using (hnorm _).trans hy⟩
+    refine isClosed_of_closure_subset fun x hx ↦ ?_
+    obtain ⟨⟨y, -, hxy⟩, -⟩ :=
+      hmapsTo (f := ((ℜ ·) : σ(M, P) → σ(M, P))) (fun y ↦ (ℜ y).2)
+        (fun y ↦ by simp [realPart_apply_coe, ← mul_assoc, he.isSelfAdjoint.star_eq,
+          mul_add, add_mul])
+        (fun y ↦ by simpa using realPart.norm_le (ofUltraweak y))
+        |>.closure_left (by fun_prop) hS hx
+    obtain ⟨⟨z, -, hxz⟩, -⟩ :=
+      hmapsTo (f := ((ℑ ·) : σ(M, P) → σ(M, P))) (fun y ↦ (ℑ y).2)
+        (fun y ↦ by simp [imaginaryPart_apply_coe, ← mul_assoc, he.isSelfAdjoint.star_eq,
+          mul_sub, sub_mul])
+        (fun y ↦ by simpa using imaginaryPart.norm_le (ofUltraweak y))
+        |>.closure_left (by fun_prop) hS hx
     refine ⟨⟨y + Complex.I • z, ?_⟩, ?_⟩
     · simp [mul_add, add_mul, hxy, hxz, realPart_add_I_smul_imaginaryPart]
-    · exact isClosed_iff_forall_filter.mp (Ultraweak.isClosed_closedBall ℂ P 0 1) x l hl_neBot
-        (by grw [hl]; simp [B]) hlx
+    · exact (Ultraweak.isClosed_closedBall ℂ P 0 1).closure_subset_iff.mpr inter_subset_right hx
   suffices (e * · * e) '' {x | IsSelfAdjoint x} ∩ ofUltraweak ⁻¹' B =
       (· - ·).uncurry '' (Icc 0 e ∩ ofUltraweak ⁻¹' B) ×ˢ (Icc 0 e ∩ ofUltraweak ⁻¹' B) by
     refine this ▸ (IsCompact.image ?_ continuous_sub |>.isClosed)
