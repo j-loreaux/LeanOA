@@ -5,10 +5,9 @@ on:
       - master
     paths:
       - '**/*.lean'
-      - '**/blueprint.yml'
+      - '.github/workflows/blueprint.yml'
       - 'blueprint/**'
-      - 'docs/**'
-      - 'scripts/**'
+      - 'home_page/**'
       - 'lean-toolchain'
       - 'lakefile.toml'
       - 'lake-manifest.json'
@@ -17,10 +16,9 @@ on:
       - master
     paths:
       - '**/*.lean'
-      - '**/blueprint.yml'
+      - '.github/workflows/blueprint.yml'
       - 'blueprint/**'
-      - 'docs/**'
-      - 'scripts/**'
+      - 'home_page/**'
       - 'lean-toolchain'
       - 'lakefile.toml'
       - 'lake-manifest.json'
@@ -95,3 +93,4 @@ jobs:
         with:
           blueprint: true
           homepage: home_page
+          ruby-version: default # read home_page/.ruby-version
