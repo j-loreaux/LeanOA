@@ -1,7 +1,6 @@
 module  -- shake: keep-all --deprecated_module: ignore
 
 public import LeanOA.AbsConvex
-public import LeanOA.BlueprintImports
 public import LeanOA.CFC
 public import LeanOA.CStarAlgebra.Extreme
 public import LeanOA.CStarAlgebra.FiniteSpectrum

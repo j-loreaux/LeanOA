@@ -1,6 +1,12 @@
 name = "LeanOA"
+# `LeanOABlueprint` is deliberately *not* a default target: `docgen-action` turns every
+# default target into a `:docs` facet, and doc-gen4 API pages for the Verso prose modules
+# are noise. CI builds the blueprint with an explicit `lake build LeanOABlueprint`.
 defaultTargets = ["LeanOA"]
 lintDriver = "batteries/runLinter"
+# Lint only the formalization, even if `LeanOABlueprint` is ever added as a default target:
+# its generated Verso document objects have no docstrings for `docBlame` to find.
+lintDriverArgs = ["LeanOA"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -16,13 +22,29 @@ warn.sorry = false
 backward.isDefEq.respectTransparency = false
 linter.style.header = false
 
+# `require mathlib` comes last so that Mathlib's pins of shared transitive dependencies
+# (e.g. plausible) win; otherwise `lake exe cache get` computes wrong hashes.
+[[require]]
+name = "VersoBlueprint"
+git = "https://github.com/leanprover/verso-blueprint.git"
+rev = "v4.32.0"
+
 [[require]]
 name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4.git"
 
-[[require]]
-name = "checkdecls"
-git = "https://github.com/PatrickMassot/checkdecls.git"
-
 [[lean_lib]]
 name = "LeanOA"
+
+# The Verso blueprint. Its prose is ordinary Verso markup rather than Lean code, so the
+# mathlib linter set (line length in particular) does not apply to it.
+[[lean_lib]]
+name = "LeanOABlueprint"
+
+[lean_lib.leanOptions]
+weak.linter.mathlibStandardSet = false
+weak.linter.flexible = false
+# Unresolved `(lean := "...")` references become errors rather than warnings. This is what
+# replaces `checkdecls` from the old leanblueprint setup.
+weak.verso.blueprint.externalCode.strictResolve = true
+weak.verso.code.warnLineLength = 0
