@@ -5,11 +5,9 @@ on:
       - master
     paths:
       - '**/*.lean'
-      - '**/blueprint.yml'
+      - '.github/workflows/blueprint.yml'
       - 'LeanOABlueprint/**'
       - 'home_page/**'
-      - 'docs/**'
-      - 'scripts/**'
       - 'lean-toolchain'
       - 'lakefile.toml'
       - 'lake-manifest.json'
@@ -18,11 +16,9 @@ on:
       - master
     paths:
       - '**/*.lean'
-      - '**/blueprint.yml'
+      - '.github/workflows/blueprint.yml'
       - 'LeanOABlueprint/**'
       - 'home_page/**'
-      - 'docs/**'
-      - 'scripts/**'
       - 'lean-toolchain'
       - 'lakefile.toml'
       - 'lake-manifest.json'
@@ -127,3 +123,4 @@ jobs:
         with:
           blueprint: false # the blueprint is built above by Verso, not by leanblueprint
           homepage: home_page
+          ruby-version: default # read home_page/.ruby-version
