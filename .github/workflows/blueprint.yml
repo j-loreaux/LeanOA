@@ -6,7 +6,7 @@ on:
     paths:
       - '**/*.lean'
       - '.github/workflows/blueprint.yml'
-      - 'blueprint/**'
+      - 'LeanOABlueprint/**'
       - 'home_page/**'
       - 'lean-toolchain'
       - 'lakefile.toml'
@@ -17,7 +17,7 @@ on:
     paths:
       - '**/*.lean'
       - '.github/workflows/blueprint.yml'
-      - 'blueprint/**'
+      - 'LeanOABlueprint/**'
       - 'home_page/**'
       - 'lean-toolchain'
       - 'lakefile.toml'
@@ -88,9 +88,39 @@ jobs:
           project-name: LeanOA
           branch-name: master
 
-      - name: Compile blueprint and documentation
+      # Needed only by `vbp build --pdf`; the HTML site has no LaTeX dependency.
+      - name: Install TeX Live for the blueprint PDF
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            python3-pygments \
+            texlive-luatex \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-fonts-extra \
+            texlive-plain-generic
+
+      # `lake build LeanOABlueprint` is a separate step because the blueprint is not a default
+      # target (see lakefile.toml). It is also the check that replaces `checkdecls`: a statement
+      # whose `(lean := "...")` name does not resolve is a build error here.
+      - name: Build the Verso blueprint
+        run: |
+          lake build LeanOABlueprint
+          lake exe vbp build --pdf
+
+      # Hand the generated site to Jekyll at the same URLs the leanblueprint site used:
+      # `/blueprint/` for the web version and `/blueprint.pdf` for the print version.
+      - name: Stage the blueprint for GitHub Pages
+        run: |
+          test -f _out/site/html-multi/index.html
+          test -f _out/site/html-multi/-verso-data/blueprint-manifest.json
+          rm -rf home_page/blueprint
+          cp -r _out/site/html-multi home_page/blueprint
+          cp _out/site/pdf/main.pdf home_page/blueprint.pdf
+
+      - name: Compile documentation and home page
         uses: leanprover-community/docgen-action@main
         with:
-          blueprint: true
+          blueprint: false # the blueprint is built above by Verso, not by leanblueprint
           homepage: home_page
           ruby-version: default # read home_page/.ruby-version
