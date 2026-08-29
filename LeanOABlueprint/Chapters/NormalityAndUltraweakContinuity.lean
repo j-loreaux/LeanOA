@@ -1,0 +1,232 @@
+import LeanOABlueprint.Base
+
+open Verso.Genre
+open Verso.Genre.Manual
+open Informal
+
+#doc (Manual) "Normality and Ultraweak Continuity for Positive Functionals" =>
+
+In what follows, let $`M` be a (nonzero) $`W^*`-algebra. Let $`\mathcal{P}(M)` denote the
+projection lattice of $`M`. Let $`\varphi` be a positive linear functional on $`M`. We say
+$`\varphi` is *normal* if whenever $`(p_\alpha)` is an increasing net of projections in $`M`
+with supremum $`p`, we have $`\varphi(p_\alpha) \to \varphi(p)`. In this chapter we show that
+this property is equivalent to $`\sigma(M, M_*)`-continuity. We say that a linear functional
+$`\varphi` on $`M` is *positive* if $`\varphi(x) \ge 0` whenever $`x \ge 0`.
+
+# Ultraweakly Continuous Implies Normal
+
+In what follows, let $`T` denote the set of all $`\sigma`-continuous positive linear
+functionals on $`M`, and $`E` the linear space of all finite linear combinations of elements
+of $`T`. Let $`P` denote the set of positive elements of $`M`.
+
+:::lemma_ "lem:homeo_of_cts_bij_cpt_haus" (tags := "mathlib") (lean := "isHomeomorph_iff_continuous_bijective")
+Every continuous bijection from a compact space to a Hausdorff space is a homeomorphism.
+:::
+
+:::theorem "thm:Banach_Alaoglu" (tags := "mathlib") (lean := "WeakDual.isCompact_closedBall")
+(Banach-Alaoglu) The closed unit ball of the dual space of a normed vector space is compact
+in the weak-$`*` topology.
+:::
+
+:::theorem "lem:sigma_cont_of_normal_Sak_1_7_4" (uses := "thm:Banach_Alaoglu, lem:homeo_of_cts_bij_cpt_haus, lem:uw_pos_sep_pts, lem:selfadjoint_le_norm, def:sigma_top, thm:comm_cstar_cts_fcns_Sak_1_2_1")
+(Sakai 1.7.4) Every uniformly bounded, increasing net in $`M^s` converges to its least upper
+bound in the $`\sigma`-topology. Further, if $`x = \sup_\lambda x_\lambda` then
+$`a^* x a = \sup_\lambda a^* x_\lambda a`.
+:::
+
+:::proof "lem:sigma_cont_of_normal_Sak_1_7_4"
+Letting $`T` denote the set of $`\sigma`-continuous positive functionals on $`M` and $`E` its
+linear span, by {bpref "lem:uw_pos_sep_pts"}[] the subspace $`E` separates the points of
+$`M` and so $`\sigma(M, E)` is Hausdorff. By the Banach-Alaoglu Theorem
+({bpref "thm:Banach_Alaoglu"}[]) the closed unit ball $`B` of $`M` is compact in the
+$`\sigma(M, M_*)`-topology. Since $`\sigma(M, E)` is weaker than $`\sigma(M, M_*)`, the
+identity map on $`B` is $`\sigma(M, M_*)`-$`\sigma(M, E)`-continuous, and therefore a
+homeomorphism, by {bpref "lem:homeo_of_cts_bij_cpt_haus"}[]. So, to prove that a uniformly
+bounded net $`(x_t)` is $`\sigma`-Cauchy, it is enough to check that for all
+$`\varepsilon > 0` and $`\varphi \in T` there is a $`\Lambda` such that
+$`\varphi(x_\lambda - x_\mu) \le \varepsilon` for $`\lambda \ge \mu \ge \Lambda`.
+
+If $`(x_\lambda)` is a uniformly bounded increasing net in $`M^s`, and $`\varphi \in T`, then
+$`(\varphi(x_\lambda))` is a uniformly bounded increasing net of real numbers and therefore
+is Cauchy. By the above paragraph, $`(x_\lambda)` is $`\sigma`-Cauchy and by the
+$`\sigma`-compactness of $`B` and the fact that $`(x_\lambda)` is increasing there exists
+$`x \in B` so that $`x_\lambda \to x` in the $`\sigma`-topology. Since for any
+$`\varphi \in T` and any $`\lambda` we have $`0 \le \varphi(x - x_\lambda)`, by
+{bpref "lem:non_pos_elem_neg_for_some_state_Sak_1_7_2"}[] we have $`0 \le x - x_\lambda`.
+Therefore $`\sup(x_\lambda) \le x`. For a given $`\varphi \in T` and
+$`\varepsilon = \varphi(x - \sup(x_\lambda))` one finds $`x_\lambda` so that
+$`\varphi(x - x_\lambda) < \varphi(x - \sup(x_\lambda))`, which is a contradiction; therefore
+$`x = \sup(x_\lambda)`.
+
+By {bpref "lem:star_conj_pos"}[] and the fact that $`(u^{-1})^* = (u^*)^{-1}`, the relation
+$`u^* x_\lambda u \le u^* x u` is equivalent to $`x_\lambda \le x`, and so
+$`\sup(u^* x_\lambda u) = u^* \sup(x_\lambda) u = u^* x u` if $`u \in M` is invertible.
+
+If $`a \in M` is not invertible, one can shift the spectrum horizontally to avoid zero, i.e.
+there is a $`c > 0` so that $`c1 + a` is invertible. Indeed, observe that
+$`a - t1 = (a + c1) - (t + c)1` and therefore
+$`t \in \sigma(a) \iff t + c \in \sigma(a + c1)`. In particular, if we let $`t = -c` here we
+find that $`0 \in \sigma(a) + c \iff 0 \in \sigma(a + c1)`. By the invertible case above,
+
+$$`\begin{aligned}
+c^2 \varphi(x_\lambda) + c \varphi(a^* x_\lambda + x_\lambda a) + \varphi(a^* x_\lambda a)
+  &= \varphi((c1 + a)^* x_\lambda (c1 + a)) \\
+  &\to \varphi((c1 + a)^* x (c1 + a))
+\end{aligned}`
+
+for all $`\varphi \in T`. It suffices to show that
+$`\varphi(a^* x_\lambda + x_\lambda a) \to \varphi(a^* x + x a)` for all $`\varphi \in T`,
+because then $`\varphi(a^* x_\lambda a) \to \varphi(a^* x a)` by the above. We can use
+Cauchy-Schwarz for this as follows. If $`\alpha \le \beta`, we have
+$`x_\beta - x_\alpha \ge 0`, and since the net $`(x_\lambda)` is uniformly bounded there
+exists $`M > 0` such that (using {bpref "lem:selfadjoint_le_norm"}[])
+
+$$`\begin{aligned}
+|\varphi(a^* (x_\beta - x_\alpha))|
+  &= |\varphi(a^* (x_\beta - x_\alpha)^{1/2} (x_\beta - x_\alpha)^{1/2})| \\
+  &\le \varphi(a^* (x_\beta - x_\alpha) a)^{1/2} \varphi(x_\beta - x_\alpha)^{1/2} \\
+  &\le 2M \varphi(a^* a)^{1/2} \varphi(x_\beta - x_\alpha)^{1/2}
+\end{aligned}`
+
+and by the positivity of $`\varphi` we have
+$`|\varphi(a^* (x_\beta - x_\alpha))| = |\varphi((x_\beta - x_\alpha) a)|`. It follows that
+$`\varphi(a^* x_\lambda + x_\lambda a) \to \varphi(a^* x + x a)`, and the proof is finished.
+:::
+
+# Normal Implies Ultraweakly Continuous
+
+If $`P : \mathcal{P}(M) \to \mathrm{Prop}` is a predicate, the usual ordering $`\le` on
+projections induces an order on the set $`\{p \in \mathcal{P}(M) \mid P(p)\}`. In what
+follows there will be no confusion if we also denote this induced order by $`\le`.
+
+:::lemma_ "lem:exists_uw_ge_normal" (uses := "lem:uw_pos_sep_pts")
+For every positive normal linear functional $`\varphi` and nonzero $`p \in \mathcal{P}(M)`
+there exists a positive $`\sigma(M, M_*)`-continuous linear functional $`\psi` such that
+$`\varphi(p) < \psi(p)`.
+:::
+
+:::proof "lem:exists_uw_ge_normal"
+By {bpref "lem:uw_pos_sep_pts"}[] there is a $`\sigma(M, M_*)`-continuous positive linear
+functional $`\psi_0` on $`M` such that $`\psi_0(p) \ne 0`. Rescale this functional by a
+positive constant to obtain $`\psi` such that $`\varphi(p) < \psi(p)`.
+:::
+
+:::lemma_ "lem:msr_th_lemma" (uses := "lem:sigma_cont_of_normal_Sak_1_7_4, prop:proj_compl_lat_wstar_Sak_1_10_2, cor:proj_sub_of_subproj")
+For all positive linear functionals $`\varphi, \psi` with $`\varphi` normal and $`\psi`
+$`\sigma(M, M_*)`-continuous and every nonzero $`p \in \mathcal{P}(M)` such that
+$`\varphi(p) < \psi(p)`, there exists a nonzero $`p_1 \in \mathcal{P}(M)` such that
+$`p_1 \le p` and for all nonzero $`q \in \mathcal{P}(M)` with $`q \le p_1`, we have
+$`\varphi(q) < \psi(q)`.
+:::
+
+:::proof "lem:msr_th_lemma"
+We proceed by contradiction. Suppose the conclusion does not hold. Then, for every nonzero
+subprojection $`p_1` of $`p` there is a nonzero subprojection $`q \le p_1` such that
+$`\varphi(q) \ge \psi(q)`. In particular, (letting $`p_1 = q`) there is a $`q \le p` such
+that $`\varphi(q) \ge \psi(q)`. If $`(q_\alpha)` is a chain of such nonzero projections, then
+$`q_\alpha \to \sup q_\alpha` in the $`\sigma`-topology by
+{bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[], and by
+{bpref "prop:proj_compl_lat_wstar_Sak_1_10_2"}[] we know this supremum is a subprojection of
+$`p_1`. Since $`\varphi` is positive and normal, and $`\psi` is positive and
+$`\sigma`-continuous, we have
+$`\varphi(\sup q_\alpha) \ge \psi(\sup q_\alpha)`.
+
+Therefore, by Zorn's Lemma, there is a maximal $`q_0 \le p` such that
+$`\varphi(q_0) \ge \psi(q_0)`. We claim $`q_0 = p`. If not, $`p - q_0` is a nonzero
+subprojection of $`p` by {bpref "cor:proj_sub_of_subproj"}[], and there exists a nonzero
+projection $`q_1 \le p - q_0` such that $`\varphi(q_1) \ge \psi(q_1)`. But then $`q_0` is a
+proper subprojection of $`q_0 + q_1` and by linearity and positivity
+$`\varphi(q_0 + q_1) \ge \psi(q_0 + q_1)`, contradicting the maximality of $`q_0`. Thus
+$`p = q_0` and so $`\varphi(p) \ge \psi(p)`, contradicting the hypothesis
+$`\varphi(p) < \psi(p)`.
+:::
+
+The following likely contains the most crucial use of the normality of $`\varphi` for the
+later proof of {bpref "thm:sigma_cts_of_normal_Sak_1_13_2"}[].
+
+:::lemma_ "lem:zorn_base" (uses := "cor:proj_sub_of_subproj, lem:selfadjoint_le_norm, lem:sigma_cont_of_normal_Sak_1_7_4, prop:proj_compl_lat_wstar_Sak_1_10_2, def:sigma_top")
+Let $`\varphi` be a normal positive linear functional on $`M` and consider the predicate
+$`P : \mathcal{P}(M) \to \mathrm{Prop}` defined, for $`p \in \mathcal{P}(M)`, by
+"$`M \ni x \mapsto \varphi(xp)` is $`\sigma(M, M_*)`-continuous". If $`(p_\alpha)` is a chain
+of projections in $`M` such that $`P(p_\alpha)` is true for each $`\alpha`, then
+$`P(\sup(p_\alpha))` is true. Hence by Zorn's Lemma there is a maximal
+$`p_0 \in \mathcal{P}(M)` such that $`P(p_0)` is true.
+:::
+
+:::proof "lem:zorn_base"
+Let $`x` be on the unit sphere and let $`p` be the supremum of the $`p_\alpha`. By
+{bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[] and
+{bpref "prop:proj_compl_lat_wstar_Sak_1_10_2"}[] we know $`p_\alpha` converges in the
+$`\sigma`-topology to $`p`, and $`p` is a projection. By
+{bpref "cor:proj_sub_of_subproj"}[] we know $`p - p_\alpha` is a projection. By the
+$`C^*`-property of the norm ($`\|x^* x\| = \|x\|^2`),
+{bpref "lem:selfadjoint_le_norm"}[] and the positivity of $`\varphi` we have
+$`\varphi(x^* x) \le \varphi(1)`. Now these facts together with Cauchy-Schwarz and the
+monotonicity of square roots give
+
+$$`\begin{aligned}
+|\varphi(x(p - p_\alpha))|
+  &\le \varphi(x^* x)^{1/2} \varphi(p - p_\alpha)^{1/2} \\
+  &\le \varphi(1)^{1/2} \varphi(p - p_\alpha)^{1/2}.
+\end{aligned}`
+
+Hence, by the definition of the operator norm,
+$`\|\varphi(\cdot (p - p_\alpha))\| \le \varphi(1)^{1/2} \varphi(p - p_\alpha)^{1/2}`. The
+right hand side converges to $`0` with $`\alpha` due to the normality of $`\varphi`, and
+therefore $`\varphi(\cdot\, p_\alpha)` converges to $`\varphi(\cdot\, p)` in norm. Since the
+set of $`\sigma`-continuous functionals on $`M` is norm closed, it follows that
+$`\varphi(\cdot\, p)` is $`\sigma`-continuous. We obtain a maximal $`p_0` by Zorn's Lemma.
+:::
+
+:::lemma_ "lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10" (uses := "def:sigma_top")
+(Sakai 1.8.10) A linear functional $`\rho` on $`M` is $`\sigma`-continuous on the unit sphere
+(hence $`\sigma`-continuous) if and only if it is $`s`-continuous on the unit sphere (hence
+$`s`-continuous).
+:::
+
+:::theorem "thm:sigma_cts_of_normal_Sak_1_13_2" (uses := "def:sigma_top, cor:sigma_eq_s_on_ball, lem:zorn_base, lem:exists_uw_ge_normal, lem:msr_th_lemma, lem:cut_down_of_wstar, lem:spec_masa_wstar_stonean_Sak_1_7_5, lem:fin_lin_approx_of_stonean_Sak_1_3_1, lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10, lem:wstar_of_masa")
+(Sakai 1.13.2) Every positive normal linear functional $`\varphi` on $`M` is
+$`\sigma(M, M_*)`-continuous.
+:::
+
+:::proof "thm:sigma_cts_of_normal_Sak_1_13_2"
+The claim is obvious for the zero functional. Let $`\varphi` be a nonzero positive normal
+linear functional. By {bpref "lem:zorn_base"}[] we have a maximal $`p_0 \in \mathcal{P}(M)`
+such that $`M \ni x \mapsto \varphi(x p_0)` is $`\sigma(M, M_*)`-continuous. Assume for the
+purposes of finding a contradiction that $`p_0 \ne 1`. By
+{bpref "lem:exists_uw_ge_normal"}[] there is a $`\sigma(M, M_*)`-continuous positive
+functional $`\psi` on $`M` such that $`\varphi(1 - p_0) < \psi(1 - p_0)`. By
+{bpref "lem:msr_th_lemma"}[] there is a nonzero subprojection $`p \le 1 - p_0` in $`M` such
+that $`\varphi(q) < \psi(q)` for every nonzero $`q \le p` in $`M`.
+
+Let $`x \in pMp` be on the unit sphere. Then $`x^* x` is positive and hence normal, so the
+$`C^*`-subalgebra of $`pMp` generated by $`x^* x` and $`p` is commutative, and is hence
+contained in a maximal abelian $`*`-subalgebra $`A` of $`pMp`. Now $`A` is a
+$`W^*`-subalgebra of $`pMp` by {bpref "lem:wstar_of_masa"}[] and hence is a maximal
+commutative $`C^*`-subalgebra of $`pMp`. Via the Gelfand Transform, $`A` is
+$`*`-isomorphic to $`C(K)`, where $`K` is Stonean by
+{bpref "lem:cut_down_of_wstar"}[] and
+{bpref "lem:spec_masa_wstar_stonean_Sak_1_7_5"}[]. By
+{bpref "lem:fin_lin_approx_of_stonean_Sak_1_3_1"}[] it follows that
+$`\varphi(a) \le \psi(a)` for every $`a \ge 0` in $`A`, which holds a fortiori for
+$`a \ge 0` in $`C^*(x^* x, p)`. In particular,
+$`\varphi(p x^* x p) \le \psi(p x^* x p)`. Therefore,
+
+$$`\begin{aligned}
+|\varphi(x(p_0 + p))|
+  &\le |\varphi(x p_0)| + |\varphi(xp)| \\
+  &\le |\varphi(x p_0)| + \varphi(1)^{1/2} \varphi(p x^* x p)^{1/2} \\
+  &\le |\varphi(x p_0)| + \varphi(1)^{1/2} \psi(p x^* x p)^{1/2}.
+\end{aligned}`
+
+Since $`x \mapsto \varphi(x p_0)` is $`\sigma`-continuous, it is $`s`-continuous by
+{bpref "lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10"}[]. The seminorm
+$`x \mapsto \psi(p x^* x p)^{1/2}` is a defining seminorm for the $`s`-topology on $`M`. It
+follows that $`x \mapsto \varphi(x(p_0 + p))` is $`s`-continuous and therefore
+$`\sigma`-continuous, by {bpref "cor:sigma_eq_s_on_ball"}[]. This contradicts the maximality
+of $`p_0`, and therefore $`p_0 = 1` and the result follows.
+:::
+
+The above result gives us that the $`\sigma`-weak continuity of a positive functional is
+determined entirely by the order structure on $`M`, and thus is independent of the choice of
+predual.
