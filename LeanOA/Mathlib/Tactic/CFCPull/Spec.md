@@ -63,20 +63,17 @@ applied and *what* the mode should be.
 ## 2. User-facing syntax
 
 ```
-cfc_pull (config)? (disch := tac)? ([lemmas])? (R)? (a)?
+cfc_pull (config)? (disch := tac)? ([lemmas])? R a
 ```
 and, in `conv` mode,
 ```
-conv ... => cfc_pull (config)? (disch := tac)? ([lemmas])? (R)? (a)? (=> tac)?
+conv ... => cfc_pull (config)? (disch := tac)? ([lemmas])? R a (=> tac)?
 ```
 
-* `R` is the scalar ring, `a` the element of the algebra. Both are optional and positional, and
-  either may be written `_`, which is the same as omitting it — that is how to give the element
-  and leave the ring to be read off the goal.
-* **Inference.** For each argument omitted or written `_`, the tactic scans the goal for a
-  subterm of the form `cfc f b` or `cfcₙ f b`, preferring the right-hand side of a relation, and
-  takes `R`/`a` from it. This makes `cfc_pull` alone work for the common goal shape
-  `lhs = cfc f a`.
+* `R` is the scalar ring, `a` the element of the algebra. Both are required and positional:
+  nothing is read off the goal. Between them they say exactly what the pull is aiming at — `a`
+  fixes the algebra `A` (as the type of `a`) and hence the subterms of the goal to act on, and
+  `R` fixes the calculus.
 * **Configuration** (standard `optConfig` syntax):
   * `+unital` / `-unital` (default `+unital`). Read as *prefer* the unital calculus: with
     `+unital` the tactic uses `cfc` whenever a unital `ContinuousFunctionalCalculus R A p`
@@ -116,8 +113,7 @@ conv ... => cfc_pull (config)? (disch := tac)? ([lemmas])? (R)? (a)? (=> tac)?
   typo.
 
   The list goes *before* the positional arguments, where `simp`'s and `rw`'s lists go relative
-  to their location. That is not only for the analogy: both arguments are optional, so a list
-  written after them would make `cfc_pull [foo]` read `[foo]` as the scalar ring.
+  to their location.
 * **The `=> tac` block** (`conv` mode only). A tactic sequence that is handed the side goals the
   pull did not close, and must close all of them; see [§7](#7-side-goals). It exists because a
   `conv` block cannot end with unsolved goals, which is what makes deferring useless there.
@@ -256,7 +252,7 @@ Tagging a lemma that does not fit any category is an error, and the error messag
 
 ### 6.1 Setup (frontend)
 
-0. Elaborate `R` and `a`, or infer them from the goal. Set `A := ` the type of `a`.
+0. Elaborate `R` and `a`. Set `A := ` the type of `a`.
 1. Determine unitality: with `+unital`, synthesise `ContinuousFunctionalCalculus R A ?p`; if it
    fails, fall back to non-unital. With `-unital`, go straight to non-unital.
 2. Read the predicate `p` off the instance and allocate the shared `?ha : p a` metavariable.
@@ -630,7 +626,6 @@ They are the intended use of the bracketed lemma list of §2: name them where th
 
 The tactic fails with a descriptive error when
 
-* neither `R` nor `a` was given and none could be inferred from the goal;
 * no continuous functional calculus instance exists for the requested mode;
 * the goal has no argument of type `A` to pull on;
 * `pull` fails on every candidate argument, in which case the error names the first expression

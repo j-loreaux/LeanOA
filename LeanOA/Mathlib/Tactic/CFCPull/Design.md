@@ -250,7 +250,6 @@ unital instance exists. This gives the same expressiveness with standard syntax.
 
 Tactic mode:
 
-* infer `R`/`a` if absent by scanning the goal for a `CFCApp`, right-hand side first;
 * find the arguments of the target to pull on: the target is `mkAppN rel args`; take the trailing
   arguments whose type is `A` (at most two);
 * run `pull` on each, tolerating individual failures;
@@ -307,7 +306,7 @@ expected.
    §8.1 of `Spec.md` (`star a * a`).
 4. **Conversions** — `Unital` and `Scalar`, with the BFS. Target: §8.2 (`a⁺` over `ℂ`).
 5. **Composition** — step 2 of the algorithm plus the `Compose` index. Target: §8.3.
-6. **Frontend polish** — inference of `R`/`a`, conv mode, side-goal discharging, tracing.
+6. **Frontend polish** — conv mode, side-goal discharging, tracing.
 7. **Lemma tagging** — work through `Spec.md` §9 and `Examples.lean`, fixing what breaks.
 
 Each milestone is a commit; `LeanOA/MathlibTest/CFCPull/Examples.lean` is the running test suite and is

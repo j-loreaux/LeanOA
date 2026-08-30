@@ -76,7 +76,7 @@ variable [IsSemitopologicalRing A] [T2Space A]
 docstring for why this is not tagged `@[cfc_pull]`. -/
 lemma CFC.sqrt_eq_cfcₙ_complex_sqrt (ha : 0 ≤ a) :
     CFC.sqrt a = cfcₙ (fun x : ℂ ↦ x.sqrt) a := by
-  cfc_pull
+  cfc_pull ℂ a
   refine cfcₙ_congr ?_
   rw [← (ha.isSelfAdjoint.quasispectrumRestricts.comp rfl (.nnreal_of_nonneg ha)).algebraMap_image]
   rintro - ⟨x, hx, rfl⟩

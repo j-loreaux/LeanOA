@@ -111,12 +111,7 @@ def postProcessSideGoals (cfg : Config) (goals : Array MVarId) : TacticM (Array 
       Use `cfc_pull +defer ..` to have them added to the goal list instead."
   return out
 
-/-! ### Determining the scalar ring and the element -/
-
-/-- Find an application of `cfc` or `cfcₙ` inside `e`, outermost first. -/
-def findCFCApp? (e : Expr) : Option CFCApp := do
-  let s ← e.find? fun s => (CFCApp.match? s).isSome
-  CFCApp.match? s
+/-! ### Locating the arguments to pull -/
 
 /-- The positions in the target that `cfc_pull` should act on: those arguments of the head
 application whose type is the algebra `A`. For `lhs = rhs` these are `lhs` and `rhs`; for
@@ -128,20 +123,6 @@ def targetPositions (target alg : Expr) : MetaM (Array Nat) := do
     if ← isDefEq (← inferType args[i]) alg then
       out := out.push i
   return out
-
-/-- Work out the scalar ring and the element from the goal when the user did not supply them:
-look for an application of the calculus, preferring the later arguments of the target (i.e. the
-right-hand side of a relation). Returns the `CFCApp` found. -/
-def inferCFCApp (target : Expr) : MetaM CFCApp := do
-  let args := target.getAppArgs
-  for i in [0:args.size] do
-    let arg := args[args.size - 1 - i]!
-    if let some c := findCFCApp? arg then
-      return c
-  if let some c := findCFCApp? target then return c
-  throwError "`cfc_pull` could not find an application of `cfc` or `cfcₙ` in the goal from\n\
-    which to read off the scalar ring and the element; supply them explicitly, as in\n\
-    `cfc_pull ℝ a`"
 
 /-! ### The lemma list -/
 
@@ -247,42 +228,12 @@ def cfcPullTarget (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (goal : MVarI
     main := []
   replaceMainGoal (main ++ (← postProcessSideGoals cfg sideGoals).toList)
 
-/-- Elaborate the optional scalar ring and element arguments, falling back to reading them off
-the goal. An argument written `_` is treated as absent, which is the way to give the element
-without the ring. The `Option Bool` reports whether the calculus found in the goal (if any) was
-unital, so that `cfc_pull` on a goal mentioning `cfcₙ` defaults to the non-unital calculus. -/
-def elabRingAndElem (target : Expr) (ring? elem? : Option Term) :
-    TacticM (Expr × Expr × Option Bool) := do
-  /- The first explicit argument is the scalar ring.  Elaborating the element there is a natural
-  mistake, so it gets a message of its own. -/
-  let elabRing (r : Term) : TacticM Expr := do
-    try
-      Term.elabType r
-    catch ex =>
-      throwError "`cfc_pull`'s first argument is the scalar ring, but `{r}` did not elaborate \
-        as a type:{indentD ex.toMessageData}\nIf `{r}` is the element to pull towards, give the \
-        scalar ring too — or `_`, as in `cfc_pull _ {r}`."
-  -- `_` in either position asks for that argument to be inferred, exactly as omitting it does
-  let isHole (t : Term) : Bool := t.raw.isOfKind ``Lean.Parser.Term.hole
-  match ring?.filter (!isHole ·), elem?.filter (!isHole ·) with
-  | some r, some a =>
-    let R ← elabRing r
-    let elem ← Term.elabTerm a none
-    Term.synthesizeSyntheticMVarsNoPostponing
-    return (← instantiateMVars R, ← instantiateMVars elem, none)
-  | some r, none =>
-    let R ← elabRing r
-    Term.synthesizeSyntheticMVarsNoPostponing
-    let c ← inferCFCApp target
-    return (← instantiateMVars R, c.a, some c.unital)
-  | none, some a =>
-    let elem ← Term.elabTerm a none
-    Term.synthesizeSyntheticMVarsNoPostponing
-    let c ← inferCFCApp target
-    return (c.R, ← instantiateMVars elem, some c.unital)
-  | none, none =>
-    let c ← inferCFCApp target
-    return (c.R, c.a, some c.unital)
+/-- Elaborate the scalar ring and the element. -/
+def elabRingAndElem (ring elem : Term) : TacticM (Expr × Expr) := do
+  let R ← Term.elabType ring
+  let elem ← Term.elabTerm elem none
+  Term.synthesizeSyntheticMVarsNoPostponing
+  return (← instantiateMVars R, ← instantiateMVars elem)
 
 open Lean Parser Tactic
 /--
@@ -316,27 +267,18 @@ Detailed tracing can be enabled with `set_option trace.Tactic.cfc_pull true` sho
 were tried and why they failed, which side goals were generated, or discharged.
 -/
 syntax (name := cfcPull) "cfc_pull" optConfig (discharger)? (cfcPullLemmas)?
-  (ppSpace colGt term:max)? (ppSpace colGt term:max)? : tactic
+  ppSpace colGt term:max ppSpace colGt term:max : tactic
 
 @[inherit_doc cfcPull]
 syntax (name := cfcPullConv) "cfc_pull" optConfig (discharger)? (cfcPullLemmas)?
-  (ppSpace colGt term:max)? (ppSpace colGt term:max)?
+  ppSpace colGt term:max ppSpace colGt term:max
   (" => " tacticSeq)? : conv
 
-/-- Whether the user explicitly mentioned the configuration field `field`. -/
-def configMentions (stx : Syntax) (field : Name) : Bool :=
-  (stx.find? fun s => s.isIdent && s.getId == field).isSome
-
-/-- Read the configuration, taking into account the unitality of a calculus found in the goal
-when the user did not mention `unital` explicitly, and the `(disch := ..)` clause, which
+/-- Read the configuration, together with the `(disch := ..)` clause, which
 `elabCFCPullConfig` cannot see. -/
-def mkConfig (cfgStx : TSyntax ``optConfig)
-    (disch? : Option (TSyntax ``discharger)) (goalUnital : Option Bool) :
+def mkConfig (cfgStx : TSyntax ``optConfig) (disch? : Option (TSyntax ``discharger)) :
     TacticM Config := do
   let mut cfg ← elabCFCPullConfig cfgStx
-  if !configMentions cfgStx `unital then
-    if let some u := goalUnital then
-      cfg := { cfg with unital := u }
   if let some disch := disch? then
     -- the keyword is `patternIgnore`d in the parser, so it does not appear in the tree
     let `(discharger| ($_ := $tac)) := disch | throwUnsupportedSyntax
@@ -347,24 +289,22 @@ def mkConfig (cfgStx : TSyntax ``optConfig)
 /-- Elaborator for the `cfc_pull` tactic. -/
 @[tactic cfcPull]
 def evalCFCPull : Tactic := fun stx => withMainContext do
-  let `(tactic| cfc_pull $cfg:optConfig $[$disch?]? $[$lems?]? $[$ring?]? $[$elem?]?) := stx
+  let `(tactic| cfc_pull $cfg:optConfig $[$disch?]? $[$lems?]? $ring $elem) := stx
     | throwUnsupportedSyntax
-  let goal ← getMainGoal
-  let target := (← instantiateMVars (← goal.getType)).consumeMData
   let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
-  let (R, elem, goalUnital) ← elabRingAndElem target ring? elem?
-  cfcPullTarget (← mkConfig cfg disch? goalUnital) lemmas R elem goal
+  let (R, elem) ← elabRingAndElem ring elem
+  cfcPullTarget (← mkConfig cfg disch?) lemmas R elem (← getMainGoal)
 
 /-- Elaborator for `cfc_pull` in `conv` mode. -/
 @[tactic cfcPullConv]
 def evalCFCPullConv : Tactic := fun stx => withMainContext do
-  let `(conv| cfc_pull $cfg:optConfig $[$disch?]? $[$lems?]? $[$ring?]? $[$elem?]?
+  let `(conv| cfc_pull $cfg:optConfig $[$disch?]? $[$lems?]? $ring $elem
       $[=> $tac?]?) := stx
     | throwUnsupportedSyntax
   let lhs := (← Conv.getLhs).consumeMData
   let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
-  let (R, elem, goalUnital) ← elabRingAndElem lhs ring? elem?
-  let mut cfg ← mkConfig cfg disch? goalUnital
+  let (R, elem) ← elabRingAndElem ring elem
+  let mut cfg ← mkConfig cfg disch?
   /- A `=> tac` block is what disposes of the survivors, so `postProcessSideGoals` must hand
   them over rather than report them: the block implies `+defer`. It does not imply `+deferAll` —
   the auto-param tactics still run, and the block sees only what they left, exactly as the

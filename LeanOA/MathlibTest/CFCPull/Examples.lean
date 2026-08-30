@@ -53,17 +53,12 @@ variable {R A : Type*} {p : A → Prop} [CommSemiring R]
   [StarRing A] [TopologicalSpace A] [Algebra R A] [ContinuousFunctionalCalculus R A p]
   [ContinuousMap.UniqueHom R A] {a : A} {f g : R → R}
 
+/- Both arguments are required and positional: the element `a` fixes the algebra, and so the
+subterms of the goal to act on, and the scalar ring `R` fixes the calculus. Neither is read off
+the goal. -/
 example (ha : p a) :
     star a * a = cfc (fun x : R ↦ star x * x) a := by
   cfc_pull R a
-
-/- Both are optional, and `_` in either position asks for that one to be read off the goal —
-which is the only way to give the element and leave the ring to be inferred. All four of these
-are the pull above. -/
-example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by cfc_pull R _
-example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by cfc_pull _ a
-example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by cfc_pull _ _
-example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by cfc_pull
 
 /- Note that `+defer` would make no difference here: it does not switch the discharging off, it
 only changes what happens to the goals the discharging could not close, and here there are none.
@@ -181,7 +176,7 @@ example (f : ℝ≥0 → ℝ≥0) (hf0 : f 0 = 0)
     (hf : ContinuousOn f (quasispectrum ℝ≥0 (CFC.sqrt (a ^ 2)))) :
     CFC.sqrt (CFC.sqrt (a ^ 2)) + cfcₙ f (CFC.sqrt (a ^ 2)) =
       cfcₙ (fun x ↦ NNReal.sqrt x + f x) (CFC.sqrt (a ^ 2)) := by
-  cfc_pull
+  cfc_pull -unital ℝ≥0 (CFC.sqrt (a ^ 2))
 
 /- Pulling over `ℂ` a term whose natural home is the non-unital calculus over `ℝ`: `cfc_pull`
 uses `CFC.posPart_def`, then `cfcₙ_eq_cfc`, then `cfc_real_eq_complex`. -/
@@ -556,11 +551,6 @@ whichever side carries the calculus and applied in whichever direction the pull 
 `cfc_sq` would do the same work stated the other way round. The one category where the
 direction matters is `Scalar`, and there the direction the lemma is stated in is the direction
 of the conversion. -/
-
-/- The list may be given on its own, with the scalar ring and the element read off the goal as
-usual — which is what the ordering buys. -/
-example (ha : IsStarNormal a) : sq a = cfc (fun x : ℂ ↦ x * x) a := by
-  cfc_pull [cfc_sq]
 
 /- And in `conv` mode, where it goes before the `=> ..` block. -/
 example (ha : IsStarNormal a) (b : A) : sq a + b = cfc (fun x : ℂ ↦ x * x) a + b := by

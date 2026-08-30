@@ -650,7 +650,7 @@ partial def pull (e : Expr) (want : Mode) : PullM Result := withIncDepth do
     /- The one failure worth spelling out: `e` is already an application of the calculus, just
     to the wrong element. `cfc_pull` only ever rewrites the calculus at a *more* complicated
     element into the calculus at a simpler one, so this is a dead end, and it usually means the
-    element was inferred from the wrong side of the goal. -/
+    wrong element was named. -/
     if let some c := CFCApp.match? e then
       unless ← withNewMCtxDepth <| withReducible <| isDefEq c.a ctx.elem do
         msg := msg ++ m!"\nThe calculus is already applied here, but to a different\n\

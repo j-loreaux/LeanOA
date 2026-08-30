@@ -40,28 +40,15 @@ error: `cfc_pull` found nothing of type `A` in the goal
 example (ha : IsStarNormal a) : (2 : ℕ) = 2 := by
   cfc_pull ℂ a
 
+/- The scalar ring comes first: it is elaborated as a type, so the element in its place is
+rejected by the elaborator. -/
 /--
-error: `cfc_pull` could not find an application of `cfc` or `cfcₙ` in the goal from
-which to read off the scalar ring and the element; supply them explicitly, as in
-`cfc_pull ℝ a`
--/
-#guard_msgs in
-example (ha : IsStarNormal a) : star a * a = star a * a := by
-  cfc_pull
-
-/--
-error: `cfc_pull`'s first argument is the scalar ring, but `a` did not elaborate as a type:
-  type expected, got
-    (a : A)
-If `a` is the element to pull towards, give the scalar ring too — or `_`, as in `cfc_pull _ a`.
+error: type expected, got
+  (a : A)
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
-  cfc_pull a
-
-/- Which is exactly what `_` is for: the element alone, with the ring read off the goal. -/
-example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
-  cfc_pull _ a
+  cfc_pull a a
 
 /--
 error: `cfc_pull` made no progress
