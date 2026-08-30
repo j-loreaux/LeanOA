@@ -284,142 +284,42 @@ def elabRingAndElem (target : Expr) (ring? elem? : Option Term) :
     let c ← inferCFCApp target
     return (c.R, c.a, some c.unital)
 
+open Lean Parser Tactic
 /--
 `cfc_pull R a` rewrites the goal so that the continuous functional calculus is at the head of
-every expression in the algebra: each side of the goal is replaced by `cfc f a` (or `cfcₙ f a`)
-for a function `f : R → R` that the tactic works out.
-
-This automates the standard technique for proving identities in a C⋆-algebra: pull `cfc` to the
-head on both sides, and then use `cfc_congr` to reduce to an equality of functions on the
-spectrum. If both sides end up with the same function, `cfc_pull` closes the goal outright.
+maximal subexpressions whose type matches that of `a`: each such subexpression is replaced by
+`cfc f a` (or `cfcₙ f a`) for some function `f : R → R` that the tactic determines from the
+structure of the expression and the collection of lemmas tagged `@[cfc_pull]`.
 
 ```lean
 example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by
-  cfc_pull R a <;> fun_prop
-```
-
-Both arguments are optional: `cfc_pull` on its own reads the scalar ring and the element off an
-application of `cfc`/`cfcₙ` already present in the goal, preferring the right-hand side. Writing
-`_` for an argument asks for that one to be read off the goal, which is how to give the element
-and leave the ring to be inferred:
-
-```lean
-example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by
-  cfc_pull _ a <;> fun_prop
-```
-
-The lemmas used along the way have hypotheses — continuity of the functions on the spectrum,
-`f 0 = 0` in the non-unital case, and the predicate `p a` — and `cfc_pull` discharges them with
-`assumption` and then with the auto-param tactic the calculus API itself uses (`cfc_cont_tac`,
-`cfc_zero_tac`, `cfc_tac`). Anything left over is an error; `+defer` turns those into goals
-instead, named after what they are, so that they can be addressed in groups:
-
-```lean
-example (ha : IsStrictlyPositive a) :
-    CFC.log a * CFC.log a = cfc (fun x : ℝ ↦ Real.log x * Real.log x) a := by
-  cfc_pull +defer ℝ a
-  case cfc_pull.continuity => exact Real.continuousOn_log.mono fun x hx h ↦ ...
-```
-
-`+deferAll` goes further and switches the discharging off entirely, so that *every* hypothesis
-the pull needed comes back as a goal — including the ones the auto-param tactics would have
-closed. Use it to see what the pull really assumed, or to discharge the obligations by one
-method of your own:
-
-```lean
-example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by
-  cfc_pull +deferAll R a <;> first | assumption | fun_prop
-```
-
-Configuration:
-
-* `+unital` / `-unital` (default `+unital`): prefer the unital calculus `cfc`, or force the
-  non-unital `cfcₙ`. With `+unital` the tactic falls back to `cfcₙ` in an algebra with no unital
-  functional calculus.
-* `+defer`: return the side goals that could not be discharged instead of failing.
-* `+deferAll`: return *all* the side goals, without trying to discharge any of them. Implies
-  `+defer`, and silently makes `(disch := ..)` inert — nothing is run on a side goal, the
-  discharger included. Duplicates are merged either way, so a hypothesis that both sides of a
-  relation ask for is handed back once.
-* `(disch := tac)`: run `tac` on side goals that none of the above closed. Only the goals tagged
-  `cfc_pull.side` reach it — the hypotheses peculiar to an individual `@[cfc_pull]` lemma, for
-  which the calculus API has no auto-param tactic. As in `simp`, the default does nothing.
-* `+zetaDelta`: unfold `let`-bound local variables. Off by default, so a local definition —
-  written with `let`, or introduced by `set` — is an atom that the tactic does not look inside,
-  and a pull reaching one gets stuck there. This is `simp`'s default too: `set b := star a * a
-  with hb` is a request to stop reading `star a * a`, and unfolding it silently would undo the
-  abstraction and strand `hb`. `rw [hb]` is the other way in. The *element* is unaffected —
-  given as a `let`-bound variable it is matched, and returned, as written.
-* `(maxDepth := n)`: the recursion depth limit.
-
-In `conv` mode, `cfc_pull` acts on the current `conv` target, which is the way to pull at a
-specific position:
-
-```lean
-example : star a * a + b = cfc (fun x : R ↦ star x * x) a + b := by
-  conv_lhs => cfc_pull R a
-```
-
-A `conv` block cannot end with unsolved goals — the same restriction that `rw` inside `conv` is
-subject to — so a side goal that survives the discharging is fatal there, and deferring it is no
-help. A trailing `=> tac` block is the way out: it takes the side goals, and only those, as its
-goal list and must leave none of them open. It implies `+defer`, so the pull no longer errors on
-what it could not close:
-
-```lean
-example : CFC.log a * CFC.log a + b = cfc (fun x : ℝ ↦ Real.log x * Real.log x) a + b := by
-  conv in CFC.log a * CFC.log a =>
-    cfc_pull ℝ a => exact Real.continuousOn_log.mono fun x hx h ↦ ...
-```
-
-The lemma list, if there is one, goes before the arguments and so before the `=> ..` block.
-
-The goals keep their kind tags inside the block, so `case cfc_pull.continuity => ..` works there
-as it does in tactic mode, and `+deferAll .. => all_goals tac` is the conv-mode counterpart of
-`cfc_pull +deferAll .. <;> tac`. The block is a `tacticSeq` and so is delimited by indentation:
-a `conv` step at the enclosing level continues the block it is in, rather than being swallowed.
-
-Going under a binder is `conv`'s job rather than the tactic's, which makes sums and the like a
-two-step affair:
-
-```lean
-example : ∑ i ∈ s, star (cfc (g i) a) = cfc (∑ i ∈ s, fun x ↦ star (g i x)) a := by
-  conv_lhs => enter [2, i]; cfc_pull R a
   cfc_pull R a
 ```
 
-The lemmas the tactic uses are those tagged `@[cfc_pull]`; `set_option trace.Tactic.cfc_pull
-true` shows which were tried and why they failed. A bracketed list adjusts that set for this one
-call: `foo` adds a lemma, exactly as `@[cfc_pull]` would, and `-foo` takes one out. It goes
-before the scalar ring and the element, where `simp`'s and `rw`'s lists go relative to their
-location.
+* `cfc_pull R a`: with `a : A` attempts to write maximal subexpressions of the goal with type `A` in
+  the form `cfc f a` for some function `f : R → R`. Fails if any generated side goals cannot be
+  solved automatically.
+* `cfc_pull -unital R a`: the same, but for `cfcₙ` instead; if only a non-unital instance of
+  the continuous functional calculus can be found this is the default, whereas `cfc` is the default
+  if a unital instance is found.
+* `cfc_pull +defer R a`: return unsolved side goals to the user, instead of failing.
+* `cfc_pull +deferAll R a`: return all side goals to the user.
+* `cfc_pull [lemma1, -lemma2] R a`: add `lemma1` to the list of lemmas used by `cfc_pull`, and
+  remove `lemma2`; only global declaration name are permitted.
+* `cfc_pull +zetaDelta R a`: unfold `let`-bound variables.
+* `cfc_pull (disch := tac) R a`: run `tac` to attempt to discharge side goals (only applicable
+  for side goals in the category `cfc_pull.side`).
+* `cfc_pull R a => tacticSeq` (`conv` mode only): discharge unsolved side goals with the supplied
+  tactic script (implies `+defer`).
 
-```lean
-example (ha : 0 ≤ a) : CFC.sqrt a * CFC.sqrt a = cfc (fun x : ℂ ↦ x.sqrt * x.sqrt) a := by
-  cfc_pull [CFC.sqrt_eq_cfc_complex_sqrt] ℂ a
-```
-
-That is the way to use a lemma too special — or too expensive in side goals — to be worth
-tagging globally, and the way to keep a tagged lemma out of the way of the one you want. Only
-declaration names may be listed: a `@[cfc_pull]` lemma is instantiated from its constant, so a
-local hypothesis cannot be one, and `rw` is the way to use it. The database itself is never
-modified: `-foo` says "do not use `foo` in this call".
+Detailed tracing can be enabled with `set_option trace.Tactic.cfc_pull true` showing which lemmas
+were tried and why they failed, which side goals were generated, or discharged.
 -/
-syntax (name := cfcPull) "cfc_pull"
-  -- The config parser has to be `Lean.Parser.Tactic.optConfig`, not the
-  -- `Lean.Parser.Term.optConfig` that `open Lean` puts in scope: only the former excludes
-  -- `disch`/`discharger` from the identifiers its `valConfigItem` accepts, and so only it
-  -- leaves the clause that follows to be parsed. With the other one the configuration swallows
-  -- `(disch := ..)` and reports it as an unknown configuration option.
-  -- the lemma list comes before the positional arguments, as `simp`'s and `rw`'s do. Both of
-  -- those are optional, so with the list after them `cfc_pull [foo]` would read `[foo]` as the
-  -- scalar ring rather than as a lemma list.
-  Lean.Parser.Tactic.optConfig (Lean.Parser.Tactic.discharger)? (cfcPullLemmas)?
+syntax (name := cfcPull) "cfc_pull" optConfig (discharger)? (cfcPullLemmas)?
   (ppSpace colGt term:max)? (ppSpace colGt term:max)? : tactic
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullConv) "cfc_pull"
-  Lean.Parser.Tactic.optConfig (Lean.Parser.Tactic.discharger)? (cfcPullLemmas)?
+syntax (name := cfcPullConv) "cfc_pull" optConfig (discharger)? (cfcPullLemmas)?
   (ppSpace colGt term:max)? (ppSpace colGt term:max)?
   (" => " tacticSeq)? : conv
 
@@ -430,8 +330,8 @@ def configMentions (stx : Syntax) (field : Name) : Bool :=
 /-- Read the configuration, taking into account the unitality of a calculus found in the goal
 when the user did not mention `unital` explicitly, and the `(disch := ..)` clause, which
 `elabCFCPullConfig` cannot see. -/
-def mkConfig (cfgStx : TSyntax ``Lean.Parser.Tactic.optConfig)
-    (disch? : Option (TSyntax ``Lean.Parser.Tactic.discharger)) (goalUnital : Option Bool) :
+def mkConfig (cfgStx : TSyntax ``optConfig)
+    (disch? : Option (TSyntax ``discharger)) (goalUnital : Option Bool) :
     TacticM Config := do
   let mut cfg ← elabCFCPullConfig cfgStx
   if !configMentions cfgStx `unital then
@@ -439,7 +339,7 @@ def mkConfig (cfgStx : TSyntax ``Lean.Parser.Tactic.optConfig)
       cfg := { cfg with unital := u }
   if let some disch := disch? then
     -- the keyword is `patternIgnore`d in the parser, so it does not appear in the tree
-    let `(Lean.Parser.Tactic.discharger| ($_ := $tac)) := disch | throwUnsupportedSyntax
+    let `(discharger| ($_ := $tac)) := disch | throwUnsupportedSyntax
     -- parenthesised so that a multi-tactic sequence stays one tactic
     cfg := { cfg with discharger := some (← `(tactic| ($tac))) }
   return cfg
