@@ -45,9 +45,9 @@ def tryTacticOn (g : MVarId) (tac : TSyntax `tactic) : TacticM Bool := do
 /-- The auto-param tactic that the continuous functional calculus API itself would use for a
 hypothesis of this kind.
 
-`.other` gets the predicate tactic too. Its classification is deliberately coarse (see
-`SideGoalKind.ofType`), so a goal landing there is often a predicate goal in disguise: `0 ≤ a * a`
-is the predicate of the calculus over `ℝ≥0`, but is not recognised as one. -/
+`.other` gets the predicate tactic too: `cfc_tac` is the calculus API's general-purpose
+discharger, and a better last resort for a hypothesis peculiar to one lemma than nothing at
+all. -/
 def SideGoalKind.tactic : SideGoalKind → MetaM (TSyntax `tactic)
   | .continuity => `(tactic| cfc_cont_tac)
   | .mapZero => `(tactic| cfc_zero_tac)

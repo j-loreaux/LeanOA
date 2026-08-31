@@ -213,9 +213,6 @@ def withIncDepth {α : Type} (x : PullM α) : PullM α := do
 def stripAutoParam (e : Expr) : Expr :=
   if e.isAutoParam then e.appFn!.appArg! else e
 
--- TODO: we should *never* actually run into `p a` goals, right? So this kind of goal should
--- be removed? We could leave it around instead, and then when we improve the classification
--- system in `ofType`, we could account for them there.
 /-- What kind of hypothesis a side goal came from. This drives both the name the goal is given
 (so that `case cfc_pull.continuity => fun_prop` addresses all of them at once) and the auto-param
 tactic used to try to discharge it. -/
@@ -230,13 +227,37 @@ inductive SideGoalKind where
   | other
   deriving Inhabited, BEq, Repr
 
--- TODO: this classification system is too inaccurate.
-/-- Classify a side goal by its statement. `ContinuousOn` is matched by name because this file
-deliberately does not import the analysis library. -/
+/-- Classify a side goal by its statement. Everything here is matched by name, because this file
+deliberately does not import the analysis library.
+
+* **Predicate.** The predicates of the continuous functional calculus in Mathlib are
+  `IsStarNormal` (over `ℂ`), `IsSelfAdjoint` (over `ℝ`) and `(0 ≤ ·)` (over `ℝ≥0`), so a goal of
+  one of those shapes is a predicate goal however it arose: the shared `p a`, the `p (cfc g a)`
+  of a composition, or a hypothesis of an individual lemma that happens to be one. All three are
+  matched at the head of the statement and nowhere else. Anywhere would be wrong: the calculus
+  instances themselves are indexed by the predicate, so `IsSelfAdjoint` occurs inside the
+  instance arguments of any `cfc` over `ℝ` — including the ones in a continuity goal's
+  `spectrum ℝ a`.
+* **Continuity.** `Continuous` or `ContinuousOn` anywhere in the statement, rather than only at
+  its head: a lemma may ask for continuity under a binder, as `cfc_sum` does with
+  `∀ i ∈ s, ContinuousOn (f i) (spectrum R a)`, and `cfc_cont_tac` is still the tactic to try.
+* **`mapZero`.** `f 0 = 0`, the hypothesis of the non-unital calculus and the only equation the
+  calculus API has an auto-param for, recognised as an equation whose right-hand side is zero.
+  An equation of any other shape is a lemma's own hypothesis, and belongs in `other` with the
+  rest of them. -/
 def SideGoalKind.ofType (type : Expr) : SideGoalKind :=
-  if type.isAppOf `ContinuousOn then .continuity
-  else if type.isAppOf ``Eq then .mapZero
+  if type.isAppOf `IsSelfAdjoint || type.isAppOf `IsStarNormal || isNonneg then .predicate
+  else if mentions `Continuous || mentions `ContinuousOn then .continuity
+  else if let some (_, _, rhs) := type.eq? then
+    if rhs.zero? then .mapZero else .other
   else .other
+where
+  /-- Whether the constant `n` occurs anywhere in the statement. -/
+  mentions (n : Name) : Bool := (type.find? (·.isConstOf n)).isSome
+  /-- Whether the statement is `0 ≤ _`, the predicate of the calculus over `ℝ≥0`. -/
+  isNonneg : Bool := match type.le? with
+    | some (_, lhs, _) => lhs.zero?
+    | none => false
 
 /-- The name a deferred goal of this kind is given. -/
 def SideGoalKind.tag : SideGoalKind → Name

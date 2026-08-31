@@ -92,7 +92,7 @@ with a side condition of its own — `cfc_real_eq_nnreal` asks for `0 ≤ a` —
 on the condition. -/
 /--
 error: `cfc_pull` rewrote the goal but could not discharge 1 side goal:
-  case cfc_pull.side
+  case cfc_pull.predicate
   A : Type u_1
   inst✝² : CStarAlgebra A
   inst✝¹ : PartialOrder A

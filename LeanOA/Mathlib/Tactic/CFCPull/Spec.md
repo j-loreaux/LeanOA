@@ -353,6 +353,14 @@ goal. The tactic handles them as follows.
   wrappers stripped so the goal displays cleanly, and **named after its kind**:
   `cfc_pull.predicate`, `cfc_pull.continuity`, `cfc_pull.mapZero` or `cfc_pull.side`. The name
   lets the user address a whole group at once with `case cfc_pull.continuity => fun_prop`.
+* The kind is read off the statement: `IsSelfAdjoint _`, `IsStarNormal _` or `0 ≤ _` — the three
+  predicates the calculus is instantiated at in Mathlib — is `predicate`, matched at the head
+  only, since the instances are themselves indexed by the predicate and so mention it
+  everywhere; a statement mentioning `Continuous` or `ContinuousOn` *anywhere*, under a binder
+  included as in `cfc_sum`'s `∀ i ∈ s, ContinuousOn (f i) (spectrum R a)`, is `continuity`; an
+  equation whose right-hand side is zero is `mapZero`; everything else is `side`. The shared
+  `?ha` of the first bullet is named `predicate` whatever its statement, which is what covers a
+  calculus instantiated at some other predicate.
 * Once the whole pull is finished (so that no function metavariables remain), the frontend
   deduplicates the goals and tries, on each: `assumption`, then the auto-param tactic the
   calculus API itself would use for a hypothesis of that kind (`cfc_cont_tac` for continuity,

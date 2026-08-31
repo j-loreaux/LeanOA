@@ -94,18 +94,18 @@ example {ι : Type*} {s : Finset ι} {h : ι → R → R}
     (hh : ∀ i, ContinuousOn (h i) (spectrum R a)) :
     ∑ i ∈ s, star (cfc (h i) a) = cfc (∑ i ∈ s, fun x ↦ star (h i x)) a := by
   conv_lhs => enter [2, i]; cfc_pull R a
-  cfc_pull +defer R a
-  case cfc_pull.side => exact fun i _ ↦ (hh i).star
+  cfc_pull R a
 
-/- The same goal, discharged in place instead of deferred. `(disch := tac)` runs `tac` on the
-`cfc_pull.side` goals, and only on those: the hypotheses peculiar to an individual lemma, here
-the continuity hypothesis of `cfc_sum`, which is stated under a binder and so is out of
-`cfc_cont_tac`'s reach. -/
+/- The hypothesis `cfc_sum` asks for is `∀ i ∈ s, ContinuousOn (h i) (spectrum R a)`: a
+continuity goal wrapped in a binder. It is classified as one all the same — the classification
+looks for `Continuous`/`ContinuousOn` anywhere in the statement, not just at its head — so it is
+named `cfc_pull.continuity`, and `cfc_cont_tac` is what closed it above. -/
 example {ι : Type*} {s : Finset ι} {h : ι → R → R}
     (hh : ∀ i, ContinuousOn (h i) (spectrum R a)) :
     ∑ i ∈ s, star (cfc (h i) a) = cfc (∑ i ∈ s, fun x ↦ star (h i x)) a := by
   conv_lhs => enter [2, i]; cfc_pull R a
-  cfc_pull (disch := intro i _; fun_prop) R a
+  cfc_pull +deferAll R a
+  case cfc_pull.continuity => exact fun i _ ↦ (hh i).star
 
 end GenericUnital
 
@@ -545,6 +545,23 @@ example (ha : IsStarNormal a) : sq a = cfc (fun x : ℂ ↦ x * x) a := by
 /- Naming it is all it takes; it is classified exactly as the attribute would classify it. -/
 example (ha : IsStarNormal a) : sq a = cfc (fun x : ℂ ↦ x * x) a := by
   cfc_pull [cfc_sq] ℂ a
+
+/- A listed lemma's own hypotheses are classified like any other side goal, and by *shape*:
+`cfc_zero_tac` exists for the `f 0 = 0` hypothesis of the non-unital calculus, so only an
+equation whose right-hand side is zero is named `cfc_pull.mapZero`. Any other equation — here
+`f 1 = 1` — is a hypothesis peculiar to the lemma, and comes back as `cfc_pull.side`, where
+`(disch := ..)` can reach it. -/
+/-- A variant of `cfc_sq` with an equational hypothesis that is not `f 0 = 0`. -/
+public theorem cfc_sq_of_map_one (f : ℂ → ℂ) (a : A) (_hf1 : f 1 = 1)
+    (hf : ContinuousOn f (spectrum ℂ a) := by cfc_cont_tac) :
+    sq (cfc f a) = cfc (fun x ↦ f x * f x) a :=
+  (cfc_mul f f a hf hf).symm
+
+example (_ha : IsStarNormal a) (f : ℂ → ℂ) (hf : Continuous f) (hf1 : f 1 = 1) :
+    sq (cfc f a) = cfc (fun x : ℂ ↦ f x * f x) a := by
+  cfc_pull +deferAll [cfc_sq_of_map_one] ℂ a
+  case cfc_pull.side => exact hf1
+  all_goals first | assumption | fun_prop
 
 /- There is no right-to-left form, here or on the attribute: the equation is recognised from
 whichever side carries the calculus and applied in whichever direction the pull calls for, so
