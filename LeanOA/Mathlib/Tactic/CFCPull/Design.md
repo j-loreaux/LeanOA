@@ -64,7 +64,7 @@ structure Mode where
 /-- The arguments of a `cfc`/`cfcₙ` application.  The ring and the unitality of one are exactly
 a `Mode`, so it extends `Mode` rather than repeating them. -/
 structure CFCApp extends Mode where
-  e A p f a : Expr
+  toExpr alg pred fn elem : Expr
 ```
 
 `CFCApp.match? : Expr → Option CFCApp` recognises `@cfc R A p _ .. _ f a` and
@@ -138,7 +138,7 @@ abbrev PullM := ReaderT Context (StateRefT State MetaM)
 structure Result where
   app   : CFCApp           -- `cfc f a`, kept verbatim so its instances are the lemma's; being a
                            -- `CFCApp` it carries the mode, the function and the element with it
-  proof : Expr             -- `e = app.e`
+  proof : Expr             -- `e = app.toExpr`
 ```
 
 The entry points are

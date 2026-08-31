@@ -57,15 +57,15 @@ instance : ToMessageData Mode where
 We keep the application itself so that we don't need to re-synthesize instance arguments. -/
 structure CFCApp extends Mode where
   /-- The application itself, `cfc f a` or `cfcₙ f a`. -/
-  e : Expr
+  toExpr : Expr
   /-- The algebra `A`. -/
-  A : Expr
+  alg : Expr
   /-- The predicate `p : A → Prop` attached to the calculus. -/
-  p : Expr
+  pred : Expr
   /-- The function `f : R → R`. -/
-  f : Expr
+  fn : Expr
   /-- The element `a : A`. -/
-  a : Expr
+  elem : Expr
   deriving Inhabited
 
 /-- Recognise an application of `cfc` or `cfcₙ`. -/
@@ -79,20 +79,20 @@ def CFCApp.match? (e : Expr) : Option CFCApp := do
   -- `cfc` has 15 arguments and `cfcₙ` has 18; we only rely on the positions of the first three
   -- and the last two, so that the matcher survives a change to the instance arguments.
   guard <| args.size ≥ 5
-  return { e, unital, ring := args[0]!, A := args[1]!, p := args[2]!,
-           f := args[args.size - 2]!, a := args[args.size - 1]! }
+  return { toExpr := e, unital, ring := args[0]!, alg := args[1]!, pred := args[2]!,
+           fn := args[args.size - 2]!, elem := args[args.size - 1]! }
 
 /-- Rebuild the application, replacing the function argument. The other arguments (including the
 instances) are reused verbatim, which is the whole point: re-elaborating them would mean
 re-running instance synthesis. -/
-def CFCApp.withFn (c : CFCApp) (f : Expr) : CFCApp :=
-  let args := c.e.getAppArgs
-  { c with e := mkAppN c.e.getAppFn (args.set! (args.size - 2) f), f }
+def CFCApp.withFn (c : CFCApp) (fn : Expr) : CFCApp :=
+  let args := c.toExpr.getAppArgs
+  { c with toExpr := mkAppN c.toExpr.getAppFn (args.set! (args.size - 2) fn), fn }
 
 /-- Rebuild the application, replacing the element argument. -/
-def CFCApp.withElem (c : CFCApp) (a : Expr) : CFCApp :=
-  let args := c.e.getAppArgs
-  { c with e := mkAppN c.e.getAppFn (args.set! (args.size - 1) a), a }
+def CFCApp.withElem (c : CFCApp) (elem : Expr) : CFCApp :=
+  let args := c.toExpr.getAppArgs
+  { c with toExpr := mkAppN c.toExpr.getAppFn (args.set! (args.size - 1) elem), elem }
 
 /-! ### Scalar rings -/
 
@@ -321,10 +321,10 @@ of `isVar`. -/
 def isHoleFor (ref : CFCApp) (isVar : Expr → MetaM Bool) (s : Expr) : MetaM Bool := do
   let some c := CFCApp.match? s | return false
   unless c.unital == ref.unital do return false
-  unless ← isVar c.f do return false
+  unless ← isVar c.fn do return false
   withNewMCtxDepth do
     unless ← isDefEq c.ring ref.ring do return false
-    unless ← isDefEq c.a ref.a do return false
+    unless ← isDefEq c.elem ref.elem do return false
     return true
 
 /-- The subterms of `alg` that *would* be holes relative to `ref` were it not for the bound
@@ -339,7 +339,7 @@ def boundHoles (ref : CFCApp) (alg : Expr) : MetaM (Array Expr) := do
   alg.forEach' fun e => do
     if e.hasLooseBVars then
       if let some c := CFCApp.match? e then
-        if c.unital == ref.unital && c.f.getAppFn.isMVar then
+        if c.unital == ref.unital && c.fn.getAppFn.isMVar then
           acc.modify (·.push e)
           -- do not descend: a partial application of `cfc` inside a full one is not a
           -- separate hole
@@ -394,7 +394,7 @@ def mkEntry (declName : Name) (prio : Nat) : MetaM Entry := do
       -- A `Scalar` lemma is applied by `convert`, which relies on it leaving the element alone;
       -- one that also changes the element would silently produce a result at an element other
       -- than the one being pulled towards. `cfc_comp_re` is the motivating example.
-      unless ← withNewMCtxDepth <| isDefEq cl.a cr.a do
+      unless ← withNewMCtxDepth <| isDefEq cl.elem cr.elem do
         throwError "@[cfc_pull] failed: `{decl}` changes both the scalar ring and the\n\
           element of the functional calculus; such lemmas are not supported. A scalar\n\
           conversion must leave the element alone, and a composition must leave the scalar\n\
@@ -406,18 +406,18 @@ def mkEntry (declName : Name) (prio : Nat) : MetaM Entry := do
     if cl.unital != cr.unital then
       return .unital { declName, ring := .ofExpr cl.ring, nonUnitalOnLhs := !cl.unital }
     -- same ring, same unitality: this must be a composition lemma
-    if ← withNewMCtxDepth <| isDefEq cl.a cr.a then
+    if ← withNewMCtxDepth <| isDefEq cl.elem cr.elem then
       throwError "@[cfc_pull] failed: both sides of `{decl}` are applications of the same\n\
         functional calculus to the same element; there is nothing for `cfc_pull` to do."
     -- The side to rewrite *from* is the one applying the calculus to the deeper element:
     -- `cfc F a = cfc f (a ^ n)` is used to turn the right-hand side into the left-hand side.
-    let srcOnLhs := cl.a.approxDepth > cr.a.approxDepth
-    if cl.a.approxDepth == cr.a.approxDepth then
+    let srcOnLhs := cl.elem.approxDepth > cr.elem.approxDepth
+    if cl.elem.approxDepth == cr.elem.approxDepth then
       throwError "@[cfc_pull] failed: `{decl}` looks like a composition lemma, but neither\n\
         side applies the functional calculus to a more complicated element than the other."
     let src := if srcOnLhs then cl else cr
-    let some innerHead := src.a.getAppFn.constName? |
-      throwError "@[cfc_pull] failed: the element `{src.a}` in `{decl}` has no head\n\
+    let some innerHead := src.elem.getAppFn.constName? |
+      throwError "@[cfc_pull] failed: the element `{src.elem}` in `{decl}` has no head\n\
         constant to index on."
     return .compose
       { declName, prio, ring := .ofExpr cl.ring, unital := cl.unital, srcOnLhs, innerHead }
@@ -425,10 +425,10 @@ where
   /-- Classify a lemma with a `cfc` application on exactly one side. -/
   mkPullEntry (c : CFCApp) (alg : Expr) (cfcOnLhs : Bool) : MetaM Entry := do
     let decl := ppConst declName
-    if ← withNewMCtxDepth <| isDefEq alg c.a then
+    if ← withNewMCtxDepth <| isDefEq alg c.elem then
       return .id { declName, ring := .ofExpr c.ring, unital := c.unital, cfcOnLhs }
     let isVar (e : Expr) : MetaM Bool := return e.isMVar
-    let (pat, holes, _) ← abstractHoles (isHoleFor c isVar) (mkFreshExprMVar c.A) alg
+    let (pat, holes, _) ← abstractHoles (isHoleFor c isVar) (mkFreshExprMVar c.alg) alg
     for b in ← boundHoles c alg do
       unless cfcPull.warnBoundHoles.get (← getOptions) do continue
       logWarning m!"`{decl}` applies the functional calculus at{indentExpr b}\n\
