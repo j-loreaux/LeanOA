@@ -54,7 +54,7 @@ namespace Mathlib.Tactic.CFCPull
 
 open Lean Meta
 
-/-! ### Configuration, modes and the monad -/
+/-! ### Configuration and the monad -/
 
 /-- Configuration for the `cfc_pull` tactic. -/
 structure Config where
@@ -109,18 +109,6 @@ structure Config where
   discharger : Option (TSyntax `tactic) := none
   deriving Inhabited
 
-/-- Which continuous functional calculus we are producing: a scalar ring, and whether the
-calculus is the unital one. -/
-structure Mode where
-  /-- The scalar ring. -/
-  ring : Expr
-  /-- `true` for `cfc`, `false` for `cfcₙ`. -/
-  unital : Bool
-  deriving Inhabited
-
-instance : ToMessageData Mode where
-  toMessageData m := m!"{if m.unital then "cfc" else "cfcₙ"} over {m.ring}"
-
 /-- What is known about the continuous functional calculus at a given mode. -/
 structure PredicateInfo where
   /-- The mode this information is about. -/
@@ -159,14 +147,11 @@ abbrev PullM := ReaderT Context <| StateRefT State MetaM
 
 /-- The outcome of pulling a single expression. -/
 structure Result where
-  /-- The mode of `rhs`. -/
-  mode : Mode
-  /-- The function `f : R → R`. -/
-  fn : Expr
-  /-- The right-hand side `cfc f a`, kept verbatim so that its instance arguments are those of
-  the lemma that produced it. -/
-  rhs : Expr
-  /-- A proof of `e = rhs`, where `e` is the expression that was pulled. -/
+  /-- The application `cfc f a` the expression was rewritten to, kept verbatim so that its
+  instance arguments are those of the lemma that produced it. It carries its own mode, function
+  and element, so none of those is stored alongside it and none can drift out of step with it. -/
+  app : CFCApp
+  /-- A proof of `e = app.e`, where `e` is the expression that was pulled. -/
   proof : Expr
   deriving Inhabited
 
@@ -430,7 +415,7 @@ which of the ring, the unitality and the element the two sides disagree about, a
 matters here — matching against `e` determines everything. `mode` is the mode of `e`, which is
 used to fill the predicate hypotheses of the lemma. -/
 def rewriteWithCFCLemma (declName : Name) (srcOnLhs : Bool) (e : Expr) (mode : Mode) :
-    PullM (Expr × Expr) := do
+    PullM (CFCApp × Expr) := do
   let ctx ← read
   let (mvars, bis, lhs, rhs, proof) ← instantiateLemma declName
   let (srcSide, tgtSide) := if srcOnLhs then (lhs, rhs) else (rhs, lhs)
@@ -447,18 +432,16 @@ def rewriteWithCFCLemma (declName : Name) (srcOnLhs : Bool) (e : Expr) (mode : M
   synthesizeInstances declName mvars bis
   let tgtSide ← instantiateMVars tgtSide
   let some ct := CFCApp.match? tgtSide | throwError "`{declName}` is not a `cfc`-to-`cfc` lemma"
-  let newE := ct.withFn (← Core.betaReduce ct.f)
+  let newApp := ct.withFn (← Core.betaReduce ct.f)
   let step ← if srcOnLhs then pure proof else mkEqSymm proof
-  let step ← mkExpectedTypeHint step (← mkEq e newE)
+  let step ← mkExpectedTypeHint step (← mkEq e newApp.e)
   collectHypotheses declName mvars bis mode
-  return (newE, step)
+  return (newApp, step)
 
 /-- Apply a transition lemma (a `Scalar` or `Unital` lemma) to a result. -/
 def applyTransition (declName : Name) (srcOnLhs : Bool) (res : Result) : PullM Result := do
-  let (newE, step) ← rewriteWithCFCLemma declName srcOnLhs res.rhs res.mode
-  let some c := CFCApp.match? newE | throwError "`{declName}`: the result is not a `cfc`"
-  return { mode := { ring := c.R, unital := c.unital }, fn := c.f, rhs := newE,
-           proof := ← mkEqTrans res.proof step }
+  let (app, step) ← rewriteWithCFCLemma declName srcOnLhs res.app.e res.app.toMode
+  return { app, proof := ← mkEqTrans res.proof step }
 
 /-- Convert a result to the requested mode: first the unitality, then the scalar ring.
 
@@ -467,23 +450,23 @@ possible function, and implements the rule that a `cfcₙ` at the right element 
 `cfc` immediately when the unital calculus was requested. -/
 def convert (res : Result) (want : Mode) : PullM Result := do
   let mut res := res
-  if res.mode.unital != want.unital then
+  if res.app.unital != want.unital then
     let mut done := false
     for l in (← read).lemmas.unital do
-      unless ← l.ring.matchesRing res.mode.ring do continue
+      unless ← l.ring.matchesRing res.app.ring do continue
       -- to reach the unital calculus we start from the non-unital side, and conversely
       let srcOnLhs := if want.unital then l.nonUnitalOnLhs else !l.nonUnitalOnLhs
       if let some r ← observing? (applyTransition l.declName srcOnLhs res) then
         res := r; done := true; break
     unless done do
-      throwError "`cfc_pull` could not convert {res.mode} into {want}"
-  unless ← withReducible <| isDefEq res.mode.ring want.ring do
-    let some path ← scalarPath (.ofExpr res.mode.ring) (.ofExpr want.ring) want.unital
-      | throwError "`cfc_pull` has no way to convert a {res.mode} into a {want}"
+      throwError "`cfc_pull` could not convert {res.app.toMode} into {want}"
+  unless ← withReducible <| isDefEq res.app.ring want.ring do
+    let some path ← scalarPath (.ofExpr res.app.ring) (.ofExpr want.ring) want.unital
+      | throwError "`cfc_pull` has no way to convert a {res.app.toMode} into a {want}"
     for l in path do
       res ← applyTransition l.declName true res
-    unless ← withReducible <| isDefEq res.mode.ring want.ring do
-      throwError "`cfc_pull` converted to {res.mode}, but {want} was requested"
+    unless ← withReducible <| isDefEq res.app.ring want.ring do
+      throwError "`cfc_pull` converted to {res.app.toMode}, but {want} was requested"
   return res
 
 /-- Apply a `Pull` lemma to `e`, recursing on the holes with `rec`.
@@ -502,9 +485,9 @@ def applyPullLemma (l : PullLemma) (e : Expr) (want : Mode)
   unless ← withReducible <| isDefEq c.A ctx.alg do
     throwError "`{l.declName}`: wrong algebra"
   if l.ring == .any then
-    unless ← withReducible <| isDefEq c.R want.ring do
+    unless ← withReducible <| isDefEq c.ring want.ring do
       throwError "`{l.declName}`: wrong scalar ring"
-  let mode : Mode := { ring := ← instantiateMVars c.R, unital := c.unital }
+  let mode : Mode := { c.toMode with ring := ← instantiateMVars c.ring }
   unless ← withReducible <| isDefEq c.p (← getPredicate mode) do
     throwError "`{l.declName}`: wrong predicate"
   unless ← withReducible <| isDefEq c.a ctx.elem do
@@ -524,15 +507,14 @@ def applyPullLemma (l : PullLemma) (e : Expr) (want : Mode)
     results := results.push (← rec sub mode)
   for (hole, res) in holes.zip results do
     let some hc := CFCApp.match? hole | throwError "internal error: bad hole"
-    unless ← withReducible <| isDefEq hc.f res.fn do
+    unless ← withReducible <| isDefEq hc.f res.app.f do
       throwError "`{l.declName}`: could not use the function found for `{hole}`"
   synthesizeInstances l.declName mvars bis
   -- Assemble the proof.  `e = ⟨algebraic side⟩` by congruence, then the lemma itself.
   let algSide' ← instantiateMVars algSide
   let cfcSide' ← instantiateMVars cfcSide
   let some cc := CFCApp.match? cfcSide' | throwError "internal error: lost the `cfc` side"
-  let fn ← Core.betaReduce cc.f
-  let newRhs := cc.withFn fn
+  let newApp := cc.withFn (← Core.betaReduce cc.f)
   let hcongr ← withLocalDeclsD (phs.map fun _ => (`x, fun _ => pure ctx.alg)) fun xs => do
     let body ← instantiateMVars <| pat.replace fun s => match s with
       | .mvar m => (phs.findIdx? (·.mvarId! == m)).map (xs[·]!)
@@ -544,9 +526,9 @@ def applyPullLemma (l : PullLemma) (e : Expr) (want : Mode)
   let hcongr ← mkExpectedTypeHint hcongr (← mkEq e algSide')
   let lemProof ← if l.cfcOnLhs then mkEqSymm proof else pure proof
   let total ← mkEqTrans hcongr lemProof
-  let total ← mkExpectedTypeHint total (← mkEq e newRhs)
+  let total ← mkExpectedTypeHint total (← mkEq e newApp.e)
   collectHypotheses l.declName mvars bis mode
-  return { mode, fn, rhs := newRhs, proof := total }
+  return { app := newApp, proof := total }
 
 /-- Apply a hole-free `Pull` lemma *without* insisting that its element be the one we are pulling
 towards: `e` is rewritten to `cfc F b` for whatever element `b` the lemma matches. The caller
@@ -566,9 +548,9 @@ def applyLooseLemma (l : PullLemma) (e : Expr) (want : Mode) : PullM (Expr × Ex
   unless ← withReducible <| isDefEq c.A ctx.alg do
     throwError "`{l.declName}`: wrong algebra"
   if l.ring == .any then
-    unless ← withReducible <| isDefEq c.R want.ring do
+    unless ← withReducible <| isDefEq c.ring want.ring do
       throwError "`{l.declName}`: wrong scalar ring"
-  let mode : Mode := { ring := ← instantiateMVars c.R, unital := c.unital }
+  let mode : Mode := { c.toMode with ring := ← instantiateMVars c.ring }
   unless ← withReducible <| isDefEq c.p (← getPredicate mode) do
     throwError "`{l.declName}`: wrong predicate"
   unless ← withReducible <| isDefEq algSide e do
@@ -576,7 +558,7 @@ def applyLooseLemma (l : PullLemma) (e : Expr) (want : Mode) : PullM (Expr × Ex
   synthesizeInstances l.declName mvars bis
   let cfcSide ← instantiateMVars cfcSide
   let some cc := CFCApp.match? cfcSide | throwError "internal error: lost the `cfc` side"
-  let newE := cc.withFn (← Core.betaReduce cc.f)
+  let newE := (cc.withFn (← Core.betaReduce cc.f)).e
   if newE == e then throwError "`{l.declName}` made no progress"
   let step ← if l.cfcOnLhs then mkEqSymm proof else pure proof
   let step ← mkExpectedTypeHint step (← mkEq e newE)
@@ -685,40 +667,40 @@ a composition. -/
 partial def pullExisting (c : CFCApp) (want : Mode) : PullM Result := do
   let ctx ← read
   let e := c.e
-  let mode : Mode := { ring := c.R, unital := c.unital }
+  let mode := c.toMode
   if ← withReducible <| isDefEq c.a ctx.elem then
-    return { mode, fn := c.f, rhs := e, proof := ← mkEqRefl e }
+    return { app := c, proof := ← mkEqRefl e }
   -- The calculus is applied to something else, so this is a composition.  Fix the unitality
   -- first: composing inside the non-unital calculus when the unital one was asked for would put
   -- a spurious `f 0 = 0` side goal on every piece of the inner expression.
   if c.unital != want.unital then
     for l in ctx.lemmas.unital do
-      unless ← l.ring.matchesRing c.R do continue
+      unless ← l.ring.matchesRing c.ring do continue
       let srcOnLhs := if want.unital then l.nonUnitalOnLhs else !l.nonUnitalOnLhs
       let r ← observing? do
-        let (newE, step) ← rewriteWithCFCLemma l.declName srcOnLhs e mode
-        let res ← pull newE want
+        let (newApp, step) ← rewriteWithCFCLemma l.declName srcOnLhs e mode
+        let res ← pull newApp.e want
         return { res with proof := ← mkEqTrans step res.proof }
       if let some r := r then return r
   -- Look for a tagged composition lemma matching the head of the inner element.
   let innerHead := c.a.getAppFn.constName?
   for l in ctx.lemmas.compose do
     unless l.unital == c.unital do continue
-    unless ← l.ring.matchesRing c.R do continue
+    unless ← l.ring.matchesRing c.ring do continue
     unless some l.innerHead == innerHead do continue
     let r ← observing? do
-      let (newE, step) ← rewriteWithCFCLemma l.declName l.srcOnLhs e mode
-      let res ← pull newE want
+      let (newApp, step) ← rewriteWithCFCLemma l.declName l.srcOnLhs e mode
+      let res ← pull newApp.e want
       return { res with proof := ← mkEqTrans step res.proof }
     if let some r := r then return r
   -- Otherwise, pull the inner element first and try again; that turns `cfc g b` into
   -- `cfc g (cfc h a)`, which the composition lemma for `cfc` (namely `cfc_comp'`) handles.
   let inner ← pull c.a mode
-  if inner.rhs == c.a then
+  if inner.app.e == c.a then
     throwError "`cfc_pull` made no progress on the inner element `{c.a}`"
-  let newE := c.withElem inner.rhs
+  let newE := (c.withElem inner.app.e).e
   let step ← withLocalDeclD `y ctx.alg fun y => do
-    let F ← mkLambdaFVars #[y] (c.withElem y)
+    let F ← mkLambdaFVars #[y] (c.withElem y).e
     mkCongrArg F inner.proof
   let step ← mkExpectedTypeHint step (← mkEq e newE)
   let res ← pull newE want
@@ -801,6 +783,6 @@ def runPull (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
             looping. Raise the limit with `cfc_pull (maxDepth := {2 * cfg.maxDepth}) ..`"
       throw ex
   let goals ← st.sideGoals.filterM fun g => return !(← g.isAssigned)
-  return (← instantiateMVars res.rhs, ← instantiateMVars res.proof, goals)
+  return (← instantiateMVars res.app.e, ← instantiateMVars res.proof, goals)
 
 end Mathlib.Tactic.CFCPull

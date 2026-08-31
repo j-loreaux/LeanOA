@@ -60,6 +60,19 @@ def cfcClassName : Name := `ContinuousFunctionalCalculus
 /-- The name of the class carrying the non-unital continuous functional calculus. -/
 def cfcₙClassName : Name := `NonUnitalContinuousFunctionalCalculus
 
+/-- Which continuous functional calculus is in play: a scalar ring, and whether the calculus is
+the unital one. This is what the `cfc_pull` tactic is asked to produce, and what a `CFCApp`
+already is. -/
+structure Mode where
+  /-- The scalar ring. -/
+  ring : Expr
+  /-- `true` for `cfc`, `false` for `cfcₙ`. -/
+  unital : Bool
+  deriving Inhabited
+
+instance : ToMessageData Mode where
+  toMessageData m := m!"{if m.unital then "cfc" else "cfcₙ"} over {m.ring}"
+
 /-- An application `cfc f a` or `cfcₙ f a`, together with the pieces of it that we care about.
 
 Both constants take the scalar ring, the algebra and the predicate as their first three
@@ -67,16 +80,16 @@ arguments and the function and the element as their last two, which is all this 
 records; the instance arguments in between are irrelevant to us, and are the reason the
 application itself is kept in the `e` field rather than reassembled on demand.
 
-The only way to build a `CFCApp` is `CFCApp.match?`, so a value of this type is a witness that
-`e` really is an application of the calculus with at least five arguments. `withFn` and
-`withElem` rely on that. -/
-structure CFCApp where
+The scalar ring and the unitality are exactly a `Mode`, which is why this extends one: an
+application of the calculus *is* an application at a mode, and `toMode` reads it off.
+
+A `CFCApp` is built by `CFCApp.match?`, or from an existing one by `withFn` and `withElem`; all
+three maintain the invariant that `e` really is an application of the calculus with at least five
+arguments, and that the remaining fields are the arguments of `e`. So a value of this type is a
+witness to that, and its fields may be read off instead of re-matching `e`. -/
+structure CFCApp extends Mode where
   /-- The application itself, `cfc f a` or `cfcₙ f a`. -/
   e : Expr
-  /-- `true` for `cfc`, `false` for `cfcₙ`. -/
-  unital : Bool
-  /-- The scalar ring `R`. -/
-  R : Expr
   /-- The algebra `A`. -/
   A : Expr
   /-- The predicate `p : A → Prop` attached to the calculus. -/
@@ -98,20 +111,20 @@ def CFCApp.match? (e : Expr) : Option CFCApp := do
   -- `cfc` has 15 arguments and `cfcₙ` has 18; we only rely on the positions of the first three
   -- and the last two, so that the matcher survives a change to the instance arguments.
   guard <| args.size ≥ 5
-  return { e, unital, R := args[0]!, A := args[1]!, p := args[2]!,
+  return { e, unital, ring := args[0]!, A := args[1]!, p := args[2]!,
            f := args[args.size - 2]!, a := args[args.size - 1]! }
 
 /-- Rebuild the application, replacing the function argument. The other arguments (including the
 instances) are reused verbatim, which is the whole point: re-elaborating them would mean
 re-running instance synthesis. -/
-def CFCApp.withFn (c : CFCApp) (f : Expr) : Expr :=
+def CFCApp.withFn (c : CFCApp) (f : Expr) : CFCApp :=
   let args := c.e.getAppArgs
-  mkAppN c.e.getAppFn (args.set! (args.size - 2) f)
+  { c with e := mkAppN c.e.getAppFn (args.set! (args.size - 2) f), f }
 
 /-- Rebuild the application, replacing the element argument. -/
-def CFCApp.withElem (c : CFCApp) (a : Expr) : Expr :=
+def CFCApp.withElem (c : CFCApp) (a : Expr) : CFCApp :=
   let args := c.e.getAppArgs
-  mkAppN c.e.getAppFn (args.set! (args.size - 1) a)
+  { c with e := mkAppN c.e.getAppFn (args.set! (args.size - 1) a), a }
 
 /-! ### Scalar rings -/
 
@@ -134,7 +147,7 @@ instance : ToMessageData RingKey where
 
 /-- The `RingKey` of an expression denoting a scalar ring.
 
-This is only ever called on the `CFCApp.R` of after having matched with `CFCApp.match?` -/
+This is only ever called on the `CFCApp.ring` of after having matched with `CFCApp.match?` -/
 def RingKey.ofExpr (R : Expr) : RingKey :=
   match R.getAppFn with
   | .const n _ => .const n
@@ -342,7 +355,7 @@ def isHoleFor (ref : CFCApp) (isVar : Expr → MetaM Bool) (s : Expr) : MetaM Bo
   unless c.unital == ref.unital do return false
   unless ← isVar c.f do return false
   withNewMCtxDepth do
-    unless ← isDefEq c.R ref.R do return false
+    unless ← isDefEq c.ring ref.ring do return false
     unless ← isDefEq c.a ref.a do return false
     return true
 
@@ -402,7 +415,7 @@ def mkEntry (declName : Name) (prio : Nat) : MetaM Entry := do
   | some c, none => mkPullEntry c rhs (cfcOnLhs := true)
   | none, some c => mkPullEntry c lhs (cfcOnLhs := false)
   | some cl, some cr => do
-    let sameRing ← withNewMCtxDepth <| isDefEq cl.R cr.R
+    let sameRing ← withNewMCtxDepth <| isDefEq cl.ring cr.ring
     -- if the lhs and rhs are over different scalar rings, then we ensure they both have the
     -- same unitality and enter this as a scalar lemma
     if !sameRing then
@@ -418,11 +431,11 @@ def mkEntry (declName : Name) (prio : Nat) : MetaM Entry := do
           conversion must leave the element alone, and a composition must leave the scalar\n\
           ring alone."
       return .scalar
-        { declName, src := .ofExpr cl.R, tgt := .ofExpr cr.R, unital := cl.unital }
+        { declName, src := .ofExpr cl.ring, tgt := .ofExpr cr.ring, unital := cl.unital }
     -- if the lhs and rhs are over the same scalar rings, but have different unitality, we
     -- enter this as a unital lemma
     if cl.unital != cr.unital then
-      return .unital { declName, ring := .ofExpr cl.R, nonUnitalOnLhs := !cl.unital }
+      return .unital { declName, ring := .ofExpr cl.ring, nonUnitalOnLhs := !cl.unital }
     -- same ring, same unitality: this must be a composition lemma
     if ← withNewMCtxDepth <| isDefEq cl.a cr.a then
       throwError "@[cfc_pull] failed: both sides of `{declName}` are applications of the same\n\
@@ -438,12 +451,12 @@ def mkEntry (declName : Name) (prio : Nat) : MetaM Entry := do
       throwError "@[cfc_pull] failed: the element `{src.a}` in `{declName}` has no head\n\
         constant to index on."
     return .compose
-      { declName, prio, ring := .ofExpr cl.R, unital := cl.unital, srcOnLhs, innerHead }
+      { declName, prio, ring := .ofExpr cl.ring, unital := cl.unital, srcOnLhs, innerHead }
 where
   /-- Classify a lemma with a `cfc` application on exactly one side. -/
   mkPullEntry (c : CFCApp) (alg : Expr) (cfcOnLhs : Bool) : MetaM Entry := do
     if ← withNewMCtxDepth <| isDefEq alg c.a then
-      return .id { declName, ring := .ofExpr c.R, unital := c.unital, cfcOnLhs }
+      return .id { declName, ring := .ofExpr c.ring, unital := c.unital, cfcOnLhs }
     let isVar (e : Expr) : MetaM Bool := return e.isMVar
     let (pat, holes, _) ← abstractHoles (isHoleFor c isVar) (mkFreshExprMVar c.A) alg
     for b in ← boundHoles c alg do
@@ -460,7 +473,7 @@ where
       throwError "@[cfc_pull] failed: the non-`cfc` side of `{declName}` is `{alg}`,\n\
         which has no head symbol to index on."
     return .pull
-      { declName, prio, ring := .ofExpr c.R, unital := c.unital, cfcOnLhs,
+      { declName, prio, ring := .ofExpr c.ring, unital := c.unital, cfcOnLhs,
         numHoles := holes.size }
       keys
 

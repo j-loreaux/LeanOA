@@ -48,10 +48,10 @@ structure Mode where
   ring   : Expr
   unital : Bool
 
-/-- The arguments of a `cfc`/`cfcₙ` application. -/
-structure CFCApp where
-  unital : Bool
-  R A p f a : Expr
+/-- The arguments of a `cfc`/`cfcₙ` application.  The ring and the unitality of one are exactly
+a `Mode`, so it extends `Mode` rather than repeating them. -/
+structure CFCApp extends Mode where
+  e A p f a : Expr
 ```
 
 `CFCApp.match? : Expr → Option CFCApp` recognises `@cfc R A p _ .. _ f a` and
@@ -123,10 +123,9 @@ structure State where
 abbrev PullM := ReaderT Context (StateRefT State MetaM)
 
 structure Result where
-  mode  : Mode
-  fn    : Expr             -- `f : mode.ring → mode.ring`
-  rhs   : Expr             -- `cfc f a`, kept verbatim so its instances are the lemma's
-  proof : Expr             -- `e = rhs`
+  app   : CFCApp           -- `cfc f a`, kept verbatim so its instances are the lemma's; being a
+                           -- `CFCApp` it carries the mode, the function and the element with it
+  proof : Expr             -- `e = app.e`
 ```
 
 The entry points are
