@@ -12,29 +12,21 @@ public meta import Lean.Meta.DiscrTree.Util
 /-!
 # The `@[cfc_pull]` attribute
 
-This file sets up the lemma database used by the `cfc_pull` tactic.
-
 A lemma tagged `@[cfc_pull]` must be an equation in which at least one side has `cfc` or `cfcₙ`
-as its head symbol. Such a lemma is sorted into one of five *categories*, which record the
-different ways the tactic can make use of it. Writing `F` for the function argument and `a` for
-the element argument of a `cfc`/`cfcₙ` application:
+as its head symbol, although for most lemmas it does not matter which. Such a lemma is sorted into
+one of five categories, listed below. These lemmas are used by the `cfc_pull` tactic to rewrite
+an element of a C⋆-algebra into an application of the continuous functional calculus.
 
 | category  | shape                                              | example              |
 | --------- | -------------------------------------------------- | -------------------- |
-| `id`      | `cfc (fun x ↦ x) a = a`                             | `cfc_id'`            |
-| `pull`    | `cfc F a = ⟨an expression in the algebra⟩`          | `cfc_mul`            |
-| `scalar`  | `cfc (F : S → S) a = cfc (G : T → T) a`, `S ≠ T`    | `cfc_real_eq_complex`|
-| `unital`  | `cfcₙ F a = cfc F a`                                | `cfcₙ_eq_cfc`        |
-| `compose` | `cfc (F ∘ G) a = cfc F ⟨an expression in `a`⟩`      | `cfc_comp_pow`       |
+| `id`      | `cfc (fun x ↦ x) a = a`                           | `cfc_id'`            |
+| `pull`    | `cfc f a = ⟨an expression in the algebra⟩`         | `cfc_mul`            |
+| `scalar`  | `cfc (f : R → R) a = cfc (g : S → S) a`, `R ≠ S`   | `cfc_real_eq_complex`|
+| `unital`  | `cfcₙ f a = cfc f a`                               | `cfcₙ_eq_cfc`        |
+| `compose` | `cfc (f ∘ g) a = cfc f ⟨an expression in `a`⟩`     | `cfc_comp_pow`       |
 
-See `LeanOA/Mathlib/Tactic/CFCPull/Spec.md` for the full specification.
-
-## Implementation notes
-
-Classification happens under `forallMetaTelescope` rather than `forallTelescope`: turning the
-lemma's binders into metavariables means that type and instance arguments are indexed as
-wildcards in the `DiscrTree`, and it makes the notion of "a variable of the lemma" (namely, an
-unassigned metavariable) agree with what the tactic sees when it applies the lemma.
+The only lemmas for which the directionality matters are `scalar` lemmas. These lemmas are used by
+the tactic to transform switch from a `R`-functional calculus to an `S`-functional calculus.
 -/
 
 public meta section
@@ -45,18 +37,12 @@ open Lean Meta
 
 /-! ### Messages -/
 
-/-- A constant, as a message supporting hover and "go to definition".
-
-Always fully qualified, whatever namespaces happen to be open where the message is produced: a
-diagnostic naming a `@[cfc_pull]` lemma, or the head symbol a pull got stuck on, should name it
-in the form the reader can search for. -/
+/-- A constant, as a message supporting hover and "go to definition". -/
 def ppConst (n : Name) : MessageData := .ofConstName n (fullNames := true)
 
 /-! ### Recognising applications of `cfc` and `cfcₙ` -/
 
-/-- Which continuous functional calculus is in play: a scalar ring, and whether the calculus is
-the unital one. This is what the `cfc_pull` tactic is asked to produce, and what a `CFCApp`
-already is. -/
+/-- The scalar ring and unitality of the relevant continuous functional calculus. -/
 structure Mode where
   /-- The scalar ring. -/
   ring : Expr
@@ -68,19 +54,7 @@ instance : ToMessageData Mode where
   toMessageData m := m!"{ppConst (if m.unital then ``cfc else ``cfcₙ)} over {m.ring}"
 
 /-- An application `cfc f a` or `cfcₙ f a`, together with the pieces of it that we care about.
-
-Both constants take the scalar ring, the algebra and the predicate as their first three
-arguments and the function and the element as their last two, which is all this structure
-records; the instance arguments in between are irrelevant to us, and are the reason the
-application itself is kept in the `e` field rather than reassembled on demand.
-
-The scalar ring and the unitality are exactly a `Mode`, which is why this extends one: an
-application of the calculus *is* an application at a mode, and `toMode` reads it off.
-
-A `CFCApp` is built by `CFCApp.match?`, or from an existing one by `withFn` and `withElem`; all
-three maintain the invariant that `e` really is an application of the calculus with at least five
-arguments, and that the remaining fields are the arguments of `e`. So a value of this type is a
-witness to that, and its fields may be read off instead of re-matching `e`. -/
+We keep the application itself so that we don't need to re-synthesize instance arguments. -/
 structure CFCApp extends Mode where
   /-- The application itself, `cfc f a` or `cfcₙ f a`. -/
   e : Expr
