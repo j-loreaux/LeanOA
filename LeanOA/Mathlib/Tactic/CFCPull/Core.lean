@@ -212,8 +212,7 @@ inductive SideGoalKind where
   | other
   deriving Inhabited, BEq, Repr
 
-/-- Classify a side goal by its statement. Everything here is matched by name, because this file
-deliberately does not import the analysis library.
+/-- Classify a side goal by its statement.
 
 * **Predicate.** The predicates of the continuous functional calculus in Mathlib are
   `IsStarNormal` (over `ℂ`), `IsSelfAdjoint` (over `ℝ`) and `(0 ≤ ·)` (over `ℝ≥0`), so a goal of
@@ -231,8 +230,8 @@ deliberately does not import the analysis library.
   An equation of any other shape is a lemma's own hypothesis, and belongs in `other` with the
   rest of them. -/
 def SideGoalKind.ofType (type : Expr) : SideGoalKind :=
-  if type.isAppOf `IsSelfAdjoint || type.isAppOf `IsStarNormal || isNonneg then .predicate
-  else if mentions `Continuous || mentions `ContinuousOn then .continuity
+  if type.isAppOf ``IsSelfAdjoint || type.isAppOf ``IsStarNormal || isNonneg then .predicate
+  else if mentions ``Continuous || mentions ``ContinuousOn then .continuity
   else if let some (_, _, rhs) := type.eq? then
     if rhs.zero? then .mapZero else .other
   else .other
@@ -279,14 +278,14 @@ def mkClassApp (clsName : Name) (args : Array Expr) : MetaM Expr := do
   for (mvar, bi) in mvars.zip bis do
     if bi == .default && j < args.size then
       unless ← isDefEq mvar args[j]! do
-        throwError "`{clsName}` does not accept `{args[j]!}` as its argument {j}"
+        throwError "`{ppConst clsName}` does not accept `{args[j]!}` as its argument {j}"
       j := j + 1
   for (mvar, bi) in mvars.zip bis do
     if bi.isInstImplicit then
       unless ← mvar.mvarId!.isAssigned do
         let inst ← synthInstance (← instantiateMVars (← mvar.mvarId!.getType))
         unless ← isDefEq mvar inst do
-          throwError "`{clsName}`: could not use the synthesised instance `{inst}`"
+          throwError "`{ppConst clsName}`: could not use the synthesised instance `{inst}`"
   return mkAppN (.const clsName lvls) mvars
 
 /-- The index in the cache of the information about the calculus at `mode`, if known. -/
@@ -304,7 +303,8 @@ def getPredicate (mode : Mode) : PullM Expr := do
     return (← get).predicates[i]!.pred
   let ctx ← read
   let p ← mkFreshExprMVar (← mkArrow ctx.alg (.sort .zero))
-  let clsName := if mode.unital then cfcClassName else cfcₙClassName
+  let clsName :=
+    if mode.unital then ``ContinuousFunctionalCalculus else ``NonUnitalContinuousFunctionalCalculus
   let noCalculus {α : Type} : PullM α :=
     throwError "`cfc_pull`: `{ctx.alg}` has no {if mode.unital then "" else "non-unital "}\
       continuous functional calculus over `{mode.ring}`"
@@ -342,11 +342,11 @@ def synthesizeInstances (declName : Name) (mvars : Array Expr) (bis : Array Bind
       unless ← mvarId.isAssigned do
         let type ← instantiateMVars (← mvarId.getType)
         if type.hasExprMVar then
-          throwError "`{declName}`: the instance argument `{type}` is not determined"
+          throwError "`{ppConst declName}`: the instance argument `{type}` is not determined"
         let .some inst ← trySynthInstance type
-          | throwError "`{declName}` does not apply here: no instance `{type}`"
+          | throwError "`{ppConst declName}` does not apply here: no instance `{type}`"
         unless ← isDefEq mvar inst do
-          throwError "`{declName}`: the synthesised instance `{inst}` does not match"
+          throwError "`{ppConst declName}`: the synthesised instance `{inst}` does not match"
 
 /-- Deal with the hypotheses of an instantiated lemma: those that are the predicate `p a` at
 `mode` are filled with the shared proof, the rest become side goals. -/
@@ -359,15 +359,16 @@ def collectHypotheses (declName : Name) (mvars : Array Expr) (bis : Array Binder
     if bi.isInstImplicit then continue
     let type := stripAutoParam (← instantiateMVars (← mvarId.getType))
     unless ← isProp type do
-      throwError "`{declName}` does not apply here: the argument of type `{type}` could not be \
-        determined"
+      throwError "`{ppConst declName}` does not apply here: the argument of type \
+        `{type}` could not be determined"
     let pred ← getPredicate mode
     if ← withReducible <| isDefEq type (mkApp pred ctx.elem) then
       mvarId.assign (← getPredicateProof mode)
-      trace[Tactic.cfc_pull] "`{declName}`: filled `{type}` from the shared predicate proof"
+      trace[Tactic.cfc_pull]
+        "`{ppConst declName}`: filled `{type}` from the shared predicate proof"
     else
       mvarId.assign (← newSideGoal type (.ofType type))
-      trace[Tactic.cfc_pull] "`{declName}`: deferred `{type}`"
+      trace[Tactic.cfc_pull] "`{ppConst declName}`: deferred `{type}`"
 
 /-- Test whether an expression is an unassigned metavariable, i.e. a variable of the lemma being
 applied. -/
@@ -419,19 +420,21 @@ def rewriteWithCFCLemma (declName : Name) (srcOnLhs : Bool) (e : Expr) (mode : M
   let ctx ← read
   let (mvars, bis, lhs, rhs, proof) ← instantiateLemma declName
   let (srcSide, tgtSide) := if srcOnLhs then (lhs, rhs) else (rhs, lhs)
-  let some cs := CFCApp.match? srcSide | throwError "`{declName}` is not a `cfc`-to-`cfc` lemma"
+  let some cs := CFCApp.match? srcSide |
+    throwError "`{ppConst declName}` is not a `cfc`-to-`cfc` lemma"
   -- Everything that decides whether this lemma applies *here* is a match against the user's
   -- expression, so it runs at reducible transparency. `synthesizeInstances` below is the
   -- exception; see the note on transparency in the module docstring.
   unless ← withReducible <| isDefEq cs.A ctx.alg do
-    throwError "`{declName}`: wrong algebra"
+    throwError "`{ppConst declName}`: wrong algebra"
   unless ← withReducible <| isDefEq cs.p (← getPredicate mode) do
-    throwError "`{declName}`: wrong predicate"
+    throwError "`{ppConst declName}`: wrong predicate"
   unless ← withReducible <| isDefEq srcSide e do
-    throwError "`{declName}` does not match `{e}`"
+    throwError "`{ppConst declName}` does not match `{e}`"
   synthesizeInstances declName mvars bis
   let tgtSide ← instantiateMVars tgtSide
-  let some ct := CFCApp.match? tgtSide | throwError "`{declName}` is not a `cfc`-to-`cfc` lemma"
+  let some ct := CFCApp.match? tgtSide |
+    throwError "`{ppConst declName}` is not a `cfc`-to-`cfc` lemma"
   let newApp := ct.withFn (← Core.betaReduce ct.f)
   let step ← if srcOnLhs then pure proof else mkEqSymm proof
   let step ← mkExpectedTypeHint step (← mkEq e newApp.e)
@@ -481,34 +484,34 @@ def applyPullLemma (l : PullLemma) (e : Expr) (want : Mode)
   let ctx ← read
   let (mvars, bis, lhs, rhs, proof) ← instantiateLemma l.declName
   let (cfcSide, algSide) := if l.cfcOnLhs then (lhs, rhs) else (rhs, lhs)
-  let some c := CFCApp.match? cfcSide | throwError "`{l.declName}` is not a pull lemma"
+  let some c := CFCApp.match? cfcSide | throwError "`{ppConst l.declName}` is not a pull lemma"
   unless ← withReducible <| isDefEq c.A ctx.alg do
-    throwError "`{l.declName}`: wrong algebra"
+    throwError "`{ppConst l.declName}`: wrong algebra"
   if l.ring == .any then
     unless ← withReducible <| isDefEq c.ring want.ring do
-      throwError "`{l.declName}`: wrong scalar ring"
+      throwError "`{ppConst l.declName}`: wrong scalar ring"
   let mode : Mode := { c.toMode with ring := ← instantiateMVars c.ring }
   unless ← withReducible <| isDefEq c.p (← getPredicate mode) do
-    throwError "`{l.declName}`: wrong predicate"
+    throwError "`{ppConst l.declName}`: wrong predicate"
   unless ← withReducible <| isDefEq c.a ctx.elem do
-    throwError "`{l.declName}`: wrong element"
+    throwError "`{ppConst l.declName}`: wrong element"
   -- Replace the holes by fresh metavariables and match.  `pat` is kept unassigned so that the
   -- holes can be abstracted again below, after unification has filled in everything else.
   let (pat, holes, phs) ←
     abstractHoles (isHoleFor c isLemmaVar) (mkFreshExprMVar ctx.alg) algSide
   unless ← withReducible <| isDefEq pat e do
-    throwError "`{l.declName}` does not match: `{pat}` ≠ `{e}`"
+    throwError "`{ppConst l.declName}` does not match: `{pat}` ≠ `{e}`"
   -- Recurse on the subterms the holes matched.
   let mut results := #[]
   for h in phs do
     let sub ← instantiateMVars h
     if sub.isMVar then
-      throwError "`{l.declName}`: the hole `{h}` was not determined by matching"
+      throwError "`{ppConst l.declName}`: the hole `{h}` was not determined by matching"
     results := results.push (← rec sub mode)
   for (hole, res) in holes.zip results do
     let some hc := CFCApp.match? hole | throwError "internal error: bad hole"
     unless ← withReducible <| isDefEq hc.f res.app.f do
-      throwError "`{l.declName}`: could not use the function found for `{hole}`"
+      throwError "`{ppConst l.declName}`: could not use the function found for `{hole}`"
   synthesizeInstances l.declName mvars bis
   -- Assemble the proof.  `e = ⟨algebraic side⟩` by congruence, then the lemma itself.
   let algSide' ← instantiateMVars algSide
@@ -541,25 +544,26 @@ unknown element. -/
 def applyLooseLemma (l : PullLemma) (e : Expr) (want : Mode) : PullM (Expr × Expr) := do
   let ctx ← read
   if l.numHoles != 0 then
-    throwError "`{l.declName}` has holes, so it cannot be applied at an unknown element"
+    throwError "`{ppConst l.declName}` has holes, so it cannot be applied at an unknown \
+      element"
   let (mvars, bis, lhs, rhs, proof) ← instantiateLemma l.declName
   let (cfcSide, algSide) := if l.cfcOnLhs then (lhs, rhs) else (rhs, lhs)
-  let some c := CFCApp.match? cfcSide | throwError "`{l.declName}` is not a pull lemma"
+  let some c := CFCApp.match? cfcSide | throwError "`{ppConst l.declName}` is not a pull lemma"
   unless ← withReducible <| isDefEq c.A ctx.alg do
-    throwError "`{l.declName}`: wrong algebra"
+    throwError "`{ppConst l.declName}`: wrong algebra"
   if l.ring == .any then
     unless ← withReducible <| isDefEq c.ring want.ring do
-      throwError "`{l.declName}`: wrong scalar ring"
+      throwError "`{ppConst l.declName}`: wrong scalar ring"
   let mode : Mode := { c.toMode with ring := ← instantiateMVars c.ring }
   unless ← withReducible <| isDefEq c.p (← getPredicate mode) do
-    throwError "`{l.declName}`: wrong predicate"
+    throwError "`{ppConst l.declName}`: wrong predicate"
   unless ← withReducible <| isDefEq algSide e do
-    throwError "`{l.declName}` does not match `{e}`"
+    throwError "`{ppConst l.declName}` does not match `{e}`"
   synthesizeInstances l.declName mvars bis
   let cfcSide ← instantiateMVars cfcSide
   let some cc := CFCApp.match? cfcSide | throwError "internal error: lost the `cfc` side"
   let newE := (cc.withFn (← Core.betaReduce cc.f)).e
-  if newE == e then throwError "`{l.declName}` made no progress"
+  if newE == e then throwError "`{ppConst l.declName}` made no progress"
   let step ← if l.cfcOnLhs then mkEqSymm proof else pure proof
   let step ← mkExpectedTypeHint step (← mkEq e newE)
   collectHypotheses l.declName mvars bis mode
@@ -627,7 +631,7 @@ partial def pull (e : Expr) (want : Mode) : PullM Result := withIncDepth do
     -- 3. tagged pull lemmas
     let candidates ← pullCandidates e want
     -- the expression is already in the enclosing trace node's message
-    trace[Tactic.cfc_pull] "candidates: {candidates.map (·.declName)}"
+    trace[Tactic.cfc_pull] "candidates: {candidates.map (ppConst ·.declName)}"
     for l in candidates do
       let r ← observing? do convert (← applyPullLemma l e want pull) want
       if let some r := r then return r
@@ -639,8 +643,11 @@ partial def pull (e : Expr) (want : Mode) : PullM Result := withIncDepth do
         let res ← pull newE want
         return { res with proof := ← mkEqTrans step res.proof }
       if let some r := r then return r
+    let head := match e.getAppFn.constName? with
+      | some n => ppConst n
+      | none => m!"_"
     let mut msg := m!"`cfc_pull` got stuck on `{e}`{indentD m!"(head symbol: \
-      {e.getAppFn.constName?.getD `_}, target: {want} at `{ctx.elem}`)"}"
+      {head}, target: {want} at `{ctx.elem}`)"}"
     /- A local definition is an atom unless `+zetaDelta` is given, so a pull that reaches one
     stops dead with nothing to say about it: the head symbol printed above is `_`, as it is for
     any free variable, which on its own tells the user nothing. Name the flag instead. -/
@@ -724,7 +731,8 @@ partial def pullCandidates (e : Expr) (want : Mode) : PullM (Array PullLemma) :=
       else pure ((← scalarPath l.ring wantKey want.unital).map (·.size))
     match conversions? with
     | none =>
-      trace[Tactic.cfc_pull] "skipping `{l.declName}`: no conversion from {l.ring} to {wantKey}"
+      trace[Tactic.cfc_pull]
+        "skipping `{ppConst l.declName}`: no conversion from {l.ring} to {wantKey}"
     | some conversions =>
       scored := scored.push
         ({ conversions, changesUnitality := l.unital != want.unital, prio := l.prio,
@@ -742,7 +750,7 @@ def mkMode (cfg : Config) (R alg : Expr) : MetaM Mode := do
     let ok ←
       try
         let p ← mkFreshExprMVar (← mkArrow alg (.sort .zero))
-        let cls ← mkClassApp cfcClassName #[R, alg, p]
+        let cls ← mkClassApp ``ContinuousFunctionalCalculus #[R, alg, p]
         pure (← trySynthInstance cls).toOption.isSome
       catch _ => pure false
     if ok then return { ring := R, unital := true }

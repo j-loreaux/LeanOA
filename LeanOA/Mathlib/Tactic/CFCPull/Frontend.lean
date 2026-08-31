@@ -53,12 +53,12 @@ def SideGoalKind.tactic : SideGoalKind → MetaM (TSyntax `tactic)
   | .mapZero => `(tactic| cfc_zero_tac)
   | .predicate | .other =>
     -- `cfc_predicate` closes the predicate goals for the inner element of a composition, e.g.
-    -- `p (cfc g a)`; the identifiers are built unresolved so that they are looked up in the
-    -- user's environment rather than in this file's.  Note that `cfc_tac` never fails, so it
-    -- has to come last.
+    -- `p (cfc g a)`; the identifiers are pre-resolved, so a local binding of either name in the
+    -- user's context cannot shadow them.  Note that `cfc_tac` never fails, so it has to come
+    -- last.
     `(tactic| first
-      | exact $(mkIdent `cfc_predicate) _ _
-      | exact $(mkIdent `cfcₙ_predicate) _ _
+      | exact $(mkCIdent ``cfc_predicate) _ _
+      | exact $(mkCIdent ``cfcₙ_predicate) _ _
       | cfc_tac)
 
 /-- Try to close the side goals raised by the pull: `assumption` first, then the auto-param
@@ -152,8 +152,8 @@ def elabCFCPullLemmas (lemmas : Lemmas) (stx? : Option (TSyntax ``cfcPullLemmas)
       let id : Ident := ⟨arg[1]⟩
       let declName ← realizeGlobalConstNoOverloadWithInfo id
       unless lemmas.contains declName do
-        throwErrorAt id "`{declName}` is not in the `cfc_pull` lemma set, so `-{id}` has \
-          nothing to remove"
+        throwErrorAt id "`{ppConst declName}` is not in the `cfc_pull` lemma set, so \
+          `-{id}` has nothing to remove"
       lemmas := lemmas.erase declName
     else
       let id : Ident := ⟨arg⟩
@@ -188,16 +188,18 @@ def cfcPullTarget (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (goal : MVarI
   let mut proofs := #[]
   let mut sideGoals := #[]
   let mut changed := false
-  let mut failures : Array String := #[]
+  -- the failures are kept as `MessageData`, so that the expressions in them are pretty-printed
+  -- in the reader's context; the string alongside is only the key that deduplicates them
+  let mut failures : Array (String × MessageData) := #[]
   for i in positions do
     let arg := args[i]!
     let mctx ← getMCtx
-    let attempt : Except String (Expr × Expr × Array MVarId) ← (do
+    let attempt : Except MessageData (Expr × Expr × Array MVarId) ← (do
       try
         return .ok (← runPull cfg lemmas R elem arg)
       catch ex =>
         setMCtx mctx
-        return .error (← ex.toMessageData.toString))
+        return .error ex.toMessageData)
     match attempt with
     | .ok (newArg, proof, goals) =>
       newArgs := newArgs.set! i newArg
@@ -206,11 +208,12 @@ def cfcPullTarget (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (goal : MVarI
       unless newArg == arg do changed := true
     | .error msg =>
       -- the two sides of a relation usually fail for the same reason; do not say so twice
-      unless failures.contains msg do failures := failures.push msg
+      let key ← msg.toString
+      unless failures.any (·.1 == key) do failures := failures.push (key, msg)
       proofs := proofs.push (← mkEqRefl arg)
   unless changed do
     throwError "`cfc_pull` made no progress\
-      {indentD (MessageData.joinSep (failures.toList.map (m!"{·}")) m!"\n")}"
+      {indentD (MessageData.joinSep (failures.toList.map (·.2)) m!"\n")}"
   -- Rebuild the goal by congruence over the positions we changed.
   let newTarget := mkAppN target.getAppFn newArgs
   let hcongr ← withLocalDeclsD (positions.map fun _ => (`x, fun _ => pure alg)) fun xs => do

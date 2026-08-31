@@ -521,7 +521,8 @@ namespace LemmaListTest
 variable {A : Type*} [CStarAlgebra A] {a : A}
 
 /- `public` only so that the error message below names `LemmaListTest.sq` rather than the
-private-name mangling of it; this file has no `public section`. -/
+private-name mangling of it; this file has no `public section`. The head symbol is reported
+fully qualified, while the expression beside it is printed as it would be written here. -/
 
 /-- An operation the `@[cfc_pull]` set says nothing about … -/
 public def sq (a : A) : A := a * a
@@ -535,7 +536,7 @@ public theorem cfc_sq (f : ℂ → ℂ) (a : A)
 /- Without it the pull stops at `sq a`, which is an atom as far as the tactic is concerned. -/
 /--
 error: `cfc_pull` made no progress
-  `cfc_pull` got stuck on `LemmaListTest.sq a`
+  `cfc_pull` got stuck on `sq a`
     (head symbol: LemmaListTest.sq, target: cfc over ℂ at `a`)
 -/
 #guard_msgs in

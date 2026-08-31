@@ -22,19 +22,32 @@ LeanOA/MathlibTest/CFCPull/Failures.lean      -- every failure mode, pinned with
 LeanOA/MathlibTest/CFCPull/Tracing.lean       -- what `trace.Tactic.cfc_pull` prints
 ```
 
-`Attr.lean` depends only on `Mathlib.Init` and `Lean.Meta`, and nothing under `Mathlib/Tactic/`
-imports anything from `Mathlib/Analysis/`, so the tactic stays where a tactic belongs and
-`Mathlib/Tactic.lean` stays light.
+`Attr.lean` imports `Mathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/NonUnital.lean`,
+and so does the whole tactic through it. That is a deliberate choice, and the alternative was
+tried first: with only `Mathlib.Init` and `Lean.Meta` in scope, every constant the tactic reasons
+about — `cfc`, `cfcₙ`, the two calculus classes, `IsSelfAdjoint`, `IsStarNormal`, `Continuous` —
+has to be written as an unchecked `` `name `` literal that a rename upstream would silently
+break, and a diagnostic naming a lemma can only print a bare `Name` rather than something the
+reader can hover over and jump to. The second of those is paid on every message the tactic
+emits, which is most of what a user ever sees of it. The import buys `` ``name ``-quotation,
+checked at compile time, and `MessageData.ofConstName` (wrapped here as `ppConst`) throughout.
 
-Everything the tactic needs *from* the library therefore lives on the other side of that line,
-under `Analysis/SpecialFunctions/ContinuousFunctionalCalculus/CFCPull/`, and no pre-existing file
+The price is that `Mathlib/Tactic/` is the wrong eventual home: nothing there imports
+`Mathlib/Analysis/`, and `Mathlib/Tactic.lean` should stay light. Upstream, these files
+belong beside the calculus they are about — under
+`Analysis/CStarAlgebra/ContinuousFunctionalCalculus/`, or a `Tactic/` subdirectory of it — with
+only the paths changing.
+
+What the tactic needs *from* the library beyond that import lives under
+`Analysis/SpecialFunctions/ContinuousFunctionalCalculus/CFCPull/`, and no pre-existing file
 imports any of it. `Tags.lean` collects the `@[cfc_pull]` tags in one place rather than writing
 them at the declaration sites: it keeps the change surveyable, it keeps the analysis files free
 of a dependency on the tactic, and it puts the reasons a lemma is *not* tagged next to the ones
-that are. `Lemmas.lean` is where the handful of lemmas Mathlib was missing live —
-`CFC.sqrt_def`, `CFC.abs_def`, `CFC.log_def`, the two `Function.extend` specialisations and
-`CFC.quasispectrum_nonpos_of_nonpos` — each of which belongs, eventually, in the file that
-defines the operation it is about.
+that are. (Tagging at the declaration site is in any case no longer open to the lemmas in
+`Unital.lean` and `NonUnital.lean`, which the tactic now imports.) `Lemmas.lean` is where the
+handful of lemmas Mathlib was missing live — `CFC.sqrt_def`, `CFC.abs_def`, `CFC.log_def`, the
+two `Function.extend` specialisations and `CFC.quasispectrum_nonpos_of_nonpos` — each of which
+belongs, eventually, in the file that defines the operation it is about.
 
 ## 2. Core data structures (`Attr.lean`)
 

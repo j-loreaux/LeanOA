@@ -5,16 +5,14 @@ Authors: Jireh Loreaux
 -/
 module
 
-public import Mathlib.Init
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
 public import Lean.Meta.Tactic.Simp
 public meta import Lean.Meta.DiscrTree.Util
 
 /-!
 # The `@[cfc_pull]` attribute
 
-This file sets up the lemma database used by the `cfc_pull` tactic. It is deliberately
-independent of `Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.*`, so that lemmas
-can eventually be tagged at their declaration sites.
+This file sets up the lemma database used by the `cfc_pull` tactic.
 
 A lemma tagged `@[cfc_pull]` must be an equation in which at least one side has `cfc` or `cfcₙ`
 as its head symbol. Such a lemma is sorted into one of five *categories*, which record the
@@ -45,20 +43,16 @@ namespace Mathlib.Tactic.CFCPull
 
 open Lean Meta
 
+/-! ### Messages -/
+
+/-- A constant, as a message supporting hover and "go to definition".
+
+Always fully qualified, whatever namespaces happen to be open where the message is produced: a
+diagnostic naming a `@[cfc_pull]` lemma, or the head symbol a pull got stuck on, should name it
+in the form the reader can search for. -/
+def ppConst (n : Name) : MessageData := .ofConstName n (fullNames := true)
+
 /-! ### Recognising applications of `cfc` and `cfcₙ` -/
-
-/-- The name of the unital continuous functional calculus. Referred to by name rather than by
-`` `` ``-quotation so that this file need not import the analysis library. -/
-def cfcName : Name := `cfc
-
-/-- The name of the non-unital continuous functional calculus. -/
-def cfcₙName : Name := `cfcₙ
-
-/-- The name of the class carrying the unital continuous functional calculus. -/
-def cfcClassName : Name := `ContinuousFunctionalCalculus
-
-/-- The name of the class carrying the non-unital continuous functional calculus. -/
-def cfcₙClassName : Name := `NonUnitalContinuousFunctionalCalculus
 
 /-- Which continuous functional calculus is in play: a scalar ring, and whether the calculus is
 the unital one. This is what the `cfc_pull` tactic is asked to produce, and what a `CFCApp`
@@ -71,7 +65,7 @@ structure Mode where
   deriving Inhabited
 
 instance : ToMessageData Mode where
-  toMessageData m := m!"{if m.unital then "cfc" else "cfcₙ"} over {m.ring}"
+  toMessageData m := m!"{ppConst (if m.unital then ``cfc else ``cfcₙ)} over {m.ring}"
 
 /-- An application `cfc f a` or `cfcₙ f a`, together with the pieces of it that we care about.
 
@@ -104,8 +98,8 @@ structure CFCApp extends Mode where
 def CFCApp.match? (e : Expr) : Option CFCApp := do
   let .const n _ := e.getAppFn | none
   let unital ←
-    if n == cfcName then pure true
-    else if n == cfcₙName then pure false
+    if n == ``cfc then pure true
+    else if n == ``cfcₙ then pure false
     else none
   let args := e.getAppArgs
   -- `cfc` has 15 arguments and `cfcₙ` has 18; we only rely on the positions of the first three
@@ -142,7 +136,7 @@ inductive RingKey where
 
 instance : ToMessageData RingKey where
   toMessageData
-    | .const n => m!"{n}"
+    | .const n => ppConst n
     | .any => m!"_"
 
 /-- The `RingKey` of an expression denoting a scalar ring.
@@ -401,16 +395,17 @@ def instantiateLemma (declName : Name) :
   let c ← mkConstWithFreshMVarLevels declName
   let (mvars, bis, type) ← forallMetaTelescopeReducing (← inferType c)
   let some (_, lhs, rhs) ← matchEq? type |
-    throwError "`{declName}` is not an equation"
+    throwError "`{ppConst declName}` is not an equation"
   return (mvars, bis, lhs, rhs, mkAppN c mvars)
 
 /-- Build the database entry for `declName`, or throw an informative error explaining why the
 lemma cannot be used by `cfc_pull`. -/
 def mkEntry (declName : Name) (prio : Nat) : MetaM Entry := do
+  let decl := ppConst declName
   let (_, _, lhs, rhs, _) ← instantiateLemma declName
   match CFCApp.match? lhs, CFCApp.match? rhs with
   | none, none =>
-    throwError "@[cfc_pull] failed: neither side of `{declName}` has `cfc` or `cfcₙ`\n\
+    throwError "@[cfc_pull] failed: neither side of `{decl}` has `cfc` or `cfcₙ`\n\
       as its head symbol:{indentD m!"{lhs} = {rhs}"}"
   | some c, none => mkPullEntry c rhs (cfcOnLhs := true)
   | none, some c => mkPullEntry c lhs (cfcOnLhs := false)
@@ -420,13 +415,13 @@ def mkEntry (declName : Name) (prio : Nat) : MetaM Entry := do
     -- same unitality and enter this as a scalar lemma
     if !sameRing then
       unless cl.unital == cr.unital do
-        throwError "@[cfc_pull] failed: `{declName}` changes both the scalar ring and the\n\
+        throwError "@[cfc_pull] failed: `{decl}` changes both the scalar ring and the\n\
           unitality of the functional calculus; such lemmas are not supported."
       -- A `Scalar` lemma is applied by `convert`, which relies on it leaving the element alone;
       -- one that also changes the element would silently produce a result at an element other
       -- than the one being pulled towards. `cfc_comp_re` is the motivating example.
       unless ← withNewMCtxDepth <| isDefEq cl.a cr.a do
-        throwError "@[cfc_pull] failed: `{declName}` changes both the scalar ring and the\n\
+        throwError "@[cfc_pull] failed: `{decl}` changes both the scalar ring and the\n\
           element of the functional calculus; such lemmas are not supported. A scalar\n\
           conversion must leave the element alone, and a composition must leave the scalar\n\
           ring alone."
@@ -438,30 +433,31 @@ def mkEntry (declName : Name) (prio : Nat) : MetaM Entry := do
       return .unital { declName, ring := .ofExpr cl.ring, nonUnitalOnLhs := !cl.unital }
     -- same ring, same unitality: this must be a composition lemma
     if ← withNewMCtxDepth <| isDefEq cl.a cr.a then
-      throwError "@[cfc_pull] failed: both sides of `{declName}` are applications of the same\n\
+      throwError "@[cfc_pull] failed: both sides of `{decl}` are applications of the same\n\
         functional calculus to the same element; there is nothing for `cfc_pull` to do."
     -- The side to rewrite *from* is the one applying the calculus to the deeper element:
     -- `cfc F a = cfc f (a ^ n)` is used to turn the right-hand side into the left-hand side.
     let srcOnLhs := cl.a.approxDepth > cr.a.approxDepth
     if cl.a.approxDepth == cr.a.approxDepth then
-      throwError "@[cfc_pull] failed: `{declName}` looks like a composition lemma, but neither\n\
+      throwError "@[cfc_pull] failed: `{decl}` looks like a composition lemma, but neither\n\
         side applies the functional calculus to a more complicated element than the other."
     let src := if srcOnLhs then cl else cr
     let some innerHead := src.a.getAppFn.constName? |
-      throwError "@[cfc_pull] failed: the element `{src.a}` in `{declName}` has no head\n\
+      throwError "@[cfc_pull] failed: the element `{src.a}` in `{decl}` has no head\n\
         constant to index on."
     return .compose
       { declName, prio, ring := .ofExpr cl.ring, unital := cl.unital, srcOnLhs, innerHead }
 where
   /-- Classify a lemma with a `cfc` application on exactly one side. -/
   mkPullEntry (c : CFCApp) (alg : Expr) (cfcOnLhs : Bool) : MetaM Entry := do
+    let decl := ppConst declName
     if ← withNewMCtxDepth <| isDefEq alg c.a then
       return .id { declName, ring := .ofExpr c.ring, unital := c.unital, cfcOnLhs }
     let isVar (e : Expr) : MetaM Bool := return e.isMVar
     let (pat, holes, _) ← abstractHoles (isHoleFor c isVar) (mkFreshExprMVar c.A) alg
     for b in ← boundHoles c alg do
       unless cfcPull.warnBoundHoles.get (← getOptions) do continue
-      logWarning m!"`{declName}` applies the functional calculus at{indentExpr b}\n\
+      logWarning m!"`{decl}` applies the functional calculus at{indentExpr b}\n\
         which mentions a bound variable. `cfc_pull` cannot recurse under a binder, so it will\n\
         treat that position as part of the pattern rather than as a hole: the lemma will only\n\
         apply when the position is already an application of the calculus.\n\
@@ -470,7 +466,7 @@ where
         `set_option cfcPull.warnBoundHoles false in`."
     let keys ← DiscrTree.mkPath pat
     if keys.size ≤ 1 then
-      throwError "@[cfc_pull] failed: the non-`cfc` side of `{declName}` is `{alg}`,\n\
+      throwError "@[cfc_pull] failed: the non-`cfc` side of `{decl}` is `{alg}`,\n\
         which has no head symbol to index on."
     return .pull
       { declName, prio, ring := .ofExpr c.ring, unital := c.unital, cfcOnLhs,
@@ -517,17 +513,17 @@ elab "#cfc_pull_lemmas" : command => Elab.Command.liftTermElabM do
     else m!"{header}:{indentD (MessageData.joinSep xs.toList m!"\n")}"
   logInfo <| MessageData.joinSep [
     sec "identity lemmas" <| l.id.map fun e =>
-      m!"{e.declName} : ring := {e.ring}, unital := {e.unital}",
+      m!"{ppConst e.declName} : ring := {e.ring}, unital := {e.unital}",
     sec "pull lemmas" <| l.pull.values.map fun e =>
-      m!"{e.declName} : ring := {e.ring}, unital := {e.unital}, \
+      m!"{ppConst e.declName} : ring := {e.ring}, unital := {e.unital}, \
         holes := {e.numHoles}, prio := {e.prio}",
     sec "scalar lemmas" <| l.scalar.map fun e =>
-      m!"{e.declName} : {e.src} → {e.tgt}, unital := {e.unital}",
+      m!"{ppConst e.declName} : {e.src} → {e.tgt}, unital := {e.unital}",
     sec "unital lemmas" <| l.unital.map fun e =>
-      m!"{e.declName} : ring := {e.ring}",
+      m!"{ppConst e.declName} : ring := {e.ring}",
     sec "compose lemmas" <| l.compose.map fun e =>
-      m!"{e.declName} : ring := {e.ring}, unital := {e.unital}, \
-        inner := {e.innerHead}"] m!"\n"
+      m!"{ppConst e.declName} : ring := {e.ring}, unital := {e.unital}, \
+        inner := {ppConst e.innerHead}"] m!"\n"
 
 /-- Tracing for the `cfc_pull` tactic. -/
 initialize registerTraceClass `Tactic.cfc_pull
