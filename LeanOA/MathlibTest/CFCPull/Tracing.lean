@@ -225,16 +225,3 @@ trace: [Tactic.cfc_pull] predicate for cfc over ℝ≥0 is fun x ↦ 0 ≤ x
 set_option trace.Tactic.cfc_pull true in
 example (ha : IsSelfAdjoint a) : a⁺ = a⁺ := by
   cfc_pull [-cfc_real_eq_nnreal, -cfcₙ_real_eq_nnreal] ℝ≥0 a
-
-/-! ### The lemma database
-
-`#cfc_pull_lemmas` prints every tagged lemma, grouped by category, with the information the
-tactic indexes it under: its scalar ring (`_` for a lemma polymorphic in the ring), whether it is
-about `cfc` or `cfcₙ`, how many holes its algebraic side has, and its priority. Composition
-lemmas additionally show the head symbol of the element they match.
-
-The output is long, so it is only checked for not failing here; run the command yourself to read
-it. -/
-
-#guard_msgs(drop info) in
-#cfc_pull_lemmas

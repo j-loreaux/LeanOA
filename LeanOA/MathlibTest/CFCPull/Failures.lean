@@ -254,10 +254,8 @@ error: `Nat.add_comm` is not in the `cfc_pull` lemma set, so `-Nat.add_comm` has
 example (ha : IsStarNormal a) : star a = cfc (fun x : ℂ ↦ star x) a := by
   cfc_pull [-Nat.add_comm] ℂ a
 
-/- A lemma added at the call site is classified exactly as `@[cfc_pull]` would classify it, and
-is rejected here for the same reasons and with the same message, reported at the name. -/
 /--
-error: @[cfc_pull] failed: neither side of `Nat.add_comm` has `cfc` or `cfcₙ`
+error: `@[cfc_pull]` failed: neither side of `Nat.add_comm` has `cfc` or `cfcₙ`
 as its head symbol:
   ?n + ?m = ?m + ?n
 -/
@@ -294,7 +292,7 @@ variable {R A : Type*} {p : A → Prop} [CommSemiring R]
 
 omit [Ring A] [StarRing A] [TopologicalSpace A] in
 /--
-error: @[cfc_pull] failed: neither side of `cfcPullTest.noCFC` has `cfc` or `cfcₙ`
+error: `@[cfc_pull]` failed: neither side of `cfcPullTest.noCFC` has `cfc` or `cfcₙ`
 as its head symbol:
   ?a = ?a
 -/
@@ -305,7 +303,7 @@ as its head symbol:
 
 
 /--
-error: @[cfc_pull] failed: both sides of `cfcPullTest.sameSides` are applications of the same
+error: `@[cfc_pull]` failed: both sides of `cfcPullTest.sameSides` are applications of the same
 functional calculus to the same element; there is nothing for `cfc_pull` to do.
 -/
 #guard_msgs in
@@ -314,7 +312,7 @@ theorem cfcPullTest.sameSides (f : R → R) (a : A) : cfc f a = cfc f a := rfl
 
 
 /--
-error: @[cfc_pull] failed: `cfcPullTest.equalSizes` looks like a composition lemma, but neither
+error: `@[cfc_pull]` failed: `cfcPullTest.equalSizes` looks like a composition lemma, but neither
 side applies the functional calculus to a more complicated element than the other.
 -/
 #guard_msgs in
@@ -323,7 +321,7 @@ theorem cfcPullTest.equalSizes (f : R → R) (a b : A) (h : a = b) : cfc f a = c
 
 
 /--
-error: @[cfc_pull] failed: the non-`cfc` side of `cfcPullTest.noHead` is `?b`,
+error: `@[cfc_pull]` failed: the non-`cfc` side of `cfcPullTest.noHead` is `?b`,
 which has no head symbol to index on.
 -/
 #guard_msgs in
@@ -334,7 +332,7 @@ end Attribute
 section BothChange
 
 /--
-error: @[cfc_pull] failed: `cfcPullTest.ringAndUnitality` changes both the scalar ring and the
+error: `@[cfc_pull]` failed: `cfcPullTest.ringAndUnitality` changes both the scalar ring and the
 unitality of the functional calculus; such lemmas are not supported.
 -/
 #guard_msgs in
@@ -349,16 +347,9 @@ end BothChange
 
 section RingAndElement
 
-/- `cfc_comp_re` and its three siblings change the scalar ring *and* the element. The `Scalar`
-category cannot express that — `convert` applies a scalar lemma expecting the element to survive
-— and the `Compose` category cannot either, since it is indexed at a single ring. So they are
-rejected rather than silently entered as a bogus `ℂ → ℝ` conversion edge. -/
-
 /--
-error: @[cfc_pull] failed: `cfc_comp_re` changes both the scalar ring and the
-element of the functional calculus; such lemmas are not supported. A scalar
-conversion must leave the element alone, and a composition must leave the scalar
-ring alone.
+error: `@[cfc_pull]` failed: `cfc_comp_re` changes both the scalar ring and the
+element of the functional calculus; such lemmas are not supported.
 -/
 #guard_msgs in
 attribute [cfc_pull] cfc_comp_re
