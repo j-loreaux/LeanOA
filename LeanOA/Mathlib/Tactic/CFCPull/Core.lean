@@ -13,39 +13,6 @@ public import LeanOA.Mathlib.Tactic.CFCPull.Attr
 Given a scalar ring `R`, an element `a : A`, and a unitality flag (jointly called a *mode*), the
 function `pull` takes an expression `e : A` and produces a function `f : R → R` together with a
 proof of `e = cfc f a` (or `e = cfcₙ f a`), plus a list of side goals that the proof depends on.
-
-The recursion is bottom-up: `pull` returns a `Result` containing the proof outright rather than
-threading output metavariables through the traversal.
-
-## Transparency
-
-Every test of the form "does this lemma apply to the expression in front of us" runs at
-reducible transparency, as in `rw`: the pattern match itself, but also the algebra, the scalar
-ring, the predicate and the element that guard it, since a lemma admitted by one of those and
-rejected by the match has cost a backtrack for nothing. There are two deliberate exceptions,
-both at default transparency:
-
-* **Instance synthesis** — `mkClassApp` and `synthesizeInstances` assign instance arguments from
-  the results of `synthInstance`, which produces terms defeq to the expected type only at
-  `.instances` transparency or beyond. Reducible here would reject valid instances.
-* **Typing** — `runPull` and `Frontend.targetPositions` ask "is this expression an element of
-  the algebra?", which is a typing question rather than a match, and is answered the way the
-  elaborator would answer it.
-
-`Attr.lean` uses default transparency throughout, but never compares against a user expression:
-its `isDefEq` calls all run under `withNewMCtxDepth` and relate two parts of a single tagged
-lemma's statement to each other.
-
-Unfolding a `let`-bound local to its value is governed not by the transparency but by the
-separate `zetaDelta` flag of `Meta.Config`, which is ambiently `true`. `runPull` sets it from
-`Config.zetaDelta`, whose default is `false`: a local definition is an atom, matching `rw` — and
-`simp`, which defaults the same way — rather than being silently transparent to the whole pull.
-The setting covers the recursion, and so the `DiscrTree` lookup that chooses the candidates as
-well; the typing and instance questions above it are left at the ambient configuration, for the
-reasons just given.
-
-See `LeanOA/Mathlib/Tactic/CFCPull/Spec.md` for the specification, and `Design.md` for a guide
-to this file.
 -/
 
 public meta section
@@ -58,54 +25,17 @@ open Lean Meta
 
 /-- Configuration for the `cfc_pull` tactic. -/
 structure Config where
-  /-- Prefer the unital calculus `cfc`. When `true` (the default) the tactic uses `cfc` if the
-  algebra carries a unital continuous functional calculus and silently falls back to `cfcₙ`
-  otherwise; when `false` it always produces `cfcₙ`. -/
+  /-- Prefer the unital calculus when `true` (the default). -/
   unital : Bool := true
-  /-- Hand back the side goals that could not be discharged, instead of failing.
-
-  `cfc_pull` always tries to discharge the hypotheses of the lemmas it uses, with `assumption`
-  and then the standard auto-param tactics `cfc_tac`, `cfc_cont_tac` and `cfc_zero_tac`. By
-  default anything left over is an error; with `+defer` it is returned as a goal instead. -/
+  /-- Return *unsolved* side goals to the user, instead of failing. -/
   defer : Bool := false
-  /-- Hand back *every* side goal, discharging none of them.
-
-  Where `+defer` returns only the goals the discharging could not close, `+deferAll` switches
-  the discharging off altogether: `assumption`, the auto-param tactics and the `(disch := ..)`
-  tactic are all skipped, and every hypothesis of every lemma used comes back as a goal. This is
-  the way to see — and to handle uniformly — the obligations the pull actually incurred.
-
-  Duplicates are merged just as they are with `+defer`, so a hypothesis that both sides of a
-  relation ask for appears once. Implies `+defer`: surviving goals are never an error. -/
+  /-- Return *all* side goals to the user, discharging none of them, but still deduplicate goals. -/
   deferAll : Bool := false
-  /-- Look through `let`-bound local variables, unfolding them to their values.
-
-  Off by default, so a local definition — whether written with `let` or introduced by `set` — is
-  an **atom**: the tactic does not look at what it stands for, and a pull that reaches one gets
-  stuck there. This is `simp`'s default too, and for the same reason: `set b := star a * a with
-  hb` is a request to stop reading `star a * a`, and silently unfolding it would undo the
-  abstraction and strand `hb`.
-
-  With `+zetaDelta` the values are unfolded and such a term is pulled on its structure. The
-  other way in is to rewrite by hand first, with the equation `set` hands you: `rw [hb]`.
-
-  Note that this is about the *definitions* of local variables, not about the element: an
-  element given as a `let`-bound variable is matched as written, and comes back as written, with
-  no need for this flag. -/
+  /-- Unfold `let`-bound local variables (default: `false`). -/
   zetaDelta : Bool := false
   /-- The maximum recursion depth. -/
   maxDepth : Nat := 48
-  /-- A tactic to try on side goals `cfc_pull` has no built-in way to prove: the ones tagged
-  `cfc_pull.side`, which are the hypotheses of a `@[cfc_pull]` lemma that are neither the
-  predicate, nor continuity, nor `f 0 = 0`, and so have no auto-param tactic in the calculus
-  API to fall back on. Something like `∀ x ∈ spectrum R a, f x ≠ 0`.
-
-  The default, `none`, does nothing, and such a goal comes straight back to the user. Set it
-  with `cfc_pull (disch := tac) ..`, as for `simp` and `fun_prop`. `+deferAll` skips every
-  attempt at a side goal, so it makes this field inert.
-
-  This field is not settable through `optConfig` — a tactic is not a term — so it is omitted
-  from `elabCFCPullConfig` and filled in by `mkConfig` from the `(disch := ..)` clause. -/
+  /-- A tactic to try on side goals `cfc_pull` has no built-in way to prove. -/
   discharger : Option (TSyntax `tactic) := none
   deriving Inhabited
 
@@ -115,8 +45,7 @@ structure PredicateInfo where
   mode : Mode
   /-- The predicate `p : A → Prop` of the calculus. -/
   pred : Expr
-  /-- A proof of `p a`, created lazily on first use and shared by every lemma application at
-  this mode. -/
+  /-- A proof of `p a`, created lazily on first use and shared among all lemmas requiring it. -/
   proof? : Option Expr := none
   deriving Inhabited
 
@@ -137,7 +66,7 @@ structure Context where
 
 /-- The mutable state of a `cfc_pull` run. -/
 structure State where
-  /-- Goals that the user will have to discharge, in creation order. -/
+  /-- Side goals that must be discharged. -/
   sideGoals : Array MVarId := #[]
   /-- Cached information about the calculus at each mode encountered so far. -/
   predicates : Array PredicateInfo := #[]
@@ -147,9 +76,7 @@ abbrev PullM := ReaderT Context <| StateRefT State MetaM
 
 /-- The outcome of pulling a single expression. -/
 structure Result where
-  /-- The application `cfc f a` the expression was rewritten to, kept verbatim so that its
-  instance arguments are those of the lemma that produced it. It carries its own mode, function
-  and element, so none of those is stored alongside it and none can drift out of step with it. -/
+  /-- The application `cfc f a` to which the expression was rewritten. -/
   app : CFCApp
   /-- A proof of `e = app.toExpr`, where `e` is the expression that was pulled. -/
   proof : Expr
