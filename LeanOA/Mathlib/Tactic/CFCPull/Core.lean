@@ -360,7 +360,7 @@ def applyPullLemma (l : PullLemma) (e : Expr) (want : Mode)
   -- Replace the holes by fresh metavariables and match.  `pat` is kept unassigned so that the
   -- holes can be abstracted again below, after unification has filled in everything else.
   let (pat, holes, phs) ←
-    abstractHoles (isHoleFor c (fun e => return e.isMVar && (← e.mvarId!.isAssigned)))
+    abstractHoles (isHoleFor c (fun e => return e.isMVar && !(← e.mvarId!.isAssigned)))
       (mkFreshExprMVar ctx.alg) algSide
   unless ← withReducible <| isDefEq pat e do
     throwError "`{ppConst l.declName}` does not match: `{pat}` ≠ `{e}`"
