@@ -159,30 +159,11 @@ def newSideGoal (type : Expr) (kind : SideGoalKind) : PullM Expr := do
   modify fun s => { s with sideGoals := s.sideGoals.push (g.mvarId!, kind) }
   return g
 
--- it really feels like there should already be a way to do this easily.
-/-- Build the application `C args ..`, synthesising the instance arguments of the class `C`.
-
-Neither `mkAppM` nor `mkAppOptM` will do: both stop at the last explicit argument, whereas the
-instance arguments of `ContinuousFunctionalCalculus R A p [CommSemiring R] ⋯` come after it, so
-they return a partial application on which `synthInstance` then fails. -/
+/-- Only used to build the expression `ContinuousFunctionalCalculus R A p` with instance arguments
+synthesized (or the non-unital variant). If `p` was the last argument, we could use `mkAppM`. -/
 def mkClassApp (clsName : Name) (args : Array Expr) : MetaM Expr := do
-  let info ← getConstInfo clsName
-  let lvls ← info.levelParams.mapM fun _ => mkFreshLevelMVar
-  let (mvars, bis, _) ←
-    forallMetaTelescope (info.type.instantiateLevelParams info.levelParams lvls)
-  let mut j := 0
-  for (mvar, bi) in mvars.zip bis do
-    if bi == .default && j < args.size then
-      unless ← isDefEq mvar args[j]! do
-        throwError "`{ppConst clsName}` does not accept `{args[j]!}` as its argument {j}"
-      j := j + 1
-  for (mvar, bi) in mvars.zip bis do
-    if bi.isInstImplicit then
-      unless ← mvar.mvarId!.isAssigned do
-        let inst ← synthInstance (← instantiateMVars (← mvar.mvarId!.getType))
-        unless ← isDefEq mvar inst do
-          throwError "`{ppConst clsName}`: could not use the synthesised instance `{inst}`"
-  return mkAppN (.const clsName lvls) mvars
+  let arity := (← getConstInfo clsName).type.getForallArity
+  mkAppOptM clsName (args.map some ++ Array.replicate (arity - args.size) none)
 
 /-- The index in the cache of the information about the calculus at `mode`, if known. -/
 def findPredicateIdx (mode : Mode) : PullM (Option Nat) := do
@@ -191,9 +172,8 @@ def findPredicateIdx (mode : Mode) : PullM (Option Nat) := do
       return some i
   return none
 
-/-- The predicate `p : A → Prop` of the continuous functional calculus at `mode`, obtained by
-synthesising the relevant instance and reading off its `outParam`. Fails if there is no such
-calculus. -/
+/-- Determine the predicate `p : A → Prop` associated to `mode` by synthesising the instance and
+reading its `outParam`. Fails if there is no such calculus. -/
 def getPredicate (mode : Mode) : PullM Expr := do
   if let some i ← findPredicateIdx mode then
     return (← get).predicates[i]!.pred
@@ -210,8 +190,7 @@ def getPredicate (mode : Mode) : PullM Expr := do
   catch _ => noCalculus
   let pred ← instantiateMVars p
   if pred.hasExprMVar then
-    throwError "`cfc_pull` could not determine the predicate of the continuous\n\
-      functional calculus for {mode}"
+    throwError "`cfc_pull` could not determine the predicate associated to {mode}"
   trace[Tactic.cfc_pull] "predicate for {mode} is {pred}"
   modify fun s => { s with predicates := s.predicates.push { mode, pred } }
   return pred
@@ -229,20 +208,13 @@ def getPredicateProof (mode : Mode) : PullM Expr := do
 
 /-- Synthesise every instance-implicit argument of an instantiated lemma that is still
 unassigned. Failure here is the mechanism by which lemmas are restricted to the rings and
-algebras they apply to. -/
+algebras they apply to, so failures must propagate: hence `allowSynthFailures := false`. -/
 def synthesizeInstances (declName : Name) (mvars : Array Expr) (bis : Array BinderInfo) :
     MetaM Unit := do
-  for (mvar, bi) in mvars.zip bis do
-    if bi.isInstImplicit then
-      let mvarId := mvar.mvarId!
-      unless ← mvarId.isAssigned do
-        let type ← instantiateMVars (← mvarId.getType)
-        if type.hasExprMVar then
-          throwError "`{ppConst declName}`: the instance argument `{type}` is not determined"
-        let .some inst ← trySynthInstance type
-          | throwError "`{ppConst declName}` does not apply here: no instance `{type}`"
-        unless ← isDefEq mvar inst do
-          throwError "`{ppConst declName}`: the synthesised instance `{inst}` does not match"
+  try
+    synthAppInstances declName default mvars bis false false
+  catch ex =>
+    throwError "`{ppConst declName}` does not apply here: {ex.toMessageData}"
 
 /-- Deal with the hypotheses of an instantiated lemma: those that are the predicate `p a` at
 `mode` are filled with the shared proof, the rest become side goals. -/
