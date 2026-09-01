@@ -238,12 +238,6 @@ def collectHypotheses (declName : Name) (mvars : Array Expr) (bis : Array Binder
       mvarId.assign (← newSideGoal type (.ofType type))
       trace[Tactic.cfc_pull] "`{ppConst declName}`: deferred `{type}`"
 
-/-- Test whether an expression is an unassigned metavariable, i.e. a variable of the lemma being
-applied. -/
-def isLemmaVar : Expr → MetaM Bool
-  | .mvar m => return !(← m.isAssigned)
-  | _ => return false
-
 /-! ### The scalar conversion graph -/
 
 /-- Whether a result obtained at ring key `src` is already usable at `tgt`. A lemma polymorphic
@@ -366,7 +360,8 @@ def applyPullLemma (l : PullLemma) (e : Expr) (want : Mode)
   -- Replace the holes by fresh metavariables and match.  `pat` is kept unassigned so that the
   -- holes can be abstracted again below, after unification has filled in everything else.
   let (pat, holes, phs) ←
-    abstractHoles (isHoleFor c isLemmaVar) (mkFreshExprMVar ctx.alg) algSide
+    abstractHoles (isHoleFor c (fun e => return e.isMVar && (← e.mvarId!.isAssigned)))
+      (mkFreshExprMVar ctx.alg) algSide
   unless ← withReducible <| isDefEq pat e do
     throwError "`{ppConst l.declName}` does not match: `{pat}` ≠ `{e}`"
   -- Recurse on the subterms the holes matched.
