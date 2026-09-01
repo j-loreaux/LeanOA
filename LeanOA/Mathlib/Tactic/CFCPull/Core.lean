@@ -89,24 +89,18 @@ instance : ExceptToTraceResult Exception Result where
 
 /-! ### Small utilities -/
 
-/-- Exception used by the recursion-depth guard.
-
-The guard has to be able to abort the whole run: thrown as an ordinary error it would be caught
-by `observing?` like any other candidate failure, and the user would be told that `cfc_pull` got
-stuck rather than that it ran out of depth. `runPull` turns it back into a readable message. -/
+/-- Exception used by the recursion-depth guard. -/
 initialize maxDepthExceptionId : InternalExceptionId ←
   registerInternalExceptionId `Mathlib.Tactic.CFCPull.maxDepth
 
-/-- Run `x`, undoing its metavariable assignments and its side goals if it fails.
-
-Only the metavariable context and the `PullM` state are rolled back, not the whole `MetaM` state:
-this keeps the trace messages emitted by failed candidates, which is the point of tracing. -/
+/-- Run `x`, reverting metavariable context and `PullM` state upon failure. -/
 def observing? {α : Type} (x : PullM α) : PullM (Option α) := do
   let mctx ← getMCtx
   let s ← get
   try
     return some (← x)
   catch ex =>
+    -- if the exception is for max recursion depth, rethrow it, otherwise revert state and trace it.
     if let .internal id _ := ex then
       if id == maxDepthExceptionId then throw ex
     setMCtx mctx
@@ -125,9 +119,7 @@ def withIncDepth {α : Type} (x : PullM α) : PullM α := do
 def stripAutoParam (e : Expr) : Expr :=
   if e.isAutoParam then e.appFn!.appArg! else e
 
-/-- What kind of hypothesis a side goal came from. This drives both the name the goal is given
-(so that `case cfc_pull.continuity => fun_prop` addresses all of them at once) and the auto-param
-tactic used to try to discharge it. -/
+/-- What kind of hypothesis a side goal came from. -/
 inductive SideGoalKind where
   /-- The predicate `p a` of the calculus. -/
   | predicate
@@ -139,23 +131,7 @@ inductive SideGoalKind where
   | other
   deriving Inhabited, BEq, Repr
 
-/-- Classify a side goal by its statement.
-
-* **Predicate.** The predicates of the continuous functional calculus in Mathlib are
-  `IsStarNormal` (over `ℂ`), `IsSelfAdjoint` (over `ℝ`) and `(0 ≤ ·)` (over `ℝ≥0`), so a goal of
-  one of those shapes is a predicate goal however it arose: the shared `p a`, the `p (cfc g a)`
-  of a composition, or a hypothesis of an individual lemma that happens to be one. All three are
-  matched at the head of the statement and nowhere else. Anywhere would be wrong: the calculus
-  instances themselves are indexed by the predicate, so `IsSelfAdjoint` occurs inside the
-  instance arguments of any `cfc` over `ℝ` — including the ones in a continuity goal's
-  `spectrum ℝ a`.
-* **Continuity.** `Continuous` or `ContinuousOn` anywhere in the statement, rather than only at
-  its head: a lemma may ask for continuity under a binder, as `cfc_sum` does with
-  `∀ i ∈ s, ContinuousOn (f i) (spectrum R a)`, and `cfc_cont_tac` is still the tactic to try.
-* **`mapZero`.** `f 0 = 0`, the hypothesis of the non-unital calculus and the only equation the
-  calculus API has an auto-param for, recognised as an equation whose right-hand side is zero.
-  An equation of any other shape is a lemma's own hypothesis, and belongs in `other` with the
-  rest of them. -/
+/-- Classify a side goal by its statement. -/
 def SideGoalKind.ofType (type : Expr) : SideGoalKind :=
   if type.isAppOf ``IsSelfAdjoint || type.isAppOf ``IsStarNormal || isNonneg then .predicate
   else if mentions ``Continuous || mentions ``ContinuousOn then .continuity
