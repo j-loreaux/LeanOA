@@ -64,10 +64,44 @@ structure Context where
   /-- The current recursion depth. -/
   depth : Nat := 0
 
+/-- What kind of hypothesis a side goal came from. -/
+inductive SideGoalKind where
+  /-- The predicate `p a` of the calculus. -/
+  | predicate
+  /-- Continuity of a function on a spectrum. -/
+  | continuity
+  /-- `f 0 = 0`, required by the non-unital calculus. -/
+  | mapZero
+  /-- Anything else, e.g. `∀ x ∈ spectrum R a, f x ≠ 0`. -/
+  | other
+  deriving Inhabited, BEq, Repr
+
+/-- Classify a side goal by its statement. -/
+def SideGoalKind.ofType (type : Expr) : SideGoalKind :=
+  if type.isAppOf ``IsSelfAdjoint || type.isAppOf ``IsStarNormal || isNonneg then .predicate
+  else if mentions ``Continuous || mentions ``ContinuousOn then .continuity
+  else if let some (_, _, rhs) := type.eq? then
+    if rhs.zero? then .mapZero else .other
+  else .other
+where
+  /-- Whether the constant `n` occurs anywhere in the statement. -/
+  mentions (n : Name) : Bool := (type.find? (·.isConstOf n)).isSome
+  /-- Whether the statement is `0 ≤ _`, the predicate of the calculus over `ℝ≥0`. -/
+  isNonneg : Bool := match type.le? with
+    | some (_, lhs, _) => lhs.zero?
+    | none => false
+
+/-- The name a deferred goal of this kind is given. -/
+def SideGoalKind.tag : SideGoalKind → Name
+  | .predicate => `cfc_pull.predicate
+  | .continuity => `cfc_pull.continuity
+  | .mapZero => `cfc_pull.mapZero
+  | .other => `cfc_pull.side
+
 /-- The mutable state of a `cfc_pull` run. -/
 structure State where
-  /-- Side goals that must be discharged. -/
-  sideGoals : Array MVarId := #[]
+  /-- Side goals that must be discharged, each paired with the kind of hypothesis it came from. -/
+  sideGoals : Array (MVarId × SideGoalKind) := #[]
   /-- Cached information about the calculus at each mode encountered so far. -/
   predicates : Array PredicateInfo := #[]
 
@@ -119,51 +153,10 @@ def withIncDepth {α : Type} (x : PullM α) : PullM α := do
 def stripAutoParam (e : Expr) : Expr :=
   if e.isAutoParam then e.appFn!.appArg! else e
 
-/-- What kind of hypothesis a side goal came from. -/
-inductive SideGoalKind where
-  /-- The predicate `p a` of the calculus. -/
-  | predicate
-  /-- Continuity of a function on a spectrum. -/
-  | continuity
-  /-- `f 0 = 0`, required by the non-unital calculus. -/
-  | mapZero
-  /-- Anything else, e.g. `∀ x ∈ spectrum R a, f x ≠ 0`. -/
-  | other
-  deriving Inhabited, BEq, Repr
-
-/-- Classify a side goal by its statement. -/
-def SideGoalKind.ofType (type : Expr) : SideGoalKind :=
-  if type.isAppOf ``IsSelfAdjoint || type.isAppOf ``IsStarNormal || isNonneg then .predicate
-  else if mentions ``Continuous || mentions ``ContinuousOn then .continuity
-  else if let some (_, _, rhs) := type.eq? then
-    if rhs.zero? then .mapZero else .other
-  else .other
-where
-  /-- Whether the constant `n` occurs anywhere in the statement. -/
-  mentions (n : Name) : Bool := (type.find? (·.isConstOf n)).isSome
-  /-- Whether the statement is `0 ≤ _`, the predicate of the calculus over `ℝ≥0`. -/
-  isNonneg : Bool := match type.le? with
-    | some (_, lhs, _) => lhs.zero?
-    | none => false
-
-/-- The name a deferred goal of this kind is given. -/
-def SideGoalKind.tag : SideGoalKind → Name
-  | .predicate => `cfc_pull.predicate
-  | .continuity => `cfc_pull.continuity
-  | .mapZero => `cfc_pull.mapZero
-  | .other => `cfc_pull.side
-
-/-- Recover the kind of a side goal from the name it was given. -/
-def SideGoalKind.ofTag (tag : Name) : SideGoalKind :=
-  if tag == SideGoalKind.predicate.tag then .predicate
-  else if tag == SideGoalKind.continuity.tag then .continuity
-  else if tag == SideGoalKind.mapZero.tag then .mapZero
-  else .other
-
 /-- Register a new side goal of the given type, named after its kind. -/
 def newSideGoal (type : Expr) (kind : SideGoalKind) : PullM Expr := do
   let g ← mkFreshExprSyntheticOpaqueMVar type (tag := kind.tag)
-  modify fun s => { s with sideGoals := s.sideGoals.push g.mvarId! }
+  modify fun s => { s with sideGoals := s.sideGoals.push (g.mvarId!, kind) }
   return g
 
 -- it really feels like there should already be a way to do this easily.
@@ -665,7 +658,7 @@ it, and the side goals that proof depends on.
 `lemmas` is the set to pull with. It is passed in rather than read from the environment here
 because the bracketed lemma list of `cfc_pull` modifies it for the duration of one call. -/
 def runPull (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
-    MetaM (Expr × Expr × Array MVarId) := do
+    MetaM (Expr × Expr × Array (MVarId × SideGoalKind)) := do
   -- see the note in `cfcPullTarget`: nothing downstream looks through `mdata`
   let e := e.consumeMData
   let alg ← inferType elem
@@ -693,7 +686,7 @@ def runPull (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
             the expression is more deeply nested than that, or the `@[cfc_pull]` lemma set is\n\
             looping. Raise the limit with `cfc_pull (maxDepth := {2 * cfg.maxDepth}) ..`"
       throw ex
-  let goals ← st.sideGoals.filterM fun g => return !(← g.isAssigned)
+  let goals ← st.sideGoals.filterM fun (g, _) => return !(← g.isAssigned)
   return (← instantiateMVars res.app.toExpr, ← instantiateMVars res.proof, goals)
 
 end Mathlib.Tactic.CFCPull

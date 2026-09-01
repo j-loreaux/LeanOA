@@ -69,9 +69,10 @@ pulled independently and so tend to ask for the same predicate twice.
 Whatever survives is an error unless `+defer` was given, in which case it is returned to be added
 to the goal list. With `+deferAll` no goal is attempted at all, and every one of them is
 returned; they are still merged, so that the deferred list has no repetitions in it. -/
-def postProcessSideGoals (cfg : Config) (goals : Array MVarId) : TacticM (Array MVarId) := do
+def postProcessSideGoals (cfg : Config) (goals : Array (MVarId × SideGoalKind)) :
+    TacticM (Array MVarId) := do
   let mut out := #[]
-  for g in goals do
+  for (g, kind) in goals do
     if ← g.isAssigned then continue
     let type ← instantiateMVars (← g.getType)
     -- merge with an earlier goal of the same type
@@ -88,7 +89,6 @@ def postProcessSideGoals (cfg : Config) (goals : Array MVarId) : TacticM (Array 
     if ← g.assumptionCore then
       trace[Tactic.cfc_pull] "{checkEmoji} closed `{type}` with `assumption`"
       continue
-    let kind := SideGoalKind.ofTag (← g.getTag)
     let tac ← kind.tactic
     if ← tryTacticOn g tac then
       trace[Tactic.cfc_pull] "{checkEmoji} closed `{type}` with `{tac}`"
@@ -194,7 +194,7 @@ def cfcPullTarget (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (goal : MVarI
   for i in positions do
     let arg := args[i]!
     let mctx ← getMCtx
-    let attempt : Except MessageData (Expr × Expr × Array MVarId) ← (do
+    let attempt : Except MessageData (Expr × Expr × Array (MVarId × SideGoalKind)) ← (do
       try
         return .ok (← runPull cfg lemmas R elem arg)
       catch ex =>
