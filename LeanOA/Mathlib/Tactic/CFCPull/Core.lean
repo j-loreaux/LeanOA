@@ -240,14 +240,12 @@ def collectHypotheses (declName : Name) (mvars : Array Expr) (bis : Array Binder
 
 /-! ### The scalar conversion graph -/
 
-/-- Whether a result obtained at ring key `src` is already usable at `tgt`. A lemma polymorphic
-in its scalar ring (`RingKey.any`) is instantiated directly at the target ring, so no conversion
-is needed. -/
+/-- Whether a result obtained at ring key `src` is already usable at `tgt`. -/
 def RingKey.isUsableAt (src tgt : RingKey) : Bool :=
   src == .any || src == tgt
 
 /-- A shortest sequence of tagged `Scalar` lemmas converting a `cfc[ₙ]` over `src` into one over
-`tgt`, or `none` if there is no such sequence. -/
+`tgt`, or `none` if there is no such sequence. In practice this array only has length 1 or 2. -/
 def scalarPath (src tgt : RingKey) (unital : Bool) : PullM (Option (Array ScalarLemma)) := do
   if src.isUsableAt tgt then return some #[]
   let edges := (← read).lemmas.scalar.filter (·.unital == unital)
@@ -271,12 +269,8 @@ def scalarPath (src tgt : RingKey) (unital : Bool) : PullM (Option (Array Scalar
 /-! ### Applying tagged lemmas -/
 
 /-- Rewrite `e` with a tagged equation between two applications of the calculus, by matching one
-side against `e` and returning the other, instantiated.
-
-This single routine covers the `Scalar`, `Unital` and `Compose` categories: they differ only in
-which of the ring, the unitality and the element the two sides disagree about, and none of that
-matters here — matching against `e` determines everything. `mode` is the mode of `e`, which is
-used to fill the predicate hypotheses of the lemma. -/
+side against `e` and returning the other, instantiated. This handles the `Scalar`, `Unital` and
+`Compose` categories. -/
 def rewriteWithCFCLemma (declName : Name) (srcOnLhs : Bool) (e : Expr) (mode : Mode) :
     PullM (CFCApp × Expr) := do
   let ctx ← read
@@ -284,9 +278,6 @@ def rewriteWithCFCLemma (declName : Name) (srcOnLhs : Bool) (e : Expr) (mode : M
   let (srcSide, tgtSide) := if srcOnLhs then (lhs, rhs) else (rhs, lhs)
   let some cs := CFCApp.match? srcSide |
     throwError "`{ppConst declName}` is not a `cfc`-to-`cfc` lemma"
-  -- Everything that decides whether this lemma applies *here* is a match against the user's
-  -- expression, so it runs at reducible transparency. `synthesizeInstances` below is the
-  -- exception; see the note on transparency in the module docstring.
   unless ← withReducible <| isDefEq cs.alg ctx.alg do
     throwError "`{ppConst declName}`: wrong algebra"
   unless ← withReducible <| isDefEq cs.pred (← getPredicate mode) do
@@ -308,11 +299,8 @@ def applyTransition (declName : Name) (srcOnLhs : Bool) (res : Result) : PullM R
   let (app, step) ← rewriteWithCFCLemma declName srcOnLhs res.app.toExpr res.app.toMode
   return { app, proof := ← mkEqTrans res.proof step }
 
-/-- Convert a result to the requested mode: first the unitality, then the scalar ring.
-
-Doing the unitality first keeps the `f 0 = 0` side goal of `cfcₙ_eq_cfc` about the smallest
-possible function, and implements the rule that a `cfcₙ` at the right element should become a
-`cfc` immediately when the unital calculus was requested. -/
+/-- Convert a result to the requested mode: first the unitality to avoid goals of the form
+`?f 0 = 0`, then the scalar ring. -/
 def convert (res : Result) (want : Mode) : PullM Result := do
   let mut res := res
   if res.app.unital != want.unital then
