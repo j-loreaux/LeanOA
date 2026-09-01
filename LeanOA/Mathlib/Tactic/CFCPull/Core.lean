@@ -608,10 +608,7 @@ def mkMode (cfg : Config) (R alg : Expr) : MetaM Mode := do
   return { ring := R, unital := false }
 
 /-- Run the core of `cfc_pull` on `e`: returns the rewritten expression, a proof that `e` equals
-it, and the side goals that proof depends on.
-
-`lemmas` is the set to pull with. It is passed in rather than read from the environment here
-because the bracketed lemma list of `cfc_pull` modifies it for the duration of one call. -/
+it, and the side goals that proof depends on. -/
 def runPull (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
     MetaM (Expr × Expr × Array (MVarId × SideGoalKind)) := do
   let e := e.consumeMData
