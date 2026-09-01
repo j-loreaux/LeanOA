@@ -460,6 +460,32 @@ instance : Ord Cost where
       |>.then (compare b.prio a.prio)
       |>.then (compare a.holes b.holes)
 
+/-- The `Pull` lemmas that could apply to `e`, best first, ordered by `Cost`: lemmas usable at
+the requested scalar ring first and then by the length of the conversion chain, within that
+those already at the requested unitality, then by attribute priority, then by number of holes.
+
+Lemmas whose scalar ring the conversion graph cannot reach from the requested one are dropped
+rather than ranked last; there is no point offering a candidate that is certain to fail. -/
+partial def pullCandidates (e : Expr) (want : Mode) : PullM (Array PullLemma) := do
+  let ctx ← read
+  let cands ← ctx.lemmas.pull.getMatch e
+  let wantKey := RingKey.ofExpr want.ring
+  let mut scored : Array (Cost × PullLemma) := #[]
+  for l in cands do
+    -- `none` here means the lemma's ring is unreachable, not that it is expensive.
+    let conversions? ←
+      if l.ring.isUsableAt wantKey then pure (some 0)
+      else pure ((← scalarPath l.ring wantKey want.unital).map (·.size))
+    match conversions? with
+    | none =>
+      trace[Tactic.cfc_pull]
+        "skipping `{ppConst l.declName}`: no conversion from {l.ring} to {wantKey}"
+    | some conversions =>
+      scored := scored.push
+        ({ conversions, changesUnitality := l.unital != want.unital, prio := l.prio,
+            holes := l.numHoles }, l)
+  return (scored.qsort fun a b => compare a.1 b.1 |>.isLT).map (·.2)
+
 /-! ### The recursion -/
 
 mutual
@@ -564,32 +590,6 @@ partial def pullExisting (c : CFCApp) (want : Mode) : PullM Result := do
   let res ← pull newE want
   return { res with proof := ← mkEqTrans step res.proof }
 
-/-- The `Pull` lemmas that could apply to `e`, best first, ordered by `Cost`: lemmas usable at
-the requested scalar ring first and then by the length of the conversion chain, within that
-those already at the requested unitality, then by attribute priority, then by number of holes.
-
-Lemmas whose scalar ring the conversion graph cannot reach from the requested one are dropped
-rather than ranked last; there is no point offering a candidate that is certain to fail. -/
-partial def pullCandidates (e : Expr) (want : Mode) : PullM (Array PullLemma) := do
-  let ctx ← read
-  let cands ← ctx.lemmas.pull.getMatch e
-  let wantKey := RingKey.ofExpr want.ring
-  let mut scored : Array (Cost × PullLemma) := #[]
-  for l in cands do
-    -- `none` here means the lemma's ring is unreachable, not that it is expensive.
-    let conversions? ←
-      if l.ring.isUsableAt wantKey then pure (some 0)
-      else pure ((← scalarPath l.ring wantKey want.unital).map (·.size))
-    match conversions? with
-    | none =>
-      trace[Tactic.cfc_pull]
-        "skipping `{ppConst l.declName}`: no conversion from {l.ring} to {wantKey}"
-    | some conversions =>
-      scored := scored.push
-        ({ conversions, changesUnitality := l.unital != want.unital, prio := l.prio,
-            holes := l.numHoles }, l)
-  return (scored.qsort fun a b => compare a.1 b.1 |>.isLT).map (·.2)
-
 end
 
 /-! ### Entry point -/
@@ -614,22 +614,12 @@ it, and the side goals that proof depends on.
 because the bracketed lemma list of `cfc_pull` modifies it for the duration of one call. -/
 def runPull (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
     MetaM (Expr × Expr × Array (MVarId × SideGoalKind)) := do
-  -- see the note in `cfcPullTarget`: nothing downstream looks through `mdata`
   let e := e.consumeMData
   let alg ← inferType elem
   unless ← isDefEq (← inferType e) alg do
     throwError "`cfc_pull`: `{e}` does not live in the algebra `{alg}`"
   let target ← mkMode cfg R alg
   let ctx : Context := { cfg, elem, alg, target, lemmas }
-  -- Compute the predicate up front, so that "there is no such functional calculus" is reported
-  -- as itself rather than as a pile of failed lemma applications.
-  /- `zetaDelta` governs whether `isDefEq` and `whnf` — and so also the `DiscrTree` lookup that
-  chooses the candidate lemmas — unfold a `let`-bound local to its value. It is `true` ambiently,
-  which would make a local definition transparent to the whole pull; the default here is `false`,
-  so that such a variable is an atom unless `+zetaDelta` asks otherwise. It is set around the
-  recursion only, leaving the typing and instance questions above at the ambient configuration,
-  for the same reason those are exempt from the reducible transparency (see the module
-  docstring). -/
   let (res, st) ←
     try
       withConfig (fun c => { c with zetaDelta := cfg.zetaDelta }) <|
