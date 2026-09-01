@@ -76,16 +76,6 @@ error: `cfc_pull` made no progress
 example (ha : IsStarNormal a) : star b * b = star b * b := by
   cfc_pull ℂ a
 
-/--
-error: `cfc_pull` made no progress
-  `cfc_pull` reached its maximum recursion depth of 1; either
-  the expression is more deeply nested than that, or the `@[cfc_pull]` lemma set is
-  looping. Raise the limit with `cfc_pull (maxDepth := 2) ..`
--/
-#guard_msgs in
-example (ha : IsStarNormal a) : star a * a = star a * a := by
-  cfc_pull (maxDepth := 1) ℂ a
-
 /- Not every failure is a failure to rewrite. Reaching `ℝ≥0` from `ℝ` is a scalar conversion
 with a side condition of its own — `cfc_real_eq_nnreal` asks for `0 ≤ a` — so a pull towards
 `ℝ≥0` of an element that is only known to be selfadjoint gets all the way there and then fails

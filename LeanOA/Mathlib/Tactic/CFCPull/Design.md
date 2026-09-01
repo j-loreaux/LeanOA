@@ -126,7 +126,6 @@ structure Context where
   alg      : Expr          -- `A`
   ring     : Expr          -- the *target* ring `R`
   unital   : Bool          -- the *target* unitality
-  depth    : Nat
 
 structure State where
   sideGoals : Array (MVarId × SideGoalKind)
@@ -253,7 +252,6 @@ structure Config where
   unital   : Bool := true    -- prefer the unital calculus
   defer    : Bool := false   -- hand back undischarged side goals instead of failing
   deferAll : Bool := false   -- hand back every side goal, discharging none
-  maxDepth : Nat  := 48
 declare_config_elab elabConfig Config
 ```
 

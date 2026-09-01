@@ -88,7 +88,6 @@ conv ... => cfc_pull (config)? (disch := tac)? ([lemmas])? R a (=> tac)?
     default, so a local definition — written with `let`, or introduced by `set` — is an atom:
     the tactic does not look at what it stands for, and a pull that reaches one gets stuck
     there, with an error naming this flag. See [§7a](#7a-let-bound-variables).
-  * `(maxDepth := n)` (default `48`), a recursion-depth guard.
 * **Discharger** (the `(disch := tac)` clause of `simp` and `fun_prop`, and written after the
   configuration items as it is there). A tactic to try on side goals nothing else closed; see
   [§7](#7-side-goals). It is not an `optConfig` item, because its value is a tactic rather than
@@ -338,8 +337,8 @@ backtracking (the `MetaM` state is checkpointed around every candidate).
 
 The recursion is structural in `e` except for step 2, where `Compose` lemmas replace `b` by a
 subterm, step 4, which replaces `e` by a `cfc` application at a subterm of `e`, and step 6, which
-is not recursive. A `maxDepth` guard (default 48) is nevertheless enforced, so that a
-badly-tagged lemma set degrades into an error rather than a hang.
+is not recursive. `pull` runs under `withIncRecDepth` nevertheless, so that a badly-tagged lemma
+set degrades into an error rather than a hang.
 
 ## 7. Side goals
 

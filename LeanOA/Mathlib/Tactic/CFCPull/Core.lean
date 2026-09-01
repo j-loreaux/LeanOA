@@ -33,8 +33,6 @@ structure Config where
   deferAll : Bool := false
   /-- Unfold `let`-bound local variables (default: `false`). -/
   zetaDelta : Bool := false
-  /-- The maximum recursion depth. -/
-  maxDepth : Nat := 48
   /-- A tactic to try on side goals `cfc_pull` has no built-in way to prove. -/
   discharger : Option (TSyntax `tactic) := none
   deriving Inhabited
@@ -61,8 +59,6 @@ structure Context where
   target : Mode
   /-- The `@[cfc_pull]` database, read once at the start of the run. -/
   lemmas : Lemmas
-  /-- The current recursion depth. -/
-  depth : Nat := 0
 
 /-- What kind of hypothesis a side goal came from. -/
 inductive SideGoalKind where
@@ -123,10 +119,6 @@ instance : ExceptToTraceResult Exception Result where
 
 /-! ### Small utilities -/
 
-/-- Exception used by the recursion-depth guard. -/
-initialize maxDepthExceptionId : InternalExceptionId ←
-  registerInternalExceptionId `Mathlib.Tactic.CFCPull.maxDepth
-
 /-- Run `x`, reverting metavariable context and `PullM` state upon failure. -/
 def observing? {α : Type} (x : PullM α) : PullM (Option α) := do
   let mctx ← getMCtx
@@ -134,20 +126,10 @@ def observing? {α : Type} (x : PullM α) : PullM (Option α) := do
   try
     return some (← x)
   catch ex =>
-    -- if the exception is for max recursion depth, rethrow it, otherwise revert state and trace it.
-    if let .internal id _ := ex then
-      if id == maxDepthExceptionId then throw ex
     setMCtx mctx
     set s
     trace[Tactic.cfc_pull] "{crossEmoji} {ex.toMessageData}"
     return none
-
-/-- Increase the recursion depth, failing if the configured maximum is reached. -/
-def withIncDepth {α : Type} (x : PullM α) : PullM α := do
-  let ctx ← read
-  if ctx.depth ≥ ctx.cfg.maxDepth then
-    throw (.internal maxDepthExceptionId)
-  withReader (fun c => { c with depth := c.depth + 1 }) x
 
 /-- Strip an `autoParam` wrapper, so that a deferred goal displays as the user expects. -/
 def stripAutoParam (e : Expr) : Expr :=
@@ -491,7 +473,7 @@ partial def pullCandidates (e : Expr) (want : Mode) : PullM (Array PullLemma) :=
 mutual
 
 /-- Pull `e` towards `cfc f a` at the mode `want`. See `Spec.md` §6.2. -/
-partial def pull (e : Expr) (want : Mode) : PullM Result := withIncDepth do
+partial def pull (e : Expr) (want : Mode) : PullM Result := withIncRecDepth do
   -- `withTraceNode` prefixes its own success/failure emoji, so the message needs none
   withTraceNode `Tactic.cfc_pull (fun _ => return m!"pull {e} into a {want}") do
     let ctx ← read
@@ -618,16 +600,8 @@ def runPull (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
   let target ← mkMode cfg R alg
   let ctx : Context := { cfg, elem, alg, target, lemmas }
   let (res, st) ←
-    try
-      withConfig (fun c => { c with zetaDelta := cfg.zetaDelta }) <|
-        ((do let _ ← getPredicate target; pull e target).run ctx).run {}
-    catch ex =>
-      if let .internal id _ := ex then
-        if id == maxDepthExceptionId then
-          throwError "`cfc_pull` reached its maximum recursion depth of {cfg.maxDepth}; either\n\
-            the expression is more deeply nested than that, or the `@[cfc_pull]` lemma set is\n\
-            looping. Raise the limit with `cfc_pull (maxDepth := {2 * cfg.maxDepth}) ..`"
-      throw ex
+    withConfig (fun c => { c with zetaDelta := cfg.zetaDelta }) <|
+      ((do let _ ← getPredicate target; pull e target).run ctx).run {}
   let goals ← st.sideGoals.filterM fun (g, _) => return !(← g.isAssigned)
   return (← instantiateMVars res.app.toExpr, ← instantiateMVars res.proof, goals)
 
