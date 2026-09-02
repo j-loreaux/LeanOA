@@ -1,5 +1,9 @@
 source "https://rubygems.org"
 
+# Keep in sync with `home_page/.ruby-version`, which CI reads via the
+# `ruby-version: default` input of leanprover-community/docgen-action.
+ruby "3.4.3"
+
 # To upgrade, run `bundle update github-pages`.
 gem "github-pages", group: :jekyll_plugins
 # If you have any plugins, put them here!

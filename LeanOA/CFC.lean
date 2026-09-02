@@ -95,15 +95,53 @@ theorem IsSelfAdjoint.norm_le_max_of_le_of_le {A : Type*} [NonUnitalCStarAlgebra
       (CStarAlgebra.norm_posPart_mono hbc hb)
     _ ≤ max ‖a‖ ‖c‖ := max_le_max (by simp) (by simp)
 
-open CStarAlgebra Unitization in
-lemma CStarAlgebra.norm_sub_le_one_of_nonneg_of_norm_le_one {A : Type*} [NonUnitalCStarAlgebra A]
-    [PartialOrder A] [StarOrderedRing A] {x y : A} (hx : 0 ≤ x) (hx0 : ‖x‖ ≤ 1) (hy : 0 ≤ y)
-    (hy0 : ‖y‖ ≤ 1) : ‖x - y‖ ≤ 1 := by
-  rw [← norm_inr (𝕜 := ℂ), norm_le_one_iff_of_nonneg _] at hx0 hy0
-  rw [← norm_inr (𝕜 := ℂ), inr_sub]
-  simpa [sub_eq_add_neg] using (IsSelfAdjoint.one _).neg.norm_le_max_of_le_of_le
-    (by simpa using add_le_add hx.inr (neg_le_neg_iff.mpr hy0))
-    (add_le_add hx0 (by simpa using neg_le_neg hy.inr : -(y : A⁺¹) ≤ 0))
+section IsSelfAdjoint
+
+open CStarAlgebra Metric Set
+open scoped Pointwise
+
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+
+lemma isSelfAdjoint_and_norm_le_iff {x : A} {r : ℝ} :
+    IsSelfAdjoint x ∧ ‖x‖ ≤ r ↔ ∃ y z, (0 ≤ y ∧ ‖y‖ ≤ r) ∧ (0 ≤ z ∧ ‖z‖ ≤ r) ∧ x = y - z := by
+  constructor
+  · rintro ⟨hx, hxr⟩
+    exact ⟨x⁺, x⁻,
+      ⟨by cfc_tac, (norm_posPart_le x).trans hxr⟩,
+      ⟨by cfc_tac, (norm_negPart_le x).trans hxr⟩,
+      (CFC.posPart_sub_negPart _ hx).symm⟩
+  · rintro ⟨y, z, ⟨hy, hyr⟩, ⟨hz, hzr⟩, rfl⟩
+    refine ⟨by cfc_tac, ?_⟩
+    grw [hz.isSelfAdjoint.neg.norm_le_max_of_le_of_le (c := y), hyr, norm_neg, hzr, max_self]
+    all_goals simpa
+
+lemma isSelfAdjoint_and_norm_lt_iff {x : A} {r : ℝ} :
+    IsSelfAdjoint x ∧ ‖x‖ < r ↔ ∃ y z, (0 ≤ y ∧ ‖y‖ < r) ∧ (0 ≤ z ∧ ‖z‖ < r) ∧ x = y - z := by
+  constructor
+  · rintro ⟨hx, hxr⟩
+    exact ⟨x⁺, x⁻,
+      ⟨by cfc_tac, (norm_posPart_le x).trans_lt hxr⟩,
+      ⟨by cfc_tac, (norm_negPart_le x).trans_lt hxr⟩,
+      (CFC.posPart_sub_negPart _ hx).symm⟩
+  · rintro ⟨y, z, ⟨hy, hyr⟩, ⟨hz, hzr⟩, rfl⟩
+    refine ⟨by cfc_tac, ?_⟩
+    grw [hz.isSelfAdjoint.neg.norm_le_max_of_le_of_le (c := y) (by simpa) (by simpa)]
+    simp_all
+
+lemma setOf_isSelfAdjoint_inter_closedBall_eq {r : ℝ} :
+    {x : A | IsSelfAdjoint x} ∩ closedBall 0 r =
+      {x | 0 ≤ x} ∩ closedBall 0 r - {x | 0 ≤ x} ∩ closedBall 0 r := by
+  ext
+  simp [isSelfAdjoint_and_norm_le_iff, Set.mem_sub]
+  grind
+
+lemma setOf_isSelfAdjoint_inter_ball_eq {r : ℝ} :
+    {x : A | IsSelfAdjoint x} ∩ ball 0 r = {x | 0 ≤ x} ∩ ball 0 r - {x | 0 ≤ x} ∩ ball 0 r := by
+  ext
+  simp [isSelfAdjoint_and_norm_lt_iff, Set.mem_sub]
+  grind
+
+end IsSelfAdjoint
 
 open scoped ComplexStarModule in
 /-- A set in a non-unital C⋆-algebra which is bounded above and below is
