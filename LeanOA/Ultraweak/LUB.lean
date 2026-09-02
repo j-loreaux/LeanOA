@@ -115,8 +115,7 @@ instance : SupConvergenceClass σ(M, P) where
 
 omit [CompleteSpace P] in
 private theorem isLUB_star_right_conjugate_aux (a u : σ(M, P)) (s : Set σ(M, P))
-    [IsDirectedOrder s] [Nonempty s] (h : IsLUB s u)
-    (h₁ : Tendsto (Subtype.val : s → σ(M, P)) atTop (𝓝 u))
+    [Nonempty s] (h : IsLUB s u) (h₁ : Tendsto (Subtype.val : s → σ(M, P)) atTop (𝓝 u))
     (φ : σ(M, P) →P[ℂ] ℂ) :
     Tendsto (fun x : s ↦ φ (a * x)) atTop (𝓝 (φ (a * u))) := by
   /- It clearly suffices to show `x ↦ ‖φ (a * (u - x))‖` tends to zero. -/

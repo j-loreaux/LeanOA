@@ -69,15 +69,6 @@ noncomputable abbrev WStarAlgebra.instCCPO : ConditionallyCompletePartialOrderSu
 
 open WeakDual ContinuousMap
 
-section StarMemClass
-
-@[simp]
-lemma SetLike.isSelfAdjoint_iff {S R : Type*} [Star R] [SetLike S R] [StarMemClass S R]
-    {s : S} {x : s} : IsSelfAdjoint (x : R) ↔ IsSelfAdjoint x := by
-  simp [IsSelfAdjoint, Subtype.ext_iff]
-
-end StarMemClass
-
 namespace StarSubalgebra
 
 -- this should be an instance, but right now the hypothesis does not involve `WStarAlgebra` and
