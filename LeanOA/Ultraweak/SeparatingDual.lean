@@ -74,8 +74,8 @@ lemma eq_zero_of_forall_positiveCLM (a : σ(M, P))
   suffices ∀ {a}, IsSelfAdjoint a → (∀ φ : σ(M, P) →P[ℂ] ℂ, φ a = 0) → a = 0 by
     have ⟨h₁, h₂⟩ := And.intro (this (ℜ a).2 (fun φ ↦ ?_)) (this (ℑ a).2 (fun φ ↦ ?_))
     · simpa [realPart_add_I_smul_imaginaryPart] using congr($h₁ + I • $h₂)
-    · simp [φ.map_realPart, ha]
-    · simp [φ.map_imaginaryPart, ha]
+    · simp [map_realPart, ha]
+    · simp [map_imaginaryPart, ha]
   intro a ha h
   have h₁ := by simpa using mt <| exists_positiveCLM_apply_lt_zero _ ha
   have h₂ := by simpa using mt <| exists_positiveCLM_apply_lt_zero _ ha.neg

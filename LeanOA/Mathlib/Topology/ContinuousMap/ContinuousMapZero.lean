@@ -34,11 +34,4 @@ def starAlgEquiv_precomp {X Y : Type*} (R : Type*) [Zero X] [Zero Y]
     (nonUnitalStarAlgHom_precomp R ⟨f.symm, by simpa using congr(f.symm $hf.symm)⟩)
     (by ext; simp) (by ext; simp)
 
-@[simp]
-theorem coe_comp {X Y R : Type*} [Zero X] [Zero Y] [Zero R]
-    [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace R]
-    (g : C(Y, R)₀) (f : C(X, Y)₀) :
-    g.comp f = g ∘ f :=
-  rfl
-
 end ContinuousMapZero

@@ -69,15 +69,6 @@ noncomputable abbrev WStarAlgebra.instCCPO : ConditionallyCompletePartialOrderSu
 
 open WeakDual ContinuousMap
 
-section StarMemClass
-
-@[simp]
-lemma SetLike.isSelfAdjoint_iff {S R : Type*} [Star R] [SetLike S R] [StarMemClass S R]
-    {s : S} {x : s} : IsSelfAdjoint (x : R) ↔ IsSelfAdjoint x := by
-  simp [IsSelfAdjoint, Subtype.ext_iff]
-
-end StarMemClass
-
 namespace StarSubalgebra
 
 -- this should be an instance, but right now the hypothesis does not involve `WStarAlgebra` and
@@ -126,8 +117,9 @@ lemma IsMasa.extremallyDisconnected_characterSpace (S : StarSubalgebra ℂ M) [h
     refine IsMasa.mem_of_commute _ (x := u) ?_
     suffices ∀ v ∈ span ℂ (S.toSubmodule.subtype '' (unitary S : Set S)), Commute u v by
       simp only [← map_span] at this
-      simpa [CStarAlgebra.span_unitary S]
-    suffices ∀ v ∈ unitary S, Commute u v from Commute.span_right (by simpa)
+      simpa [CStarAlgebra.span_unitary S, StarSubalgebra.subtype]
+    suffices ∀ v ∈ unitary S, Commute u v from Commute.span_right
+      (by simpa [StarSubalgebra.subtype])
     intro v hv
     /- So if `v ∈ S` is unitary, to show that `v` commutes with `u`, it suffices to show that
     `v * u * star v = u`. Now `v * u * star v` is the supremum of `v * (f '' s) * star v`, but
@@ -153,7 +145,7 @@ lemma IsMasa.extremallyDisconnected_characterSpace (S : StarSubalgebra ℂ M) [h
   replace hu := hu.of_image (by simp)
   rw [Function.comp_def (f := o.symm), ← Set.image_image (g := o.symm), o.symm.isLUB_image,
     o.symm_symm] at hu
-  have : IsSelfAdjoint (o u) := .map (by simpa using hu') e
+  have : IsSelfAdjoint (o u) := .map e (by simpa using hu')
   exact ⟨_, (this.realToRCLike_rclikeToReal ▸ hu).of_image <| by simp⟩
 
 end StarSubalgebra

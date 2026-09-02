@@ -34,13 +34,12 @@ theorem CStarAlgebra.finiteSpectrum_iff_spectrum [Ring A] [Algebra ℝ A] [Star 
       {x : A | IsSelfAdjoint x} ⊆ closure {x | IsSelfAdjoint x ∧ (spectrum ℝ x).Finite} := by
   simp [quasispectrum_eq_spectrum_union_zero, CStarAlgebra.finiteSpectrum_iff]
 
-instance [NonUnitalRing A] [Module ℝ A] [StarRing A] [IsScalarTower ℝ A A] [SMulCommClass ℝ A A]
-    [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint] [Subsingleton A] :
+instance [NonUnitalRing A] [Module ℝ A] [StarRing A] [Subsingleton A] :
     CStarAlgebra.FiniteSpectrum A where
-  fs := by simp [Subsingleton.eq_zero, CFC.quasispectrum_zero_eq]
+  fs := by simp [Subsingleton.eq_zero]
 
 instance [Ring A] [Algebra ℝ A] [Star A] [Subsingleton A] :
-    CStarAlgebra.FiniteSpectrum A where fs := by simp [quasispectrum_eq_spectrum_union_zero]
+    CStarAlgebra.FiniteSpectrum A where fs := by simp
 
 open ContinuousMap LocallyConstant in
 instance [TotallySeparatedSpace A] [CompactSpace A] : CStarAlgebra.FiniteSpectrum C(A, 𝕜) :=

@@ -6,9 +6,11 @@ public import LeanOA.Mathlib.Analysis.Complex.Basic
 public import LeanOA.CFC
 public import LeanOA.Ultraweak.ContinuousFunctionalCalculus
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
-public import LeanOA.CStarAlgebra.PositiveLinearFunctional
 public import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
 public import Mathlib.Algebra.Order.Star.Basic
+public import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
+
+import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 
 @[expose] public section
 
@@ -52,7 +54,7 @@ lemma DirectedOn.exists_isLUB (s : Set σ(M, P)) (hs : DirectedOn (· ≤ ·) s)
     use ofUltraweak x₀
     rintro - ⟨x, hx, rfl⟩
     aesop
-  obtain ⟨r, hr⟩ := isBounded_of_bddAbove_of_bddBelow hbd' hbd'' |>.subset_closedBall 0
+  obtain ⟨r, hr⟩ := CStarAlgebra.isBounded_of_bddAbove_of_bddBelow hbd' hbd'' |>.subset_closedBall 0
   /- The net `s` of elements is eventually bounded. -/
   have h_map_le : map (Subtype.val : s → σ(M, P)) atTop ≤
       𝓟 (ofUltraweak ⁻¹' Metric.closedBall 0 r) := by
@@ -81,7 +83,7 @@ lemma DirectedOn.exists_isLUB (s : Set σ(M, P)) (hs : DirectedOn (· ≤ ·) s)
   refine ⟨x, ?_, hx⟩
   /- Since the net is increasing, and the topology on `σ(M, P)` is order closed, the
   limit is the least upper bound. -/
-  simpa [setOf] using! isLUB_of_tendsto_atTop (β := s) (Subtype.mono_coe (· ∈ s)) hx
+  simpa [ofPred] using! isLUB_of_tendsto_atTop (β := s) (Subtype.mono_coe (· ∈ s)) hx
 
 /-- `σ(M, P)` is a conditionally complete partial order. Since this is only dependent upon the
 order, not the topology, the same is true of `M`. -/
@@ -92,7 +94,7 @@ noncomputable instance : ConditionallyCompletePartialOrderSup σ(M, P) where
     then (DirectedOn.exists_isLUB s h.1 h.2.1 h.2.2).choose
     else 0
   isLUB_csSup_of_directed s h_dir h_non hbdd := by
-    rw [dif_pos (by grind)]
+    rw [dite_eq_left (by grind)]
     exact (DirectedOn.exists_isLUB s h_dir h_non hbdd).choose_spec.1
 
 /-- An increasing net of elements which is bounded above in `σ(M, P)` converges
@@ -113,8 +115,7 @@ instance : SupConvergenceClass σ(M, P) where
 
 omit [CompleteSpace P] in
 private theorem isLUB_star_right_conjugate_aux (a u : σ(M, P)) (s : Set σ(M, P))
-    [IsDirectedOrder s] [Nonempty s] (h : IsLUB s u)
-    (h₁ : Tendsto (Subtype.val : s → σ(M, P)) atTop (𝓝 u))
+    [Nonempty s] (h : IsLUB s u) (h₁ : Tendsto (Subtype.val : s → σ(M, P)) atTop (𝓝 u))
     (φ : σ(M, P) →P[ℂ] ℂ) :
     Tendsto (fun x : s ↦ φ (a * x)) atTop (𝓝 (φ (a * u))) := by
   /- It clearly suffices to show `x ↦ ‖φ (a * (u - x))‖` tends to zero. -/
@@ -138,9 +139,9 @@ private theorem isLUB_star_right_conjugate_aux (a u : σ(M, P)) (s : Set σ(M, P
     gcongr
     calc
       ‖φ (a * (u - x) * star a)‖ ≤ ‖φ (a * (u - x₀) * star a)‖ :=
-        CStarAlgebra.norm_le_norm_of_nonneg_of_le -- hitting a nail with a nuke
-          (map_nonneg φ <| star_right_conjugate_nonneg (by simpa using h.1 x.prop) a)
+        CStarAlgebra.norm_le_norm_of_le_of_nonneg -- hitting a nail with a nuke
           (OrderHomClass.mono φ <| star_right_conjugate_le_conjugate (by grw [hx]) a)
+          (map_nonneg φ <| star_right_conjugate_nonneg (by simpa using h.1 x.prop) a)
       _ = ‖φ' (ofUltraweak (a * (u - ↑x₀) * star a))‖ := by simp [φ']
       _ ≤ ‖φ'‖ * ‖ofUltraweak (a * (u - ↑x₀) * star a)‖ := φ'.le_opNorm _
   /- By the Cauchy-Schwarz inequality,
@@ -151,7 +152,7 @@ private theorem isLUB_star_right_conjugate_aux (a u : σ(M, P)) (s : Set σ(M, P
   refine squeeze_zero (fun _ ↦ by positivity) (fun x ↦ ?_) <| bdd_le_mul_tendsto_zero' c hcu h₂
   have hux : 0 ≤ u - x := sub_nonneg.mpr <| h.1 x.prop
   rw [← CFC.sqrt_mul_sqrt_self' (u - x)]
-  have := φ.toPositiveLinearMap.cauchy_schwarz_mul_star
+  have := PositiveLinearMap.cauchy_schwarz_mul_star φ
     (a * CFC.sqrt (u - x)) (star (CFC.sqrt (u - x)))
   simpa [(CFC.sqrt_nonneg (u - x)).star_eq, mul_assoc]
 
@@ -190,7 +191,7 @@ lemma DirectedOn.isLUB_star_right_conjugate (a u : σ(M, P)) (s : Set σ(M, P))
     simp only [disjoint_cobounded_iff]
     refine ⟨_, image_mem_map (Ici_mem_atTop x₀), ?_⟩
     rw [← isBounded_image_ofUltraweak]
-    apply isBounded_of_bddAbove_of_bddBelow <;> simp only [image_image]
+    apply CStarAlgebra.isBounded_of_bddAbove_of_bddBelow <;> simp only [image_image]
     · refine monotone_ofUltraweak.comp (conjOrderHom a).monotone |>.map_bddAbove ⟨u, h.1⟩ |>.mono ?_
       rintro - ⟨x, hx, rfl⟩
       exact ⟨x.val, x.prop, rfl⟩
