@@ -60,7 +60,7 @@ lemma WeakDual.isClosed_image_polar_of_mem_nhds' {s : Set E} (s_nhds : s ∈ �
         { toFun := f, map_add' := hf1, map_smul' := hf2 }
         ⟨s, s_nhds, Bornology.isVonNBounded_image 𝕜 s hf3⟩,
       mem_preimage.mp hf3, rfl⟩
-  this ▸ ((isClosed_setOf_map_add E 𝕜).inter (isClosed_setOf_map_smul E 𝕜 id)).inter
+  this ▸ ((isClosed_setOfPred_map_add E 𝕜).inter (isClosed_setOfPred_map_smul E 𝕜 id)).inter
     (isClosed_biInter fun u _ ↦ isClosed_Iic.preimage (continuous_apply u).norm)
 
 -- deprime and replace the original

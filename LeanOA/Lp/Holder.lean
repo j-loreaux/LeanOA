@@ -48,7 +48,7 @@ theorem Memℓp.of_bilin_of_zero_left (B : (i : ι) → E i →L[𝕜] F i →L[
     Memℓp (fun i ↦ B i (e i) (f i)) 0 := by
   rw [memℓp_zero_iff] at he ⊢
   apply he.subset
-  rw [← Set.compl_subset_compl, Set.compl_setOf, Set.compl_setOf]
+  rw [← Set.compl_subset_compl, Set.compl_ofPred, Set.compl_ofPred]
   simp +contextual
 
 theorem Memℓp.of_bilin_of_zero_right (B : (i : ι) → E i →L[𝕜] F i →L[𝕜] G i)

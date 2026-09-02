@@ -153,15 +153,15 @@ lemma StrongDual.range_coeLM_eq_sUnion_polar_nhds {𝕜 E : Type*} [Nontrivially
       ⋃₀ {(LinearMap.id (R := 𝕜) (M := Dual 𝕜 E)).flip.polar (s i) | (i : ι) (_ : p i)} := by
   ext f
   simp only [SetLike.mem_coe, LinearMap.mem_range, coeLM_apply, exists_prop, Set.mem_sUnion,
-    Set.mem_setOf_eq, exists_exists_and_eq_and]
+    Set.mem_ofPred_eq, exists_exists_and_eq_and]
   constructor
   · rintro ⟨y , rfl⟩
     have := ContinuousAt.tendsto <| map_continuousAt y 0
     simp only [map_zero, LinearMap.polar, LinearMap.flip_apply, LinearMap.id_coe, id_eq,
-      Set.mem_setOf_eq, coe_coe] at this ⊢
+      Set.mem_ofPred_eq, coe_coe] at this ⊢
     convert Filter.Tendsto.basis_left this h (Metric.closedBall 0 1)
       <| Metric.closedBall_mem_nhds _ zero_lt_one
-    simp only [Metric.closedBall, dist_zero_right, Set.MapsTo, Set.mem_setOf_eq]
+    simp only [Metric.closedBall, dist_zero_right, Set.MapsTo, Set.mem_ofPred_eq]
   · rintro ⟨i, _, hi2⟩
     have : s i ∈ 𝓝 0 := by apply h.1 (s i) |>.mpr; use i
     use LinearMap.clmOfExistsBoundedImage f ⟨s _, this, Bornology.isVonNBounded_image _ _ hi2⟩
@@ -180,7 +180,7 @@ theorem Mackey.range_coeLM_eq_image_bilin [IsTopologicalAddGroup F] [Module ℝ 
     [IsScalarTower ℝ 𝕜 F] [T1Space F] [ContinuousSMul 𝕜 F] :
     (coeLM 𝕜 : StrongDual 𝕜 (Mackey B) →ₗ[𝕜] Dual 𝕜 (Mackey B)).range =
       (bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}) '' univ := by
-  letI B₁ := bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}
+  let B₁ := bilin B {s | IsCompact s ∧ AbsConvex 𝕜 s}
   have : ContinuousSMul ℝ F := IsScalarTower.continuousSMul 𝕜
   have : ContinuousSMul 𝕜 (Mackey B) := by
     apply PolarTopology.continuousSMul (E := Mackey B)
@@ -189,13 +189,13 @@ theorem Mackey.range_coeLM_eq_image_bilin [IsTopologicalAddGroup F] [Module ℝ 
   rw [StrongDual.range_coeLM_eq_sUnion_polar_nhds <|
       hasBasis_nhds_zero_polar (nonempty_setOf_isCompact_absConvex _ _)
         (directedOn_setOf_isCompact_absConvex _ _)
-        (by simpa [mem_setOf_eq, and_imp] using fun _ h _ ↦ IsCompact.isVonNBounded _ h)
+        (by simpa [mem_ofPred_eq, and_imp] using fun _ h _ ↦ IsCompact.isVonNBounded _ h)
         (fun c _ w hw ↦ ⟨c • w, ⟨⟨IsCompact.smul _ hw.1, by
                 simpa using AbsConvex.image (Module.End.smulLeft (RCLike.ofReal _)
                   (algebraMap_mem_center _)) hw.2⟩, by aesop⟩⟩)]
   ext x
   constructor
-  · simp only [mem_setOf_eq, exists_prop, mem_sUnion, exists_exists_and_eq_and]
+  · simp only [mem_ofPred_eq, exists_prop, mem_sUnion, exists_exists_and_eq_and]
     rintro ⟨s, _, hb⟩
     by_cases hne : s.Nonempty
     · rw [Module.dualPairing_flip_polar_polar B₁ (by aesop) (by aesop) hne] at hb
@@ -204,7 +204,7 @@ theorem Mackey.range_coeLM_eq_image_bilin [IsTopologicalAddGroup F] [Module ℝ 
       rw [polar_univ, mem_singleton_iff] at hb
       · use 0; rw [hb, map_zero]
       exact separatingRight_iff_flip_ker_eq_bot.mpr rfl
-  · simp only [image_univ, mem_range, mem_setOf_eq, exists_prop, mem_sUnion,
+  · simp only [image_univ, mem_range, mem_ofPred_eq, exists_prop, mem_sUnion,
     exists_exists_and_eq_and, forall_exists_index]
     intro f hf
     use closedAbsConvexHull 𝕜 (convexHull ℝ {f})

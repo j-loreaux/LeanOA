@@ -167,7 +167,7 @@ lemma isClosed_nonneg : IsClosed {x : σ(M, P) | 0 ≤ x} := by
     simpa [norm_sub_rev, S] using NNReal.coe_le_coe.mpr this
   have h₂ : (1 : σ(M, P)) +ᵥ M_sa ∩ S ⊆ N := by
     rintro - ⟨x, ⟨hx_sa, hx⟩, rfl⟩
-    simp only [vadd_eq_add, Set.mem_setOf_eq, N]
+    simp only [vadd_eq_add, Set.mem_ofPred_eq, N]
     change 0 ≤ 1 + ofUltraweak x
     rw [nonneg_iff_isSelfAdjoint_and_quasispectrumRestricts,
       quasispectrumRestricts_iff_spectrumRestricts]

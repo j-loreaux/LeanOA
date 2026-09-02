@@ -363,7 +363,7 @@ lemma seminorm_finite_sUnion {s : Set (Set F)} (hs : s.Finite)
       sUnion_empty, forall_true_left, mem_empty_iff_false]
     ext
     rw [Seminorm.iSup_apply (by simp)]
-    simp [Real.iSup_of_isEmpty]
+    simp
   · intro p hp hnp hfin himp hyp
     simp only [sUnion_insert]
     rw [Set.forall_mem_insert, seminorm_union hyp.1 ((isVonNBounded_sUnion hfin).mpr hyp.2)] at *
@@ -393,7 +393,7 @@ lemma continuous_seminorm (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (�
   simp only [Metric.mem_closedBall, dist_zero_right] at this
   rw [ContinuousAt, this.tendsto_iff Metric.nhds_basis_closedBall]
   intro ε hε
-  simp only [preimage_setOf_eq, toUniformConvergenceCLM_apply_apply, mem_setOf_eq,
+  simp only [preimage_ofPred_eq, toUniformConvergenceCLM_apply_apply, mem_ofPred_eq,
     map_zero, Metric.mem_closedBall, dist_zero_right, Real.norm_eq_abs]
   simp_rw [abs_of_nonneg (apply_nonneg _ _)]
   refine ⟨(s, ε), ⟨hs_mem, hε⟩, fun x hx ↦ ?_⟩
@@ -430,7 +430,7 @@ lemma withSeminorms (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ 
   rw [← map_zero (toUniformConvergenceCLM (B := B) (𝔖 := 𝔖)), ← nhds_induced] at this
   simp only [Metric.mem_ball, dist_zero_right] at this
   apply this.to_hasBasis' ?_ ?_
-  · simp only [id_eq, preimage_setOf_eq, toUniformConvergenceCLM_apply_apply, and_imp, Prod.forall]
+  · simp only [id_eq, preimage_ofPred_eq, toUniformConvergenceCLM_apply_apply, and_imp, Prod.forall]
     intro s ε hs hε
     simp only [SeminormFamily.basisSets, mem_iUnion, mem_singleton_iff, exists_prop, ↓existsAndEq,
       and_true]
@@ -440,7 +440,7 @@ lemma withSeminorms (h𝔖_non : 𝔖.Nonempty) (h𝔖_dir : DirectedOn (· ⊆ 
     intro x
     simp only [Finset.sup_singleton, seminormFamily_apply, Seminorm.ball_zero_eq_preimage_ball,
       mem_preimage, Metric.mem_ball, dist_zero_right,
-      Real.norm_eq_abs, mem_setOf_eq]
+      Real.norm_eq_abs, mem_ofPred_eq]
     intro hx y hy
     replace hx := le_abs_self _ |>.trans_lt hx
     obtain (hs | hs) := s.1.eq_empty_or_nonempty; · simp_all
@@ -526,8 +526,8 @@ def polarTopologyNhdsPolars [TopologicalSpace E] [IsTopologicalAddGroup E]
   toLinearEquiv := linearEquiv (B := B) (𝔖 := nhdsPolars B)
   continuous_toFun := by
     simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, LinearEquiv.coe_coe]
-    letI f := (PolarTopology.linearEquiv (B := B) (𝔖 := nhdsPolars B))
-    letI B₂ := bilin B (nhdsPolars B)
+    let f := (PolarTopology.linearEquiv (B := B) (𝔖 := nhdsPolars B))
+    let B₂ := bilin B (nhdsPolars B)
     apply continuous_of_tendsto_nhds_zero
     rw [Filter.HasBasis.tendsto_right_iff (LocallyConvexSpace.absConvex_closed_basis_zero 𝕜 E)]
     rintro u ⟨hu_nhd, hu_ac, hu_cl⟩

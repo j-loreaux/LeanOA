@@ -4,12 +4,10 @@ public import LeanOA.AbsConvex
 public import LeanOA.CFC
 public import LeanOA.CStarAlgebra.Extreme
 public import LeanOA.CStarAlgebra.FiniteSpectrum
-public import LeanOA.CStarAlgebra.PositiveLinearFunctional
 public import LeanOA.CStarModule.Standard
 public import LeanOA.ComplexOrder
 public import LeanOA.Corner
 public import LeanOA.ExtremallyDisconnected
-public import LeanOA.IsUnital
 public import LeanOA.IsWeak
 public import LeanOA.KreinSmulian
 public import LeanOA.LocallyConvexNhdsBasis
@@ -22,7 +20,6 @@ public import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
-public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Transfer
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
