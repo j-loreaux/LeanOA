@@ -217,17 +217,26 @@ The zero-hole case degenerates to `hcongr := rfl`, so no special casing is neede
 
 ### 3.2 Backtracking
 
-Every candidate is tried inside
+`PullM` has a `MonadBacktrack` instance whose saved state pairs the ambient `Meta.SavedState`
+with the `State` of the run, so one checkpoint covers the metavariable assignments *and* the
+side goals and predicate cache accumulated so far. Every candidate is tried inside
 
 ```lean
-def observing (x : PullM α) : PullM (Option α) := do
-  let sMeta ← Meta.saveState; let sPull ← get
-  try pure (some (← x))
-  catch _ => sMeta.restore; set sPull; pure none
+def attempt? (header : MessageData) (x : PullM Result) : PullM (Option Result) := do
+  let attempt ← withTraceNode `Tactic.cfc_pull msg do
+    let s ← saveState
+    try pure (.ok (← x))
+    catch ex => restoreState s; pure (.error ex.toMessageData)
+  return attempt.toOption
 ```
 
-so that a failed candidate leaves neither metavariable assignments nor stray side goals behind.
-Side goals are stored in `State`, hence covered by the same checkpoint.
+so that a failed candidate leaves neither metavariable assignments nor stray side goals behind,
+while the trace node — headed by the lemma being tried — records why it was rejected. Rejection
+is reported as a trace *failure* (`❌️`) rather than an error (`💥️`): a candidate that does not
+fit is the routine outcome of trying it.
+
+Because the header names the lemma, the messages raised while applying it need not: they read
+`wrong predicate`, not `` `cfc_mul`: wrong predicate ``.
 
 ### 3.3 Side goals
 

@@ -17,10 +17,11 @@ public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Pos
 # Inspecting what `cfc_pull` is doing
 
 `set_option trace.Tactic.cfc_pull true` makes `cfc_pull` report its reasoning as a tree: one node
-per subexpression it recurses into, and inside each node the candidate lemmas retrieved from the
-`@[cfc_pull]` index, which of them were rejected and why, which hypotheses were filled from the
-shared predicate proof and which were deferred as side goals, which conversions were applied,
-and finally what became of each side goal.
+per subexpression it recurses into, listing the candidate lemmas retrieved from the `@[cfc_pull]`
+index, and under it a node per lemma tried — `❌️` for each one rejected, with the reason, and
+`✅️` for the one that applied. Everything that lemma led to sits inside its node: the recursions
+its holes triggered, the conversions it needed, and its hypotheses, marked as filled from the
+shared predicate proof or deferred as side goals. What became of each side goal comes last.
 
 This file is both a demonstration and a regression test for that output. `#cfc_pull_lemmas`, at
 the end, prints the lemma database itself.
@@ -38,16 +39,19 @@ variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {a : 
 /-! ### A successful pull
 
 The predicate for the mode is reported once, before the traversal starts. Each node says what it
-is pulling and into which mode; `✅️` marks the ones that succeeded. Here the recursion stops
+is pulling and into which mode, and the node inside it names the lemma that did the work; `✅️`
+marks the ones that succeeded. Here the recursion stops
 immediately, because `cfc_star_id` matches `star a` outright and needs no holes. -/
 
 /--
 trace: [Tactic.cfc_pull] predicate for cfc over ℂ is IsStarNormal
 [Tactic.cfc_pull] ✅️ pull star a into a cfc over ℂ
   [Tactic.cfc_pull] candidates: [cfc_star_id, cfc_star, cfcₙ_star_id, cfcₙ_star]
-  [Tactic.cfc_pull] `cfc_star_id`: filled `IsStarNormal a` from the shared predicate proof
+  [Tactic.cfc_pull] ✅️ cfc_star_id
+    [Tactic.cfc_pull] filled `IsStarNormal a` from the shared predicate proof
 [Tactic.cfc_pull] predicate for cfc over ℂ is IsStarNormal
 [Tactic.cfc_pull] ✅️ pull cfc (fun x ↦ star x) a into a cfc over ℂ
+  [Tactic.cfc_pull] ✅️ the calculus already applied at a
 [Tactic.cfc_pull] ✅️ closed `IsStarNormal a` with `assumption`
 -/
 #guard_msgs in
@@ -65,10 +69,13 @@ hole — hence the extra node for the recursion into `a`. -/
 trace: [Tactic.cfc_pull] predicate for cfc over ℂ is IsStarNormal
 [Tactic.cfc_pull] ✅️ pull star a into a cfc over ℂ
   [Tactic.cfc_pull] candidates: [cfc_star, cfcₙ_star_id, cfcₙ_star]
-  [Tactic.cfc_pull] ✅️ pull a into a cfc over ℂ
-    [Tactic.cfc_pull] `cfc_id'`: filled `IsStarNormal a` from the shared predicate proof
+  [Tactic.cfc_pull] ✅️ cfc_star
+    [Tactic.cfc_pull] ✅️ pull a into a cfc over ℂ
+      [Tactic.cfc_pull] ✅️ cfc_id'
+        [Tactic.cfc_pull] filled `IsStarNormal a` from the shared predicate proof
 [Tactic.cfc_pull] predicate for cfc over ℂ is IsStarNormal
 [Tactic.cfc_pull] ✅️ pull cfc (fun x ↦ star x) a into a cfc over ℂ
+  [Tactic.cfc_pull] ✅️ the calculus already applied at a
 [Tactic.cfc_pull] ✅️ closed `IsStarNormal a` with `assumption`
 -/
 #guard_msgs in
@@ -94,11 +101,13 @@ trace: [Tactic.cfc_pull] predicate for cfc over ℂ is IsStarNormal
        cfcₙ_const_mul,
        cfcₙ_smul_id,
        cfcₙ_smul]
-  [Tactic.cfc_pull] ❌️ `cfc_const_mul_id` does not match: `?r • a` ≠ `3 • a`
-  [Tactic.cfc_pull] ❌️ `cfc_const_mul` does not match: `?r • ?_` ≠ `3 • a`
-  [Tactic.cfc_pull] `cfc_smul_id`: filled `IsStarNormal a` from the shared predicate proof
+  [Tactic.cfc_pull] ❌️ cfc_const_mul_id: does not match: `?r • a` ≠ `3 • a`
+  [Tactic.cfc_pull] ❌️ cfc_const_mul: does not match: `?r • ?_` ≠ `3 • a`
+  [Tactic.cfc_pull] ✅️ cfc_smul_id
+    [Tactic.cfc_pull] filled `IsStarNormal a` from the shared predicate proof
 [Tactic.cfc_pull] predicate for cfc over ℂ is IsStarNormal
 [Tactic.cfc_pull] ✅️ pull cfc (fun x ↦ 3 • x) a into a cfc over ℂ
+  [Tactic.cfc_pull] ✅️ the calculus already applied at a
 [Tactic.cfc_pull] ✅️ closed `IsStarNormal a` with `assumption`
 -/
 -- `pp.mvars.anonymous false` so that the unnamed metavariable in the rejected pattern prints as
@@ -120,13 +129,17 @@ were deferred (they become side goals), and which were filled from the shared pr
 trace: [Tactic.cfc_pull] predicate for cfc over ℂ is IsStarNormal
 [Tactic.cfc_pull] ✅️ pull a⁺ into a cfc over ℂ
   [Tactic.cfc_pull] candidates: [CFC.posPart_def]
-  [Tactic.cfc_pull] predicate for cfcₙ over ℝ is IsSelfAdjoint
-  [Tactic.cfc_pull] `cfcₙ_eq_cfc`: deferred `ContinuousOn (fun x ↦ x⁺) (quasispectrum ℝ a)`
-  [Tactic.cfc_pull] `cfcₙ_eq_cfc`: deferred `0⁺ = 0`
-  [Tactic.cfc_pull] predicate for cfc over ℝ is IsSelfAdjoint
-  [Tactic.cfc_pull] `cfc_real_eq_complex`: filled `IsSelfAdjoint a` from the shared predicate proof
+  [Tactic.cfc_pull] ✅️ CFC.posPart_def
+    [Tactic.cfc_pull] predicate for cfcₙ over ℝ is IsSelfAdjoint
+    [Tactic.cfc_pull] ✅️ cfcₙ_eq_cfc
+      [Tactic.cfc_pull] deferred `ContinuousOn (fun x ↦ x⁺) (quasispectrum ℝ a)`
+      [Tactic.cfc_pull] deferred `0⁺ = 0`
+    [Tactic.cfc_pull] ✅️ cfc_real_eq_complex
+      [Tactic.cfc_pull] predicate for cfc over ℝ is IsSelfAdjoint
+      [Tactic.cfc_pull] filled `IsSelfAdjoint a` from the shared predicate proof
 [Tactic.cfc_pull] predicate for cfc over ℂ is IsStarNormal
 [Tactic.cfc_pull] ✅️ pull cfc (fun z ↦ ↑z.re⁺) a into a cfc over ℂ
+  [Tactic.cfc_pull] ✅️ the calculus already applied at a
 [Tactic.cfc_pull] ✅️ closed `ContinuousOn (fun x ↦ x⁺) (quasispectrum ℝ a)` with `cfc_cont_tac`
 [Tactic.cfc_pull] ✅️ closed `0⁺ = 0` with `cfc_zero_tac`
 [Tactic.cfc_pull] ✅️ closed `IsSelfAdjoint a` with `assumption`
@@ -146,14 +159,18 @@ what turns the leftover into a goal rather than an error. -/
 trace: [Tactic.cfc_pull] predicate for cfc over ℝ is IsSelfAdjoint
 [Tactic.cfc_pull] ✅️ pull CFC.log a * CFC.log a into a cfc over ℝ
   [Tactic.cfc_pull] candidates: [cfc_mul, cfcₙ_mul]
-  [Tactic.cfc_pull] ✅️ pull CFC.log a into a cfc over ℝ
-    [Tactic.cfc_pull] candidates: [CFC.log_def]
-  [Tactic.cfc_pull] ✅️ pull CFC.log a into a cfc over ℝ
-    [Tactic.cfc_pull] candidates: [CFC.log_def]
-  [Tactic.cfc_pull] `cfc_mul`: deferred `ContinuousOn Real.log (spectrum ℝ a)`
-  [Tactic.cfc_pull] `cfc_mul`: deferred `ContinuousOn Real.log (spectrum ℝ a)`
+  [Tactic.cfc_pull] ✅️ cfc_mul
+    [Tactic.cfc_pull] ✅️ pull CFC.log a into a cfc over ℝ
+      [Tactic.cfc_pull] candidates: [CFC.log_def]
+      [Tactic.cfc_pull] ✅️ CFC.log_def
+    [Tactic.cfc_pull] ✅️ pull CFC.log a into a cfc over ℝ
+      [Tactic.cfc_pull] candidates: [CFC.log_def]
+      [Tactic.cfc_pull] ✅️ CFC.log_def
+    [Tactic.cfc_pull] deferred `ContinuousOn Real.log (spectrum ℝ a)`
+    [Tactic.cfc_pull] deferred `ContinuousOn Real.log (spectrum ℝ a)`
 [Tactic.cfc_pull] predicate for cfc over ℝ is IsSelfAdjoint
 [Tactic.cfc_pull] ✅️ pull cfc (fun x ↦ Real.log x * Real.log x) a into a cfc over ℝ
+  [Tactic.cfc_pull] ✅️ the calculus already applied at a
 [Tactic.cfc_pull] ❌️ could not close `ContinuousOn Real.log (spectrum ℝ a)`
 [Tactic.cfc_pull] side goal `ContinuousOn Real.log (spectrum ℝ a)` is a duplicate
 -/
@@ -176,14 +193,18 @@ below ends in a `is a duplicate` line rather than a second `unattempted` one. -/
 trace: [Tactic.cfc_pull] predicate for cfc over ℝ is IsSelfAdjoint
 [Tactic.cfc_pull] ✅️ pull CFC.log a * CFC.log a into a cfc over ℝ
   [Tactic.cfc_pull] candidates: [cfc_mul, cfcₙ_mul]
-  [Tactic.cfc_pull] ✅️ pull CFC.log a into a cfc over ℝ
-    [Tactic.cfc_pull] candidates: [CFC.log_def]
-  [Tactic.cfc_pull] ✅️ pull CFC.log a into a cfc over ℝ
-    [Tactic.cfc_pull] candidates: [CFC.log_def]
-  [Tactic.cfc_pull] `cfc_mul`: deferred `ContinuousOn Real.log (spectrum ℝ a)`
-  [Tactic.cfc_pull] `cfc_mul`: deferred `ContinuousOn Real.log (spectrum ℝ a)`
+  [Tactic.cfc_pull] ✅️ cfc_mul
+    [Tactic.cfc_pull] ✅️ pull CFC.log a into a cfc over ℝ
+      [Tactic.cfc_pull] candidates: [CFC.log_def]
+      [Tactic.cfc_pull] ✅️ CFC.log_def
+    [Tactic.cfc_pull] ✅️ pull CFC.log a into a cfc over ℝ
+      [Tactic.cfc_pull] candidates: [CFC.log_def]
+      [Tactic.cfc_pull] ✅️ CFC.log_def
+    [Tactic.cfc_pull] deferred `ContinuousOn Real.log (spectrum ℝ a)`
+    [Tactic.cfc_pull] deferred `ContinuousOn Real.log (spectrum ℝ a)`
 [Tactic.cfc_pull] predicate for cfc over ℝ is IsSelfAdjoint
 [Tactic.cfc_pull] ✅️ pull cfc (fun x ↦ Real.log x * Real.log x) a into a cfc over ℝ
+  [Tactic.cfc_pull] ✅️ the calculus already applied at a
 [Tactic.cfc_pull] deferring `ContinuousOn Real.log (spectrum ℝ a)` unattempted (`+deferAll`)
 [Tactic.cfc_pull] side goal `ContinuousOn Real.log (spectrum ℝ a)` is a duplicate
 -/

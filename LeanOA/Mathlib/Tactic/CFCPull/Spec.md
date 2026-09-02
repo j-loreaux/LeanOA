@@ -639,10 +639,11 @@ The tactic fails with a descriptive error when
   it got stuck on and its head symbol.
 
 `set_option trace.Tactic.cfc_pull true` reports, in a nested tree: the mode chosen and the
-predicate found; for each subexpression, the candidate lemmas retrieved from the index, which
-were rejected and why (ring mismatch, instance synthesis failure, pattern mismatch, recursive
-failure); which hypotheses were filled from the cache and which became side goals; and the
-conversions applied.
+predicate found; for each subexpression, the candidate lemmas retrieved from the index, and then
+a node per lemma tried, saying why it was rejected (ring mismatch, instance synthesis failure,
+pattern mismatch, recursive failure) or, for the one that applied, holding everything it led to
+— the recursions into its holes, the conversions applied, and its hypotheses, marked as filled
+from the cache or deferred as side goals.
 
 ## 11. Deliberate non-goals and future work
 

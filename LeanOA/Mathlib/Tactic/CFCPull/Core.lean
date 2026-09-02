@@ -119,17 +119,56 @@ instance : ExceptToTraceResult Exception Result where
 
 /-! ### Small utilities -/
 
-/-- Run `x`, reverting metavariable context and `PullM` state upon failure. -/
-def observing? {α : Type} (x : PullM α) : PullM (Option α) := do
-  let mctx ← getMCtx
-  let s ← get
-  try
-    return some (← x)
-  catch ex =>
-    setMCtx mctx
-    set s
-    trace[Tactic.cfc_pull] "{crossEmoji} {ex.toMessageData}"
-    return none
+/-- Everything a failed candidate must not leave behind: the `MetaM` state, and the side goals
+and predicate cache the attempt accumulated. -/
+structure SavedState where
+  /-- The ambient `MetaM` state. -/
+  metaState : Meta.SavedState
+  /-- The state of the `cfc_pull` run. -/
+  pullState : State
+
+instance : MonadBacktrack SavedState PullM where
+  saveState := return { metaState := ← Meta.saveState, pullState := ← get }
+  restoreState s := do s.metaState.restore; set s.pullState
+
+/-- The outcome of one attempt: what it produced, or why it did not apply. -/
+abbrev Attempt := Except MessageData Result
+
+/-- A candidate that does not apply is the routine outcome of trying it, not an exception
+escaping, so it reads as a trace failure (`❌️`) rather than as an error (`💥️`). -/
+instance : ExceptToTraceResult Exception Attempt where
+  toTraceResult
+    | .error _ => .error
+    | .ok (.error _) => .failure
+    | .ok (.ok _) => .success
+
+/-- Run `x` under a trace node headed by `header`, which on failure also reports why. Every
+message raised inside is read against that header, so none of them needs to repeat what is being
+tried.
+
+This is the form for a step the tactic has committed to, where failure is a real error (`💥️`)
+rather than a candidate declining to apply; `attempt?` is the backtracking form. -/
+def withAttempt (header : MessageData) (x : PullM Result) : PullM Result :=
+  withTraceNode `Tactic.cfc_pull
+    (fun
+      | .error ex => return m!"{header}: {ex.toMessageData}"
+      | .ok _ => return header) x
+
+/-- `withAttempt`, reverting the metavariable context and the state of the run when the attempt
+fails, so that the next candidate starts from a clean slate. -/
+def attempt? (header : MessageData) (x : PullM Result) : PullM (Option Result) := do
+  let attempt ← withTraceNode `Tactic.cfc_pull
+    (fun (r : Except Exception Attempt) => return match r with
+      | .ok (.error reason) => m!"{header}: {reason}"
+      | .error ex => m!"{header}: {ex.toMessageData}"
+      | .ok (.ok _) => header) do
+    let s ← saveState
+    try
+      return .ok (← x)
+    catch ex =>
+      restoreState s
+      return .error ex.toMessageData
+  return attempt.toOption
 
 /-- Strip an `autoParam` wrapper, so that a deferred goal displays as the user expects. -/
 def stripAutoParam (e : Expr) : Expr :=
@@ -192,16 +231,13 @@ def getPredicateProof (mode : Mode) : PullM Expr := do
 unassigned. Failure here is the mechanism by which lemmas are restricted to the rings and
 algebras they apply to, so failures must propagate: hence `allowSynthFailures := false`. -/
 def synthesizeInstances (declName : Name) (mvars : Array Expr) (bis : Array BinderInfo) :
-    MetaM Unit := do
-  try
-    synthAppInstances declName default mvars bis false false
-  catch ex =>
-    throwError "`{ppConst declName}` does not apply here: {ex.toMessageData}"
+    MetaM Unit :=
+  synthAppInstances declName default mvars bis false false
 
 /-- Deal with the hypotheses of an instantiated lemma: those that are the predicate `p a` at
 `mode` are filled with the shared proof, the rest become side goals. -/
-def collectHypotheses (declName : Name) (mvars : Array Expr) (bis : Array BinderInfo)
-    (mode : Mode) : PullM Unit := do
+def collectHypotheses (mvars : Array Expr) (bis : Array BinderInfo) (mode : Mode) :
+    PullM Unit := do
   let ctx ← read
   for (mvar, bi) in mvars.zip bis do
     let mvarId := mvar.mvarId!
@@ -209,16 +245,14 @@ def collectHypotheses (declName : Name) (mvars : Array Expr) (bis : Array Binder
     if bi.isInstImplicit then continue
     let type := stripAutoParam (← instantiateMVars (← mvarId.getType))
     unless ← isProp type do
-      throwError "`{ppConst declName}` does not apply here: the argument of type \
-        `{type}` could not be determined"
+      throwError "the argument of type `{type}` could not be determined"
     let pred ← getPredicate mode
     if ← withReducible <| isDefEq type (mkApp pred ctx.elem) then
       mvarId.assign (← getPredicateProof mode)
-      trace[Tactic.cfc_pull]
-        "`{ppConst declName}`: filled `{type}` from the shared predicate proof"
+      trace[Tactic.cfc_pull] "filled `{type}` from the shared predicate proof"
     else
       mvarId.assign (← newSideGoal type (.ofType type))
-      trace[Tactic.cfc_pull] "`{ppConst declName}`: deferred `{type}`"
+      trace[Tactic.cfc_pull] "deferred `{type}`"
 
 /-! ### The scalar conversion graph -/
 
@@ -259,21 +293,21 @@ def rewriteWithCFCLemma (declName : Name) (srcOnLhs : Bool) (e : Expr) (mode : M
   let (mvars, bis, lhs, rhs, proof) ← instantiateLemma declName
   let (srcSide, tgtSide) := if srcOnLhs then (lhs, rhs) else (rhs, lhs)
   let some cs := CFCApp.match? srcSide |
-    throwError "`{ppConst declName}` is not a `cfc`-to-`cfc` lemma"
+    throwError "not a `cfc`-to-`cfc` lemma"
   unless ← withReducible <| isDefEq cs.alg ctx.alg do
-    throwError "`{ppConst declName}`: wrong algebra"
+    throwError "wrong algebra"
   unless ← withReducible <| isDefEq cs.pred (← getPredicate mode) do
-    throwError "`{ppConst declName}`: wrong predicate"
+    throwError "wrong predicate"
   unless ← withReducible <| isDefEq srcSide e do
-    throwError "`{ppConst declName}` does not match `{e}`"
+    throwError "does not match `{e}`"
   synthesizeInstances declName mvars bis
   let tgtSide ← instantiateMVars tgtSide
   let some ct := CFCApp.match? tgtSide |
-    throwError "`{ppConst declName}` is not a `cfc`-to-`cfc` lemma"
+    throwError "not a `cfc`-to-`cfc` lemma"
   let newApp := ct.withFn (← Core.betaReduce ct.fn)
   let step ← if srcOnLhs then pure proof else mkEqSymm proof
   let step ← mkExpectedTypeHint step (← mkEq e newApp.toExpr)
-  collectHypotheses declName mvars bis mode
+  collectHypotheses mvars bis mode
   return (newApp, step)
 
 /-- Apply a transition lemma (a `Scalar` or `Unital` lemma) to a result. -/
@@ -291,7 +325,7 @@ def convert (res : Result) (want : Mode) : PullM Result := do
       unless ← l.ring.matchesRing res.app.ring do continue
       -- to reach the unital calculus we start from the non-unital side, and conversely
       let srcOnLhs := if want.unital then l.nonUnitalOnLhs else !l.nonUnitalOnLhs
-      if let some r ← observing? (applyTransition l.declName srcOnLhs res) then
+      if let some r ← attempt? (ppConst l.declName) (applyTransition l.declName srcOnLhs res) then
         res := r; done := true; break
     unless done do
       throwError "`cfc_pull` could not convert {res.app.toMode} into {want}"
@@ -299,7 +333,7 @@ def convert (res : Result) (want : Mode) : PullM Result := do
     let some path ← scalarPath (.ofExpr res.app.ring) (.ofExpr want.ring) want.unital
       | throwError "`cfc_pull` has no way to convert a {res.app.toMode} into a {want}"
     for l in path do
-      res ← applyTransition l.declName true res
+      res ← withAttempt (ppConst l.declName) (applyTransition l.declName true res)
     unless ← withReducible <| isDefEq res.app.ring want.ring do
       throwError "`cfc_pull` converted to {res.app.toMode}, but {want} was requested"
   return res
@@ -316,35 +350,35 @@ def applyPullLemma (l : PullLemma) (e : Expr) (want : Mode)
   let ctx ← read
   let (mvars, bis, lhs, rhs, proof) ← instantiateLemma l.declName
   let (cfcSide, algSide) := if l.cfcOnLhs then (lhs, rhs) else (rhs, lhs)
-  let some c := CFCApp.match? cfcSide | throwError "`{ppConst l.declName}` is not a pull lemma"
+  let some c := CFCApp.match? cfcSide | throwError "not a pull lemma"
   unless ← withReducible <| isDefEq c.alg ctx.alg do
-    throwError "`{ppConst l.declName}`: wrong algebra"
+    throwError "wrong algebra"
   if l.ring == .any then
     unless ← withReducible <| isDefEq c.ring want.ring do
-      throwError "`{ppConst l.declName}`: wrong scalar ring"
+      throwError "wrong scalar ring"
   let mode : Mode := { c.toMode with ring := ← instantiateMVars c.ring }
   unless ← withReducible <| isDefEq c.pred (← getPredicate mode) do
-    throwError "`{ppConst l.declName}`: wrong predicate"
+    throwError "wrong predicate"
   unless ← withReducible <| isDefEq c.elem ctx.elem do
-    throwError "`{ppConst l.declName}`: wrong element"
+    throwError "wrong element"
   -- Replace the holes by fresh metavariables and match.  `pat` is kept unassigned so that the
   -- holes can be abstracted again below, after unification has filled in everything else.
   let (pat, holes, phs) ←
     abstractHoles (isHoleFor c (fun e => return e.isMVar && !(← e.mvarId!.isAssigned)))
       (mkFreshExprMVar ctx.alg) algSide
   unless ← withReducible <| isDefEq pat e do
-    throwError "`{ppConst l.declName}` does not match: `{pat}` ≠ `{e}`"
+    throwError "does not match: `{pat}` ≠ `{e}`"
   -- Recurse on the subterms the holes matched.
   let mut results := #[]
   for h in phs do
     let sub ← instantiateMVars h
     if sub.isMVar then
-      throwError "`{ppConst l.declName}`: the hole `{h}` was not determined by matching"
+      throwError "the hole `{h}` was not determined by matching"
     results := results.push (← rec sub mode)
   for (hole, res) in holes.zip results do
     let some hc := CFCApp.match? hole | throwError "internal error: bad hole"
     unless ← withReducible <| isDefEq hc.fn res.app.fn do
-      throwError "`{ppConst l.declName}`: could not use the function found for `{hole}`"
+      throwError "could not use the function found for `{hole}`"
   synthesizeInstances l.declName mvars bis
   -- Assemble the proof.  `e = ⟨algebraic side⟩` by congruence, then the lemma itself.
   let algSide' ← instantiateMVars algSide
@@ -363,7 +397,7 @@ def applyPullLemma (l : PullLemma) (e : Expr) (want : Mode)
   let lemProof ← if l.cfcOnLhs then mkEqSymm proof else pure proof
   let total ← mkEqTrans hcongr lemProof
   let total ← mkExpectedTypeHint total (← mkEq e newApp.toExpr)
-  collectHypotheses l.declName mvars bis mode
+  collectHypotheses mvars bis mode
   return { app := newApp, proof := total }
 
 /-- Apply a hole-free `Pull` lemma *without* insisting that its element be the one we are pulling
@@ -377,29 +411,28 @@ unknown element. -/
 def applyLooseLemma (l : PullLemma) (e : Expr) (want : Mode) : PullM (Expr × Expr) := do
   let ctx ← read
   if l.numHoles != 0 then
-    throwError "`{ppConst l.declName}` has holes, so it cannot be applied at an unknown \
-      element"
+    throwError "it has holes, so it cannot be applied at an unknown element"
   let (mvars, bis, lhs, rhs, proof) ← instantiateLemma l.declName
   let (cfcSide, algSide) := if l.cfcOnLhs then (lhs, rhs) else (rhs, lhs)
-  let some c := CFCApp.match? cfcSide | throwError "`{ppConst l.declName}` is not a pull lemma"
+  let some c := CFCApp.match? cfcSide | throwError "not a pull lemma"
   unless ← withReducible <| isDefEq c.alg ctx.alg do
-    throwError "`{ppConst l.declName}`: wrong algebra"
+    throwError "wrong algebra"
   if l.ring == .any then
     unless ← withReducible <| isDefEq c.ring want.ring do
-      throwError "`{ppConst l.declName}`: wrong scalar ring"
+      throwError "wrong scalar ring"
   let mode : Mode := { c.toMode with ring := ← instantiateMVars c.ring }
   unless ← withReducible <| isDefEq c.pred (← getPredicate mode) do
-    throwError "`{ppConst l.declName}`: wrong predicate"
+    throwError "wrong predicate"
   unless ← withReducible <| isDefEq algSide e do
-    throwError "`{ppConst l.declName}` does not match `{e}`"
+    throwError "does not match `{e}`"
   synthesizeInstances l.declName mvars bis
   let cfcSide ← instantiateMVars cfcSide
   let some cc := CFCApp.match? cfcSide | throwError "internal error: lost the `cfc` side"
   let newE := (cc.withFn (← Core.betaReduce cc.fn)).toExpr
-  if newE == e then throwError "`{ppConst l.declName}` made no progress"
+  if newE == e then throwError "made no progress"
   let step ← if l.cfcOnLhs then mkEqSymm proof else pure proof
   let step ← mkExpectedTypeHint step (← mkEq e newE)
-  collectHypotheses l.declName mvars bis mode
+  collectHypotheses mvars bis mode
   return (newE, step)
 
 /-- Convert an `IdLemma` into the `PullLemma` that `applyPullLemma` expects; an identity lemma is
@@ -480,24 +513,25 @@ partial def pull (e : Expr) (want : Mode) : PullM Result := withIncRecDepth do
     -- 1. the element itself
     if ← withReducible <| isDefEq e ctx.elem then
       for l in ctx.lemmas.id do
-        let r ← observing? do
+        let r ← attempt? (ppConst l.declName) do
           convert (← applyPullLemma l.toPullLemma e want pull) want
         if let some r := r then return r
     -- 2. an application of the calculus
     if let some c := CFCApp.match? e then
-      let r ← observing? do convert (← pullExisting c want) want
+      let r ← attempt? m!"the calculus already applied at {c.elem}" do
+        convert (← pullExisting c want) want
       if let some r := r then return r
     -- 3. tagged pull lemmas
     let candidates ← pullCandidates e want
     -- the expression is already in the enclosing trace node's message
     trace[Tactic.cfc_pull] "candidates: {candidates.map (ppConst ·.declName)}"
     for l in candidates do
-      let r ← observing? do convert (← applyPullLemma l e want pull) want
+      let r ← attempt? (ppConst l.declName) do convert (← applyPullLemma l e want pull) want
       if let some r := r then return r
     -- 3b. tagged pull lemmas applied at some *other* element, followed by a composition
     for l in candidates do
       if l.numHoles != 0 then continue
-      let r ← observing? do
+      let r ← attempt? (ppConst l.declName) do
         let (newE, step) ← applyLooseLemma l e want
         let res ← pull newE want
         return { res with proof := ← mkEqTrans step res.proof }
@@ -543,7 +577,7 @@ partial def pullExisting (c : CFCApp) (want : Mode) : PullM Result := do
     for l in ctx.lemmas.unital do
       unless ← l.ring.matchesRing c.ring do continue
       let srcOnLhs := if want.unital then l.nonUnitalOnLhs else !l.nonUnitalOnLhs
-      let r ← observing? do
+      let r ← attempt? (ppConst l.declName) do
         let (newApp, step) ← rewriteWithCFCLemma l.declName srcOnLhs e mode
         let res ← pull newApp.toExpr want
         return { res with proof := ← mkEqTrans step res.proof }
@@ -554,7 +588,7 @@ partial def pullExisting (c : CFCApp) (want : Mode) : PullM Result := do
     unless l.unital == c.unital do continue
     unless ← l.ring.matchesRing c.ring do continue
     unless some l.innerHead == innerHead do continue
-    let r ← observing? do
+    let r ← attempt? (ppConst l.declName) do
       let (newApp, step) ← rewriteWithCFCLemma l.declName l.srcOnLhs e mode
       let res ← pull newApp.toExpr want
       return { res with proof := ← mkEqTrans step res.proof }
