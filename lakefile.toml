@@ -27,7 +27,7 @@ linter.style.header = false
 [[require]]
 name = "VersoBlueprint"
 git = "https://github.com/leanprover/verso-blueprint.git"
-rev = "v4.32.0"
+rev = "v4.34.0"
 
 [[require]]
 name = "mathlib"
