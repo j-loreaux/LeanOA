@@ -3,7 +3,7 @@ module
 public import Mathlib.Topology.Algebra.NonUnitalStarAlgebra
 public import Mathlib.Topology.Algebra.StarSubalgebra
 public import Mathlib.Algebra.Algebra.Spectrum.Quasispectrum
-public import Mathlib.Data.Complex.Basic
+public import Mathlib.Basic.Complex.Basic
 
 @[expose] public section
 

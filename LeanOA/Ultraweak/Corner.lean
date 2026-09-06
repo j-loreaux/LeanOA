@@ -92,5 +92,5 @@ lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarP
       have e_mul_e : (ofUltraweak e * · * ofUltraweak e) =
           LinearMap.mulLeftRight ℂ ⟨ofUltraweak e, ofUltraweak e⟩ := by ext; simp
       rw [← he'.mem_image_mul_mul_nonneg_inter_unitClosedBall_iff, e_mul_e,
-        setOf_isSelfAdjoint_inter_closedBall_eq, Set.image_sub]
+        setOfPred_isSelfAdjoint_inter_closedBall_eq, Set.image_sub]
     _ = _ := by rw [← Set.image2_sub, ← Set.image_uncurry_prod]; rfl

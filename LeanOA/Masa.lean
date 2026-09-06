@@ -18,82 +18,6 @@ lemma setLike_mul_comm_star {S A : Type*}
     a * star b = star b * a :=
   setLike_mul_comm ha (star_mem hb)
 
-@[to_additive]
-instance Subsemigroup.instIsMulCommutativeTopologicalClosure {A : Type*}
-    [TopologicalSpace A] [Semigroup A] [ContinuousMul A] [T2Space A]
-    (s : Subsemigroup A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure :=
-  let := s.commSemigroupTopologicalClosure mul_comm'
-  ⟨⟨mul_comm⟩⟩
-
-@[to_additive]
-instance Submonoid.instIsMulCommutativeTopologicalClosure {A : Type*}
-    [TopologicalSpace A] [Monoid A] [ContinuousMul A] [T2Space A]
-    (s : Submonoid A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure :=
-  let := s.commMonoidTopologicalClosure mul_comm'
-  ⟨⟨mul_comm⟩⟩
-
-instance NonUnitalSubsemiring.instIsMulCommutativeTopologicalClosure {A : Type*}
-    [TopologicalSpace A] [NonUnitalSemiring A] [IsTopologicalSemiring A] [T2Space A]
-    (s : NonUnitalSubsemiring A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure :=
-  let := s.nonUnitalCommSemiringTopologicalClosure mul_comm'
-  ⟨⟨mul_comm⟩⟩
-
-instance Subsemiring.instIsMulCommutativeTopologicalClosure {A : Type*}
-    [TopologicalSpace A] [Semiring A] [IsTopologicalSemiring A] [T2Space A]
-    (s : Subsemiring A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure :=
-  let := s.commSemiringTopologicalClosure mul_comm'
-  ⟨⟨mul_comm⟩⟩
-
-instance NonUnitalSubring.instIsMulCommutativeTopologicalClosure {A : Type*}
-    [TopologicalSpace A] [NonUnitalRing A] [IsTopologicalRing A] [T2Space A]
-    (s : NonUnitalSubring A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure :=
-  let := s.nonUnitalCommRingTopologicalClosure mul_comm'
-  ⟨⟨mul_comm⟩⟩
-
-instance Subring.instIsMulCommutativeTopologicalClosure {A : Type*}
-    [TopologicalSpace A] [Ring A] [IsTopologicalRing A] [T2Space A]
-    (s : Subring A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure :=
-  let := s.commRingTopologicalClosure mul_comm'
-  ⟨⟨mul_comm⟩⟩
-
-instance NonUnitalStarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
-    [CommSemiring R] [TopologicalSpace A] [Star A] [NonUnitalSemiring A] [Module R A]
-    [IsTopologicalSemiring A] [ContinuousStar A] [ContinuousConstSMul R A] [T2Space A]
-    (s : NonUnitalStarSubalgebra R A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure :=
-  let := s.nonUnitalCommSemiringTopologicalClosure mul_comm'
-  ⟨⟨mul_comm⟩⟩
-
-instance NonUnitalSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
-    [CommSemiring R] [TopologicalSpace A] [NonUnitalSemiring A] [Module R A]
-    [IsTopologicalSemiring A] [ContinuousConstSMul R A] [T2Space A]
-    (s : NonUnitalSubalgebra R A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure :=
-  let := s.nonUnitalCommSemiringTopologicalClosure mul_comm'
-  ⟨⟨mul_comm⟩⟩
-
-instance Subalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
-    [CommSemiring R] [TopologicalSpace A] [Semiring A] [Algebra R A]
-    [IsTopologicalSemiring A] [T2Space A]
-    (s : Subalgebra R A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure :=
-  let := s.commSemiringTopologicalClosure mul_comm'
-  ⟨⟨mul_comm⟩⟩
-
-instance StarSubalgebra.instIsMulCommutativeTopologicalClosure {R A : Type*}
-    [CommSemiring R] [StarRing R] [TopologicalSpace A] [Semiring A] [StarRing A] [Algebra R A]
-    [StarModule R A] [IsTopologicalSemiring A] [ContinuousStar A]
-    [T2Space A] (s : StarSubalgebra R A) [hs : IsMulCommutative s] :
-    IsMulCommutative s.topologicalClosure :=
-  let := s.commSemiringTopologicalClosure mul_comm'
-  ⟨⟨mul_comm⟩⟩
-
 namespace IsMulCommutative
 
 variable {R : Type*}
@@ -120,14 +44,6 @@ scoped instance (priority := 50) instNonUnitalNormedCommRing [NonUnitalNormedRin
 /-- A normed ring with commutative multiplication is a commutative normed ring. -/
 scoped instance (priority := 50) instNormedCommRing [NormedRing R] [IsMulCommutative R] :
     NormedCommRing R where
-
-/-- A nonunital C⋆-algebra with commutative multiplication is a commutative nonunital C⋆-algebra. -/
-scoped instance (priority := 50) instNonUnitalCommCStarAlgebra [NonUnitalCStarAlgebra R]
-    [IsMulCommutative R] : NonUnitalCommCStarAlgebra R where
-
-/-- A C⋆-algebra with commutative multiplication is a commutative C⋆-algebra. -/
-scoped instance (priority := 50) instCommCStarAlgebra [CStarAlgebra R] [IsMulCommutative R] :
-    CommCStarAlgebra R where
 
 end IsMulCommutative
 

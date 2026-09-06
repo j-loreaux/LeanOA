@@ -212,13 +212,13 @@ noncomputable instance : NormedSpace ℂ ℓ²(A, E) := .ofCore <| normedSpaceCo
 lemma norm_apply_le (x : ℓ²(A, E)) (i : ι) : ‖x i‖ ≤ ‖x‖ := by
   refine Real.le_sqrt_of_sq_le ?_
   rw [norm_sq_eq A]
-  exact CStarAlgebra.norm_le_norm_of_nonneg_of_le inner_self_nonneg (inner_apply_self_le_inner x i)
+  exact CStarAlgebra.norm_le_norm_of_le_of_nonneg (inner_apply_self_le_inner x i) inner_self_nonneg
 
 lemma norm_sum_inner_apply_le (x : ℓ²(A, E)) (s : Finset ι) :
     ‖∑ i ∈ s, ⟪x i, x i⟫_A‖ ≤ ‖x‖ ^ 2 := by
   rw [norm_def, Real.sq_sqrt (by positivity)]
-  exact CStarAlgebra.norm_le_norm_of_nonneg_of_le (s.sum_nonneg fun _ _ ↦ inner_self_nonneg)
-    (sum_inner_apply_self_le_inner x s)
+  exact CStarAlgebra.norm_le_norm_of_le_of_nonneg (sum_inner_apply_self_le_inner x s)
+    (s.sum_nonneg fun _ _ ↦ inner_self_nonneg)
 
 /-- The coercion from `ℓ²(A, E)` to `Π i, E i` is uniformly continuous. -/
 theorem uniformContinuous_coe :
