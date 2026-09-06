@@ -20,12 +20,10 @@ section NonUnital
 variable [NonUnitalCStarAlgebra M] [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
 
 instance : NonUnitalContinuousFunctionalCalculus ℂ σ(M, P) IsStarNormal :=
-  NonUnitalContinuousFunctionCalculus.transfer
-    (starAlgEquiv M P).symm continuous_toUltraweak (fun _ ↦ Iff.rfl)
+  .transfer (starAlgEquiv M P).symm continuous_toUltraweak (fun _ ↦ Iff.rfl)
 
 instance : NonUnitalContinuousFunctionalCalculus ℝ σ(M, P) IsSelfAdjoint :=
-  NonUnitalContinuousFunctionCalculus.transfer
-    ((starAlgEquiv M P).symm.restrictScalars ℝ) continuous_toUltraweak (fun _ ↦ Iff.rfl)
+  .transfer ((starAlgEquiv M P).symm.restrictScalars ℝ) continuous_toUltraweak (fun _ ↦ Iff.rfl)
 
 @[simp]
 lemma toUltraweak_cfcₙ_complex (f : ℂ → ℂ) (m : M) :
@@ -52,8 +50,7 @@ lemma ofUltraweak_cfcₙ_real (f : ℝ → ℝ) (m : σ(M, P)) :
 variable [PartialOrder M] [StarOrderedRing M]
 
 instance : NonUnitalContinuousFunctionalCalculus ℝ≥0 σ(M, P) (0 ≤ ·) :=
-  NonUnitalContinuousFunctionCalculus.transfer
-    ((starAlgEquiv M P).symm.restrictScalars ℝ≥0) continuous_toUltraweak (fun _ ↦ Iff.rfl)
+  .transfer ((starAlgEquiv M P).symm.restrictScalars ℝ≥0) continuous_toUltraweak (fun _ ↦ Iff.rfl)
 
 /- The lemmas `{to,of}Ultraweak_cfcₙ_nnreal` require a `ContinuousMapZero.UniqueHom ℝ≥0 σ(M, P)`
 instace, which requires that `σ(M, P)` is a topological algebra. So, we cannot establish those
