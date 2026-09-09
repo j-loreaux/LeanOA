@@ -69,7 +69,7 @@ example (ha : p a) (hf : ContinuousOn f (spectrum R a)) (hg : ContinuousOn g (sp
   cfc_pull R a
 
 example (ha : p a) :
-    a ^ 2 + 3 • a * cfc (id : R → R) a = cfc (fun x : R ↦ x ^ 2 + 3 • x * x) a := by
+    a ^ 2 + 3 • a * cfc (id : R → R) a = cfc (fun x : R ↦ x ^ 2 + 3 • x * id x) a := by
   cfc_pull R a
 
 /- Composition: the calculus is applied to `a ^ 2` rather than to `a`, which `cfc_comp_pow`
@@ -129,7 +129,7 @@ example (ha : p a) (hf : ContinuousOn f (quasispectrum R a)) (hf0 : f 0 = 0)
   cfc_pull R a
 
 example (ha : p a) :
-    a * a + 3 • a * cfcₙ (id : R → R) a = cfcₙ (fun x : R ↦ x * x + 3 • x * x) a := by
+    a * a + 3 • a * cfcₙ (id : R → R) a = cfcₙ (fun x : R ↦ x * x + 3 • x * id x) a := by
   cfc_pull R a
 
 /- Note that `cfc_pull` produces `f (x * x)`, not `f (x ^ 2)`: it follows the shape of the term
@@ -155,7 +155,7 @@ open Complex
 open scoped NNReal
 
 example (ha : IsStarNormal a) :
-    NormedSpace.exp (I • a) = cfc (fun x ↦ Complex.exp (I • x)) a := by
+    NormedSpace.exp (I • a) = cfc (fun x ↦ Complex.exp (I * x)) a := by
   cfc_pull ℂ a
 
 example (ha : IsSelfAdjoint a) :
@@ -220,7 +220,7 @@ example (ha : IsSelfAdjoint a) :
 
 example (ha : IsStarNormal a) (z : ℂ) :
     NormedSpace.exp (z • a) = cfc (fun w : ℂ ↦ Complex.exp (z * w)) a := by
-  cfc_pull ℂ a
+  cfc_pull [cfc_comp_smul] ℂ a
 
 /- `CFC.log` composed with `NormedSpace.exp`, pulled (not simplified away) into a single `cfc`. -/
 example (ha : IsSelfAdjoint a) :
@@ -826,10 +826,11 @@ example (f g : ℝ≥0 → ℝ≥0) (ha : 0 ≤ a) (hfg : ∀ x ∈ spectrum ℝ
     cfc f a - cfc g a = cfc (fun x ↦ f x - g x) a := by
   cfc_pull ℝ≥0 a
 
-/- With a concrete `f` and `g` the extra hypothesis is closed automatically. -/
+/- With a concrete `f` and `g` the extra hypothesis is provable, but nothing in the calculus API
+is run on a `cfc_pull.side` goal, so it takes a discharger. -/
 example (ha : 0 ≤ a) :
     cfc (fun x : ℝ≥0 ↦ x + 1) a - a = cfc (fun x : ℝ≥0 ↦ x + 1 - x) a := by
-  cfc_pull ℝ≥0 a
+  cfc_pull (disch := simp) ℝ≥0 a
 
 /- Over `ℝ` the ordinary `cfc_sub` is preferred, so no such hypothesis appears at all. -/
 example (f g : ℝ → ℝ) (hf : ContinuousOn f (spectrum ℝ a))

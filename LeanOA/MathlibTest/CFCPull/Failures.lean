@@ -77,11 +77,20 @@ example (ha : IsStarNormal a) : star b * b = star b * b := by
   cfc_pull ℂ a
 
 /- Not every failure is a failure to rewrite. Reaching `ℝ≥0` from `ℝ` is a scalar conversion
-with a side condition of its own — `cfc_real_eq_nnreal` asks for `0 ≤ a` — so a pull towards
-`ℝ≥0` of an element that is only known to be selfadjoint gets all the way there and then fails
-on the condition. -/
+with side conditions of its own — `cfc_real_eq_nnreal` asks that the function be nonnegative on
+the spectrum, and that `0 ≤ a` — so a pull towards `ℝ≥0` of an element that is only known to be
+selfadjoint gets all the way there and then fails on those. -/
 /--
-error: `cfc_pull` rewrote the goal but could not discharge 1 side goal:
+error: `cfc_pull` rewrote the goal but could not discharge 2 side goals:
+  case cfc_pull.side
+  A : Type u_1
+  inst✝² : CStarAlgebra A
+  inst✝¹ : PartialOrder A
+  inst✝ : StarOrderedRing A
+  a b : A
+  ha : IsSelfAdjoint a
+  ⊢ ∀ x ∈ spectrum ℝ a, 0 ≤ x⁺
+
   case cfc_pull.predicate
   A : Type u_1
   inst✝² : CStarAlgebra A
@@ -92,7 +101,7 @@ error: `cfc_pull` rewrote the goal but could not discharge 1 side goal:
   ⊢ 0 ≤ a
 Use `cfc_pull +defer ..` to have them added to the goal list instead.
 -/
-#guard_msgs in
+#guard_msgs (whitespace := lax) in
 example (ha : IsSelfAdjoint a) : a⁺ = a⁺ := by
   cfc_pull ℝ≥0 a
 

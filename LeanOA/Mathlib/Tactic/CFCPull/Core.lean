@@ -245,7 +245,15 @@ def collectHypotheses (mvars : Array Expr) (bis : Array BinderInfo) (mode : Mode
       mvarId.assign (← getPredicateProof mode)
       trace[Tactic.cfc_pull] "filled `{type}` from the shared predicate proof"
     else
-      mvarId.assign (← newSideGoal type (.ofType type))
+      /- `p b` for an element `b` other than `a` — the inner element of a composition, say — is a
+      predicate goal too, but `SideGoalKind.ofType` sees only the statement and so cannot
+      recognize one whose predicate is a variable.  The outer metavariables are frozen: this is a
+      test, and only `b` is allowed to be determined by it. -/
+      let kind ← withNewMCtxDepth do
+        let b ← mkFreshExprMVar ctx.alg
+        if ← withReducible <| isDefEq type (mkApp pred b) then pure .predicate
+        else pure (.ofType type)
+      mvarId.assign (← newSideGoal type kind)
       trace[Tactic.cfc_pull] "deferred `{type}`"
 
 /-! ### The scalar conversion graph -/

@@ -229,7 +229,9 @@ def Lemmas.addEntry (s : Lemmas) : Entry → Lemmas
   | .pull l keys => { s with pull := s.pull.insertKeyValue keys l }
   | .scalar l => { s with scalar := s.scalar.push l }
   | .unital l => { s with unital := s.unital.push l }
-  | .compose l => { s with compose := s.compose.push l }
+  | .compose l =>
+    let i := s.compose.findIdx? (·.prio < l.prio) |>.getD s.compose.size
+    { s with compose := s.compose.insertIdx! i l }
 
 /-- Whether the database has an entry for `declName`. -/
 def Lemmas.contains (s : Lemmas) (declName : Name) : Bool :=

@@ -352,25 +352,30 @@ goal. The tactic handles them as follows.
   wrappers stripped so the goal displays cleanly, and **named after its kind**:
   `cfc_pull.predicate`, `cfc_pull.continuity`, `cfc_pull.mapZero` or `cfc_pull.side`. The name
   lets the user address a whole group at once with `case cfc_pull.continuity => fun_prop`.
-* The kind is read off the statement: `IsSelfAdjoint _`, `IsStarNormal _` or `0 ≤ _` — the three
-  predicates the calculus is instantiated at in Mathlib — is `predicate`, matched at the head
-  only, since the instances are themselves indexed by the predicate and so mention it
-  everywhere; a statement mentioning `Continuous` or `ContinuousOn` *anywhere*, under a binder
-  included as in `cfc_sum`'s `∀ i ∈ s, ContinuousOn (f i) (spectrum R a)`, is `continuity`; an
-  equation whose right-hand side is zero is `mapZero`; everything else is `side`. The shared
-  `?ha` of the first bullet is named `predicate` whatever its statement, which is what covers a
-  calculus instantiated at some other predicate.
+* A hypothesis that is the mode's predicate at some *other* element — `p (cfc g a)`, the inner
+  element of a composition — is `predicate` too: it is matched against `p ?b` for the predicate
+  the mode resolved to, with the outer metavariables frozen, so it is recognized whatever the
+  shape of the predicate. The shared `?ha` of the first bullet is likewise named `predicate`
+  whatever its statement. Between them, these two cover a calculus instantiated at a predicate
+  the tactic cannot name.
+* Failing that, the kind is read off the statement: `IsSelfAdjoint _`, `IsStarNormal _` or
+  `0 ≤ _` — the three predicates the calculus is instantiated at in Mathlib — is `predicate`,
+  matched at the head only, since the instances are themselves indexed by the predicate and so
+  mention it everywhere; a statement mentioning `Continuous` or `ContinuousOn` *anywhere*, under
+  a binder included as in `cfc_sum`'s `∀ i ∈ s, ContinuousOn (f i) (spectrum R a)`, is
+  `continuity`; an equation whose right-hand side is zero is `mapZero`; everything else is
+  `side`.
 * Once the whole pull is finished (so that no function metavariables remain), the frontend
   deduplicates the goals and tries, on each: `assumption`, then the auto-param tactic the
   calculus API itself would use for a hypothesis of that kind (`cfc_cont_tac` for continuity,
-  `cfc_zero_tac` for `f 0 = 0`, and for the rest `cfc_predicate`/`cfcₙ_predicate` followed by
-  `cfc_tac` — in that order, because `cfc_tac` never fails).
-* On a `cfc_pull.side` goal that survives all of that, the `(disch := tac)` tactic is tried
-  last. These are the hypotheses peculiar to an individual lemma, the only ones the calculus API
-  has nothing to offer for; the other three kinds already have a tactic written for them, and
-  running a user tactic after it would mostly mean running `fun_prop` twice on the same
-  `ContinuousOn` goal. The discharger is run as a separate attempt rather than as another branch
-  of the `first` above, because that `first` ends in `cfc_tac`, which never fails.
+  `cfc_zero_tac` for `f 0 = 0`, and for a predicate goal `cfc_predicate`/`cfcₙ_predicate`
+  followed by `cfc_tac` — in that order, because `cfc_tac` never fails). A `cfc_pull.side` goal
+  has no such tactic; the next bullet is what runs in its place.
+* On a `cfc_pull.side` goal, the `(disch := tac)` tactic takes the auto-param tactic's place: it
+  is what is tried after `assumption`. These are the hypotheses peculiar to an individual lemma,
+  the only ones the calculus API has nothing to offer for; the other three kinds already have a
+  tactic written for them, and running a user tactic after one would mostly mean running
+  `fun_prop` twice on the same `ContinuousOn` goal.
 * Anything still open is **an error**, listing the goals. With `+defer` they are returned and
   added to the goal list after the main goal instead, and in `conv` mode with a `=> tac` block
   they are handed to that block.
@@ -595,11 +600,11 @@ are `rfl`) in `.../CFCPull/Lemmas.lean`, along with `cfcHom_eq_cfc_extend_zero` 
 `cfcₙ_real_eq_nnreal`, `cfc_complex_eq_real`, `cfcₙ_complex_eq_real` in the narrowing one. The
 four narrowing lemmas carry a hypothesis the tactic cannot read off the syntax — `∀ x ∈
 spectrum ℝ a, 0 ≤ f x` for the first two, `∀ x ∈ spectrum ℂ a, star (f x) = f x` for the other
-two — which comes back as a `cfc_pull.side` goal, and `cfc_real_eq_nnreal` additionally asks for
-`0 ≤ a`. They are tagged all the same: with them the three rings are reachable from one another,
+two — which comes back as a `cfc_pull.side` goal, and nothing is run on those automatically, so
+it survives unless a discharger is given; `cfc_real_eq_nnreal` additionally asks for `0 ≤ a`. They are tagged all the same: with them the three rings are reachable from one another,
 so `cfc_pull ℝ≥0 a` on a `ℂ`-expression is a matter of discharging conditions rather than of
 finding a route. The price is that a pull towards `ℝ≥0` of an element only known to be
-selfadjoint now fails on `0 ≤ a` instead of reporting that it got stuck.
+selfadjoint now fails on those conditions instead of reporting that it got stuck.
 
 **`Unital`**: `cfcₙ_eq_cfc`.
 

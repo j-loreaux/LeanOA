@@ -116,3 +116,55 @@ lemma log_def (a : A) : log a = cfc Real.log a := rfl
 end Log
 
 end CFC
+
+section Norm
+
+open CFC
+open scoped ComplexOrder
+
+section Unital
+
+variable {A : Type*}
+  [Ring A] [TopologicalSpace A] [StarRing A] [PartialOrder A]
+  [StarOrderedRing A] [IsTopologicalRing A] [T2Space A]
+
+lemma cfc_real_comp_norm [Algebra ℝ A] [NonnegSpectrumClass ℝ A]
+    [ContinuousFunctionalCalculus ℝ A IsSelfAdjoint] (f : ℝ → ℝ) (a : A)
+    (ha : IsSelfAdjoint a := by cfc_tac)
+    (hf : ContinuousOn f ((‖·‖) '' spectrum ℝ a) := by cfc_cont_tac) :
+    cfc (f ‖·‖) a = cfc f (abs a) :=
+  cfc_comp_norm f a
+
+lemma cfc_complex_comp_norm [Algebra ℂ A] [NonnegSpectrumClass ℝ A]
+    [ContinuousFunctionalCalculus ℂ A IsStarNormal] (f : ℂ → ℂ) (a : A)
+    (ha : IsStarNormal a := by cfc_tac)
+    (hf : ContinuousOn f ((‖·‖) '' spectrum ℂ a) := by cfc_cont_tac) :
+    cfc (f ‖·‖) a = cfc f (abs a) :=
+  cfc_comp_norm f a
+
+end Unital
+
+section NonUnital
+
+variable {A : Type*} [NonUnitalRing A] [TopologicalSpace A] [StarRing A] [PartialOrder A]
+  [StarOrderedRing A] [IsTopologicalRing A] [T2Space A]
+
+lemma cfcₙ_real_comp_norm [Module ℝ A] [SMulCommClass ℝ A A] [IsScalarTower ℝ A A]
+  [NonnegSpectrumClass ℝ A] [NonUnitalContinuousFunctionalCalculus ℝ A IsSelfAdjoint]
+    (f : ℝ → ℝ) (a : A)
+    (ha : IsSelfAdjoint a := by cfc_tac)
+    (hf : ContinuousOn f ((‖·‖) '' quasispectrum ℝ a) := by cfc_cont_tac) :
+    cfcₙ (f ‖·‖) a = cfcₙ f (abs a) :=
+  cfcₙ_comp_norm f a
+
+lemma cfcₙ_complex_comp_norm [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A]
+    [NonnegSpectrumClass ℝ A] [NonUnitalContinuousFunctionalCalculus ℂ A IsStarNormal]
+    (f : ℂ → ℂ) (a : A)
+    (ha : IsStarNormal a := by cfc_tac)
+    (hf : ContinuousOn f ((‖·‖) '' quasispectrum ℂ a) := by cfc_cont_tac) :
+    cfcₙ (f ‖·‖) a = cfcₙ f (abs a) :=
+  cfcₙ_comp_norm f a
+
+end NonUnital
+
+end Norm

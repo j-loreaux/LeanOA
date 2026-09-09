@@ -14,8 +14,6 @@ public import Mathlib.Tactic.ContinuousFunctionalCalculus
 
 The user-facing side of `cfc_pull`: syntax, elaboration of the scalar ring and the element,
 locating the subterms of the goal to rewrite, and post-processing the side goals.
-
-See `LeanOA/Mathlib/Tactic/CFCPull/Spec.md` for the specification.
 -/
 
 public meta section
@@ -31,44 +29,24 @@ declare_config_elab elabCFCPullConfig Config where
 
 /-! ### Side goals -/
 
-/-- Run a tactic on a goal, returning `true` if it closed the goal and restoring the state
-otherwise. -/
-def tryTacticOn (g : MVarId) (tac : TSyntax `tactic) : TacticM Bool := do
-  let s ← saveState
-  try
-    if (← Tactic.run g (evalTactic tac)).isEmpty then
-      return true
-  catch _ => pure ()
-  s.restore
-  return false
+/-- Run a tactic on a goal, returning `true` iff it closes the goal; otherwise restore the state. -/
+def tryTacticOn (g : MVarId) (tac : TacticM Unit) : TacticM Bool :=
+  tryTactic do unless (← Tactic.run g tac).isEmpty do failure
 
-/-- The auto-param tactic that the continuous functional calculus API itself would use for a
-hypothesis of this kind.
-
-`.other` gets the predicate tactic too: `cfc_tac` is the calculus API's general-purpose
-discharger, and a better last resort for a hypothesis peculiar to one lemma than nothing at
-all. -/
-def SideGoalKind.tactic : SideGoalKind → MetaM (TSyntax `tactic)
-  | .continuity => `(tactic| cfc_cont_tac)
-  | .mapZero => `(tactic| cfc_zero_tac)
-  | .predicate | .other =>
-    -- `cfc_predicate` closes the predicate goals for the inner element of a composition, e.g.
-    -- `p (cfc g a)`; the identifiers are pre-resolved, so a local binding of either name in the
-    -- user's context cannot shadow them.  Note that `cfc_tac` never fails, so it has to come
-    -- last.
-    `(tactic| first
+/-- The tactic to try on a side goal of this kind. This returns `TSyntax` as oppposed to
+`TacticM Unit` because we also want it to appear in traces. -/
+def SideGoalKind.tactic? (cfg : Config) : SideGoalKind → MetaM (Option (TSyntax `tactic))
+  | .continuity => return some (← `(tactic| cfc_cont_tac))
+  | .mapZero => return some (← `(tactic| cfc_zero_tac))
+  | .other => return cfg.discharger
+  | .predicate =>
+    return some (← `(tactic| first
       | exact $(mkCIdent ``cfc_predicate) _ _
       | exact $(mkCIdent ``cfcₙ_predicate) _ _
-      | cfc_tac)
+      | cfc_tac))
 
-/-- Try to close the side goals raised by the pull: `assumption` first, then the auto-param
-tactic for the goal's kind, and finally — for the goals the calculus API has no auto-param for —
-`cfg.discharger`. Duplicates are merged, which matters because the two sides of a relation are
-pulled independently and so tend to ask for the same predicate twice.
-
-Whatever survives is an error unless `+defer` was given, in which case it is returned to be added
-to the goal list. With `+deferAll` no goal is attempted at all, and every one of them is
-returned; they are still merged, so that the deferred list has no repetitions in it. -/
+/-- Deduplicate side goals and try to close them with the appropriate tactic, including the user
+provided discharger for `SideGoalKind.other` goals. With `+deferAll` no attempt is made. -/
 def postProcessSideGoals (cfg : Config) (goals : Array (MVarId × SideGoalKind)) :
     TacticM (Array MVarId) := do
   let mut out := #[]
@@ -86,22 +64,13 @@ def postProcessSideGoals (cfg : Config) (goals : Array (MVarId × SideGoalKind))
       trace[Tactic.cfc_pull] "deferring `{type}` unattempted (`+deferAll`)"
       out := out.push g
       continue
-    if ← g.assumptionCore then
+    if ← withReducible g.assumptionCore then
       trace[Tactic.cfc_pull] "{checkEmoji} closed `{type}` with `assumption`"
       continue
-    let tac ← kind.tactic
-    if ← tryTacticOn g tac then
-      trace[Tactic.cfc_pull] "{checkEmoji} closed `{type}` with `{tac}`"
-      continue
-    /- The user's discharger is the last resort, and only for `.other`: the hypotheses peculiar
-    to an individual `@[cfc_pull]` lemma, which the calculus API has no tactic for. It is run
-    separately rather than appended to `kind.tactic` with `first`, because that tactic ends in
-    `cfc_tac`, which never fails and so would swallow the alternative. -/
-    if kind == .other then
-      if let some disch := cfg.discharger then
-        if ← tryTacticOn g disch then
-          trace[Tactic.cfc_pull] "{checkEmoji} closed `{type}` with the discharger `{disch}`"
-          continue
+    if let some tac ← kind.tactic? cfg then
+      if ← tryTacticOn g (evalTactic tac) then
+        trace[Tactic.cfc_pull] "{checkEmoji} closed `{type}` with `{tac}`"
+        continue
     trace[Tactic.cfc_pull] "{crossEmoji} could not close `{type}`"
     out := out.push g
   unless cfg.defer || cfg.deferAll || out.isEmpty do
@@ -120,29 +89,19 @@ def targetPositions (target alg : Expr) : MetaM (Array Nat) := do
   let args := target.getAppArgs
   let mut out := #[]
   for _h : i in [0:args.size] do
-    if ← isDefEq (← inferType args[i]) alg then
+    if ← withReducible (isDefEq (← inferType args[i]) alg) then
       out := out.push i
   return out
 
 /-! ### The lemma list -/
 
-/-- `-foo`: the entry of `cfc_pull`'s bracketed lemma list that removes every entry for `foo`
-from the set for this call. -/
+/-- Remove the identifier from the lemma database of `cfc_pull` for this call. -/
 syntax cfcPullErase := "-" ident
 
-/-- `cfc_pull`'s bracketed lemma list, which adjusts the `@[cfc_pull]` set for one call. Each
-entry is either a declaration name, added to the set exactly as `@[cfc_pull]` would add it, or
-`-foo`, which takes `foo` out. -/
+/-- `cfc_pull`'s bracketed lemma list, which adjusts the `@[cfc_pull]` set for one call. -/
 syntax cfcPullLemmas := " [" withoutPosition((cfcPullErase <|> ident),*,?) "]"
 
-/-- Apply the bracketed lemma list to the `@[cfc_pull]` set, giving the set that this call will
-pull with. The database itself is untouched: there is no way to remove a lemma from it.
-
-Only global declarations may be named. A tagged lemma is instantiated from its constant — see
-`instantiateLemma` — so a local hypothesis has no place in the set; `rw` is the way to use one.
-An added lemma is classified exactly as the attribute would classify it (`mkEntry`), and so is
-read in the direction it is stated, rejected here for the same reasons, and given the default
-priority. -/
+/-- Apply the bracketed lemma list to the `@[cfc_pull]` set. Only global declarations allowed. -/
 def elabCFCPullLemmas (lemmas : Lemmas) (stx? : Option (TSyntax ``cfcPullLemmas)) :
     TacticM Lemmas := do
   let some stx := stx? | return lemmas
@@ -176,9 +135,6 @@ result. Returns the new goal (unless it was closed by `rfl`) and the surviving s
 def cfcPullTarget (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (goal : MVarId) :
     TacticM Unit := do
   let alg ← inferType elem
-  -- `consumeMData` is not optional: a goal type routinely arrives wrapped in an
-  -- `mdata noImplicitLambda` annotation left by the elaborator, and `Expr.getAppArgs` does not
-  -- see through `mdata`, so `targetPositions` below would find no arguments at all.
   let target := (← instantiateMVars (← goal.getType)).consumeMData
   let positions ← targetPositions target alg
   if positions.isEmpty then
@@ -227,7 +183,7 @@ def cfcPullTarget (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (goal : MVarI
   let hcongr ← mkExpectedTypeHint hcongr (← mkEq target newTarget)
   let newGoal ← goal.replaceTargetEq newTarget hcongr
   let mut main := [newGoal]
-  if ← tryTacticOn newGoal (← `(tactic| rfl)) then
+  if ← tryTacticOn newGoal (evalTactic (← `(tactic| with_reducible rfl))) then
     main := []
   replaceMainGoal (main ++ (← postProcessSideGoals cfg sideGoals).toList)
 
@@ -245,8 +201,12 @@ maximal subexpressions whose type matches that of `a`: each such subexpression i
 `cfc f a` (or `cfcₙ f a`) for some function `f : R → R` that the tactic determines from the
 structure of the expression and the collection of lemmas tagged `@[cfc_pull]`.
 
+In the following example, `cfc_pull` acts on both sides of the equality, doing nothing with the
+right-hand side, but expressing the left-hand side as `cfc (?f : R → R) a` where
+`?f := fun x : R ↦ star x * x`, and the goal is closed with `rfl` at reducible transparency.
+
 ```lean
-example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by
+example (ha : p a) : star a * a = cfc (eun x : R ↦ star x * x) a := by
   cfc_pull R a
 ```
 
@@ -257,7 +217,7 @@ example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by
   the continuous functional calculus can be found this is the default, whereas `cfc` is the default
   if a unital instance is found.
 * `cfc_pull +defer R a`: return unsolved side goals to the user, instead of failing.
-* `cfc_pull +deferAll R a`: return all side goals to the user.
+* `cfc_pull +deferAll R a`: return all side goals to the user without attempting to discharge them.
 * `cfc_pull [lemma1, -lemma2] R a`: add `lemma1` to the list of lemmas used by `cfc_pull`, and
   remove `lemma2`; only global declaration name are permitted.
 * `cfc_pull +zetaDelta R a`: unfold `let`-bound variables.

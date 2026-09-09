@@ -247,9 +247,10 @@ For each undischarged metavariable in order:
 1. if its type is defeq to `p a` for the lemma's mode, assign the cached shared `?ha`;
 2. otherwise convert it to a synthetic-opaque metavariable, named after its `SideGoalKind`
    (`cfc_pull.continuity`, `cfc_pull.mapZero`, …), and push it, paired with that kind, onto
-   `State.sideGoals`. The name is what the user sees in `case cfc_pull.continuity => …`; the
-   kind travels alongside the goal, and is what the frontend reads to choose the auto-param
-   tactic to try.
+   `State.sideGoals`. The kind is `predicate` when the type is that same predicate at some other
+   element, and `SideGoalKind.ofType` of the statement otherwise. The name is what the user sees
+   in `case cfc_pull.continuity => …`; the kind travels alongside the goal, and is what the
+   frontend reads to choose the auto-param tactic to try.
 
 (Natural metavariables cannot be returned as goals directly; the routine creates a fresh
 synthetic-opaque one of the same type and assigns the natural one to it.)

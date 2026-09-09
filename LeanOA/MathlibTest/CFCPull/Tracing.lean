@@ -225,8 +225,8 @@ error message reports the head symbol and the element being pulled towards, but 
 reason.
 
 (The removal is what makes the failure happen: with the whole set, `ℝ≥0`, `ℝ` and `ℂ` are all
-reachable from one another, and this pull instead succeeds and leaves the `0 ≤ a` that
-`cfc_real_eq_nnreal` asks for as a side goal.) -/
+reachable from one another, and this pull instead succeeds and leaves the two conditions that
+`cfc_real_eq_nnreal` asks for as side goals.) -/
 
 /--
 error: `cfc_pull` made no progress

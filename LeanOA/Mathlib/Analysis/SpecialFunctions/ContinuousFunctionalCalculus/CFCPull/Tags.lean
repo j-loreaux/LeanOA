@@ -143,7 +143,10 @@ attribute [cfc_pull]
   cfc_comp_norm
   cfc_realPart cfc_imaginaryPart cfcₙ_realPart cfcₙ_imaginaryPart
 
-attribute [cfc_pull 1100] cfc_comp_const_mul cfcₙ_comp_const_mul
+attribute [cfc_pull 1100]
+  cfc_comp_const_mul cfcₙ_comp_const_mul
+  cfc_real_comp_norm cfcₙ_real_comp_norm
+  cfc_complex_comp_norm cfcₙ_complex_comp_norm
 
 /- The `ℝ`-valued companions `cfc_comp_re`, `cfc_comp_im`, `cfcₙ_comp_re` and `cfcₙ_comp_im` are
 deliberately *not* tagged. They change the scalar ring (`ℝ` on the side with the structured
