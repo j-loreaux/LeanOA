@@ -51,9 +51,7 @@ public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
 public import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
-public import LeanOA.MathlibTest.CFCPull.Examples
-public import LeanOA.MathlibTest.CFCPull.Failures
-public import LeanOA.MathlibTest.CFCPull.Tracing
+public import LeanOA.MathlibTest.CFCPull
 public import LeanOA.Notation
 public import LeanOA.PositiveContinuousLinearMap
 public import LeanOA.TendstoZero.Defs
