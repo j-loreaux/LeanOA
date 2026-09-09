@@ -413,7 +413,7 @@ The five categories the recognized by the attribute are:
 
 | category  | shape                                              | example              |
 | --------- | -------------------------------------------------- | -------------------- |
-| `id`      | `cfc (fun x ↦ x) a = a`                           | `cfc_id'`            |
+| `id`      | `cfc (fun x ↦ x) a = a`                            | `cfc_id'`            |
 | `pull`    | `cfc f a = ⟨an expression in the algebra⟩`         | `cfc_mul`            |
 | `scalar`  | `cfc (f : R → R) a = cfc (g : S → S) a`, `R ≠ S`   | `cfc_real_eq_complex`|
 | `unital`  | `cfcₙ f a = cfc f a`                               | `cfcₙ_eq_cfc`        |

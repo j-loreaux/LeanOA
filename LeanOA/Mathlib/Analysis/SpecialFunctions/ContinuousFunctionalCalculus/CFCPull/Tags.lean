@@ -14,19 +14,9 @@ public import LeanOA.Mathlib.Tactic.CFCPull.Attr
 /-!
 # The `@[cfc_pull]` lemma set
 
-This file tags Mathlib's continuous functional calculus lemmas with `@[cfc_pull]`, building the
-database the `cfc_pull` tactic searches. Nothing else happens here: every lemma named below is
-proved elsewhere, and the tags are collected in one place rather than written at the declaration
-sites so that the tactic and everything supporting it can be read, reviewed and landed as a
-self-contained unit.
-
-The categories a lemma can fall into (`Id`, `Pull`, `Scalar`, `Unital`, `Compose`) are described
-in `LeanOA/Mathlib/Tactic/CFCPull/Spec.md` §4; the attribute works out which one applies from
-the shape of the lemma's statement. §9 of the same document walks through the set below and says
-why each group is there. The sections here follow that walkthrough.
-
-Where a lemma is *deliberately* absent, the reason is recorded in a comment next to the group it
-would have joined.
+This tags all the lemmas currently used by the `cfc_pull` tactic. We do it in a central location
+for convenience for now, but upon upstreaming to Mathlib these should be distributed.
+For lemmas which are deliberately absent, we explain the reason.
 -/
 
 public section
@@ -96,12 +86,11 @@ The operations that are secretly an application of the calculus: positive and ne
 square roots, absolute values, powers, logarithms, exponentials, real and imaginary parts, the
 spectral construction for a Hermitian matrix, and the `Unitization` bridges.
 
-`cfc_tsub` and `cfcₙ_tsub` sit at priority 900, below the generic `cfc_sub`/`cfcₙ_sub` that win
-wherever the scalars form a ring; over `ℝ≥0` those are rejected by instance synthesis and the
-truncated versions take over, at the cost of a `cfc_pull.side` goal.
+`cfc_tsub` and `cfcₙ_tsub` have lower priority than `cfc_sub`/`cfcₙ_sub` so that they still
+apply over `ℝ≥0` but are not tried first since they generate side goals.
 
-`CFC.real_exp_eq_normedSpace_exp` and `CFC.complex_exp_eq_normedSpace_exp` sit at 1100 so that
-`Real.exp`/`Complex.exp` are produced in preference to `NormedSpace.exp`. -/
+`CFC.real_exp_eq_normedSpace_exp` and `CFC.complex_exp_eq_normedSpace_exp` have higher priority so
+that `Real.exp`/`Complex.exp` are produced in preference to `NormedSpace.exp`. -/
 
 attribute [cfc_pull]
   CFC.posPart_def CFC.negPart_def
@@ -117,22 +106,15 @@ attribute [cfc_pull 1100] CFC.real_exp_eq_normedSpace_exp CFC.complex_exp_eq_nor
 
 attribute [cfc_pull 900] cfc_tsub cfcₙ_tsub
 
-/- The generic `Unitization.cfcₙ_eq_cfc_inr` is *not* tagged: its `hp` hypothesis relating the
-two predicates is not something the tactic can discharge.
-
-`CFC.sqrt_eq_cfc_complex_sqrt` and `CFC.sqrt_eq_cfcₙ_complex_sqrt` are not tagged either, for a
-different reason; see the module docstring of
-`LeanOA/Mathlib/Analysis/SpecialFunctions/ContinuousFunctionalCalculus/CFCPull/ComplexSqrt.lean`. -/
+/- `CFC.sqrt_eq_cfc_complex_sqrt` and `CFC.sqrt_eq_cfcₙ_complex_sqrt` are not tagged, unlike
+their real counterparts. This is because `Complex.sqrt` is continuous only away from the negative
+reals, creating continuity side goals that are harder to discharge via `fun_prop`. -/
 
 /-! ### Pulling through a homomorphism
 
 Note that the element to pull towards lives in the *codomain*. -/
 
 attribute [cfc_pull] StarAlgHom.map_cfc NonUnitalStarAlgHom.map_cfcₙ
-
-/- The `...Class` counterparts `StarAlgHomClass.map_cfc` and `NonUnitalStarAlgHomClass.map_cfcₙ`
-are **not** tagged: their auxiliary scalar ring `S` occurs only in the instance arguments and so
-is undetermined at application time. See `Spec.md` §11. -/
 
 /-! ### Composition -/
 
@@ -148,19 +130,8 @@ attribute [cfc_pull 1100]
   cfc_real_comp_norm cfcₙ_real_comp_norm
   cfc_complex_comp_norm cfcₙ_complex_comp_norm
 
-/- The `ℝ`-valued companions `cfc_comp_re`, `cfc_comp_im`, `cfcₙ_comp_re` and `cfcₙ_comp_im` are
-deliberately *not* tagged. They change the scalar ring (`ℝ` on the side with the structured
-element `ℜ a`, `ℂ` on the side with the element `a`) *and* the element, and the `@[cfc_pull]`
-attribute classifies any lemma whose two sides disagree about the scalar ring as a `Scalar`
-conversion, without looking at the elements. Tagging them would therefore add a bogus `ℂ → ℝ`
-edge to the conversion graph, along which `cfc_pull` would happily "convert" a result at `a`
-into one at `ℜ a`. Supporting them needs a `Compose` category that is allowed to change the
-ring; see `Spec.md` §11.
+/- The lemmas `cfc_comp_re`, `cfc_comp_im`, `cfcₙ_comp_re` and `cfcₙ_comp_im` are
+deliberately *not* tagged. They change the scalar ring *and* the element and so are unsupported.
 
-`cfc_apply_pi`, `cfc_map_pi`, `cfc_map_prod` and `cfcₙ_map_prod` are not tagged either. For the
-last two there are two independent reasons: the auxiliary scalar ring `S` occurs only in the
-hypotheses, so `cfc_pull` cannot determine it when it applies the lemma; and even with `S`
-pinned down the two components `cfc f a` and `cfc f b` are not *holes* — a hole must be an
-application of the calculus at the element and in the algebra being pulled towards, here
-`(a, b)` in `A × B` — so the lemma could only collect a pair that is already of the form
-`(cfc f a, cfc f b)`, never build one component by component. See `Spec.md` §11. -/
+The lemmas `cfc_apply_pi`, `cfc_map_pi`, `cfc_map_prod` and `cfcₙ_map_prod` are not tagged either,
+but this is because there is no single element to pull towards. -/

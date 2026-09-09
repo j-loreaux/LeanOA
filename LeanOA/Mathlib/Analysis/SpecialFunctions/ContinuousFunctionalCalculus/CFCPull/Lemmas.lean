@@ -11,27 +11,7 @@ public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Exp
 /-!
 # Lemmas needed by the `cfc_pull` tactic
 
-`cfc_pull` (see `LeanOA/Mathlib/Tactic/CFCPull/Spec.md`) rewrites an expression built out of
-`cfc`/`cfcₙ` applications into a single one. To do that it needs, for every operation that is
-*secretly* an application of the calculus, a lemma exhibiting it as such. Mathlib already has
-most of them; this file collects the ones it was missing, so that the tactic and its supporting
-material stay in one place instead of being sprinkled over the library.
-
-## Main results
-
-* `CFC.sqrt_def`, `CFC.abs_def`, `CFC.log_def`: `CFC.sqrt`, `CFC.abs` and `CFC.log` unfolded to
-  the calculus applied to `NNReal.sqrt`, `NNReal.sqrt` (at `star a * a`) and `Real.log`. All
-  three are `rfl`.
-* `cfcHom_eq_cfc_extend_zero`, `cfcₙHom_eq_cfcₙ_extend_zero`: the `g := 0` specialisations of
-  `cfcHom_eq_cfc_extend` and `cfcₙHom_eq_cfcₙ_extend`, which are what the tactic uses to turn a
-  bare `cfcHom`/`cfcₙHom` application into a `cfc`/`cfcₙ` one.
-* `CFC.quasispectrum_nonpos_of_nonpos`, `CFC.nonpos_of_mem_quasispectrum`: the nonpositive
-  counterparts of `NonnegSpectrumClass.quasispectrum_nonneg_of_nonneg`, together with a
-  `grind_pattern` for the latter.
-
-Everything here belongs in the file that defines the operation it is about; it lives here only
-so that `cfc_pull` can be reviewed and landed without touching those files. See
-`LeanOA/Mathlib/Tactic/CFCPull/Design.md` §7.
+Some lemmas missing from Mathlib needed for the `cfc_pull` tactic.
 -/
 
 @[expose] public section
