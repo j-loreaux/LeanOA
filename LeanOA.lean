@@ -44,7 +44,6 @@ public import LeanOA.Mathlib.Order.Hom.Basic
 public import LeanOA.Mathlib.Tactic.CFCPull
 public import LeanOA.Mathlib.Tactic.CFCPull.Attr
 public import LeanOA.Mathlib.Tactic.CFCPull.Core
-public import LeanOA.Mathlib.Tactic.CFCPull.Frontend
 public import LeanOA.Mathlib.Topology.Algebra.Module.LinearMap
 public import LeanOA.Mathlib.Topology.Algebra.Module.PolarTopology
 public import LeanOA.Mathlib.Topology.Algebra.Module.Spaces.UniformConvergenceCLM
