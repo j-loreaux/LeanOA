@@ -22,6 +22,8 @@ public import Mathlib.Tactic.Linarith
 
 /-!  # Test suite for the `cfc_pull` tactic -/
 
+set_option linter.privateModule false
+
 section GenericUnital
 
 variable {R A : Type*} {p : A → Prop} [CommSemiring R]

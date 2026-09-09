@@ -73,9 +73,8 @@ attribute [cfc_pull 1100] cfcₙ_const_mul cfcₙ_const_mul_id
 /-! ### Sums
 
 `cfc_sum` and `cfcₙ_sum` cannot pull *through* a sum, but they collect one whose summands are
-already applications of the calculus, which is the second half of the staged idiom of
-`Spec.md` §11. Their algebraic side has a hole under a binder, which the attribute warns about
-by default. -/
+already applications of the calculus. Their algebraic side has a hole under a binder, which the
+attribute warns about by default. -/
 
 set_option cfcPull.warnBoundHoles false in
 attribute [cfc_pull] cfc_sum cfcₙ_sum

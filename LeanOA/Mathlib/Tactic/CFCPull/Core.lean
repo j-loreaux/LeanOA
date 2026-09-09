@@ -536,7 +536,7 @@ partial def pullCandidates (e : Expr) (want : Mode) : PullM (Array PullLemma) :=
 
 mutual
 
-/-- Pull `e` towards `cfc f a` at the mode `want`. See `Spec.md` §6.2. -/
+/-- Pull `e` towards `cfc f a` at the mode `want`. -/
 partial def pull (e : Expr) (want : Mode) : PullM Result := withIncRecDepth do
   withTraceNode `Tactic.cfc_pull (fun _ => return m!"pull {e} into a {want}") do
     let ctx ← read
