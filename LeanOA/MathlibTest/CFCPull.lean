@@ -451,7 +451,58 @@ example (φ : A →⋆ₐ[ℂ] B) (f g : ℂ → ℂ) (hφ : Continuous φ) (ha 
     star (φ (cfc f a)) * φ (cfc g a) = cfc (fun x ↦ star (f x) * g x) (φ a) := by
   cfc_pull ℂ (φ a)
 
+/- The argument of `φ` need not already be an application of the calculus: it is pulled towards
+`a` in `A`, and the result carried through `φ`. -/
+example (φ : A →⋆ₐ[ℂ] B) (hφ : Continuous φ) (ha : IsStarNormal a) (hφa : IsStarNormal (φ a)) :
+    φ (star a * a) = cfc (fun x : ℂ ↦ star x * x) (φ a) := by
+  cfc_pull ℂ (φ a)
+
+example (φ : A →⋆ₐ[ℂ] B) (hφ : Continuous φ) (ha : IsStarNormal a) (hφa : IsStarNormal (φ a)) :
+    star (φ (a ^ 2)) * φ a = cfc (fun x : ℂ ↦ star (x ^ 2) * x) (φ a) := by
+  cfc_pull ℂ (φ a)
+
+/- Two homomorphisms deep: the recursion descends through `ψ` and then through `φ`. -/
+example {C : Type*} [CStarAlgebra C] (φ : A →⋆ₐ[ℂ] B) (ψ : B →⋆ₐ[ℂ] C) (hφ : Continuous φ)
+    (hψ : Continuous ψ) (ha : IsStarNormal a) (hφa : IsStarNormal (φ a))
+    (hψa : IsStarNormal (ψ (φ a))) :
+    ψ (φ (star a * a)) = cfc (fun x : ℂ ↦ star x * x) (ψ (φ a)) := by
+  cfc_pull ℂ (ψ (φ a))
+
 end StarAlgHom
+
+section NonUnitalStarAlgHom
+
+variable {A B : Type*} [NonUnitalCStarAlgebra A] [NonUnitalCStarAlgebra B] {a : A}
+
+open scoped CStarAlgebra
+
+example (φ : A →⋆ₙₐ[ℂ] B) (ha : IsStarNormal a) :
+    φ (star a * a) = cfcₙ (fun x : ℂ ↦ star x * x) (φ a) := by
+  cfc_pull ℂ (φ a)
+
+example (φ : A⁺¹ →⋆ₙₐ[ℂ] B) (ha : IsStarNormal a) (hφa : IsStarNormal (φ a)) :
+    φ (star a * a) = cfcₙ (fun x : ℂ ↦ star x * x) (φ a) := by
+  cfc_pull ℂ (φ a)
+
+end NonUnitalStarAlgHom
+
+section Unitization
+
+/-! ## The unitization -/
+
+variable {A : Type*} [NonUnitalCStarAlgebra A] {a : A}
+
+/- What sits under the coercion is pulled in `A`, in the non-unital calculus, and then bridged. -/
+example (ha : IsStarNormal a) :
+    ((star a * a : A) : Unitization ℂ A) = cfc (fun x : ℂ ↦ star x * x) (a : Unitization ℂ A) := by
+  cfc_pull ℂ (a : Unitization ℂ A)
+
+example (ha : IsStarNormal a) :
+    (1 : Unitization ℂ A) - ((star a * a : A) : Unitization ℂ A) =
+      cfc (fun x : ℂ ↦ 1 - star x * x) (a : Unitization ℂ A) := by
+  cfc_pull ℂ (a : Unitization ℂ A)
+
+end Unitization
 
 /-! ## Failures -/
 

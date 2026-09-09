@@ -49,17 +49,6 @@ proof of `e = cfc f a` (or `e = cfcₙ f a`), plus a list of side goals that the
   Supporting them is doable though: give `ComposeLemma` a source and a target ring
   key instead of one `ring`, index and filter `pullExisting`'s loop on the source key, and let
   the `pull newE want` that already follows every composition step do the conversion.
-
-* **Descending through a homomorphism into another algebra.** A `pull` run fixes one algebra and
-  one element for its whole duration (`Context.alg`, `Context.elem`). So `StarAlgHom.map_cfc`,
-  `Unitization.complex_cfcₙ_eq_cfc_inr` and `cfc_eq_cfc_transfer` are usable only in the
-  degenerate, hole-free direction: `φ (cfc f a)` is pulled towards `cfc f (φ a)`, but
-  `φ (star a * a)` is not, because that needs the sub-pull `star a * a = cfc _ a` to run in the
-  *domain*. Doing it in general means making the algebra and the element part of the mode and
-  threading a per-node `Context`, at which point `map_cfc` becomes a `Compose`-like lemma that
-  relates two different algebras. That is a substantially bigger change than the ring-changing
-  composition above, and the same remark applies to `cfc_map_prod`/`cfc_map_pi`, where the
-  components additionally live at *different* elements of *different* algebras.
 -/
 
 public meta section
@@ -86,7 +75,8 @@ structure Config where
 
 /-- What is known about the continuous functional calculus at a given mode. -/
 structure PredicateInfo where
-  /-- The mode this information is about. -/
+  /-- The mode this information is about. The predicate depends only on its ring, unitality and
+  algebra; the shared proof is about its element. -/
   mode : Mode
   /-- The predicate `p : A → Prop` of the calculus. -/
   pred : Expr
@@ -98,11 +88,10 @@ structure PredicateInfo where
 structure Context where
   /-- The user's configuration. -/
   cfg : Config
-  /-- The element `a : A` that everything is pulled towards. -/
-  elem : Expr
-  /-- The algebra `A`. -/
-  alg : Expr
-  /-- The mode requested by the user. -/
+  /-- The mode requested by the user: the ring, the unitality, and the element `a : A` that
+  everything is pulled towards. A recursive call may work at another mode — the hole of a lemma
+  such as `StarAlgHom.map_cfc` sends the recursion into another algebra — so this is the target
+  of the run, not of the current call. -/
   target : Mode
   /-- The `@[cfc_pull]` database, read once at the start of the run. -/
   lemmas : Lemmas
@@ -234,52 +223,68 @@ def mkClassApp (clsName : Name) (args : Array Expr) : MetaM Expr := do
   let arity := (← getConstInfo clsName).type.getForallArity
   mkAppOptM clsName (args.map some ++ Array.replicate (arity - args.size) none)
 
-/-- The index in the cache of the information about the calculus at `mode`, if known. -/
-def findPredicateIdx (mode : Mode) : PullM (Option Nat) := do
+/-- A mode as a message, naming its element unless it is the one the run is pulling towards. -/
+def describeMode (mode : Mode) : PullM MessageData := do
+  if mode.elem == (← read).target.elem then return m!"{mode}"
+  else return m!"{mode} at {mode.elem}"
+
+/-- The index in the cache of the information about the calculus at `mode`, if known: the entry
+must agree with `mode` on the ring, the unitality and the algebra, and with `sameElem` on the
+element too. -/
+def findPredicateIdx (mode : Mode) (sameElem : Bool) : PullM (Option Nat) := do
   for (pi, i) in (← get).predicates.zipIdx do
-    if pi.mode.unital == mode.unital && (← withReducible <| isDefEq pi.mode.ring mode.ring) then
-      return some i
+    unless pi.mode.unital == mode.unital do continue
+    unless ← withReducible <| isDefEq pi.mode.ring mode.ring do continue
+    unless ← withReducible <| isDefEq pi.mode.alg mode.alg do continue
+    if sameElem then
+      unless ← withReducible <| isDefEq pi.mode.elem mode.elem do continue
+    return some i
   return none
 
 /-- Determine the predicate `p : A → Prop` associated to `mode` by synthesising the instance and
 reading its `outParam`. Fails if there is no such calculus. -/
 def getPredicate (mode : Mode) : PullM Expr := do
-  if let some i ← findPredicateIdx mode then
+  if let some i ← findPredicateIdx mode (sameElem := false) then
     return (← get).predicates[i]!.pred
-  let ctx ← read
-  let p ← mkFreshExprMVar (← mkArrow ctx.alg (.sort .zero))
+  let p ← mkFreshExprMVar (← mkArrow mode.alg (.sort .zero))
   let clsName :=
     if mode.unital then ``ContinuousFunctionalCalculus else ``NonUnitalContinuousFunctionalCalculus
   let noCalculus {α : Type} : PullM α :=
-    throwError "`cfc_pull`: `{ctx.alg}` has no {if mode.unital then "" else "non-unital "}\
+    throwError "`cfc_pull`: `{mode.alg}` has no {if mode.unital then "" else "non-unital "}\
       continuous functional calculus over `{mode.ring}`"
-  let cls ← try mkClassApp clsName #[mode.ring, ctx.alg, p] catch _ => noCalculus
+  let cls ← try mkClassApp clsName #[mode.ring, mode.alg, p] catch _ => noCalculus
   try
     discard <| synthInstance cls
   catch _ => noCalculus
   let pred ← instantiateMVars p
   if pred.hasExprMVar then
     throwError "`cfc_pull` could not determine the predicate associated to {mode}"
-  trace[Tactic.cfc_pull] "predicate for {mode} is {pred}"
+  trace[Tactic.cfc_pull] "predicate for {← describeMode mode} is {pred}"
   modify fun s => { s with predicates := s.predicates.push { mode, pred } }
   return pred
 
 /-- A proof of `p a` for the calculus at `mode`. The metavariable is created on first use and
 then shared, so a run leaves at most one predicate side goal per mode. -/
 def getPredicateProof (mode : Mode) : PullM Expr := do
-  let _ ← getPredicate mode
-  let some i ← findPredicateIdx mode | throwError "internal error: missing predicate cache entry"
+  let pred ← getPredicate mode
+  let i ← do
+    if let some i ← findPredicateIdx mode (sameElem := true) then pure i
+    else
+      modify fun s => { s with predicates := s.predicates.push { mode, pred } }
+      pure ((← get).predicates.size - 1)
   let pi := (← get).predicates[i]!
   if let some prf := pi.proof? then return prf
-  let prf ← newSideGoal (mkApp pi.pred (← read).elem) .predicate
+  -- `headBeta`: a predicate given as a lambda should read `0 ≤ a`, not `(fun x ↦ 0 ≤ x) a`
+  let prf ← newSideGoal (mkApp pi.pred mode.elem).headBeta .predicate
   modify fun s => { s with predicates := s.predicates.set! i { pi with proof? := some prf } }
   return prf
 
-/-- Deal with the hypotheses of an instantiated lemma: those that are the predicate `p a` at
-`mode` are filled with the shared proof, the rest become side goals. -/
+/-- Deal with the hypotheses of an instantiated lemma: those that are the predicate of the
+calculus at a mode met so far — the lemma's own `mode`, that of one of its holes, the target of
+the run — at that mode's element are filled with the shared proof; the rest become side goals. -/
 def collectHypotheses (mvars : Array Expr) (bis : Array BinderInfo) (mode : Mode) :
     PullM Unit := do
-  let ctx ← read
+  let _ ← getPredicate mode
   for (mvar, bi) in mvars.zip bis do
     let mvarId := mvar.mvarId!
     if ← mvarId.isAssigned then continue
@@ -287,19 +292,21 @@ def collectHypotheses (mvars : Array Expr) (bis : Array BinderInfo) (mode : Mode
     let type := stripAutoParam (← instantiateMVars (← mvarId.getType))
     unless ← isProp type do
       throwError "the argument of type `{type}` could not be determined"
-    let pred ← getPredicate mode
-    if ← withReducible <| isDefEq type (mkApp pred ctx.elem) then
-      mvarId.assign (← getPredicateProof mode)
+    let known := (← get).predicates
+    if let some pi ← known.findM? fun pi =>
+        withReducible <| isDefEq type (mkApp pi.pred pi.mode.elem) then
+      mvarId.assign (← getPredicateProof pi.mode)
       trace[Tactic.cfc_pull] "filled `{type}` from the shared predicate proof"
     else
-      /- `p b` for an element `b` other than `a` — the inner element of a composition, say — is a
-      predicate goal too, but `SideGoalKind.ofType` sees only the statement and so cannot
-      recognize one whose predicate is a variable.  The outer metavariables are frozen: this is a
-      test, and only `b` is allowed to be determined by it. -/
+      /- `p b` for an element `b` other than those met so far — the inner element of a
+      composition, say — is a predicate goal too, but `SideGoalKind.ofType` sees only the
+      statement and so cannot recognize one whose predicate is a variable.  The outer
+      metavariables are frozen: this is a test, and only `b` is allowed to be determined by it. -/
       let kind ← withNewMCtxDepth do
-        let b ← mkFreshExprMVar ctx.alg
-        if ← withReducible <| isDefEq type (mkApp pred b) then pure .predicate
-        else pure (.ofType type)
+        for pi in known do
+          let b ← mkFreshExprMVar pi.mode.alg
+          if ← withReducible <| isDefEq type (mkApp pi.pred b) then return .predicate
+        return .ofType type
       mvarId.assign (← newSideGoal type kind)
       trace[Tactic.cfc_pull] "deferred `{type}`"
 
@@ -338,12 +345,11 @@ side against `e` and returning the other, instantiated. This handles the `Scalar
 `Compose` categories. -/
 def rewriteWithCFCLemma (declName : Name) (srcOnLhs : Bool) (e : Expr) (mode : Mode) :
     PullM (CFCApp × Expr) := do
-  let ctx ← read
   let (mvars, bis, lhs, rhs, proof) ← instantiateLemma declName
   let (srcSide, tgtSide) := if srcOnLhs then (lhs, rhs) else (rhs, lhs)
   let some cs := CFCApp.match? srcSide |
     throwError "not a `cfc`-to-`cfc` lemma"
-  unless ← withReducible <| isDefEq cs.alg ctx.alg do
+  unless ← withReducible <| isDefEq cs.alg mode.alg do
     throwError "wrong algebra"
   unless ← withReducible <| isDefEq cs.pred (← getPredicate mode) do
     throwError "wrong predicate"
@@ -388,41 +394,46 @@ def convert (res : Result) (want : Mode) : PullM Result := do
 
 /-- Apply a `Pull` lemma to `e`, recursing on the holes with `rec`.
 
-The steps, in order: fix the algebra, ring, predicate and element of the lemma; replace the holes
+The steps, in order: fix the algebra, ring, element and predicate of the lemma; replace the holes
 of its algebraic side by fresh metavariables and match the result against `e`; recurse on what
-the holes matched; assign the functions so obtained; synthesise instances; and assemble the
-proof. Assigning the element *before* matching is what makes lemmas whose algebraic side does
-not mention it (such as `cfc_const_one`) apply only at the right element. -/
+the holes matched, each at the mode of its hole; assign the functions so obtained; synthesise
+instances; and assemble the proof. Assigning the element *before* matching is what makes lemmas
+whose algebraic side does not mention it (such as `cfc_const_one`) apply only at the right
+element, and it is what determines the modes of the holes: in `StarAlgHom.map_cfc`, matching
+`cfc f (φ a)` against the target fixes `a`, and with it the hole `cfc f a` in the domain. -/
 def applyPullLemma (l : PullLemma) (e : Expr) (want : Mode)
     (rec : Expr → Mode → PullM Result) : PullM Result := do
-  let ctx ← read
   let (mvars, bis, lhs, rhs, proof) ← instantiateLemma l.declName
   let (cfcSide, algSide) := if l.cfcOnLhs then (lhs, rhs) else (rhs, lhs)
   let some c := CFCApp.match? cfcSide | throwError "not a pull lemma"
-  unless ← withReducible <| isDefEq c.alg ctx.alg do
+  unless ← withReducible <| isDefEq c.alg want.alg do
     throwError "wrong algebra"
   if l.ring == .any then
     unless ← withReducible <| isDefEq c.ring want.ring do
       throwError "wrong scalar ring"
-  let mode : Mode := { c.toMode with ring := ← instantiateMVars c.ring }
+  unless ← withReducible <| isDefEq c.elem want.elem do
+    throwError "wrong element"
+  let mode ← c.toMode.instantiateMVars
   unless ← withReducible <| isDefEq c.pred (← getPredicate mode) do
     throwError "wrong predicate"
-  unless ← withReducible <| isDefEq c.elem ctx.elem do
-    throwError "wrong element"
   -- Replace the holes by fresh metavariables and match.  `pat` is kept unassigned so that the
   -- holes can be abstracted again below, after unification has filled in everything else.
   let (pat, holes, phs) ←
-    abstractHoles (isHoleFor c (fun e => return e.isMVar && !(← e.mvarId!.isAssigned)))
-      (mkFreshExprMVar ctx.alg) algSide
+    abstractHoles (isHole fun e => return e.isMVar && !(← e.mvarId!.isAssigned))
+      (fun h => do mkFreshExprMVar (← inferType h)) algSide
   unless ← withReducible <| isDefEq pat e do
     throwError "does not match: `{pat}` ≠ `{e}`"
-  -- Recurse on the subterms the holes matched.
+  -- Recurse on the subterms the holes matched, each at the mode of its hole.
   let mut results := #[]
-  for h in phs do
-    let sub ← instantiateMVars h
+  for (hole, ph) in holes.zip phs do
+    let sub ← instantiateMVars ph
     if sub.isMVar then
-      throwError "the hole `{h}` was not determined by matching"
-    results := results.push (← rec sub mode)
+      throwError "the hole `{ph}` was not determined by matching"
+    let some hc := CFCApp.match? hole | throwError "internal error: bad hole"
+    let holeMode ← hc.toMode.instantiateMVars
+    if holeMode.elem.hasExprMVar || holeMode.ring.hasExprMVar then
+      throwError "the hole `{hole}` is at an element or ring that matching did not determine"
+    results := results.push (← rec sub holeMode)
   for (hole, res) in holes.zip results do
     let some hc := CFCApp.match? hole | throwError "internal error: bad hole"
     unless ← withReducible <| isDefEq hc.fn res.app.fn do
@@ -433,7 +444,11 @@ def applyPullLemma (l : PullLemma) (e : Expr) (want : Mode)
   let cfcSide' ← instantiateMVars cfcSide
   let some cc := CFCApp.match? cfcSide' | throwError "internal error: lost the `cfc` side"
   let newApp := cc.withFn (← Core.betaReduce cc.fn)
-  let hcongr ← withLocalDeclsD (phs.map fun _ => (`x, fun _ => pure ctx.alg)) fun xs => do
+  -- one variable per hole, of that hole's algebra
+  let decls ← phs.mapM fun ph => do
+    let ty ← instantiateMVars (← inferType ph)
+    return (`x, fun (_ : Array Expr) => pure ty)
+  let hcongr ← withLocalDeclsD decls fun xs => do
     let body ← instantiateMVars <| pat.replace fun s => match s with
       | .mvar m => (phs.findIdx? (·.mvarId! == m)).map (xs[·]!)
       | _ => none
@@ -455,22 +470,24 @@ This is what lets `NormedSpace.exp (I • a)` become `cfc Complex.exp (I • a)`
 lemma applied at an unknown element would themselves be applications of the calculus at that
 unknown element. -/
 def applyLooseLemma (l : PullLemma) (e : Expr) (want : Mode) : PullM (Expr × Expr) := do
-  let ctx ← read
   if l.numHoles != 0 then
     throwError "it has holes, so it cannot be applied at an unknown element"
   let (mvars, bis, lhs, rhs, proof) ← instantiateLemma l.declName
   let (cfcSide, algSide) := if l.cfcOnLhs then (lhs, rhs) else (rhs, lhs)
   let some c := CFCApp.match? cfcSide | throwError "not a pull lemma"
-  unless ← withReducible <| isDefEq c.alg ctx.alg do
+  unless ← withReducible <| isDefEq c.alg want.alg do
     throwError "wrong algebra"
   if l.ring == .any then
     unless ← withReducible <| isDefEq c.ring want.ring do
       throwError "wrong scalar ring"
-  let mode : Mode := { c.toMode with ring := ← instantiateMVars c.ring }
-  unless ← withReducible <| isDefEq c.pred (← getPredicate mode) do
-    throwError "wrong predicate"
   unless ← withReducible <| isDefEq algSide e do
     throwError "does not match `{e}`"
+  -- the element is whatever the match made it, and the predicate is that of the calculus there
+  let mode ← c.toMode.instantiateMVars
+  if mode.elem.hasExprMVar then
+    throwError "the element was not determined by matching"
+  unless ← withReducible <| isDefEq c.pred (← getPredicate mode) do
+    throwError "wrong predicate"
   synthAppInstances l.declName default mvars bis false false
   let cfcSide ← instantiateMVars cfcSide
   let some cc := CFCApp.match? cfcSide | throwError "internal error: lost the `cfc` side"
@@ -538,10 +555,10 @@ mutual
 
 /-- Pull `e` towards `cfc f a` at the mode `want`. -/
 partial def pull (e : Expr) (want : Mode) : PullM Result := withIncRecDepth do
-  withTraceNode `Tactic.cfc_pull (fun _ => return m!"pull {e} into a {want}") do
+  withTraceNode `Tactic.cfc_pull (fun _ => do return m!"pull {e} into a {← describeMode want}") do
     let ctx ← read
     -- 1. the element itself
-    if ← withReducible <| isDefEq e ctx.elem then
+    if ← withReducible <| isDefEq e want.elem then
       for l in ctx.lemmas.id do
         let r ← attempt? (ppConst l.declName) do
           convert (← applyPullLemma l.toPullLemma e want pull) want
@@ -569,7 +586,7 @@ partial def pull (e : Expr) (want : Mode) : PullM Result := withIncRecDepth do
       | some n => ppConst n
       | none => m!"_"
     let mut msg := m!"`cfc_pull` got stuck on `{e}`{indentD m!"(head symbol: \
-      {head}, target: {want} at `{ctx.elem}`)"}"
+      {head}, target: {want} at `{want.elem}`)"}"
     -- A local definition is an atom unless `+zetaDelta` is given.
     if !ctx.cfg.zetaDelta then
       if let .fvar fvarId := e.getAppFn then
@@ -579,7 +596,7 @@ partial def pull (e : Expr) (want : Mode) : PullM Result := withIncRecDepth do
             first — `set .. with h` hands you the equation `h` to do it with."
     -- `e` is already an application of the calculus, just to the wrong element; this is a dead end.
     if let some c := CFCApp.match? e then
-      unless ← withNewMCtxDepth <| withReducible <| isDefEq c.elem ctx.elem do
+      unless ← withNewMCtxDepth <| withReducible <| isDefEq c.elem want.elem do
         msg := msg ++ m!"\nThe calculus is already applied here, but to a different\n\
           element; `cfc_pull` only ever makes the element simpler, never more\n\
           complicated. If it is that element you meant to pull towards, name\n\
@@ -591,7 +608,7 @@ partial def pullExisting (c : CFCApp) (want : Mode) : PullM Result := do
   let ctx ← read
   let e := c.toExpr
   let mode := c.toMode
-  if ← withReducible <| isDefEq c.elem ctx.elem then
+  if ← withReducible <| isDefEq c.elem want.elem then
     return { app := c, proof := ← mkEqRefl e }
   -- The calculus is applied to something else, so this is a composition. Adjust unitality first.
   if c.unital != want.unital then
@@ -616,11 +633,11 @@ partial def pullExisting (c : CFCApp) (want : Mode) : PullM Result := do
     if let some r := r then return r
   -- Otherwise, pull the inner element first and try again; that turns `cfc g b` into
   -- `cfc g (cfc h a)`, which the composition lemma for `cfc` (namely `cfc_comp'`) handles.
-  let inner ← pull c.elem mode
+  let inner ← pull c.elem { mode with elem := want.elem }
   if inner.app.toExpr == c.elem then
     throwError "`cfc_pull` made no progress on the inner element `{c.elem}`"
   let newE := (c.withElem inner.app.toExpr).toExpr
-  let step ← withLocalDeclD `y ctx.alg fun y => do
+  let step ← withLocalDeclD `y c.alg fun y => do
     let F ← mkLambdaFVars #[y] (c.withElem y).toExpr
     mkCongrArg F inner.proof
   let step ← mkExpectedTypeHint step (← mkEq e newE)
@@ -632,7 +649,7 @@ end
 /-! ### Entry point -/
 
 /-- Determine the mode to work in from information supplied by the user. -/
-def mkMode (cfg : Config) (R alg : Expr) : MetaM Mode := do
+def mkMode (cfg : Config) (R alg elem : Expr) : MetaM Mode := do
   if cfg.unital then
     let ok ←
       try
@@ -640,8 +657,8 @@ def mkMode (cfg : Config) (R alg : Expr) : MetaM Mode := do
         let cls ← mkClassApp ``ContinuousFunctionalCalculus #[R, alg, p]
         pure (← trySynthInstance cls).toOption.isSome
       catch _ => pure false
-    if ok then return { ring := R, unital := true }
-  return { ring := R, unital := false }
+    if ok then return { ring := R, unital := true, alg, elem }
+  return { ring := R, unital := false, alg, elem }
 
 /-- Run the core of `cfc_pull` on `e`: returns the rewritten expression, a proof that `e` equals
 it, and the side goals that proof depends on. -/
@@ -651,8 +668,8 @@ def runPull (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
   let alg ← inferType elem
   unless ← isDefEq (← inferType e) alg do
     throwError "`cfc_pull`: `{e}` does not live in the algebra `{alg}`"
-  let target ← mkMode cfg R alg
-  let ctx : Context := { cfg, elem, alg, target, lemmas }
+  let target ← mkMode cfg R alg elem
+  let ctx : Context := { cfg, target, lemmas }
   let (res, st) ←
     withConfig (fun c => { c with zetaDelta := cfg.zetaDelta }) <|
       ((do let _ ← getPredicate target; pull e target).run ctx).run {}

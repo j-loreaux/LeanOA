@@ -42,30 +42,42 @@ def ppConst (n : Name) : MessageData := .ofConstName n (fullNames := true)
 
 /-! ### Recognising applications of `cfc` and `cfcₙ` -/
 
-/-- The scalar ring and unitality of the relevant continuous functional calculus. -/
+/-- The target of a pull: the scalar ring and unitality of the relevant continuous functional
+calculus, and the element it is applied to. Every recursive call of the tactic has its own; in
+particular a lemma such as `StarAlgHom.map_cfc : φ (cfc f a) = cfc f (φ a)` sends the recursion
+into the domain of `φ`, at a different element of a different algebra. -/
 structure Mode where
   /-- The scalar ring. -/
   ring : Expr
   /-- `true` for `cfc`, `false` for `cfcₙ`. -/
   unital : Bool
+  /-- The algebra `A`. -/
+  alg : Expr
+  /-- The element `a : A`. -/
+  elem : Expr
   deriving Inhabited
 
+/-- Only the ring and the unitality: the element is reported separately, where it matters. -/
 instance : ToMessageData Mode where
   toMessageData m := m!"{ppConst (if m.unital then ``cfc else ``cfcₙ)} over {m.ring}"
 
+/-- Instantiate the metavariables in a mode. -/
+def Mode.instantiateMVars (m : Mode) : MetaM Mode := do
+  let ring ← Lean.instantiateMVars m.ring
+  let alg ← Lean.instantiateMVars m.alg
+  let elem ← Lean.instantiateMVars m.elem
+  return { m with ring, alg, elem }
+
 /-- An application `cfc f a` or `cfcₙ f a`, together with the pieces of it that we care about.
-We keep the application itself so that we don't need to re-synthesize instance arguments. -/
+We keep the application itself so that we don't need to re-synthesize instance arguments. Its
+mode is the one whose target is its own element. -/
 structure CFCApp extends Mode where
   /-- The application itself, `cfc f a` or `cfcₙ f a`. -/
   toExpr : Expr
-  /-- The algebra `A`. -/
-  alg : Expr
   /-- The predicate `p : A → Prop` attached to the calculus. -/
   pred : Expr
   /-- The function `f : R → R`. -/
   fn : Expr
-  /-- The element `a : A`. -/
-  elem : Expr
   deriving Inhabited
 
 /-- Recognise an application of `cfc` or `cfcₙ`. -/
@@ -136,9 +148,9 @@ structure IdLemma where
 /-- A lemma with `cfc`/`cfcₙ` on one side and an algebraic expression on the other, e.g.
 `cfc_mul : cfc (fun x ↦ f x * g x) a = cfc f a * cfc g a`.
 
-The subterms of the algebraic side which are themselves `cfc`/`cfcₙ` applications at the same
-ring, unitality and element (here `cfc f a` and `cfc g a`) are called *holes*: they are the
-positions at which the tactic recurses. -/
+The subterms of the algebraic side which are themselves `cfc`/`cfcₙ` applications with a
+variable function (here `cfc f a` and `cfc g a`) are called *holes*: they are the positions at
+which the tactic recurses, each at its own ring, unitality, algebra and element. -/
 structure PullLemma where
   /-- The name of the tagged declaration. -/
   declName : Name
@@ -261,16 +273,16 @@ def getLemmas : CoreM Lemmas := return cfcPullExt.getState (← getEnv)
 /-! ### Finding and abstracting holes -/
 
 /-- Replace every maximal subterm of `e` satisfying `isHole` by a fresh placeholder produced by
-`mk`. Returns the resulting pattern together with the replaced subterms and the placeholders
-used, both in left-to-right traversal order. Subterms containing loose bound variables are never
-treated as holes.
+`mk` from it. Returns the resulting pattern together with the replaced subterms and the
+placeholders used, both in left-to-right traversal order. Subterms containing loose bound
+variables are never treated as holes.
 
 The traversal is written out rather than delegated to `Meta.transform` for two reasons, both to
 do with that loose-bound-variable test: `Meta.transform` instantiates binders with local
 hypotheses before visiting a body, so the test would never fire and a hole could capture a
 variable that does not exist outside the traversal; and it memoises on structural equality, which
 would give two structurally equal holes the same placeholder. -/
-partial def abstractHoles (isHole : Expr → MetaM Bool) (mk : MetaM Expr) (e : Expr) :
+partial def abstractHoles (isHole : Expr → MetaM Bool) (mk : Expr → MetaM Expr) (e : Expr) :
     MetaM (Expr × Array Expr × Array Expr) := do
   let (pat, (holes, phs)) ← (go e).run (#[], #[])
   return (pat, holes, phs)
@@ -279,7 +291,7 @@ where
   go (e : Expr) : StateT (Array Expr × Array Expr) MetaM Expr := do
     if !e.hasLooseBVars then
       if ← isHole e then
-        let ph ← mk
+        let ph ← mk e
         modify fun (hs, ps) => (hs.push e, ps.push ph)
         return ph
     match e with
@@ -291,27 +303,28 @@ where
     | .proj s i b => return .proj s i (← go b)
     | _ => return e
 
-/-- Test whether `s` is a hole relative to the `cfc` application `ref`: an application of the
-same calculus, at the same ring and element, whose function argument is a variable in the sense
-of `isVar`. -/
-def isHoleFor (ref : CFCApp) (isVar : Expr → MetaM Bool) (s : Expr) : MetaM Bool := do
+/-- Test whether `s` is a hole: an application of the calculus whose function argument is a
+variable in the sense of `isVar`. Its ring, unitality, algebra and element are its own and need
+not be those of the lemma's `cfc` side — in `StarAlgHom.map_cfc : φ (cfc f a) = cfc f (φ a)`
+the hole `cfc f a` lives in the domain of `φ`, at `a` rather than at `φ a` — because the
+recursion into a hole runs at the hole's own mode. -/
+def isHole (isVar : Expr → MetaM Bool) (s : Expr) : MetaM Bool := do
   let some c := CFCApp.match? s | return false
-  unless c.unital == ref.unital do return false
-  unless ← isVar c.fn do return false
-  withNewMCtxDepth do
-    unless ← isDefEq c.ring ref.ring do return false
-    unless ← isDefEq c.elem ref.elem do return false
-    return true
+  -- a partial application is not one: `cfc R A p ⋯` inside `cfc R A p ⋯ (f i) a`, say, which the
+  -- traversal reaches because the full application mentions the bound variable `i`
+  unless s.getAppNumArgs == (← getConstInfo s.getAppFn.constName!).type.getForallArity do
+    return false
+  isVar c.fn
 
-/-- The subterms of `alg` that *would* be holes relative to `ref` were it not for the bound
-variables they mention. `abstractHoles` skips these, so a lemma containing one is usable but
-weaker than it looks; the attribute warns about them. -/
-def boundHoles (ref : CFCApp) (alg : Expr) : MetaM (Array Expr) := do
+/-- The subterms of `alg` that *would* be holes were it not for the bound variables they mention.
+`abstractHoles` skips these, so a lemma containing one is usable but weaker than it looks; the
+attribute warns about them. -/
+def boundHoles (alg : Expr) : MetaM (Array Expr) := do
   let acc ← IO.mkRef (#[] : Array Expr)
   alg.forEach' fun e => do
     if e.hasLooseBVars then
       if let some c := CFCApp.match? e then
-        if c.unital == ref.unital && c.fn.getAppFn.isMVar then
+        if c.fn.getAppFn.isMVar then
           acc.modify (·.push e)
           -- do not descend: a partial application of `cfc` inside a full one is not a
           -- separate hole
@@ -385,8 +398,10 @@ where
     if ← withNewMCtxDepth <| isDefEq alg c.elem then
       return .id { declName, ring := .ofExpr c.ring, unital := c.unital, cfcOnLhs }
     let isVar (e : Expr) : MetaM Bool := return e.isMVar
-    let (pat, holes, _) ← abstractHoles (isHoleFor c isVar) (mkFreshExprMVar c.alg) alg
-    for b in ← boundHoles c alg do
+    -- a placeholder has the type of the hole it stands for, which is that hole's algebra
+    let (pat, holes, _) ←
+      abstractHoles (isHole isVar) (fun h => do mkFreshExprMVar (← inferType h)) alg
+    for b in ← boundHoles alg do
       unless cfcPull.warnBoundHoles.get (← getOptions) do continue
       logWarning m!"`{decl}` applies the functional calculus at{indentExpr b}\n\
         which mentions a bound variable. `cfc_pull` cannot recurse under a binder, so it will\n\
