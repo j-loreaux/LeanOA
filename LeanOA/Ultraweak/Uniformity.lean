@@ -101,7 +101,7 @@ private lemma cauchy_weakE_iff_forall_posCLM {l : Filter (WeakE M P)} :
     simpa using! (ihφ.prod ihψ).mono (tendsto_map.prodMk tendsto_map) |>.map uniformContinuous_add
   | smul a φ hφ ihφ => simpa using! ihφ.map <| uniformContinuous_const_smul a
 
-private lemma tendsto_weakE_iff_forall_posCLM {α : Type*} [TopologicalSpace α]
+private lemma tendsto_weakE_iff_forall_posCLM {α : Type*}
     {l : Filter α} (x : WeakE M P) {f : α → WeakE M P} :
     Tendsto f l (𝓝 x) ↔ ∀ φ : σ(M, P) →P[ℂ] ℂ,
       Tendsto (fun m ↦ φ (toUltraweak ℂ P (weakEEquiv M P (f m)))) l
@@ -181,7 +181,7 @@ lemma cauchy_of_forall_posCLM_of_disjoint {l : Filter σ(M, P)}
   refine cauchy_of_forall_posCLM_of_eventually (r := r) ?_ hl
   filter_upwards [mem_of_superset hsl (by simpa using hr)] using by simp
 
-variable {α : Type*} [TopologicalSpace α] {l : Filter α} {a : α} {s : Set α}
+variable {α : Type*} {l : Filter α} {a : α} {s : Set α}
   {x : σ(M, P)} {f : α → σ(M, P)}
 
 -- this proof is totally gross
@@ -226,6 +226,8 @@ lemma tendsto_of_forall_posCLM_of_disjoint (hfl : Disjoint (map f l) (cobounded 
   refine tendsto_of_forall_posCLM_of_eventually (r := r) ?_ hf
   filter_upwards [mem_of_superset (mem_map.mp hsl) (preimage_mono <| by simpa using hr)]
   simp
+
+variable [TopologicalSpace α]
 
 /-- If `f : α → σ(M, P)` is eventually bounded along `𝓝[s] a`, and for every
 positive continuous linear functional `φ : σ(M, P) →P[ℂ] ℂ`, `φ ∘ f` is continuous at `a` within

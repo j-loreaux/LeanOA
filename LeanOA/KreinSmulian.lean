@@ -101,6 +101,7 @@ lemma separationSeq_induction_step_aux {s t : ℝ} (hs : 0 < s) (ht : s < t)
     simp only [Subtype.exists, exists_and_left, exists_prop, ι, T]
     refine ⟨G ∪ H, ?sub1, ⟨hG₁.union hH₁, union_subset hG₂ hH₂⟩, ?sub2⟩
     case sub1 | sub2 => exact LinearMap.polar_antitone _ (by simp)
+  simp_rw [← disjoint_iff_inter_eq_empty] at hsT ⊢
   simpa [ι, T, and_assoc] using h_cpct.elim_directed_family_closed T hTc hsT h_dir
 
 /-- Suppose `A : Set (WeakDual 𝕜 E)` satisfies the `KreinSmulianProperty` and it's polar
@@ -324,7 +325,7 @@ theorem krein_smulian (A : Set (WeakDual 𝕜 E))
       fun b : WeakDual 𝕜 E ↦ RCLike.re (-((r : 𝕜)⁻¹ • φ₀ x)  + (r : 𝕜)⁻¹ • b x)
     fun_prop)
   replace this := this hφ_mem
-  simp only [mem_setOf_eq, neg_add_cancel] at this
+  simp only [mem_ofPred_eq, neg_add_cancel] at this
   change s ≤ RCLike.re 0 at this -- grrrr...
   simp only [map_zero] at this
   exact lt_irrefl _ <| hs.trans_le this

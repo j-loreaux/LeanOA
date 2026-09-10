@@ -1,8 +1,8 @@
 module
 
 public import LeanOA.Ultraweak.Basic
-public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Transfer
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Transfer
 public import Mathlib.Algebra.Star.Subalgebra
 
 @[expose] public section

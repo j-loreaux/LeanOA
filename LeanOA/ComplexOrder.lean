@@ -28,9 +28,7 @@ lemma sSup_def {s : Set ℂ} (hs : s.Nonempty) (hs' : BddAbove s) :
 @[simp]
 lemma sSup_empty : sSup (∅ : Set ℂ) = 0 := by simp [sSup]
 
-@[simp]
-lemma iSup_empty {ι : Type*} [IsEmpty ι] {f : ι → ℂ} : ⨆ i, f i = 0 := by
-  simp [← sSup_range, Set.range_eq_empty]
+lemma iSup_empty {ι : Type*} [IsEmpty ι] {f : ι → ℂ} : ⨆ i, f i = 0 := by simp
 
 lemma sSup_of_not_bddAbove {s : Set ℂ} (h : ¬BddAbove s) : sSup s = 0 := by simp [sSup, h]
 
