@@ -111,9 +111,14 @@ reals, creating continuity side goals that are harder to discharge via `fun_prop
 
 /-! ### Pulling through a homomorphism
 
-Note that the element to pull towards lives in the *codomain*. -/
+Note that the element to pull towards lives in the *codomain*.
+
+The morphism-specific lemmas should be used first, if possible, falling back to
+the generic ones when they cannot be used. -/
 
 attribute [cfc_pull] StarAlgHom.map_cfc NonUnitalStarAlgHom.map_cfcₙ
+
+attribute [cfc_pull 900] StarAlgHomClass.map_cfc NonUnitalStarAlgHomClass.map_cfcₙ
 
 /-! ### Composition -/
 

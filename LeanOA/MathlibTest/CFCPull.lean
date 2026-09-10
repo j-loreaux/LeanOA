@@ -437,34 +437,51 @@ section StarAlgHom
 /-! ## Star algebra homomorphism -/
 
 variable {A B : Type*} [CStarAlgebra A] [CStarAlgebra B] {a : A}
+open scoped CStarAlgebra
 
 example (φ : A →⋆ₐ[ℂ] B) (f : ℂ → ℂ) (hφ : Continuous φ) (ha : IsStarNormal a)
     (hφa : IsStarNormal (φ a)) (hf : ContinuousOn f (spectrum ℂ a)) :
     φ (cfc f a) = cfc f (φ a) := by
   cfc_pull ℂ (φ a)
 
-example (φ : A →⋆ₐ[ℂ] B) (f g : ℂ → ℂ) (hφ : Continuous φ) (ha : IsStarNormal a)
-    (hφa : IsStarNormal (φ a)) (hf : ContinuousOn f (spectrum ℂ a))
-    (hg : ContinuousOn g (spectrum ℂ a))
-    (hf' : ContinuousOn (fun x ↦ star (f x)) (spectrum ℂ (φ a)))
-    (hg' : ContinuousOn g (spectrum ℂ (φ a))) :
-    star (φ (cfc f a)) * φ (cfc g a) = cfc (fun x ↦ star (f x) * g x) (φ a) := by
+example (φ : A →⋆ₐ[ℂ] B) (f : ℝ → ℝ) (ha : IsSelfAdjoint a)
+    (hf₁ : ContinuousOn f (quasispectrum ℝ a)) (hf0 : f 0 = 0) :
+    φ (cfcₙ f a) = cfcₙ f (φ a) := by
+  -- uses `NonUnitalStarAlgHomClass.map_cfcₙ` with `S := ℝ`, `R := ℂ`, and `F := A →⋆ₐ[ℂ] B`.
+  cfc_pull -unital ℝ (φ a)
+
+example {F : Type*} [FunLike F A B] [NonUnitalAlgHomClass F ℂ A B] [StarHomClass F A B] (φ : F)
+    (f g : ℂ → ℂ) (ha : IsStarNormal a) (hf : Continuous f) (hf0 : f 0 = 0)
+    (hg : Continuous g) (hg0 : g 0 = 0) :
+    star (φ (cfcₙ f a)) * (φ (cfc g a)) =
+      φ (cfcₙ (fun x ↦ star (f x) * (g x)) a) := by
+  cfc_pull -unital ℂ (φ a)
+
+example (φ : A →⋆ₐ[ℂ] B) (f g : ℝ → ℝ) (ha : IsSelfAdjoint a) (hf : Continuous f) (hf0 : f 0 = 0)
+    (hg : Continuous g) (hg0 : g 0 = 0) :
+    star (φ (cfcₙ f a)) * (φ (cfc g a)) =
+      φ (cfcₙ (fun x ↦ star (f x) * (g x)) a) := by
   cfc_pull ℂ (φ a)
+  simp
+
+example (φ : A →⋆ₐ[ℂ] B) (f g : ℝ → ℝ) (ha : IsSelfAdjoint a) (hf : Continuous f) (hf0 : f 0 = 0)
+    (hg : Continuous g) (hg0 : g 0 = 0) :
+    star (φ (cfcₙ f a)) * (φ (cfc g a)) =
+      φ (cfcₙ (fun x ↦ star (f x) * (g x)) a) := by
+  cfc_pull ℝ (φ a)
 
 /- The argument of `φ` need not already be an application of the calculus: it is pulled towards
 `a` in `A`, and the result carried through `φ`. -/
-example (φ : A →⋆ₐ[ℂ] B) (hφ : Continuous φ) (ha : IsStarNormal a) (hφa : IsStarNormal (φ a)) :
+example (φ : A →⋆ₐ[ℂ] B) (ha : IsStarNormal a) :
     φ (star a * a) = cfc (fun x : ℂ ↦ star x * x) (φ a) := by
   cfc_pull ℂ (φ a)
 
-example (φ : A →⋆ₐ[ℂ] B) (hφ : Continuous φ) (ha : IsStarNormal a) (hφa : IsStarNormal (φ a)) :
+example (φ : A →⋆ₐ[ℂ] B) (ha : IsStarNormal a) :
     star (φ (a ^ 2)) * φ a = cfc (fun x : ℂ ↦ star (x ^ 2) * x) (φ a) := by
   cfc_pull ℂ (φ a)
 
 /- Two homomorphisms deep: the recursion descends through `ψ` and then through `φ`. -/
-example {C : Type*} [CStarAlgebra C] (φ : A →⋆ₐ[ℂ] B) (ψ : B →⋆ₐ[ℂ] C) (hφ : Continuous φ)
-    (hψ : Continuous ψ) (ha : IsStarNormal a) (hφa : IsStarNormal (φ a))
-    (hψa : IsStarNormal (ψ (φ a))) :
+example {C : Type*} [CStarAlgebra C] (φ : A →⋆ₐ[ℂ] B) (ψ : B →⋆ₐ[ℂ] C) (ha : IsStarNormal a) :
     ψ (φ (star a * a)) = cfc (fun x : ℂ ↦ star x * x) (ψ (φ a)) := by
   cfc_pull ℂ (ψ (φ a))
 

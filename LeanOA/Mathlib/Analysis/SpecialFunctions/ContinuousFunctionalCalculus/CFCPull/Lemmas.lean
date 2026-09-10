@@ -148,3 +148,11 @@ lemma cfcₙ_complex_comp_norm [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarT
 end NonUnital
 
 end Norm
+
+@[fun_prop]
+lemma StarAlgHom.continuous_restrictScalars {R S A B : Type*} [TopologicalSpace A]
+    [TopologicalSpace B] [CommSemiring R] [CommSemiring S] [Semiring A] [Semiring B] [Algebra R S]
+    [Algebra S A] [Algebra S B] [Algebra R A] [Algebra R B] [IsScalarTower R S A]
+    [IsScalarTower R S B] [Star A] [Star B] {f : A →⋆ₐ[S] B} (hf : Continuous f) :
+    Continuous (f.restrictScalars R) :=
+  hf
