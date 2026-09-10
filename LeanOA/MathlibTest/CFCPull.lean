@@ -324,6 +324,8 @@ example : ((star a * a) * (1 - star a * a) ^ 2 : A⁺¹) =
   case cfc_pull.side =>
     rw [← IsSelfAdjoint.spectrumRestricts (by cfc_tac) |>.algebraMap_image]
     simp
+  -- this is a bug with the `@[congr]` lemma `cfc_congr'`, fixed in #43689
+  norm_cast
   norm_cast
 
 end NonUnital
