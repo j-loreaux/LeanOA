@@ -22,10 +22,29 @@ namespace Mathlib.Tactic.CFCPull
 
 open Lean Meta Elab Tactic
 
-/-- Elaborate the configuration of `cfc_pull`. `discharger` is omitted because its value is a
-tactic rather than a term; `mkConfig` fills it in from the `(disch := ..)` clause. -/
+/-- The value of a tactic-valued option: `(opt := by tac)` sets it to `tac`, and `(opt := none)`
+turns it off, so that side goals of that kind are deferred unattempted. -/
+def elabTacOption (item : ConfigEval.ConfigItem) : TermElabM (Option (TSyntax `tactic)) := do
+  match item.value with
+  -- parenthesised so that a multi-tactic sequence stays one tactic
+  | `(by $seq) => return some (← `(tactic| ($seq)))
+  | `(none) => return none
+  | _ => throwErrorAt item.value "expected `by tac` or `none`"
+
+/-- Elaborate the configuration of `cfc_pull`. The tactic-valued fields take `by tac` or `none`
+through `elabTacOption`. `discharger` is omitted; `mkConfig` fills it in from the
+`(disch := ..)` clause. -/
 declare_config_elab elabCFCPullConfig Config where
   omit discharger
+  option contTac := fun cfg item => do
+    item.addConstInfo ``Config.contTac
+    return { cfg with contTac := ← elabTacOption item }
+  option mapZeroTac := fun cfg item => do
+    item.addConstInfo ``Config.mapZeroTac
+    return { cfg with mapZeroTac := ← elabTacOption item }
+  option predTac := fun cfg item => do
+    item.addConstInfo ``Config.predTac
+    return { cfg with predTac := ← elabTacOption item }
 
 /-! ### Side goals -/
 
@@ -33,17 +52,13 @@ declare_config_elab elabCFCPullConfig Config where
 def tryTacticOn (g : MVarId) (tac : TacticM Unit) : TacticM Bool :=
   tryTactic do unless (← Tactic.run g tac).isEmpty do failure
 
-/-- The tactic to try on a side goal of this kind. This returns `TSyntax` as oppposed to
+/-- The tactic to try on a side goal of this kind, if any. This returns `TSyntax` as opposed to
 `TacticM Unit` because we also want it to appear in traces. -/
-def SideGoalKind.tactic? (cfg : Config) : SideGoalKind → MetaM (Option (TSyntax `tactic))
-  | .continuity => return some (← `(tactic| cfc_cont_tac))
-  | .mapZero => return some (← `(tactic| cfc_zero_tac))
-  | .other => return cfg.discharger
-  | .predicate =>
-    return some (← `(tactic| first
-      | exact $(mkCIdent ``cfc_predicate) _ _
-      | exact $(mkCIdent ``cfcₙ_predicate) _ _
-      | cfc_tac))
+def SideGoalKind.tactic? (cfg : Config) : SideGoalKind → Option (TSyntax `tactic)
+  | .continuity => cfg.contTac
+  | .mapZero => cfg.mapZeroTac
+  | .predicate => cfg.predTac
+  | .other => cfg.discharger
 
 /-- Deduplicate side goals and try to close them with the appropriate tactic, including the user
 provided discharger for `SideGoalKind.other` goals. With `+deferAll` no attempt is made. -/
@@ -67,10 +82,14 @@ def postProcessSideGoals (cfg : Config) (goals : Array (MVarId × SideGoalKind))
     if ← withReducible g.assumptionCore then
       trace[Tactic.cfc_pull] "{checkEmoji} closed `{type}` with `assumption`"
       continue
-    if let some tac ← kind.tactic? cfg then
+    if let some tac := kind.tactic? cfg then
       if ← tryTacticOn g (evalTactic tac) then
         trace[Tactic.cfc_pull] "{checkEmoji} closed `{type}` with `{tac}`"
         continue
+    else
+      trace[Tactic.cfc_pull] "deferring `{type}` unattempted (no discharger for `{kind.tag}` goals)"
+      out := out.push g
+      continue
     trace[Tactic.cfc_pull] "{crossEmoji} could not close `{type}`"
     out := out.push g
   unless cfg.defer || cfg.deferAll || out.isEmpty do
@@ -223,6 +242,10 @@ example (ha : p a) : star a * a = cfc (eun x : R ↦ star x * x) a := by
 * `cfc_pull +zetaDelta R a`: unfold `let`-bound variables.
 * `cfc_pull (disch := tac) R a`: run `tac` to attempt to discharge side goals (only applicable
   for side goals in the category `cfc_pull.side`).
+* `cfc_pull (contTac := by tac) R a`: run `tac` instead of `cfc_cont_tac` on `cfc_pull.continuity`
+  side goals; likewise `mapZeroTac` (default `cfc_zero_tac`) for `cfc_pull.mapZero` goals and
+  `predTac` for `cfc_pull.predicate` goals. `(contTac := none)` and so on skip the tactic entirely,
+  so only `assumption` is tried.
 * `cfc_pull R a => tacticSeq` (`conv` mode only): discharge unsolved side goals with the supplied
   tactic script (implies `+defer`).
 

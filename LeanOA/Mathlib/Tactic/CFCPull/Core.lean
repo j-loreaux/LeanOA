@@ -6,6 +6,7 @@ Authors: Jireh Loreaux
 module
 
 public import LeanOA.Mathlib.Tactic.CFCPull.Attr
+public import Mathlib.Tactic.ContinuousFunctionalCalculus
 
 /-!
 # The core of the `cfc_pull` tactic
@@ -71,6 +72,16 @@ structure Config where
   zetaDelta : Bool := false
   /-- A tactic to try on side goals `cfc_pull` has no built-in way to prove. -/
   discharger : Option (TSyntax `tactic) := none
+  /-- A tactic to try on side goals pertaining to continuity (default: `cfc_cont_tac`). -/
+  contTac : Option (TSyntax `tactic) := some (Unhygienic.run `(tactic| cfc_cont_tac))
+  /-- A tactic to try on side goals of the form `f 0 = 0` (default: `cfc_zero_tac`). -/
+  mapZeroTac : Option (TSyntax `tactic) := some (Unhygienic.run `(tactic| cfc_zero_tac))
+  /-- A tactic to try on side goals that are the predicate of the calculus (default: the
+  predicate lemmas `cfc_predicate` and `cfcₙ_predicate`, then `cfc_tac`). -/
+  predTac : Option (TSyntax `tactic) := some <| Unhygienic.run `(tactic| first
+    | exact $(mkCIdent ``cfc_predicate) _ _
+    | exact $(mkCIdent ``cfcₙ_predicate) _ _
+    | cfc_tac)
   deriving Inhabited
 
 /-- What is known about the continuous functional calculus at a given mode. -/
