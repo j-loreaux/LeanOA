@@ -589,18 +589,41 @@ Discharge them with a tactic block, as in `cfc_pull .. => tac`.
 example : cfc (fun x : ℂ ↦ x) a = a := by
   cfc_pull ℂ a
 
+/- Side goals the `=> ..` block leaves open are reported on the `=>`. -/
 /--
-error: `cfc_pull` ran the `=> ..` block, but 1 side goal is still open:
-  case cfc_pull.predicate
-  A : Type u_1
-  inst✝ : CStarAlgebra A
-  a b : A
-  ⊢ IsStarNormal a
-The `=> ..` block must close every side goal.
+@ +2:15...17
+error: unsolved goals
+case cfc_pull.predicate
+A : Type u_1
+inst✝ : CStarAlgebra A
+a b : A
+⊢ IsStarNormal a
 -/
-#guard_msgs in
+#guard_msgs (positions := true) in
 example : cfc (fun x : ℂ ↦ x) a = a := by
   cfc_pull ℂ a => skip
+
+/- Likewise in `conv` mode. The second error is the main goal, which the failed `conv` leaves
+open. -/
+/--
+@ +2:27...29
+error: unsolved goals
+case cfc_pull.predicate
+A : Type u_1
+inst✝ : CStarAlgebra A
+a b : A
+⊢ IsStarNormal a
+---
+@ +1:39...+2:34
+error: unsolved goals
+A : Type u_1
+inst✝ : CStarAlgebra A
+a b : A
+⊢ cfc (fun x ↦ x) a = a
+-/
+#guard_msgs (positions := true) in
+example : cfc (fun x : ℂ ↦ x) a = a := by
+  conv_rhs => cfc_pull ℂ a => skip
 
 /-! # Tracing -/
 

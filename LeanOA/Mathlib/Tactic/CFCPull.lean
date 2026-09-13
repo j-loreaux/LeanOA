@@ -6,6 +6,7 @@ Authors: Jireh Loreaux
 module
 
 public import LeanOA.Mathlib.Tactic.CFCPull.Core
+public meta import LeanOA.Mathlib.Lean.Elab.Tactic.Basic
 public meta import Lean.Elab.Tactic.Conv.Basic
 public import Mathlib.Tactic.ContinuousFunctionalCalculus
 
@@ -100,24 +101,6 @@ def postProcessSideGoals (cfg : Config) (goals : Array (MVarId × SideGoalKind))
       Discharge them with a tactic block, as in `cfc_pull .. => tac`."
   return out
 
-/-- Run the `=> ..` block of `cfc_pull` with the side goals, and only those, as the goal list: the
-other goals are set aside so that the block cannot touch them, and restored afterwards. Handing
-over the whole list rather than one goal at a time is what lets `case cfc_pull.continuity => ..`
-be written in the block, the goals having kept their kind tags. Like `case` and `conv`, the block
-must close every goal it is given. -/
-def evalSideGoalBlock (tac : TacticM Unit) (sideGoals : List MVarId) :
-    TacticM Unit := do
-  let goals ← getGoals
-  setGoals sideGoals
-  tac
-  let remaining ← getGoals
-  unless remaining.isEmpty do
-    throwError "`cfc_pull` ran the `=> ..` block, but {remaining.length} side \
-      goal{if remaining.length == 1 then " is" else "s are"} still open:\
-      {indentD (goalsToMessageData remaining)}\n\
-      The `=> ..` block must close every side goal."
-  setGoals goals
-
 /-! ### Locating the arguments to pull -/
 
 /-- The positions in the target that `cfc_pull` should act on: those arguments of the head
@@ -169,10 +152,11 @@ def elabCFCPullLemmas (lemmas : Lemmas) (stx? : Option (TSyntax ``cfcPullLemmas)
 /-! ### The tactic -/
 
 /-- Pull every argument of the target that lives in the algebra, and replace the goal by the
-result, unless `rfl` closes it. The surviving side goals are handed to the `=> ..` block `tac?`
-if there is one, and otherwise (with `+deferAll`) follow the new goal in the goal list. -/
+result, unless `rfl` closes it. The surviving side goals are handed to the tactic in `refTac?`
+(the `=> ..` block) if there is one, and otherwise (with `+deferAll`) follow the new goal in the
+goal list. The syntax in `refTac?` is the `=>`, where goals the block leaves open are reported. -/
 def cfcPullTarget (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (goal : MVarId)
-    (tac? : Option (TSyntax ``Parser.Tactic.tacticSeq)) : TacticM Unit := do
+    (refTac? : Option (Syntax × TacticM Unit)) : TacticM Unit := do
   let alg ← inferType elem
   let target := (← instantiateMVars (← goal.getType)).consumeMData
   let positions ← targetPositions target alg
@@ -224,10 +208,10 @@ def cfcPullTarget (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (goal : MVarI
   let mut main := [newGoal]
   if ← tryTacticOn newGoal (evalTactic (← `(tactic| with_reducible rfl))) then
     main := []
-  let survivors ← postProcessSideGoals cfg sideGoals (defer := tac?.isSome)
-  let some tac := tac? | replaceMainGoal (main ++ survivors.toList)
-  evalSideGoalBlock (evalTactic tac) survivors.toList
-  replaceMainGoal main
+  let survivors ← postProcessSideGoals cfg sideGoals (defer := refTac?.isSome)
+  replaceMainGoal (main ++ survivors.toList)
+  let some (ref, tac) := refTac? | return
+  withRef ref <| focusGoalsAndDone survivors.contains tac
 
 /-- Elaborate the scalar ring and the element. -/
 def elabRingAndElem (ring elem : Term) : TacticM (Expr × Expr) := do
@@ -301,17 +285,18 @@ def mkConfig (cfgStx : TSyntax ``optConfig) (disch? : Option (TSyntax ``discharg
 @[tactic cfcPull]
 def evalCFCPull : Tactic := fun stx => withMainContext do
   let `(tactic| cfc_pull $cfg:optConfig $[$disch?]? $[$lems?]? $ring $elem
-      $[=> $tac?]?) := stx
+      $[=>%$arrow? $tac?]?) := stx
     | throwUnsupportedSyntax
   let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
   let (R, elem) ← elabRingAndElem ring elem
-  cfcPullTarget (← mkConfig cfg disch?) lemmas R elem (← getMainGoal) tac?
+  let refTac? := return (← arrow?, evalTactic (← tac?))
+  cfcPullTarget (← mkConfig cfg disch?) lemmas R elem (← getMainGoal) refTac?
 
 /-- Elaborator for `cfc_pull` in `conv` mode. -/
 @[tactic cfcPullConv]
 def evalCFCPullConv : Tactic := fun stx => withMainContext do
   let `(conv| cfc_pull $cfg:optConfig $[$disch?]? $[$lems?]? $ring $elem
-      $[=> $tac?]?) := stx
+      $[=>%$arrow? $tac?]?) := stx
     | throwUnsupportedSyntax
   let lhs := (← Conv.getLhs).consumeMData
   let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
@@ -320,7 +305,8 @@ def evalCFCPullConv : Tactic := fun stx => withMainContext do
   let (newLhs, proof, sideGoals) ← runPull cfg lemmas R elem lhs
   Conv.updateLhs newLhs proof
   let sideGoals ← postProcessSideGoals cfg sideGoals (defer := tac?.isSome)
-  let some tac := tac? | replaceMainGoal ((← getGoals) ++ sideGoals.toList)
-  evalSideGoalBlock (evalTactic tac) sideGoals.toList
+  appendGoals sideGoals.toList
+  let (some arrow, some tac) := (arrow?, tac?) | return
+  withRef arrow <| focusGoalsAndDone sideGoals.contains (evalTactic tac)
 
 end Mathlib.Tactic.CFCPull
