@@ -691,3 +691,58 @@ example [PartialOrder A] [StarOrderedRing A] (ha : IsStrictlyPositive a) :
     CFC.log a * CFC.log a = cfc (fun x : ℝ ↦ Real.log x * Real.log x) a := by
   cfc_pull ℝ a =>
     exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
+
+/-! # `at` -/
+
+example (ha : IsStarNormal a) (h : star a * a = b) : cfc (fun x : ℂ ↦ star x * x) a = b := by
+  cfc_pull ℂ a at h
+  exact h
+
+example (ha : IsStarNormal a) (h : star a * a = b) : star a * a = b := by
+  cfc_pull ℂ a at h ⊢
+  exact h
+
+example (ha : IsStarNormal a) (h : star a * a = a) :
+    cfc (fun x : ℂ ↦ star x * x) a = cfc (fun x : ℂ ↦ x) a := by
+  cfc_pull ℂ a at h
+  exact h
+
+example (ha : IsStarNormal a) (h : star a * a = b) : star a * a = b := by
+  cfc_pull ℂ a at *
+  exact h
+
+/- Side goals raised at a hypothesis go to the `=> ..` block too. -/
+example [PartialOrder A] [StarOrderedRing A] (ha : IsStrictlyPositive a)
+    (h : CFC.log a * CFC.log a = b) : cfc (fun x : ℝ ↦ Real.log x * Real.log x) a = b := by
+  cfc_pull ℝ a at h =>
+    exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
+  exact h
+
+/- An error at a hypothesis. -/
+/--
+@ +2:2...10
+error: `cfc_pull` made no progress
+  `cfc_pull` got stuck on `b`
+    (head symbol: _, target: cfc over ℂ at `a`)
+-/
+#guard_msgs (positions := true) in
+example (h : b = b) : True := by
+  cfc_pull ℂ a at h
+  trivial
+
+/- At more than one location, side goals cannot be deferred. -/
+/--
+@ +2:22...24
+error: `cfc_pull` cannot defer side goals to a `=> ..` block when rewriting at more than one location. Rewrite one location at a time to use a block.
+-/
+#guard_msgs (positions := true) in
+example (h : star a * a = b) : star a * a = b := by
+  cfc_pull ℂ a at h ⊢ => skip
+
+/--
+@ +2:2...10
+error: `cfc_pull +deferAll` cannot be used when rewriting at more than one location. Rewrite one location at a time to defer side goals.
+-/
+#guard_msgs (positions := true) in
+example (h : star a * a = b) : star a * a = b := by
+  cfc_pull +deferAll ℂ a at h ⊢

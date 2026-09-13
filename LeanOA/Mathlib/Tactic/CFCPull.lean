@@ -8,6 +8,7 @@ module
 public import LeanOA.Mathlib.Tactic.CFCPull.Core
 public meta import LeanOA.Mathlib.Lean.Elab.Tactic.Basic
 public meta import Lean.Elab.Tactic.Conv.Basic
+public meta import Lean.Elab.Tactic.Location
 public import Mathlib.Tactic.ContinuousFunctionalCalculus
 
 /-!
@@ -151,18 +152,18 @@ def elabCFCPullLemmas (lemmas : Lemmas) (stx? : Option (TSyntax ``cfcPullLemmas)
 
 /-! ### The tactic -/
 
-/-- Pull every argument of the target that lives in the algebra, and replace the goal by the
-result, unless `rfl` closes it. The surviving side goals are handed to the tactic in `refTac?`
-(the `=> ..` block) if there is one, and otherwise (with `+deferAll`) follow the new goal in the
-goal list. The syntax in `refTac?` is the `=>`, where goals the block leaves open are reported. -/
-def cfcPullTarget (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (goal : MVarId)
-    (refTac? : Option (Syntax × TacticM Unit)) : TacticM Unit := do
+/-- Pull every top-level argument of `e` that lives in the algebra of `elem`: for `lhs = rhs` or
+`lhs ≤ rhs` these are `lhs` and `rhs`. Returns the new expression, a proof that `e` equals it, and
+the side goals. An argument that cannot be pulled is left as it is; this fails only if there is no
+such argument, or none of them changes. -/
+def pullArgs (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
+    TacticM (Expr × Expr × Array (MVarId × SideGoalKind)) := do
   let alg ← inferType elem
-  let target := (← instantiateMVars (← goal.getType)).consumeMData
-  let positions ← targetPositions target alg
+  let e := (← instantiateMVars e).consumeMData
+  let positions ← targetPositions e alg
   if positions.isEmpty then
-    throwError "`cfc_pull` found no top-level expressions of type `{alg}` in {indentExpr target}"
-  let args := target.getAppArgs
+    throwError "`cfc_pull` found no top-level expressions of type `{alg}` in {indentExpr e}"
+  let args := e.getAppArgs
   let mut newArgs := args
   let mut proofs := #[]
   let mut sideGoals := #[]
@@ -193,25 +194,58 @@ def cfcPullTarget (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (goal : MVarI
   unless changed do
     throwError "`cfc_pull` made no progress\
       {indentD (MessageData.joinSep (failures.toList.map (·.2)) m!"\n")}"
-  -- Rebuild the goal by congruence over the positions we changed.
-  let newTarget := mkAppN target.getAppFn newArgs
+  -- Rebuild `e` by congruence over the positions we changed.
+  let newE := mkAppN e.getAppFn newArgs
   let hcongr ← withLocalDeclsD (positions.map fun _ => (`x, fun _ => pure alg)) fun xs => do
     let mut body := args
     for _h : j in [0:positions.size] do
       body := body.set! positions[j]! xs[j]!
-    let F ← mkLambdaFVars xs (mkAppN target.getAppFn body)
+    let F ← mkLambdaFVars xs (mkAppN e.getAppFn body)
     -- `mkCongr` one position at a time: from `hᵢ : xᵢ = yᵢ`, folding it over `rfl : F = F`
     -- gives `F x₀ ⋯ xₙ = F y₀ ⋯ yₙ`. `F` is non-dependent by construction.
     proofs.foldlM (init := ← mkEqRefl F) fun h h' => mkCongr h h'
-  let hcongr ← mkExpectedTypeHint hcongr (← mkEq target newTarget)
-  let newGoal ← goal.replaceTargetEq newTarget hcongr
-  let mut main := [newGoal]
-  if ← tryTacticOn newGoal (evalTactic (← `(tactic| with_reducible rfl))) then
-    main := []
-  let survivors ← postProcessSideGoals cfg sideGoals (defer := refTac?.isSome)
-  replaceMainGoal (main ++ survivors.toList)
-  let some (ref, tac) := refTac? | return
-  withRef ref <| focusGoalsAndDone survivors.contains tac
+  let hcongr ← mkExpectedTypeHint hcongr (← mkEq e newE)
+  return (newE, hcongr, sideGoals)
+
+/-- Pull at the locations `loc`: the goal, hypotheses, or everything (`at *`), each through
+`pullArgs`; the goal, once rewritten, is closed with `rfl` if possible. Each location's side goals
+are dealt with before the next location is rewritten: they are handed to the tactic in `refTac?`
+(the `=> ..` block) if there is one, and otherwise (with `+deferAll`) follow the goal in the goal
+list. The syntax in `refTac?` is the `=>`, where goals the block leaves open are reported.
+
+Deferring side goals is only allowed at a single location, so that there is exactly one place for
+them to come from; under `at *` a location that fails is skipped. -/
+def cfcPullAt (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (loc : Location)
+    (refTac? : Option (Syntax × TacticM Unit)) : TacticM Unit := do
+  let multiple := match loc with
+    | .wildcard => true
+    | .targets hyps type => hyps.size + (if type then 1 else 0) > 1
+  if multiple then
+    if let some (ref, _) := refTac? then
+      throwErrorAt ref "`cfc_pull` cannot defer side goals to a `=> ..` block when rewriting at \
+        more than one location. Rewrite one location at a time to use a block."
+    if cfg.deferAll then
+      throwError "`cfc_pull +deferAll` cannot be used when rewriting at more than one location. \
+        Rewrite one location at a time to defer side goals."
+  -- replace the main goal by `goals`, and deal with the side goals of the location just rewritten
+  let finish (goals : List MVarId) (sideGoals : Array (MVarId × SideGoalKind)) :
+      TacticM Unit := do
+    let survivors ← postProcessSideGoals cfg sideGoals (defer := refTac?.isSome)
+    replaceMainGoal (goals ++ survivors.toList)
+    if let some (ref, tac) := refTac? then
+      withRef ref <| focusGoalsAndDone survivors.contains tac
+  let atTarget : TacticM Unit := do
+    let goal ← getMainGoal
+    let (newTarget, proof, sideGoals) ← pullArgs cfg lemmas R elem (← goal.getType)
+    let newGoal ← goal.replaceTargetEq newTarget proof
+    let closed ← tryTacticOn newGoal (evalTactic (← `(tactic| with_reducible rfl)))
+    finish (if closed then [] else [newGoal]) sideGoals
+  let atLocal (fvarId : FVarId) : TacticM Unit := do
+    let goal ← getMainGoal
+    let (newType, proof, sideGoals) ← pullArgs cfg lemmas R elem (← fvarId.getType)
+    finish [(← goal.replaceLocalDecl fvarId newType proof).mvarId] sideGoals
+  withLocation loc atLocal atTarget fun _ =>
+    throwError "`cfc_pull` made no progress at the goal or at any hypothesis"
 
 /-- Elaborate the scalar ring and the element. -/
 def elabRingAndElem (ring elem : Term) : TacticM (Expr × Expr) := do
@@ -239,6 +273,10 @@ example (ha : p a) : star a * a = cfc (eun x : R ↦ star x * x) a := by
 * `cfc_pull R a`: with `a : A` attempts to write maximal subexpressions of the goal with type `A` in
   the form `cfc f a` for some function `f : R → R`. Fails if any generated side goals cannot be
   solved automatically.
+* `cfc_pull R a at h₁ h₂ ⊢`: rewrite the hypotheses `h₁` and `h₂` in the same way, and the goal
+  (without `⊢`, the goal is left alone); `cfc_pull R a at *` rewrites everywhere it can. At more
+  than one location no side goal can be deferred: neither a `=> ..` block nor `+deferAll` is
+  allowed, so every side goal must be discharged automatically.
 * `cfc_pull -unital R a`: the same, but for `cfcₙ` instead; if only a non-unital instance of
   the continuous functional calculus can be found this is the default, whereas `cfc` is the default
   if a unital instance is found.
@@ -261,7 +299,7 @@ Detailed tracing can be enabled with `set_option trace.Tactic.cfc_pull true` sho
 were tried and why they failed, which side goals were generated, or discharged.
 -/
 syntax (name := cfcPull) "cfc_pull" optConfig (discharger)? (cfcPullLemmas)?
-  ppSpace colGt term:max ppSpace colGt term:max
+  ppSpace colGt term:max ppSpace colGt term:max (location)?
   (" => " tacticSeq)? : tactic
 
 @[inherit_doc cfcPull]
@@ -285,13 +323,14 @@ def mkConfig (cfgStx : TSyntax ``optConfig) (disch? : Option (TSyntax ``discharg
 @[tactic cfcPull]
 def evalCFCPull : Tactic := fun stx => withMainContext do
   let `(tactic| cfc_pull%$tk $cfg:optConfig $[$disch?]? $[$lems?]? $ring $elem
-      $[=>%$arrow? $tac?]?) := stx
+      $[$loc?:location]? $[=>%$arrow? $tac?]?) := stx
     | throwUnsupportedSyntax
   withRef tk do
     let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
     let (R, elem) ← elabRingAndElem ring elem
     let refTac? := return (← arrow?, evalTactic (← tac?))
-    cfcPullTarget (← mkConfig cfg disch?) lemmas R elem (← getMainGoal) refTac?
+    let loc := expandOptLocation (mkOptionalNode loc?)
+    cfcPullAt (← mkConfig cfg disch?) lemmas R elem loc refTac?
 
 /-- Elaborator for `cfc_pull` in `conv` mode. -/
 @[tactic cfcPullConv]
