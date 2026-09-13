@@ -161,7 +161,7 @@ def cfcPullTarget (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (goal : MVarI
   let target := (← instantiateMVars (← goal.getType)).consumeMData
   let positions ← targetPositions target alg
   if positions.isEmpty then
-    throwError "`cfc_pull` found nothing of type `{alg}` in the goal{indentExpr target}"
+    throwError "`cfc_pull` found no top-level expressions of type `{alg}` in {indentExpr target}"
   let args := target.getAppArgs
   let mut newArgs := args
   let mut proofs := #[]

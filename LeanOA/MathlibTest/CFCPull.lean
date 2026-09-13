@@ -569,7 +569,7 @@ example (ha : IsStarNormal a) : star a * a = star a * a := by
   cfc_pull ℚ a
 
 /--
-error: `cfc_pull` found nothing of type `A` in the goal
+error: `cfc_pull` found no top-level expressions of type `A` in ⏎
   2 = 2
 -/
 #guard_msgs in
