@@ -146,23 +146,21 @@ open scoped NNReal
 
 example (ha : IsStrictlyPositive a) :
     CFC.log a * CFC.log a = cfc (fun x : ℝ ↦ Real.log x * Real.log x) a := by
-  cfc_pull +defer ℝ a
-  case cfc_pull.continuity =>
+  cfc_pull ℝ a =>
     exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
 
 example (ha : IsStrictlyPositive a) (x : ℝ) :
     a ^ x * a ^ x = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ x) a := by
-  cfc_pull +defer ℝ≥0 a
-  case cfc_pull.continuity =>
+  cfc_pull ℝ≥0 a =>
     exact NNReal.continuousOn_rpow_const (.inl (spectrum.zero_notMem ℝ≥0 ha.2))
 
 example (ha : IsSelfAdjoint a) (f : ℝ → ℝ) (hf : Continuous f)
     (hspec : spectrum ℝ a ⊆ Set.Icc (-1) 1) (hf0 : ∀ x ∈ Set.Icc (-1 : ℝ) 1, f x ≠ 0) :
     Ring.inverse (cfc f a) = cfc (fun x : ℝ ↦ (f x)⁻¹) a := by
-  cfc_pull +deferAll ℝ a
-  case cfc_pull.side => exact fun x hx ↦ hf0 x (hspec hx)
-  case cfc_pull.predicate => exact ha
-  case cfc_pull.continuity => fun_prop
+  cfc_pull +deferAll ℝ a =>
+    case cfc_pull.side => exact fun x hx ↦ hf0 x (hspec hx)
+    case cfc_pull.predicate => exact ha
+    case cfc_pull.continuity => fun_prop
 
 end MessySideGoals
 
@@ -320,8 +318,7 @@ example : ((star a * a) * (1 - star a * a) ^ 2 : A⁺¹) =
 -- this is a bit of a weird example because it pulls towards `ℝ` rather than `ℂ`.
 example : ((star a * a) * (1 - star a * a) ^ 2 : A⁺¹) =
     cfc (fun x : ℂ => x * (1 - x) ^ 2) (star a * a : A⁺¹) := by
-  cfc_pull +defer ℝ (star a * a : A⁺¹)
-  case cfc_pull.side =>
+  cfc_pull ℝ (star a * a : A⁺¹) =>
     rw [← IsSelfAdjoint.spectrumRestricts (by cfc_tac) |>.algebraMap_image]
     simp
   -- this is a bug with the `@[congr]` lemma `cfc_congr'`, fixed in #43689
@@ -347,16 +344,16 @@ example (ha : IsSelfAdjoint a) :
 whose hypothesis `0 ≤ 1 - a ^ 2` becomes a side goal. -/
 example [Nontrivial A] (ha : IsSelfAdjoint a) (ha_norm : ‖a‖ ≤ 1) :
     a + I • CFC.sqrt (1 - a ^ 2) = cfc (fun x ↦ ↑x.re + I * ↑√(1 - x.re ^ 2)) a := by
-  cfc_pull +defer ℂ a
-  · refine cfc_congr fun x hx ↦ ?_
-    rw [← SpectrumRestricts.real_iff.mp ha.spectrumRestricts _ hx]
-  · -- the side goal `0 ≤ 1 - a ^ 2` left by `CFC.sqrt_eq_real_sqrt`
+  cfc_pull ℂ a =>
+    -- the side goal `0 ≤ 1 - a ^ 2` left by `CFC.sqrt_eq_real_sqrt`
     have key : (1 : A) - a ^ 2 = cfc (fun x : ℝ ↦ 1 - x ^ 2) a := by cfc_pull ℝ a
     rw [key]
     refine cfc_nonneg fun x hx ↦ ?_
     have hx' : |x| ≤ 1 := by
       simpa [Real.norm_eq_abs] using (spectrum.norm_le_norm_of_mem hx).trans ha_norm
     nlinarith [sq_abs x, abs_le.mp hx']
+  refine cfc_congr fun x hx ↦ ?_
+  rw [← SpectrumRestricts.real_iff.mp ha.spectrumRestricts _ hx]
 
 end InTheWild
 
@@ -586,11 +583,24 @@ error: `cfc_pull` rewrote the goal but could not discharge 1 side goal:
   inst✝ : CStarAlgebra A
   a b : A
   ⊢ IsStarNormal a
-Use `cfc_pull +defer ..` to have them added to the goal list instead.
+Discharge them with a tactic block, as in `cfc_pull .. => tac`.
 -/
 #guard_msgs in
 example : cfc (fun x : ℂ ↦ x) a = a := by
   cfc_pull ℂ a
+
+/--
+error: `cfc_pull` ran the `=> ..` block, but 1 side goal is still open:
+  case cfc_pull.predicate
+  A : Type u_1
+  inst✝ : CStarAlgebra A
+  a b : A
+  ⊢ IsStarNormal a
+The `=> ..` block must close every side goal.
+-/
+#guard_msgs in
+example : cfc (fun x : ℂ ↦ x) a = a := by
+  cfc_pull ℂ a => skip
 
 /-! # Tracing -/
 
@@ -645,6 +655,5 @@ trace: [Tactic.cfc_pull] predicate for cfc over ℝ is IsSelfAdjoint
 set_option trace.Tactic.cfc_pull true in
 example [PartialOrder A] [StarOrderedRing A] (ha : IsStrictlyPositive a) :
     CFC.log a * CFC.log a = cfc (fun x : ℝ ↦ Real.log x * Real.log x) a := by
-  cfc_pull +defer ℝ a
-  case cfc_pull.continuity =>
+  cfc_pull ℝ a =>
     exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)

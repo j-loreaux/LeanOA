@@ -27,13 +27,14 @@ proof of `e = cfc f a` (or `e = cfcₙ f a`), plus a list of side goals that the
   example (ha : p a) (hg : ∀ i, ContinuousOn (g i) (spectrum R a)) :
       ∑ i ∈ s, star (cfc (g i) a) = cfc (∑ i ∈ s, fun x ↦ star (g i x)) a := by
     conv_lhs => enter [2, i]; cfc_pull R a
-    cfc_pull +defer R a
+    cfc_pull R a
   ```
 
   The first line pulls each summand to `cfc (fun x ↦ star (g i x)) a`; the second lets `cfc_sum`
   collect them. (`enter [2, i]`, not `ext i`: `conv` must enter `Finset.sum`'s function argument
-  before it can go under the lambda.) This leaves the side goal
-  `∀ i ∈ s, ContinuousOn (fun x ↦ star (g i x)) (spectrum R a)`.
+  before it can go under the lambda.) The second line raises the side goal
+  `∀ i ∈ s, ContinuousOn (fun x ↦ star (g i x)) (spectrum R a)`, which the default tactics close
+  here; when they cannot, discharge it with `cfc_pull R a => tac`.
 
   **What a built-in version would take.**
 
@@ -64,8 +65,6 @@ open Lean Meta
 structure Config where
   /-- Prefer the unital calculus when `true` (the default). -/
   unital : Bool := true
-  /-- Return *unsolved* side goals to the user, instead of failing. -/
-  defer : Bool := false
   /-- Return *all* side goals to the user, discharging none of them, but still deduplicate goals. -/
   deferAll : Bool := false
   /-- Unfold `let`-bound local variables (default: `false`). -/
