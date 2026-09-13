@@ -284,29 +284,31 @@ def mkConfig (cfgStx : TSyntax ``optConfig) (disch? : Option (TSyntax ``discharg
 /-- Elaborator for the `cfc_pull` tactic. -/
 @[tactic cfcPull]
 def evalCFCPull : Tactic := fun stx => withMainContext do
-  let `(tactic| cfc_pull $cfg:optConfig $[$disch?]? $[$lems?]? $ring $elem
+  let `(tactic| cfc_pull%$tk $cfg:optConfig $[$disch?]? $[$lems?]? $ring $elem
       $[=>%$arrow? $tac?]?) := stx
     | throwUnsupportedSyntax
-  let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
-  let (R, elem) ← elabRingAndElem ring elem
-  let refTac? := return (← arrow?, evalTactic (← tac?))
-  cfcPullTarget (← mkConfig cfg disch?) lemmas R elem (← getMainGoal) refTac?
+  withRef tk do
+    let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
+    let (R, elem) ← elabRingAndElem ring elem
+    let refTac? := return (← arrow?, evalTactic (← tac?))
+    cfcPullTarget (← mkConfig cfg disch?) lemmas R elem (← getMainGoal) refTac?
 
 /-- Elaborator for `cfc_pull` in `conv` mode. -/
 @[tactic cfcPullConv]
 def evalCFCPullConv : Tactic := fun stx => withMainContext do
-  let `(conv| cfc_pull $cfg:optConfig $[$disch?]? $[$lems?]? $ring $elem
+  let `(conv| cfc_pull%$tk $cfg:optConfig $[$disch?]? $[$lems?]? $ring $elem
       $[=>%$arrow? $tac?]?) := stx
     | throwUnsupportedSyntax
-  let lhs := (← Conv.getLhs).consumeMData
-  let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
-  let (R, elem) ← elabRingAndElem ring elem
-  let cfg ← mkConfig cfg disch?
-  let (newLhs, proof, sideGoals) ← runPull cfg lemmas R elem lhs
-  Conv.updateLhs newLhs proof
-  let sideGoals ← postProcessSideGoals cfg sideGoals (defer := tac?.isSome)
-  appendGoals sideGoals.toList
-  let (some arrow, some tac) := (arrow?, tac?) | return
-  withRef arrow <| focusGoalsAndDone sideGoals.contains (evalTactic tac)
+  withRef tk do
+    let lhs := (← Conv.getLhs).consumeMData
+    let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
+    let (R, elem) ← elabRingAndElem ring elem
+    let cfg ← mkConfig cfg disch?
+    let (newLhs, proof, sideGoals) ← runPull cfg lemmas R elem lhs
+    Conv.updateLhs newLhs proof
+    let sideGoals ← postProcessSideGoals cfg sideGoals (defer := tac?.isSome)
+    appendGoals sideGoals.toList
+    let (some arrow, some tac) := (arrow?, tac?) | return
+    withRef arrow <| focusGoalsAndDone sideGoals.contains (evalTactic tac)
 
 end Mathlib.Tactic.CFCPull

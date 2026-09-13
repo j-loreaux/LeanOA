@@ -561,18 +561,29 @@ example (ha : IsStarNormal a) : star b * b = star b * b := by
   cfc_pull +deferAll ℂ a
 
 /--
+@ +2:2...10
 error: `cfc_pull` made no progress
   `cfc_pull`: `A` has no non-unital continuous functional calculus over `ℚ`
 -/
-#guard_msgs in
+#guard_msgs (positions := true) in
 example (ha : IsStarNormal a) : star a * a = star a * a := by
   cfc_pull ℚ a
 
+/- In `conv` mode too, the error is reported on the `cfc_pull` keyword alone. -/
 /--
+@ +2:14...22
+error: `cfc_pull`: `A` has no non-unital continuous functional calculus over `ℚ`
+-/
+#guard_msgs (positions := true) in
+example (ha : IsStarNormal a) : star a * a = star a * a := by
+  conv_lhs => cfc_pull ℚ a
+
+/--
+@ +2:2...10
 error: `cfc_pull` found no top-level expressions of type `A` in ⏎
   2 = 2
 -/
-#guard_msgs in
+#guard_msgs (positions := true) in
 example (ha : IsStarNormal a) : (2 : ℕ) = 2 := by
   cfc_pull ℂ a
 
