@@ -109,7 +109,7 @@ example (ha : IsSelfAdjoint a) :
 
 example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
     a ^ x * a ^ y = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ y) a := by
-  cfc_pull +deferAll ℝ≥0 a <;> fun_prop
+  cfc_pull +defer ℝ≥0 a => all_goals fun_prop
 
 example (ha : IsStarNormal a) (z : ℂ) :
     NormedSpace.exp (z • a) = cfc (fun w : ℂ ↦ Complex.exp (z * w)) a := by
@@ -157,7 +157,7 @@ example (ha : IsStrictlyPositive a) (x : ℝ) :
 example (ha : IsSelfAdjoint a) (f : ℝ → ℝ) (hf : Continuous f)
     (hspec : spectrum ℝ a ⊆ Set.Icc (-1) 1) (hf0 : ∀ x ∈ Set.Icc (-1 : ℝ) 1, f x ≠ 0) :
     Ring.inverse (cfc f a) = cfc (fun x : ℝ ↦ (f x)⁻¹) a := by
-  cfc_pull +deferAll ℝ a =>
+  cfc_pull +defer ℝ a =>
     case cfc_pull.side => exact fun x hx ↦ hf0 x (hspec hx)
     case cfc_pull.predicate => exact ha
     case cfc_pull.continuity => fun_prop
@@ -178,7 +178,7 @@ example (ha : IsStrictlyPositive a) (b : A) :
       exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
 
 example (ha : IsStarNormal a) (b : A) : star a * a + b = cfc (fun x : ℂ ↦ star x * x) a + b := by
-  conv in star a * a => cfc_pull +deferAll ℂ a =>
+  conv in star a * a => cfc_pull +defer ℂ a =>
     case cfc_pull.predicate => exact ha
     all_goals fun_prop
 
@@ -421,7 +421,7 @@ example (ha : 0 ≤ a) :
 example (f g : ℝ → ℝ) (hf : ContinuousOn f (spectrum ℝ a))
     (hg : ContinuousOn g (spectrum ℝ a)) :
     cfc f a - cfc g a = cfc (fun x ↦ f x - g x) a := by
-  cfc_pull +deferAll ℝ a <;> assumption
+  cfc_pull +defer ℝ a => all_goals assumption
 
 example (f g : ℝ≥0 → ℝ≥0) (ha : 0 ≤ a) (hfg : ∀ x ∈ quasispectrum ℝ≥0 a, g x ≤ f x)
     (hf : ContinuousOn f (quasispectrum ℝ≥0 a)) (hf0 : f 0 = 0)
@@ -558,7 +558,7 @@ error: `cfc_pull` made no progress
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) : star b * b = star b * b := by
-  cfc_pull +deferAll ℂ a
+  cfc_pull +defer ℂ a => skip
 
 /--
 @ +2:2...10
@@ -739,10 +739,32 @@ error: `cfc_pull` cannot defer side goals to a `=> ..` block when rewriting at m
 example (h : star a * a = b) : star a * a = b := by
   cfc_pull ℂ a at h ⊢ => skip
 
+/- `+defer` hands every side goal to the `=> ..` block, so it needs one. -/
 /--
 @ +2:2...10
-error: `cfc_pull +deferAll` cannot be used when rewriting at more than one location. Rewrite one location at a time to defer side goals.
+error: `cfc_pull +defer` hands every side goal to a `=> ..` block, so it needs one.
 -/
 #guard_msgs (positions := true) in
 example (h : star a * a = b) : star a * a = b := by
-  cfc_pull +deferAll ℂ a at h ⊢
+  cfc_pull +defer ℂ a
+
+/- A failing `=> ..` block does not lose the main goal: it is still reported at the end. -/
+/--
+@ +2:15...17
+error: unsolved goals
+case cfc_pull.predicate
+A : Type u_1
+inst✝ : CStarAlgebra A
+a b : A
+⊢ IsStarNormal a
+---
+@ +1:44...+2:22
+error: unsolved goals
+A : Type u_1
+inst✝ : CStarAlgebra A
+a b : A
+⊢ cfc (fun x ↦ x) a = cfc (fun x ↦ star x) a
+-/
+#guard_msgs (positions := true) in
+example : cfc (fun x : ℂ ↦ x) a = star a := by
+  cfc_pull ℂ a => skip

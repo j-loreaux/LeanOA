@@ -23,16 +23,18 @@ namespace Lean.Elab.Tactic
 
 /-- Runs `x` with only the unsolved goals satisfying `select` as the goal list, in their original
 order. The goals `x` leaves are placed at the front of the goal list, followed by the goals that
-were not selected. Goals satisfying `select` that are not in the goal list are not added to it. -/
+were not selected. Goals satisfying `select` that are not in the goal list are not added to it.
+
+The goals that were not selected are restored even if `x` throws, so that an error in `x` does not
+lose them: they are still in the goal list for error recovery to report. -/
 def focusGoals {α} (select : MVarId → Bool) (x : TacticM α) : TacticM α := do
   let (selected, rest) := (← getUnsolvedGoals).partition select
   setGoals selected
-  let a ← x
-  setGoals ((← getUnsolvedGoals) ++ rest)
-  pure a
+  try x finally setGoals ((← getUnsolvedGoals) ++ rest)
 
 /-- Runs `x` with only the unsolved goals satisfying `select` as the goal list, and expects it to
-leave no goals. The goals that were not selected are restored afterwards. -/
+leave no goals. The goals that were not selected are restored afterwards, even if `x` fails or
+leaves goals open. -/
 def focusGoalsAndDone {α} (select : MVarId → Bool) (x : TacticM α) : TacticM α :=
   focusGoals select do
     let a ← x

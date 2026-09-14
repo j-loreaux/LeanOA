@@ -65,8 +65,9 @@ open Lean Meta
 structure Config where
   /-- Prefer the unital calculus when `true` (the default). -/
   unital : Bool := true
-  /-- Return *all* side goals to the user, discharging none of them, but still deduplicate goals. -/
-  deferAll : Bool := false
+  /-- Hand *all* side goals to the `=> ..` block, discharging none of them, but still deduplicate
+  goals. Requires a `=> ..` block. -/
+  defer : Bool := false
   /-- Unfold `let`-bound local variables (default: `false`). -/
   zetaDelta : Bool := false
   /-- A tactic to try on side goals `cfc_pull` has no built-in way to prove. -/

@@ -63,10 +63,10 @@ def SideGoalKind.tactic? (cfg : Config) : SideGoalKind → Option (TSyntax `tact
   | .other => cfg.discharger
 
 /-- Deduplicate side goals and try to close them with the appropriate tactic, including the user
-provided discharger for `SideGoalKind.other` goals. With `+deferAll` no attempt is made.
-Unless `defer` is set (there is a `=> ..` block to hand them to), surviving goals are an error. -/
+provided discharger for `SideGoalKind.other` goals. With `+defer` no attempt is made.
+Unless `block` is set (there is a `=> ..` block to hand them to), surviving goals are an error. -/
 def postProcessSideGoals (cfg : Config) (goals : Array (MVarId × SideGoalKind))
-    (defer : Bool) : TacticM (Array MVarId) := do
+    (block : Bool) : TacticM (Array MVarId) := do
   let mut out := #[]
   for (g, kind) in goals do
     if ← g.isAssigned then continue
@@ -78,8 +78,8 @@ def postProcessSideGoals (cfg : Config) (goals : Array (MVarId × SideGoalKind))
         else return false then
       trace[Tactic.cfc_pull] "side goal `{type}` is a duplicate"
       continue
-    if cfg.deferAll then
-      trace[Tactic.cfc_pull] "deferring `{type}` unattempted (`+deferAll`)"
+    if cfg.defer then
+      trace[Tactic.cfc_pull] "deferring `{type}` unattempted (`+defer`)"
       out := out.push g
       continue
     if ← withReducible g.assumptionCore then
@@ -95,7 +95,7 @@ def postProcessSideGoals (cfg : Config) (goals : Array (MVarId × SideGoalKind))
       continue
     trace[Tactic.cfc_pull] "{crossEmoji} could not close `{type}`"
     out := out.push g
-  unless defer || cfg.deferAll || out.isEmpty do
+  unless block || out.isEmpty do
     throwError "`cfc_pull` rewrote the goal but could not discharge \
       {out.size} side goal{if out.size == 1 then "" else "s"}:\
       {indentD (goalsToMessageData out.toList)}\n\
@@ -209,9 +209,9 @@ def pullArgs (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
 
 /-- Pull at the locations `loc`: the goal, hypotheses, or everything (`at *`), each through
 `pullArgs`; the goal, once rewritten, is closed with `rfl` if possible. Each location's side goals
-are dealt with before the next location is rewritten: they are handed to the tactic in `refTac?`
-(the `=> ..` block) if there is one, and otherwise (with `+deferAll`) follow the goal in the goal
-list. The syntax in `refTac?` is the `=>`, where goals the block leaves open are reported.
+are dealt with before the next location is rewritten: those that survive are handed to the tactic
+in `refTac?` (the `=> ..` block), and are an error if there is none. The syntax in `refTac?` is the
+`=>`, where goals the block leaves open are reported.
 
 Deferring side goals is only allowed at a single location, so that there is exactly one place for
 them to come from; under `at *` a location that fails is skipped. -/
@@ -224,13 +224,10 @@ def cfcPullAt (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (loc : Location)
     if let some (ref, _) := refTac? then
       throwErrorAt ref "`cfc_pull` cannot defer side goals to a `=> ..` block when rewriting at \
         more than one location. Rewrite one location at a time to use a block."
-    if cfg.deferAll then
-      throwError "`cfc_pull +deferAll` cannot be used when rewriting at more than one location. \
-        Rewrite one location at a time to defer side goals."
   -- replace the main goal by `goals`, and deal with the side goals of the location just rewritten
   let finish (goals : List MVarId) (sideGoals : Array (MVarId × SideGoalKind)) :
       TacticM Unit := do
-    let survivors ← postProcessSideGoals cfg sideGoals (defer := refTac?.isSome)
+    let survivors ← postProcessSideGoals cfg sideGoals (block := refTac?.isSome)
     replaceMainGoal (goals ++ survivors.toList)
     if let some (ref, tac) := refTac? then
       withRef ref <| focusGoalsAndDone survivors.contains tac
@@ -275,7 +272,7 @@ example (ha : p a) : star a * a = cfc (eun x : R ↦ star x * x) a := by
   solved automatically.
 * `cfc_pull R a at h₁ h₂ ⊢`: rewrite the hypotheses `h₁` and `h₂` in the same way, and the goal
   (without `⊢`, the goal is left alone); `cfc_pull R a at *` rewrites everywhere it can. At more
-  than one location no side goal can be deferred: neither a `=> ..` block nor `+deferAll` is
+  than one location no side goal can be deferred: no `=> ..` block (and so no `+defer`) is
   allowed, so every side goal must be discharged automatically.
 * `cfc_pull -unital R a`: the same, but for `cfcₙ` instead; if only a non-unital instance of
   the continuous functional calculus can be found this is the default, whereas `cfc` is the default
@@ -283,8 +280,8 @@ example (ha : p a) : star a * a = cfc (eun x : R ↦ star x * x) a := by
 * `cfc_pull R a => tacticSeq`: discharge the side goals left unsolved with the supplied tactic
   script, which sees only those goals and must close all of them. `case cfc_pull.continuity => ..`
   and so on select goals by kind.
-* `cfc_pull +deferAll R a`: attempt to discharge no side goals; they are returned to the user (or
-  handed to the `=> ..` block, if there is one).
+* `cfc_pull +defer R a => tacticSeq`: attempt to discharge no side goals, and hand all of them to
+  the `=> ..` block, which `+defer` requires.
 * `cfc_pull [lemma1, -lemma2] R a`: add `lemma1` to the list of lemmas used by `cfc_pull`, and
   remove `lemma2`; only global declaration name are permitted.
 * `cfc_pull +zetaDelta R a`: unfold `let`-bound variables.
@@ -308,15 +305,18 @@ syntax (name := cfcPullConv) "cfc_pull" optConfig (discharger)? (cfcPullLemmas)?
   (" => " tacticSeq)? : conv
 
 /-- Read the configuration, together with the `(disch := ..)` clause, which
-`elabCFCPullConfig` cannot see. -/
-def mkConfig (cfgStx : TSyntax ``optConfig) (disch? : Option (TSyntax ``discharger)) :
-    TacticM Config := do
+`elabCFCPullConfig` cannot see. `block` says whether there is a `=> ..` block, which `+defer`
+requires. -/
+def mkConfig (cfgStx : TSyntax ``optConfig) (disch? : Option (TSyntax ``discharger))
+    (block : Bool) : TacticM Config := do
   let mut cfg ← elabCFCPullConfig cfgStx
   if let some disch := disch? then
     -- the keyword is `patternIgnore`d in the parser, so it does not appear in the tree
     let `(discharger| ($_ := $tac)) := disch | throwUnsupportedSyntax
     -- parenthesised so that a multi-tactic sequence stays one tactic
     cfg := { cfg with discharger := some (← `(tactic| ($tac))) }
+  if cfg.defer && !block then
+    throwError "`cfc_pull +defer` hands every side goal to a `=> ..` block, so it needs one."
   return cfg
 
 /-- Elaborator for the `cfc_pull` tactic. -/
@@ -330,7 +330,7 @@ def evalCFCPull : Tactic := fun stx => withMainContext do
     let (R, elem) ← elabRingAndElem ring elem
     let refTac? := return (← arrow?, evalTactic (← tac?))
     let loc := expandOptLocation (mkOptionalNode loc?)
-    cfcPullAt (← mkConfig cfg disch?) lemmas R elem loc refTac?
+    cfcPullAt (← mkConfig cfg disch? refTac?.isSome) lemmas R elem loc refTac?
 
 /-- Elaborator for `cfc_pull` in `conv` mode. -/
 @[tactic cfcPullConv]
@@ -342,10 +342,10 @@ def evalCFCPullConv : Tactic := fun stx => withMainContext do
     let lhs := (← Conv.getLhs).consumeMData
     let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
     let (R, elem) ← elabRingAndElem ring elem
-    let cfg ← mkConfig cfg disch?
+    let cfg ← mkConfig cfg disch? tac?.isSome
     let (newLhs, proof, sideGoals) ← runPull cfg lemmas R elem lhs
     Conv.updateLhs newLhs proof
-    let sideGoals ← postProcessSideGoals cfg sideGoals (defer := tac?.isSome)
+    let sideGoals ← postProcessSideGoals cfg sideGoals (block := tac?.isSome)
     appendGoals sideGoals.toList
     let (some arrow, some tac) := (arrow?, tac?) | return
     withRef arrow <| focusGoalsAndDone sideGoals.contains (evalTactic tac)
