@@ -24,29 +24,26 @@ namespace Mathlib.Tactic.CFCPull
 
 open Lean Meta Elab Tactic
 
-/-- The value of a tactic-valued option: `(opt := by tac)` sets it to `tac`, and `(opt := none)`
-turns it off, so that side goals of that kind are deferred unattempted. -/
-def elabTacOption (item : ConfigEval.ConfigItem) : TermElabM (Option (TSyntax `tactic)) := do
-  match item.value with
-  -- parenthesised so that a multi-tactic sequence stays one tactic
-  | `(by $seq) => return some (← `(tactic| ($seq)))
-  | `(none) => return none
-  | _ => throwErrorAt item.value "expected `by tac` or `none`"
-
-/-- Elaborate the configuration of `cfc_pull`. The tactic-valued fields take `by tac` or `none`
-through `elabTacOption`. `discharger` is omitted; `mkConfig` fills it in from the
-`(disch := ..)` clause. -/
+/-- Elaborate the configuration of `cfc_pull`, other than its tactic-valued fields, which are not
+terms and so cannot be configuration items: `mkConfig` fills them in from the `cfcPullTacOption`
+and `(disch := ..)` clauses among them. -/
 declare_config_elab elabCFCPullConfig Config where
-  omit discharger
-  option contTac := fun cfg item => do
-    item.addConstInfo ``Config.contTac
-    return { cfg with contTac := ← elabTacOption item }
-  option mapZeroTac := fun cfg item => do
-    item.addConstInfo ``Config.mapZeroTac
-    return { cfg with mapZeroTac := ← elabTacOption item }
-  option predTac := fun cfg item => do
-    item.addConstInfo ``Config.predTac
-    return { cfg with predTac := ← elabTacOption item }
+  omit discharger, contTac, mapZeroTac, predTac
+
+/-- A tactic-valued option of `cfc_pull`, as in `(contTac := fun_prop)`. Like `(disch := ..)`, it
+takes a tactic sequence rather than a term, so it is parsed separately from the configuration
+items. -/
+syntax cfcPullTacOption :=
+  atomic(" (" (&"contTac" <|> &"mapZeroTac" <|> &"predTac") " := ") withoutPosition(tacticSeq) ")"
+
+/-- The configuration of `cfc_pull`: configuration items, with `cfcPullTacOption`s and the
+`(disch := ..)` clause among them in any order. -/
+syntax cfcPullConfig := (colGt (cfcPullTacOption <|> Lean.Parser.Tactic.discharger <|>
+  Lean.Parser.Tactic.configItem))*
+
+-- like `(disch := ..)`, a tactic option need not run, so its tactics are not flagged as unused
+initialize Batteries.Linter.UnreachableTactic.addIgnoreTacticKind ``cfcPullTacOption
+initialize Mathlib.Linter.UnusedTactic.addIgnoreTacticKind ``cfcPullTacOption
 
 /-! ### Side goals -/
 
@@ -57,9 +54,9 @@ def tryTacticOn (g : MVarId) (tac : TacticM Unit) : TacticM Bool :=
 /-- The tactic to try on a side goal of this kind, if any. This returns `TSyntax` as opposed to
 `TacticM Unit` because we also want it to appear in traces. -/
 def SideGoalKind.tactic? (cfg : Config) : SideGoalKind → Option (TSyntax `tactic)
-  | .continuity => cfg.contTac
-  | .mapZero => cfg.mapZeroTac
-  | .predicate => cfg.predTac
+  | .continuity => some cfg.contTac
+  | .mapZero => some cfg.mapZeroTac
+  | .predicate => some cfg.predTac
   | .other => cfg.discharger
 
 /-- Deduplicate side goals and try to close them with the appropriate tactic, including the user
@@ -287,34 +284,41 @@ example (ha : p a) : star a * a = cfc (eun x : R ↦ star x * x) a := by
 * `cfc_pull +zetaDelta R a`: unfold `let`-bound variables.
 * `cfc_pull (disch := tac) R a`: run `tac` to attempt to discharge side goals (only applicable
   for side goals in the category `cfc_pull.side`).
-* `cfc_pull (contTac := by tac) R a`: run `tac` instead of `cfc_cont_tac` on `cfc_pull.continuity`
+* `cfc_pull (contTac := tac) R a`: run `tac` instead of `cfc_cont_tac` on `cfc_pull.continuity`
   side goals; likewise `mapZeroTac` (default `cfc_zero_tac`) for `cfc_pull.mapZero` goals and
-  `predTac` for `cfc_pull.predicate` goals. `(contTac := none)` and so on skip the tactic entirely,
-  so only `assumption` is tried.
+  `predTac` for `cfc_pull.predicate` goals.
 
 Detailed tracing can be enabled with `set_option trace.Tactic.cfc_pull true` showing which lemmas
 were tried and why they failed, which side goals were generated, or discharged.
 -/
-syntax (name := cfcPull) "cfc_pull" optConfig (discharger)? (cfcPullLemmas)?
+syntax (name := cfcPull) "cfc_pull" cfcPullConfig (cfcPullLemmas)?
   ppSpace colGt term:max ppSpace colGt term:max (location)?
   (" => " tacticSeq)? : tactic
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullConv) "cfc_pull" optConfig (discharger)? (cfcPullLemmas)?
+syntax (name := cfcPullConv) "cfc_pull" cfcPullConfig (cfcPullLemmas)?
   ppSpace colGt term:max ppSpace colGt term:max
   (" => " tacticSeq)? : conv
 
-/-- Read the configuration, together with the `(disch := ..)` clause, which
-`elabCFCPullConfig` cannot see. `block` says whether there is a `=> ..` block, which `+defer`
-requires. -/
-def mkConfig (cfgStx : TSyntax ``optConfig) (disch? : Option (TSyntax ``discharger))
-    (block : Bool) : TacticM Config := do
-  let mut cfg ← elabCFCPullConfig cfgStx
-  if let some disch := disch? then
+/-- Read the configuration, together with the tactic-valued options and the `(disch := ..)`
+clause, which `elabCFCPullConfig` cannot see. `block` says whether there is a `=> ..` block, which
+`+defer` requires. -/
+def mkConfig (cfgStx : TSyntax ``cfcPullConfig) (block : Bool) : TacticM Config := do
+  let (tacOpts, items) := cfgStx.raw[0].getArgs.partition fun item ↦
+    item.isOfKind ``cfcPullTacOption || item.isOfKind ``discharger
+  let mut cfg ← elabCFCPullConfig (mkNode ``optConfig #[mkNullNode items])
+  -- the tactics are parenthesised so that a multi-tactic sequence stays one tactic
+  for opt in tacOpts do
+    if let `(cfcPullTacOption| ($name := $tac)) := opt then
+      let tac ← `(tactic| ($tac))
+      cfg := match name.raw[0].getAtomVal with
+        | "contTac" => { cfg with contTac := tac }
+        | "mapZeroTac" => { cfg with mapZeroTac := tac }
+        | _ => { cfg with predTac := tac }
     -- the keyword is `patternIgnore`d in the parser, so it does not appear in the tree
-    let `(discharger| ($_ := $tac)) := disch | throwUnsupportedSyntax
-    -- parenthesised so that a multi-tactic sequence stays one tactic
-    cfg := { cfg with discharger := some (← `(tactic| ($tac))) }
+    else if let `(discharger| ($_ := $tac)) := opt then
+      cfg := { cfg with discharger := some (← `(tactic| ($tac))) }
+    else throwUnsupportedSyntax
   if cfg.defer && !block then
     throwError "`cfc_pull +defer` hands every side goal to a `=> ..` block, so it needs one."
   return cfg
@@ -322,7 +326,7 @@ def mkConfig (cfgStx : TSyntax ``optConfig) (disch? : Option (TSyntax ``discharg
 /-- Elaborator for the `cfc_pull` tactic. -/
 @[tactic cfcPull]
 def evalCFCPull : Tactic := fun stx => withMainContext do
-  let `(tactic| cfc_pull%$tk $cfg:optConfig $[$disch?]? $[$lems?]? $ring $elem
+  let `(tactic| cfc_pull%$tk $cfg:cfcPullConfig $[$lems?]? $ring $elem
       $[$loc?:location]? $[=>%$arrow? $tac?]?) := stx
     | throwUnsupportedSyntax
   withRef tk do
@@ -330,19 +334,19 @@ def evalCFCPull : Tactic := fun stx => withMainContext do
     let (R, elem) ← elabRingAndElem ring elem
     let refTac? := return (← arrow?, evalTactic (← tac?))
     let loc := expandOptLocation (mkOptionalNode loc?)
-    cfcPullAt (← mkConfig cfg disch? refTac?.isSome) lemmas R elem loc refTac?
+    cfcPullAt (← mkConfig cfg refTac?.isSome) lemmas R elem loc refTac?
 
 /-- Elaborator for `cfc_pull` in `conv` mode. -/
 @[tactic cfcPullConv]
 def evalCFCPullConv : Tactic := fun stx => withMainContext do
-  let `(conv| cfc_pull%$tk $cfg:optConfig $[$disch?]? $[$lems?]? $ring $elem
+  let `(conv| cfc_pull%$tk $cfg:cfcPullConfig $[$lems?]? $ring $elem
       $[=>%$arrow? $tac?]?) := stx
     | throwUnsupportedSyntax
   withRef tk do
     let lhs := (← Conv.getLhs).consumeMData
     let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
     let (R, elem) ← elabRingAndElem ring elem
-    let cfg ← mkConfig cfg disch? tac?.isSome
+    let cfg ← mkConfig cfg tac?.isSome
     let (newLhs, proof, sideGoals) ← runPull cfg lemmas R elem lhs
     Conv.updateLhs newLhs proof
     let sideGoals ← postProcessSideGoals cfg sideGoals (block := tac?.isSome)

@@ -162,6 +162,23 @@ example (ha : IsSelfAdjoint a) (f : ℝ → ℝ) (hf : Continuous f)
     case cfc_pull.predicate => exact ha
     case cfc_pull.continuity => fun_prop
 
+/- The tactic-valued options take a tactic sequence, like `(disch := ..)`, and all of them may
+appear in any order among the configuration items. -/
+example (ha : IsStrictlyPositive a) :
+    CFC.log a * CFC.log a = cfc (fun x : ℝ ↦ Real.log x * Real.log x) a := by
+  cfc_pull (contTac :=
+    exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)) ℝ a
+
+example (ha : IsSelfAdjoint a) (f : ℝ → ℝ) (hf : Continuous f)
+    (hspec : spectrum ℝ a ⊆ Set.Icc (-1) 1) (hf0 : ∀ x ∈ Set.Icc (-1 : ℝ) 1, f x ≠ 0) :
+    Ring.inverse (cfc f a) = cfc (fun x : ℝ ↦ (f x)⁻¹) a := by
+  cfc_pull (contTac := fun_prop) +zetaDelta (disch := intro x hx; exact hf0 x (hspec hx))
+    (predTac := exact ha) ℝ a
+
+example (f : ℝ → ℝ) (hf : Continuous f) (hf0 : 0 = f 0) :
+    cfcₙ f a + cfcₙ f a = cfcₙ (fun x ↦ f x + f x) a := by
+  cfc_pull -unital (mapZeroTac := symm; exact hf0) ℝ a
+
 end MessySideGoals
 
 section ConvSideGoals
