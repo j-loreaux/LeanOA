@@ -62,27 +62,46 @@ def hasCFC (unital : Bool) (R alg : Expr) : MetaM Bool := do
     return (← trySynthInstance cls).toOption.isSome
   catch _ => return false
 
-/-- The targets: `t` itself, and the outermost subterms of `t` in each other algebra. -/
-def findTargets (cfg : Config) (R t : Expr) : MetaM (Array Target) := do
-  let subterms := go t #[]
-  let mut out : Array Target := #[]
-  for s in subterms do
-    let some alg ← try some <$> (instantiateMVars (← inferType s)) catch _ => pure none | continue
-    if ← isProp alg <||> isType s then continue
-    if ← out.anyM fun o => withNewMCtxDepth <| isDefEq o.alg alg then continue
-    if cfg.unital && (← hasCFC true R alg) then
-      out := out.push { elem := s, alg, unital := true }
-    else if ← hasCFC false R alg then
-      out := out.push { elem := s, alg, unital := false }
-  return out
+/-- The target at `s`, if its type has a calculus over `R`. -/
+def mkTarget? (cfg : Config) (R s : Expr) : MetaM (Option Target) := do
+  let alg ← instantiateMVars (← inferType s)
+  if cfg.unital && (← hasCFC true R alg) then return some { elem := s, alg, unital := true }
+  if ← hasCFC false R alg then return some { elem := s, alg, unital := false }
+  return none
+
+/-- The targets: `t` itself, and, as in `cfc_pull`, the elements that the holes of a lemma with a
+structured element (`φ (cfc f a) = cfc f (φ a)`) are at when that element is a target. -/
+partial def findTargets (cfg : Config) (entries : Array Entry) (R t : Expr) :
+    MetaM (Array Target) := do
+  let some tg ← mkTarget? cfg R t | return #[]
+  go #[tg] #[t]
 where
-  /-- Subterms along application spines, outermost first. -/
-  go (e : Expr) (acc : Array Expr) : Array Expr :=
-    if e.hasLooseBVars then acc else
-    match e with
-    | .app f x => go x (go f (acc.push e))
-    | .mdata _ b => go b acc
-    | _ => acc.push e
+  go (out : Array Target) (todo : Array Expr) : MetaM (Array Target) := do
+    let some t := todo.back? | return out
+    let mut out := out
+    let mut todo := todo.pop
+    for e in entries do
+      unless e.kind matches .pull | .target do continue
+      unless e.holes do continue
+      let found ← withoutModifyingState do
+        let (_, _, ty) ← forallMetaTelescopeReducing (← inferType (← mkConstWithFreshMVarLevels
+          e.declName))
+        let some (_, lhs, rhs) := ty.eq? | return #[]
+        let some (_, _, _, elem) := matchCFC? rhs | return #[]
+        if elem.isMVar then return #[]
+        unless ← withReducible <| isDefEq elem t do return #[]
+        let mut found := #[]
+        let holes ← IO.mkRef #[]
+        (← instantiateMVars lhs).forEach fun h ↦ do
+          if let some (_, _, _, b) := matchCFC? h then
+            unless b.hasMVar || b.hasLooseBVars do holes.modify (·.push b)
+        for b in ← holes.get do found := found.push b
+        return found
+      for b in found do
+        if ← out.anyM fun o ↦ return o.elem == b then continue
+        if let some tg ← mkTarget? cfg R b then
+          out := out.push tg; todo := todo.push b
+    go out todo
 
 /-- Priority adjusted for the requested ring and unitality: as in `cfc_pull`, fewer scalar
 conversions first, then the right unitality, then the priority. -/
@@ -131,7 +150,7 @@ def instantiateTarget (R : Expr) (t : Target) (e : Entry) : MetaM (Option (Expr 
 
   unless ← isDefEq (← inferType elem) t.alg do return none
   -- an element the left-hand side does not determine must be the target
-  if elem.isMVar && (lhs.findMVar? (· == elem.mvarId!)).isNone || lhs.isMVar then
+  if elem.isMVar then
     unless ← isDefEq elem t.elem do return none
   -- a type nothing determines (the `S` of an `AlgHomClass F S A B`, which is not an `outParam`)
   -- is taken to be `R` too
@@ -204,11 +223,12 @@ mutual
 
 /-- The simp context and simprocs pulling towards `R`, cached per ring. -/
 partial def getSetup (cfg : Config) (t : Expr) (extra : Array Name)
-    (cache : IO.Ref (Array (Expr × Setup))) (R : Expr) : MetaM Setup := do
+    (cache : IO.Ref (Array (Expr × Setup))) (stack : IO.Ref (Array Expr)) (R : Expr) :
+    MetaM Setup := do
   for (R', s) in ← cache.get do
     if ← withNewMCtxDepth <| isDefEq R R' then return s
-  let targets ← findTargets cfg R t
   let entries := cfcSimpExt.getState (← getEnv)
+  let targets ← findTargets cfg entries R t
   let dist := ringDistances R entries
   let distOf (n : Option Name) : Option Nat := n.bind fun n ↦ (dist.find? (·.1 == n)).map (·.2)
   -- a concrete ring that is not a node of the conversion graph is only usable if it is `R`
@@ -243,7 +263,7 @@ partial def getSetup (cfg : Config) (t : Expr) (extra : Array Name)
         -- towards the requested ring
         if d < d' then conv ← conv.addConst e.declName
     | .target =>
-      for tg in targets do
+      for (tg, i) in targets.zipIdx do
         if let some (prf, bare) ← instantiateTarget R tg e then
           trace[Tactic.cfc_simp] "{e.declName} at {tg.elem}: {← inferType prf}"
           let id := .other (e.declName ++ `inst)
@@ -251,15 +271,16 @@ partial def getSetup (cfg : Config) (t : Expr) (extra : Array Name)
           if bare then
             atom ← atom.add id r.paramNames r.expr
           else if e.holes then
-            tgt ← tgt.add id r.paramNames r.expr (prio := 100000 + boost distOf cfg.unital e)
+            tgt ← tgt.add id r.paramNames r.expr
+              (prio := 100000 + boost distOf cfg.unital e - 100 * i)
           else
-            loose ← loose.add id r.paramNames r.expr (prio := boost distOf cfg.unital e)
+            loose ← loose.add id r.paramNames r.expr (prio := boost distOf cfg.unital e - 100 * i)
   let ctx ← Simp.mkContext { zetaDelta := cfg.zetaDelta } (simpTheorems := #[pull, tgt])
-  let procs := getSetup cfg t extra cache
+  let procs := getSetup cfg t extra cache stack
   let simprocs : Simp.Simprocs := {
     pre := DiscrTree.empty.insertKeyValue #[.star]
       { declName := `cfcSimpPre, post := false, keys := #[.star],
-        proc := .inl (cfcPre R targets atom loose conv compose procs) }
+        proc := .inl (cfcPre R targets atom loose conv compose stack procs) }
     post := DiscrTree.empty.insertKeyValue #[.star]
       { declName := `cfcSimpFlip, post := true, keys := #[.star],
         proc := .inl (flipPost flip #[pull, tgt]) } }
@@ -272,7 +293,7 @@ partial def getSetup (cfg : Config) (t : Expr) (extra : Array Name)
 that is not the requested one, so that an inner element is pulled at the ring of the calculus
 applied to it; and only then convert towards the requested unitality, then ring. -/
 partial def cfcPre (R : Expr) (targets : Array Target) (atom loose conv compose : SimpTheorems)
-    (setup : Expr → MetaM Setup) : Simp.Simproc := fun e => do
+    (stack : IO.Ref (Array Expr)) (setup : Expr → MetaM Setup) : Simp.Simproc := fun e => do
   let some (S, _, _, b) := matchCFC? e |
     if ← isTargetElem targets e then
       if let some r ← Simp.rewrite? e atom.post atom.erased "cfc_simp atom" false then
@@ -287,12 +308,20 @@ partial def cfcPre (R : Expr) (targets : Array Target) (atom loose conv compose 
   unless isTarget do
     if let some r ← Simp.rewrite? e compose.post compose.erased "cfc_simp compose" false then
       return .visit r
-  unless isTarget do
-    let rb ← if ← withNewMCtxDepth <| isDefEq S R then Simp.simp b else do
-      let s ← setup S
-      let (rb, _) ← Simp.main b s.ctx (methods := Simp.mkDefaultMethodsCore s.simprocs)
-      pure rb
-    if rb.expr != b then
+  -- an element already being simplified further up is left alone, or `ψ a ↦ cfc id (ψ a)` loops
+  if !isTarget && !(← stack.get).contains b then
+    stack.modify (·.push b)
+    let rb ← try
+        if ← withNewMCtxDepth <| isDefEq S R then Simp.simp b else do
+          let s ← setup S
+          let (rb, _) ← Simp.main b s.ctx (methods := Simp.mkDefaultMethodsCore s.simprocs)
+          pure rb
+      finally stack.modify (·.pop)
+    -- `cfc id b`, say, is no progress: composing would give `e` back, and loop
+    let same := match matchCFC? rb.expr with
+      | some (_, _, _, b') => b' == b
+      | none => false
+    if rb.expr != b && !same then
       return .visit (← Simp.mkCongrArg e.appFn! rb)
   if let some r ← Simp.rewrite? e conv.post conv.erased "cfc_simp conv" false then
     return .visit r
@@ -337,7 +366,7 @@ def elabArgs (cfgStx : TSyntax ``optConfig) (lems? : Option (TSyntax ``cfcSimpLe
   let extra ← match lems? with
     | none => pure #[]
     | some stx => stx.raw[1].getSepArgs.mapM fun id => realizeGlobalConstNoOverloadWithInfo id
-  let s ← getSetup cfg t extra (← IO.mkRef #[]) R
+  let s ← getSetup cfg t extra (← IO.mkRef #[]) (← IO.mkRef #[]) R
   return s
 
 @[tactic cfcSimp]
