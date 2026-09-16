@@ -236,7 +236,7 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
   let mut compose : SimpTheorems := {}
   let mut tgt : SimpTheorems := {}
   let mut atom : SimpTheorems := {}
-  for n in [``eq_self, ``iff_self] do
+  for n in [``eq_self, ``iff_self, ``implies_true] do
     pull ← pull.addConst n
   for e in entries do
     let (name, inv) := (e.declName, e.inv)
@@ -378,22 +378,43 @@ def deferDischarge (useHyps : Bool) : Simp.Discharge := fun e => do
     if ← withReducible <| isDefEq d.type e then return some d.toExpr
   return some <| .mdata (KVMap.empty.insert `cfcSimpSideGoal (.ofBool true)) (← mkSorry e true)
 
-/-- Replace the placeholders `deferDischarge` left in `proof` by new goals, one per statement. -/
+/-- Replace the placeholders `deferDischarge` left in `proof` by new goals, one per statement. A
+placeholder below a binder of the proof (under the `funext` of a rewrite under `∀ n`, say) mentions
+the bound variables, so its goal is the statement quantified over the enclosing binders, applied
+back to them. -/
 def replacePlaceholders (proof : Expr) : MetaM (Expr × Array MVarId) := do
-  let proof ← instantiateMVars proof
-  let found ← IO.mkRef (#[] : Array (Expr × Expr))
-  proof.forEach fun e => do
-    if let .mdata d b := e then
-      if d.contains `cfcSimpSideGoal then
-        let ty ← inferType b
-        unless (← found.get).any (·.1 == ty) do
-          found.modify (·.push (ty, ← mkFreshExprSyntheticOpaqueMVar ty))
-  let found ← found.get
-  let proof := proof.replace fun e => match e with
-    | .mdata d b => if d.contains `cfcSimpSideGoal then
-        found.find? (·.1 == b.appFn!.appArg!) |>.map (·.2) else none
-    | _ => none
-  return (proof, found.map (·.2.mvarId!))
+  let goals ← IO.mkRef (#[] : Array (Expr × MVarId))
+  let proof ← go goals #[] (← instantiateMVars proof)
+  return (proof, (← goals.get).map (·.2))
+where
+  /-- `binders` are the enclosing binders, outermost first, with their types as written in the
+  term (so their loose bound variables refer to the earlier binders): closing over them is
+  nesting them back around the statement. -/
+  go (goals : IO.Ref (Array (Expr × MVarId))) (binders : Array (Name × Expr × BinderInfo)) :
+      Expr → MetaM Expr
+    | .mdata d b => do
+      unless d.contains `cfcSimpSideGoal do return .mdata d (← go goals binders b)
+      -- `b` is `sorryAx ty true`
+      let ty := binders.foldr (init := b.appFn!.appArg!) fun (n, t, bi) ty ↦ .forallE n t ty bi
+      let g ← match (← goals.get).find? (·.1 == ty) with
+        | some (_, g) => pure g
+        | none =>
+          let g ← mkFreshExprSyntheticOpaqueMVar ty
+          goals.modify (·.push (ty, g.mvarId!))
+          pure g.mvarId!
+      let k := binders.size
+      return mkAppN (mkMVar g) ((Array.range k).map fun i ↦ .bvar (k - 1 - i))
+    | .app f x => return .app (← go goals binders f) (← go goals binders x)
+    | .lam n t b bi =>
+      return .lam n (← go goals binders t) (← go goals (binders.push (n, t, bi)) b) bi
+    | .forallE n t b bi =>
+      return .forallE n (← go goals binders t) (← go goals (binders.push (n, t, bi)) b) bi
+    | .letE n t v b nd =>
+      -- quantifying over the variable instead of `let`-binding it gives a stronger goal
+      return .letE n (← go goals binders t) (← go goals binders v)
+        (← go goals (binders.push (n, t, .default)) b) nd
+    | .proj s i b => return .proj s i (← go goals binders b)
+    | e => return e
 
 /-- Elaborate the arguments of `cfc_simp`. -/
 def elabArgs (cfgStx : TSyntax ``optConfig) (lems? : Option (TSyntax ``cfcSimpLemmas))
@@ -420,17 +441,19 @@ def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := d
     let ty ← instantiateMVars (← g.getType)
     if let some g' ← out.findM? fun g' => do withReducible <| isDefEq ty (← g'.getType) then
       g.assign (mkMVar g'); continue
-    -- as in `cfc_pull`, the tactic is chosen by the kind of goal, and other goals are left alone
-    let isNonneg := match ty.le? with
+    -- as in `cfc_pull`, the tactic is chosen by the kind of goal, and other goals are left alone;
+    -- a goal raised under a binder is quantified, so it is classified by its body
+    let body := ty.getForallBody
+    let isNonneg := match body.le? with
       | some (_, lhs, _) => lhs.zero?
       | none => false
-    let mentions (n : Name) := (ty.find? (·.isConstOf n)).isSome
-    let (tag, tacs) ← if ty.isAppOf ``IsSelfAdjoint || ty.isAppOf ``IsStarNormal || isNonneg then
+    let mentions (n : Name) := (body.find? (·.isConstOf n)).isSome
+    let (tag, tacs) ← if body.isAppOf ``IsSelfAdjoint || body.isAppOf ``IsStarNormal || isNonneg then
         pure (`cfc_pull.predicate, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
           `(tactic| exact cfcₙ_predicate _ _), `(tactic| cfc_tac)].mapM id)
       else if mentions ``Continuous || mentions ``ContinuousOn then
         pure (`cfc_pull.continuity, ← [`(tactic| assumption), `(tactic| cfc_cont_tac)].mapM id)
-      else if ty.eq?.any (·.2.2.zero?) then
+      else if body.eq?.any (·.2.2.zero?) then
         pure (`cfc_pull.mapZero, ← [`(tactic| assumption), `(tactic| cfc_zero_tac)].mapM id)
       else
         pure (`cfc_pull.side, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
@@ -439,6 +462,7 @@ def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := d
     let tacs := if cfg.defer then [] else tacs
     let mut closed := false
     for tac in tacs do
+      let tac ← `(tactic| (intros; $tac))
       let saved ← saveState
       -- runtime exceptions too: `cfc_zero_tac` can loop, on `0 = f 0` say
       let ok ← Term.withoutErrToSorry <| tryCatchRuntimeEx
