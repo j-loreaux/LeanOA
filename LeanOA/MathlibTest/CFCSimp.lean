@@ -13,7 +13,6 @@ public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.RealImaginaryPart
 public import Mathlib.Analysis.Matrix.HermitianFunctionalCalculus
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
-public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.Tags
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog.Basic
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart.Basic
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.ComplexSqrt
@@ -21,7 +20,7 @@ public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpo
 public import Mathlib.Analysis.SpecialFunctions.Pow.Continuity
 public import Mathlib.Tactic.Linarith
 
-/-!  # The `cfc_pull` test suite, run against `cfc_simp` -/
+/-!  # Test suite for the `cfc_simp` tactic -/
 
 set_option linter.privateModule false
 set_option linter.unusedVariables false
@@ -58,7 +57,7 @@ end GenericUnital
 
 section GenericNonUnital
 
-/- Here the algebra is not unital, so `cfc_pull` falls back to `cfcₙ` without being told to. -/
+/- Here the algebra is not unital, so `cfc_simp` falls back to `cfcₙ` without being told to. -/
 
 variable {R A : Type*} {p : A → Prop} [CommSemiring R] [Nontrivial R]
   [StarRing R] [MetricSpace R] [IsTopologicalSemiring R] [ContinuousStar R] [NonUnitalRing A]
@@ -163,9 +162,9 @@ example (ha : IsSelfAdjoint a) (f : ℝ → ℝ) (hf : Continuous f)
     (hspec : spectrum ℝ a ⊆ Set.Icc (-1) 1) (hf0 : ∀ x ∈ Set.Icc (-1 : ℝ) 1, f x ≠ 0) :
     Ring.inverse (cfc f a) = cfc (fun x : ℝ ↦ (f x)⁻¹) a := by
   cfc_simp +defer ℝ a =>
-    case cfc_pull.side => exact fun x hx ↦ hf0 x (hspec hx)
-    case cfc_pull.predicate => exact ha
-    case cfc_pull.continuity => fun_prop
+    case cfc_simp.side => exact fun x hx ↦ hf0 x (hspec hx)
+    case cfc_simp.predicate => exact ha
+    case cfc_simp.continuity => fun_prop
 
 /- The tactic-valued options take a tactic sequence, like `(disch := ..)`, and all of them may
 appear in any order among the configuration items. -/
@@ -385,7 +384,7 @@ end Only
 
 section Only
 
-/-! ## `only [..]` and `cfc_pull?` -/
+/-! ## `only [..]` and `cfc_simp?` -/
 
 variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {a b : A}
 
@@ -454,7 +453,7 @@ example (ha : IsSelfAdjoint a) :
   refine cfc_congr fun x hx ↦ ?_
   rw [← SpectrumRestricts.real_iff.mp ha.spectrumRestricts _ hx]
 
-/- The same, but starting from `CFC.sqrt (1 - a ^ 2)`. `cfc_pull` uses `CFC.sqrt_eq_real_sqrt`,
+/- The same, but starting from `CFC.sqrt (1 - a ^ 2)`. `cfc_simp` uses `CFC.sqrt_eq_real_sqrt`,
 whose hypothesis `0 ≤ 1 - a ^ 2` becomes a side goal. -/
 example [Nontrivial A] (ha : IsSelfAdjoint a) (ha_norm : ‖a‖ ≤ 1) :
     a + I • CFC.sqrt (1 - a ^ 2) = cfc (fun x ↦ ↑x.re + I * ↑√(1 - x.re ^ 2)) a := by
@@ -526,7 +525,7 @@ example (f g : ℝ≥0 → ℝ≥0) (ha : 0 ≤ a) (hfg : ∀ x ∈ spectrum ℝ
   cfc_simp ℝ≥0 a
 
 /- With a concrete `f` and `g` the extra hypothesis is provable, but nothing in the calculus API
-is run on a `cfc_pull.side` goal, so it takes a discharger. -/
+is run on a `cfc_simp.side` goal, so it takes a discharger. -/
 example (ha : 0 ≤ a) :
     cfc (fun x : ℝ≥0 ↦ x + 1) a - a = cfc (fun x : ℝ≥0 ↦ x + 1 - x) a := by
   cfc_simp ℝ≥0 a => all_goals first | (simp)

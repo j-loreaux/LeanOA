@@ -6,8 +6,8 @@ Authors: Jireh Loreaux
 module
 
 public import Mathlib.Analysis.Complex.SqrtDeriv
-public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.Tags
-public import LeanOA.Mathlib.Tactic.CFCPull
+public import LeanOA.Mathlib.Tactic.CFCSimp
+public import LeanOA.Mathlib.Tactic.CFCSimp.Tags
 
 /-!  # `CFC.sqrt` via the complex functional calculus -/
 
@@ -42,11 +42,11 @@ lemma Complex.continuousOn_sqrt_quasispectrum (ha : 0 ≤ a) :
 variable [IsSemitopologicalRing A] [T2Space A]
 
 /-- `CFC.sqrt` is the non-unital calculus over `ℂ` applied to `Complex.sqrt`. This is not
-tagged `@[cfc_pull]` because it could generate side goals involving continuity of `Complex.sqrt`,
+tagged `@[cfc_simp]` because it could generate side goals involving continuity of `Complex.sqrt`,
 which are not easily discharged by `fun_prop`. -/
 lemma CFC.sqrt_eq_cfcₙ_complex_sqrt (ha : 0 ≤ a) :
     CFC.sqrt a = cfcₙ (fun x : ℂ ↦ x.sqrt) a := by
-  cfc_pull ℂ a
+  cfc_simp ℂ a
   refine cfcₙ_congr ?_
   rw [← (ha.isSelfAdjoint.quasispectrumRestricts.comp rfl (.nnreal_of_nonneg ha)).algebraMap_image]
   rintro - ⟨x, hx, rfl⟩
@@ -74,10 +74,10 @@ lemma Complex.continuousOn_sqrt_spectrum (ha : 0 ≤ a) :
 variable [IsSemitopologicalRing A] [T2Space A]
 
 /-- `CFC.sqrt` is the unital calculus over `ℂ` applied to `Complex.sqrt`. This is not
-tagged `@[cfc_pull]` because it could generate side goals involving continuity of `Complex.sqrt`,
+tagged `@[cfc_simp]` because it could generate side goals involving continuity of `Complex.sqrt`,
 which are not easily discharged by `fun_prop`. -/
 lemma CFC.sqrt_eq_cfc_complex_sqrt (ha : 0 ≤ a) :
     CFC.sqrt a = cfc (fun x : ℂ ↦ x.sqrt) a := by
-  cfc_pull -unital [CFC.sqrt_eq_cfcₙ_complex_sqrt] ℂ a
+  cfc_simp -unital [CFC.sqrt_eq_cfcₙ_complex_sqrt] ℂ a
 
 end Unital

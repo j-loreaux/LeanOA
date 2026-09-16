@@ -11,24 +11,40 @@ public meta import LeanOA.Mathlib.Lean.Elab.Tactic.Basic
 public meta import Lean.Meta.Tactic.TryThis
 
 /-!
-# `cfc_pull` via `simp`
+# The `cfc_simp` tactic
 
-`cfc_simp R a` is `simp only` with the `@[cfc_simp]` lemmas, plus what cannot be expressed without
-knowing `R` and `a`:
+`cfc_simp R a` rewrites the goal so that the continuous functional calculus over `R` is at the head
+of every maximal subexpression whose type is that of `a`: each such subexpression becomes `cfc f a`
+(or `cfcₙ f a`) for a function `f : R → R` read off its structure with the `@[cfc_simp]` lemmas.
 
-* *targets*: `a`, and the outermost subterms of `a` in other algebras (`x` in `φ x`, in `↑x`);
-* the `target` lemmas (`a = cfc id a`, `1 = cfc 1 a`, `star b = cfc star b`, ..), instantiated at
-  `R` (and, when the left-hand side is the bare element, at the target);
+It is `simp only` with those lemmas, plus what cannot be expressed without knowing `R` and `a`:
+
+* *targets*: `a`, and the elements that the holes of a lemma with a structured element
+  (`φ (cfc f a) = cfc f (φ a)`) are at when that element is a target, such as `x` in `φ x`;
+* the `target` lemmas (`a = cfc id a`, `1 = cfc 1 a`, `star b = cfc star b`, ..), whose algebraic
+  side does not determine the ring, instantiated at `R` (and, when the left-hand side is the bare
+  element, at the target);
 * priorities, boosted for lemmas at the ring `R` and the requested unitality;
-* one simproc on `cfc f b` / `cfcₙ f b`, which converts the scalar ring and unitality towards the
-  requested ones (conversion lemmas are included only in that direction, so they cannot loop),
-  applies composition lemmas, and simplifies `b` (never `f`), unless `b` is a target.
+* one pre-simproc on `cfc f b` / `cfcₙ f b`, which applies composition lemmas, simplifies `b`
+  (never `f`) unless `b` is a target, and converts the scalar ring and unitality towards the
+  requested ones (conversion lemmas are included only in that direction, so they cannot loop);
+* one post-simproc, which flips the unitality of an argument when no lemma applies otherwise.
 
 The lemmas are the real ones, hypotheses included. `simp` rejects a rewrite whose proof contains
 an assignable metavariable, so the discharger cannot leave a goal behind; instead it fills each
 hypothesis it cannot prove with a marked placeholder, which the tactic turns into a side goal once
-`simp` is done (`deferDischarge`, `replacePlaceholders`). The side goals then get the treatment
-`cfc_pull` gives them: the tactic for their kind, or the `=> ..` block.
+`simp` is done (`deferDischarge`, `replacePlaceholders`). The side goals are then attempted with
+a tactic chosen by their kind, and the survivors handed to the `=> ..` block.
+
+## Unsupported
+
+* **Compositions that also change the scalar ring.**
+  `cfc_comp_re : cfc (fun x : ℂ ↦ f (re x)) a = cfc f (ℜ a : A)` is a composition that changes the
+  scalar ring from `ℝ` to `ℂ` on the way. The attribute classifies such a lemma as a composition
+  at the ring of its simpler side, which is not enough: the composition would have to be followed
+  by a conversion, at the inner element. These lemmas are deliberately left untagged.
+* **Several elements at once** (`cfc_apply_pi`, `cfc_map_prod`): there is no single element to
+  pull towards.
 -/
 
 public meta section
@@ -79,7 +95,7 @@ def mkTarget? (cfg : Config) (R s : Expr) : MetaM (Option Target) := do
   if ← hasCFC false R alg then return some { elem := s, alg, unital := false }
   return none
 
-/-- The targets: `t` itself, and, as in `cfc_pull`, the elements that the holes of a lemma with a
+/-- The targets: `t` itself, and the elements that the holes of a lemma with a
 structured element (`φ (cfc f a) = cfc f (φ a)`) are at when that element is a target. -/
 partial def findTargets (cfg : Config) (entries : Array Entry) (R t : Expr) :
     MetaM (Array Target) := do
@@ -112,7 +128,7 @@ where
           out := out.push tg; todo := todo.push b
     go out todo
 
-/-- Priority adjusted for the requested ring and unitality: as in `cfc_pull`, fewer scalar
+/-- Priority adjusted for the requested ring and unitality: fewer scalar
 conversions first, then the right unitality, then the priority. -/
 def boost (dist : Option Name → Option Nat) (unital : Bool) (e : Entry) : Nat :=
   let conversions := match e.ring with
@@ -360,14 +376,50 @@ syntax cfcSimpErase := "-" ident
 /-- The lemma list of `cfc_simp`: declarations or local hypotheses to add, `-lemma`s to remove. -/
 syntax cfcSimpLemmas := " [" withoutPosition((cfcSimpErase <|> ident),*,?) "]"
 
-/-- `cfc_simp R a`: a `simp`-based `cfc_pull R a`. Rewrites the goal (or the location `at ..`)
-so that the calculus over `R` is at the head of every maximal subexpression in the algebra of
-`a`, using the `@[cfc_simp]` lemmas together with those in `[..]`, which may be local
-hypotheses; `[-lemma]` removes one, and `only [..]` starts from the empty set. Side goals are
-attempted with the tactic for their kind, as in `cfc_pull`, and the survivors are handed to the
-`=> ..` block, or left open; `+defer` attempts none of them. `-unital` asks for `cfcₙ`;
-`+zetaDelta` unfolds `let`-bound variables. `cfc_simp?` suggests the `only [..]` call listing
-the lemmas used. -/
+/--
+`cfc_simp R a` rewrites the goal so that the continuous functional calculus is at the head of
+maximal subexpressions whose type matches that of `a`: each such subexpression is replaced by
+`cfc f a` (or `cfcₙ f a`) for some function `f : R → R` that the tactic determines from the
+structure of the expression and the collection of lemmas tagged `@[cfc_simp]`.
+
+In the following example, `cfc_simp` acts on both sides of the equality, doing nothing with the
+right-hand side, but expressing the left-hand side as `cfc (?f : R → R) a` where
+`?f := fun x : R ↦ star x * x`, and the goal is closed with `rfl` at reducible transparency.
+
+```lean
+example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by
+  cfc_simp R a
+```
+
+* `cfc_simp R a`: with `a : A` attempts to write maximal subexpressions of the goal with type `A`
+  in the form `cfc f a` for some function `f : R → R`, wherever they occur: under binders, and
+  inside terms of other types. Side goals that cannot be discharged automatically are left open.
+* `cfc_simp R a at h₁ h₂ ⊢`: rewrite the hypotheses `h₁` and `h₂` in the same way, and the goal
+  (without `⊢`, the goal is left alone); `cfc_simp R a at *` rewrites everywhere it can.
+* `cfc_simp -unital R a`: the same, but for `cfcₙ` instead; if only a non-unital instance of
+  the continuous functional calculus can be found this is the default, whereas `cfc` is the default
+  if a unital instance is found.
+* `cfc_simp R a => tacticSeq`: discharge the side goals left unsolved with the supplied tactic
+  script, which sees only those goals and must close all of them. `case cfc_simp.continuity => ..`
+  and so on select goals by kind: `cfc_simp.predicate`, `cfc_simp.continuity`,
+  `cfc_simp.mapZero` and `cfc_simp.side`.
+* `cfc_simp +defer R a => tacticSeq`: attempt to discharge no side goals, and hand all of them to
+  the `=> ..` block.
+* `cfc_simp [lemma1, -lemma2, h] R a`: add `lemma1` and the local hypothesis `h` to the lemmas
+  used by `cfc_simp`, and remove `lemma2`.
+* `cfc_simp only [lemma1, lemma2] R a`: use only `lemma1` and `lemma2`, not the `@[cfc_simp]`
+  lemmas.
+* `cfc_simp? R a`: the same as `cfc_simp R a`, but suggests replacing itself with
+  `cfc_simp only [..] R a`, listing the lemmas the rewrite used.
+* `cfc_simp +zetaDelta R a`: unfold `let`-bound variables.
+
+Side goals are first attempted with a tactic chosen by their kind: `cfc_cont_tac` for continuity,
+`cfc_zero_tac` for `f 0 = 0`, and the predicate lemmas `cfc_predicate`/`cfcₙ_predicate` followed
+by `cfc_tac` for the predicate of the calculus; `assumption` is tried on all of them.
+
+Tracing of the `simp` call is available with `set_option trace.Meta.Tactic.simp true`, and of the
+side goals with `set_option trace.Tactic.cfc_simp true`.
+-/
 syntax (name := cfcSimp) "cfc_simp" optConfig (&" only")? (cfcSimpLemmas)? ppSpace colGt term:max
   ppSpace colGt term:max (location)? (" => " colGt tacticSeq)? : tactic
 
@@ -505,7 +557,7 @@ def mkOnlyLemmas (used : Array Origin) (entries : Array Entry) :
   let list := mkNullNode (mkSepArray ids (mkAtom ","))
   return ⟨mkNode ``cfcSimpLemmas #[mkAtom "[", list, mkAtom "]"]⟩
 
-/-- The side goals, deduplicated, and without those the tactics of `cfc_pull` close. -/
+/-- The side goals, deduplicated, and without those the tactic for their kind closes. -/
 def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := do
   let mut out : Array MVarId := #[]
   for g in goals do
@@ -513,7 +565,7 @@ def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := d
     let ty ← instantiateMVars (← g.getType)
     if let some g' ← out.findM? fun g' => do withReducible <| isDefEq ty (← g'.getType) then
       g.assign (mkMVar g'); continue
-    -- as in `cfc_pull`, the tactic is chosen by the kind of goal, and other goals are left alone;
+    -- the tactic is chosen by the kind of goal, and other goals are left alone;
     -- a goal raised under a binder is quantified, so it is classified by its body
     let body := ty.getForallBody
     let isNonneg := match body.le? with
@@ -522,14 +574,14 @@ def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := d
     let mentions (n : Name) := (body.find? (·.isConstOf n)).isSome
     let isPred := body.isAppOf ``IsSelfAdjoint || body.isAppOf ``IsStarNormal || isNonneg
     let (tag, tacs) ← if isPred then
-        pure (`cfc_pull.predicate, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
+        pure (`cfc_simp.predicate, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
           `(tactic| exact cfcₙ_predicate _ _), `(tactic| cfc_tac)].mapM id)
       else if mentions ``Continuous || mentions ``ContinuousOn then
-        pure (`cfc_pull.continuity, ← [`(tactic| assumption), `(tactic| cfc_cont_tac)].mapM id)
+        pure (`cfc_simp.continuity, ← [`(tactic| assumption), `(tactic| cfc_cont_tac)].mapM id)
       else if body.eq?.any (·.2.2.zero?) then
-        pure (`cfc_pull.mapZero, ← [`(tactic| assumption), `(tactic| cfc_zero_tac)].mapM id)
+        pure (`cfc_simp.mapZero, ← [`(tactic| assumption), `(tactic| cfc_zero_tac)].mapM id)
       else
-        pure (`cfc_pull.side, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
+        pure (`cfc_simp.side, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
           `(tactic| exact cfcₙ_predicate _ _)].mapM id)
     g.setTag tag
     let tacs := if cfg.defer then [] else tacs
@@ -560,7 +612,7 @@ def evalCFCSimp : Tactic := fun stx => withMainContext do
   let root ← getMainGoal
   let loc := expandOptLocation (mkOptionalNode loc?)
   let stats ← simpLocation s.ctx s.simprocs s.disch loc
-  -- as `cfc_pull` does, close the goal if it is now `rfl` up to reducible unfolding
+  -- close the goal if it is now `rfl` up to reducible unfolding
   unless (← getGoals).isEmpty do
     if loc matches .wildcard || loc matches .targets _ true then
       try evalTactic (← `(tactic| with_reducible rfl)) catch _ => pure ()
