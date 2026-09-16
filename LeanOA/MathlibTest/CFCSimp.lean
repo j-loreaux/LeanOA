@@ -271,7 +271,117 @@ example (ha : IsStarNormal a) (g : ℕ → A) (hg : ∀ n, g n = cfc (fun x : �
 
 end Hypotheses
 
+/-! ### `-lemma` -/
+
+section Erase
+
+variable {A : Type*} [CStarAlgebra A] {a : A}
+
+/- Without both `mul` lemmas the factors are pulled but not the product. -/
+/--
+error: unsolved goals
+A : Type u_1
+inst✝ : CStarAlgebra A
+a : A
+ha : IsStarNormal a
+⊢ cfc (fun x ↦ x) a * cfc (fun x ↦ x) a = cfc (fun x ↦ x * x) a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) : a * a = cfc (fun x : ℂ ↦ x * x) a := by
+  cfc_simp [-cfc_mul, -cfcₙ_mul] ℂ a
+
+/- With `cfc_mul` alone gone, `cfcₙ_mul` and the unitality conversion take over. -/
+example (ha : IsStarNormal a) : a * a = cfc (fun x : ℂ ↦ x * x) a := by
+  cfc_simp [-cfc_mul] ℂ a
+
+/--
+error: `Nat.add_comm` is not in the `cfc_simp` lemma set, so `-Nat.add_comm` has nothing to remove
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) : a * a = cfc (fun x : ℂ ↦ x * x) a := by
+  cfc_simp [-Nat.add_comm] ℂ a
+
+end Erase
+
 end LemmaList
+
+section Only
+
+/-! ## `only [..]` and `cfc_simp?` -/
+
+variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {a b : A}
+
+open scoped NNReal
+
+/--
+info: Try this:
+  [apply] cfc_simp only [cfc_star_id, cfc_id', cfc_mul] ℂ a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
+  cfc_simp? ℂ a
+
+example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
+  cfc_simp only [cfc_star_id, cfc_id', cfc_mul] ℂ a
+
+/--
+error: unsolved goals
+A : Type u_1
+inst✝² : CStarAlgebra A
+inst✝¹ : PartialOrder A
+inst✝ : StarOrderedRing A
+a b : A
+ha : IsStarNormal a
+⊢ cfc (fun x ↦ star x) a * cfc (fun x ↦ x) a = cfc (fun x ↦ star x * x) a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
+  cfc_simp only [cfc_star_id, cfc_id'] ℂ a
+
+/- The suggestion replaces everything up to the element, keeping the configuration and leaving any
+location or `=> ..` block as it is; lemmas used at several locations are listed once. -/
+/--
+info: Try this:
+  [apply] cfc_simp +defer only [CFC.rpow_def, cfc_mul] ℝ≥0 a
+-/
+#guard_msgs in
+example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
+    a ^ x * a ^ y = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ y) a := by
+  cfc_simp? +defer ℝ≥0 a => all_goals fun_prop
+
+example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
+    a ^ x * a ^ y = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ y) a := by
+  cfc_simp +defer only [CFC.rpow_def, cfc_mul] ℝ≥0 a => all_goals fun_prop
+
+/- `at *` visits the hypotheses first, `ha` included, so `cfc_id'` is used before `cfc_star_id`. -/
+/--
+info: Try this:
+  [apply] cfc_simp only [cfc_id', cfc_star_id, cfc_mul] ℂ a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) (h : star a * a = b) : star a * a = b := by
+  cfc_simp? ℂ a at *
+  exact h
+
+/- A hypothesis in the list is suggested by name. -/
+/--
+info: Try this:
+  [apply] cfc_simp only [hf, cfc_id', cfc_mul] ℂ a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) (f : ℂ → ℂ) (hf : star a = cfc f a) (hf' : Continuous f) :
+    star a * a = cfc (fun x ↦ f x * x) a := by
+  cfc_simp? [hf] ℂ a
+
+/--
+info: Try this:
+  [apply] cfc_simp only [cfc_star_id, cfc_id', cfc_mul] ℂ a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) (b : A) : star a * a + b = cfc (fun x : ℂ ↦ star x * x) a + b := by
+  conv in star a * a => cfc_simp? ℂ a
+
+end Only
 
 section Only
 
