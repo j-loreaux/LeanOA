@@ -54,6 +54,10 @@ structure Entry where
   /-- For `pull` and `target` lemmas: whether the algebraic side has applications of the calculus
   in it (*holes*). A lemma without holes is applied top-down, before its argument is simplified. -/
   holes : Bool := true
+  /-- The original lemma. -/
+  origName : Name := .anonymous
+  /-- Whether this copy is the original read right to left. -/
+  inv : Bool := false
   deriving Inhabited
 
 initialize cfcSimpExt : SimpleScopedEnvExtension Entry (Array Entry) ←
@@ -100,8 +104,8 @@ def generate (declName : Name) (prio : Nat) : MetaM (Array Entry) := do
     let lvls := info.levelParams
     match matchCFC? lhs, matchCFC? rhs with
     | none, none => throwError "`{declName}`: neither side is `cfc`/`cfcₙ`"
-    | some c, none => pullEntry lvls xs rhs lhs c
-    | none, some c => pullEntry lvls xs lhs rhs c
+    | some c, none => pullEntry lvls xs rhs lhs c true
+    | none, some c => pullEntry lvls xs lhs rhs c false
     | some (Rl, ul, _, el), some (Rr, ur, _, er) =>
       if el == er then
         -- a conversion; record both directions, `cfc_simp` picks one
@@ -109,18 +113,21 @@ def generate (declName : Name) (prio : Nat) : MetaM (Array Entry) := do
         let n₂ ← addSorryDecl declName "_symm" lvls xs rhs lhs
         return #[
           { declName := n₁, kind := .conv, prio, ring := ringKey Rr, unital := ur,
-            srcRing := ringKey Rl, srcUnital := ul },
+            srcRing := ringKey Rl, srcUnital := ul, origName := declName },
           { declName := n₂, kind := .conv, prio, ring := ringKey Rl, unital := ul,
-            srcRing := ringKey Rr, srcUnital := ur }]
+            srcRing := ringKey Rr, srcUnital := ur, origName := declName, inv := true }]
       else
         -- a composition: the side whose element is more complicated goes on the left
-        let (l, r, R, u) := if el.approxDepth ≥ er.approxDepth then (lhs, rhs, Rr, ur)
-          else (rhs, lhs, Rl, ul)
+        let inv := el.approxDepth < er.approxDepth
+        let (l, r, R, u) := if !inv then (lhs, rhs, Rr, ur) else (rhs, lhs, Rl, ul)
         let n ← addSorryDecl declName "" lvls xs l r
-        return #[{ declName := n, kind := .compose, prio, ring := ringKey R, unital := u }]
+        let entry : Entry :=
+          { declName := n, kind := .compose, prio := prio, ring := ringKey R, unital := u
+            origName := declName, inv := inv }
+        return #[entry]
 where
   pullEntry (lvls : List Name) (xs : Array Expr) (alg cfcSide : Expr)
-      (c : Expr × Bool × Expr × Expr) : MetaM (Array Entry) := do
+      (c : Expr × Bool × Expr × Expr) (inv : Bool) : MetaM (Array Entry) := do
     let (R, unital, _, _) := c
     let n ← addSorryDecl declName "" lvls xs alg cfcSide
     -- if the ring is a variable that the algebraic side does not mention, `simp` cannot use it
@@ -129,7 +136,10 @@ where
       return (← isType x) && !alg.containsFVar x.fvarId! && !cfcSide.containsFVar x.fvarId!
     let kind := if R.isFVar && !alg.containsFVar R.fvarId! || freeType then .target else .pull
     let holes := (alg.find? fun e ↦ (matchCFC? e).isSome).isSome
-    return #[{ declName := n, kind, prio, ring := ringKey R, unital, holes }]
+    let entry : Entry :=
+      { declName := n, kind := kind, prio := prio, ring := ringKey R, unital := unital
+        holes := holes, origName := declName, inv := inv }
+    return #[entry]
 
 /-- `cfc_simp_gen (prio)? foo bar ..`: generate the `sorry`d, hypothesis-free, pull-direction copies
 `CFCSimp.foo`, `CFCSimp.bar`, .. of `cfc_pull` lemmas, for use by `cfc_simp`. -/
