@@ -9,9 +9,9 @@ public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog.Basic
 
 /-!
-# Lemmas needed by the `cfc_simp` tactic
+# Lemmas needed by the `cfc_pull` tactic
 
-Some lemmas missing from Mathlib needed for the `cfc_simp` tactic.
+Some lemmas missing from Mathlib needed for the `cfc_pull` tactic.
 -/
 
 @[expose] public section

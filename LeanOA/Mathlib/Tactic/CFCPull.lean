@@ -1,6 +1,6 @@
 module
 
-public import LeanOA.Mathlib.Tactic.CFCSimp.Attr
+public import LeanOA.Mathlib.Tactic.CFCPull.Attr
 public meta import Lean.Elab.Tactic.Simp
 public meta import Lean.Elab.Tactic.Location
 public meta import Lean.Parser.Tactic
@@ -11,11 +11,11 @@ public meta import LeanOA.Mathlib.Lean.Elab.Tactic.Basic
 public meta import Lean.Meta.Tactic.TryThis
 
 /-!
-# The `cfc_simp` tactic
+# The `cfc_pull` tactic
 
-`cfc_simp R a` rewrites the goal so that the continuous functional calculus over `R` is at the head
+`cfc_pull R a` rewrites the goal so that the continuous functional calculus over `R` is at the head
 of every maximal subexpression whose type is that of `a`: each such subexpression becomes `cfc f a`
-(or `cfcₙ f a`) for a function `f : R → R` read off its structure with the `@[cfc_simp]` lemmas.
+(or `cfcₙ f a`) for a function `f : R → R` read off its structure with the `@[cfc_pull]` lemmas.
 
 It is `simp only` with those lemmas, plus what cannot be expressed without knowing `R` and `a`:
 
@@ -49,11 +49,11 @@ a tactic chosen by their kind, and the survivors handed to the `=> ..` block.
 
 public meta section
 
-namespace Mathlib.Tactic.CFCSimp
+namespace Mathlib.Tactic.CFCPull
 
 open Lean Meta Elab Tactic Parser.Tactic
 
-/-- Configuration for `cfc_simp`. -/
+/-- Configuration for `cfc_pull`. -/
 structure Config where
   /-- Prefer the unital calculus. -/
   unital : Bool := true
@@ -277,7 +277,7 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
           let r ← abstractMVars prf
           if seen.contains r.expr then continue
           seen := seen.push r.expr
-          trace[Tactic.cfc_simp] "{← ppOrigin e.origin} at {tg.elem}: {← inferType prf}"
+          trace[Tactic.cfc_pull] "{← ppOrigin e.origin} at {tg.elem}: {← inferType prf}"
           let id := .other (e.origin.key ++ `inst)
           if bare then
             atom ← atom.add id r.paramNames r.expr
@@ -291,10 +291,10 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
   let procs := getSetup cfg t entries disch cache stack
   let simprocs : Simp.Simprocs := {
     pre := DiscrTree.empty.insertKeyValue #[.star]
-      { declName := `cfcSimpPre, post := false, keys := #[.star],
+      { declName := `cfcPullPre, post := false, keys := #[.star],
         proc := .inl (cfcPre R targets atom loose conv compose stack procs) }
     post := DiscrTree.empty.insertKeyValue #[.star]
-      { declName := `cfcSimpFlip, post := true, keys := #[.star],
+      { declName := `cfcPullFlip, post := true, keys := #[.star],
         proc := .inl (flipPost flip #[pull, tgt]) } }
   let s := { ctx, simprocs := #[simprocs], disch }
   cache.modify (·.push (R, s))
@@ -308,17 +308,17 @@ partial def cfcPre (R : Expr) (targets : Array Target) (atom loose conv compose 
     (stack : IO.Ref (Array Expr)) (setup : Expr → MetaM Setup) : Simp.Simproc := fun e => do
   let some (S, _, _, b) := matchCFC? e |
     if ← isTargetElem targets e then
-      if let some r ← Simp.rewrite? e atom.post atom.erased "cfc_simp atom" false then
+      if let some r ← Simp.rewrite? e atom.post atom.erased "cfc_pull atom" false then
         return .visit r
       return .continue
-    if let some r ← Simp.rewrite? e loose.post loose.erased "cfc_simp loose" false then
+    if let some r ← Simp.rewrite? e loose.post loose.erased "cfc_pull loose" false then
       return .visit r
     return .continue
   unless e.getAppNumArgs == (← getConstInfo e.getAppFn.constName!).type.getForallArity do
     return .continue
   let isTarget ← isTargetElem targets b
   unless isTarget do
-    if let some r ← Simp.rewrite? e compose.post compose.erased "cfc_simp compose" false then
+    if let some r ← Simp.rewrite? e compose.post compose.erased "cfc_pull compose" false then
       return .visit r
   -- an element already being simplified further up is left alone, or `ψ a ↦ cfc id (ψ a)` loops
   if !isTarget && !(← stack.get).contains b then
@@ -335,10 +335,10 @@ partial def cfcPre (R : Expr) (targets : Array Target) (atom loose conv compose 
       | some (_, _, _, b') => b' == b
       | none => false
     if rb.expr != b && !same then
-      -- the nested run has its own statistics; `cfc_simp?` wants its lemmas too
+      -- the nested run has its own statistics; `cfc_pull?` wants its lemmas too
       for o in nestedUsed do Simp.recordSimpTheorem o
       return .visit (← Simp.mkCongrArg e.appFn! rb)
-  if let some r ← Simp.rewrite? e conv.post conv.erased "cfc_simp conv" false then
+  if let some r ← Simp.rewrite? e conv.post conv.erased "cfc_pull conv" false then
     return .visit r
   return .done { expr := e }
 
@@ -348,13 +348,13 @@ lemmas again. -/
 partial def flipPost (flip : SimpTheorems) (thms : Array SimpTheorems) : Simp.Simproc := fun e => do
   if (matchCFC? e).isSome then return .continue
   let args := e.getAppArgs
-  -- a flip that leads nowhere is not a use of the lemma, as far as `cfc_simp?` is concerned
+  -- a flip that leads nowhere is not a use of the lemma, as far as `cfc_pull?` is concerned
   let used := (← get).usedTheorems
   let mut flips : Array (Nat × Simp.Result) := #[]
   for h : i in [0:args.size] do
     let arg := args[i]
     unless (matchCFC? arg).isSome do continue
-    if let some r ← Simp.rewrite? arg flip.post flip.erased "cfc_simp flip" false then
+    if let some r ← Simp.rewrite? arg flip.post flip.erased "cfc_pull flip" false then
       flips := flips.push (i, r)
   if flips.isEmpty then return .continue
   let candidates := if flips.size > 1 then #[flips] ++ flips.map (#[·]) else #[flips]
@@ -363,76 +363,76 @@ partial def flipPost (flip : SimpTheorems) (thms : Array SimpTheorems) : Simp.Si
     for (i, r) in c do
       r₁ ← r₁.mkEqTrans (← congrAt r₁.expr i r)
     for s in thms do
-      if let some r₂ ← Simp.rewrite? r₁.expr s.post s.erased "cfc_simp" false then
+      if let some r₂ ← Simp.rewrite? r₁.expr s.post s.erased "cfc_pull" false then
         return .visit (← r₁.mkEqTrans r₂)
   modify fun s => { s with usedTheorems := used }
   return .continue
 
 end
 
-/-- Remove the lemma from the `cfc_simp` set for this call. -/
-syntax cfcSimpErase := "-" ident
+/-- Remove the lemma from the `cfc_pull` set for this call. -/
+syntax cfcPullErase := "-" ident
 
-/-- The lemma list of `cfc_simp`: declarations or local hypotheses to add, `-lemma`s to remove. -/
-syntax cfcSimpLemmas := " [" withoutPosition((cfcSimpErase <|> ident),*,?) "]"
+/-- The lemma list of `cfc_pull`: declarations or local hypotheses to add, `-lemma`s to remove. -/
+syntax cfcPullLemmas := " [" withoutPosition((cfcPullErase <|> ident),*,?) "]"
 
 /--
-`cfc_simp R a` rewrites the goal so that the continuous functional calculus is at the head of
+`cfc_pull R a` rewrites the goal so that the continuous functional calculus is at the head of
 maximal subexpressions whose type matches that of `a`: each such subexpression is replaced by
 `cfc f a` (or `cfcₙ f a`) for some function `f : R → R` that the tactic determines from the
-structure of the expression and the collection of lemmas tagged `@[cfc_simp]`.
+structure of the expression and the collection of lemmas tagged `@[cfc_pull]`.
 
-In the following example, `cfc_simp` acts on both sides of the equality, doing nothing with the
+In the following example, `cfc_pull` acts on both sides of the equality, doing nothing with the
 right-hand side, but expressing the left-hand side as `cfc (?f : R → R) a` where
 `?f := fun x : R ↦ star x * x`, and the goal is closed with `rfl` at reducible transparency.
 
 ```lean
 example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by
-  cfc_simp R a
+  cfc_pull R a
 ```
 
-* `cfc_simp R a`: with `a : A` attempts to write maximal subexpressions of the goal with type `A`
+* `cfc_pull R a`: with `a : A` attempts to write maximal subexpressions of the goal with type `A`
   in the form `cfc f a` for some function `f : R → R`, wherever they occur: under binders, and
   inside terms of other types. Side goals that cannot be discharged automatically are left open.
-* `cfc_simp R a at h₁ h₂ ⊢`: rewrite the hypotheses `h₁` and `h₂` in the same way, and the goal
-  (without `⊢`, the goal is left alone); `cfc_simp R a at *` rewrites everywhere it can.
-* `cfc_simp -unital R a`: the same, but for `cfcₙ` instead; if only a non-unital instance of
+* `cfc_pull R a at h₁ h₂ ⊢`: rewrite the hypotheses `h₁` and `h₂` in the same way, and the goal
+  (without `⊢`, the goal is left alone); `cfc_pull R a at *` rewrites everywhere it can.
+* `cfc_pull -unital R a`: the same, but for `cfcₙ` instead; if only a non-unital instance of
   the continuous functional calculus can be found this is the default, whereas `cfc` is the default
   if a unital instance is found.
-* `cfc_simp R a => tacticSeq`: discharge the side goals left unsolved with the supplied tactic
-  script, which sees only those goals and must close all of them. `case cfc_simp.continuity => ..`
-  and so on select goals by kind: `cfc_simp.predicate`, `cfc_simp.continuity`,
-  `cfc_simp.mapZero` and `cfc_simp.side`.
-* `cfc_simp +defer R a => tacticSeq`: attempt to discharge no side goals, and hand all of them to
+* `cfc_pull R a => tacticSeq`: discharge the side goals left unsolved with the supplied tactic
+  script, which sees only those goals and must close all of them. `case cfc_pull.continuity => ..`
+  and so on select goals by kind: `cfc_pull.predicate`, `cfc_pull.continuity`,
+  `cfc_pull.mapZero` and `cfc_pull.side`.
+* `cfc_pull +defer R a => tacticSeq`: attempt to discharge no side goals, and hand all of them to
   the `=> ..` block.
-* `cfc_simp [lemma1, -lemma2, h] R a`: add `lemma1` and the local hypothesis `h` to the lemmas
-  used by `cfc_simp`, and remove `lemma2`.
-* `cfc_simp only [lemma1, lemma2] R a`: use only `lemma1` and `lemma2`, not the `@[cfc_simp]`
+* `cfc_pull [lemma1, -lemma2, h] R a`: add `lemma1` and the local hypothesis `h` to the lemmas
+  used by `cfc_pull`, and remove `lemma2`.
+* `cfc_pull only [lemma1, lemma2] R a`: use only `lemma1` and `lemma2`, not the `@[cfc_pull]`
   lemmas.
-* `cfc_simp? R a`: the same as `cfc_simp R a`, but suggests replacing itself with
-  `cfc_simp only [..] R a`, listing the lemmas the rewrite used.
-* `cfc_simp +zetaDelta R a`: unfold `let`-bound variables.
+* `cfc_pull? R a`: the same as `cfc_pull R a`, but suggests replacing itself with
+  `cfc_pull only [..] R a`, listing the lemmas the rewrite used.
+* `cfc_pull +zetaDelta R a`: unfold `let`-bound variables.
 
 Side goals are first attempted with a tactic chosen by their kind: `cfc_cont_tac` for continuity,
 `cfc_zero_tac` for `f 0 = 0`, and the predicate lemmas `cfc_predicate`/`cfcₙ_predicate` followed
 by `cfc_tac` for the predicate of the calculus; `assumption` is tried on all of them.
 
 Tracing of the `simp` call is available with `set_option trace.Meta.Tactic.simp true`, and of the
-side goals with `set_option trace.Tactic.cfc_simp true`.
+side goals with `set_option trace.Tactic.cfc_pull true`.
 -/
-syntax (name := cfcSimp) "cfc_simp" optConfig (&" only")? (cfcSimpLemmas)? ppSpace colGt term:max
+syntax (name := cfcPull) "cfc_pull" optConfig (&" only")? (cfcPullLemmas)? ppSpace colGt term:max
   ppSpace colGt term:max (location)? (" => " colGt tacticSeq)? : tactic
 
-@[inherit_doc cfcSimp]
-syntax (name := cfcSimpTrace) "cfc_simp?" optConfig (&" only")? (cfcSimpLemmas)? ppSpace colGt
+@[inherit_doc cfcPull]
+syntax (name := cfcPullTrace) "cfc_pull?" optConfig (&" only")? (cfcPullLemmas)? ppSpace colGt
   term:max ppSpace colGt term:max (location)? (" => " colGt tacticSeq)? : tactic
 
-@[inherit_doc cfcSimp]
-syntax (name := cfcSimpConv) "cfc_simp" optConfig (&" only")? (cfcSimpLemmas)? ppSpace colGt
+@[inherit_doc cfcPull]
+syntax (name := cfcPullConv) "cfc_pull" optConfig (&" only")? (cfcPullLemmas)? ppSpace colGt
   term:max ppSpace colGt term:max (" => " colGt tacticSeq)? : conv
 
-@[inherit_doc cfcSimp]
-syntax (name := cfcSimpTraceConv) "cfc_simp?" optConfig (&" only")? (cfcSimpLemmas)? ppSpace
+@[inherit_doc cfcPull]
+syntax (name := cfcPullTraceConv) "cfc_pull?" optConfig (&" only")? (cfcPullLemmas)? ppSpace
   colGt term:max ppSpace colGt term:max (" => " colGt tacticSeq)? : conv
 
 /-- Discharge a hypothesis with a local hypothesis if there is one, and otherwise with a
@@ -452,7 +452,7 @@ def deferDischarge (useHyps : Bool) : Simp.Discharge := fun e => do
     unless useHyps do break
     if d.isImplementationDetail then continue
     if ← withReducible <| isDefEq d.type e then return some d.toExpr
-  return some <| .mdata (KVMap.empty.insert `cfcSimpSideGoal (.ofBool true)) (← mkSorry e true)
+  return some <| .mdata (KVMap.empty.insert `cfcPullSideGoal (.ofBool true)) (← mkSorry e true)
 
 /-- Replace the placeholders `deferDischarge` left in `proof` by new goals, one per statement. A
 placeholder below a binder of the proof (under the `funext` of a rewrite under `∀ n`, say) mentions
@@ -469,7 +469,7 @@ where
   go (goals : IO.Ref (Array (Expr × MVarId))) (binders : Array (Name × Expr × BinderInfo)) :
       Expr → MetaM Expr
     | .mdata d b => do
-      unless d.contains `cfcSimpSideGoal do return .mdata d (← go goals binders b)
+      unless d.contains `cfcPullSideGoal do return .mdata d (← go goals binders b)
       -- `b` is `sorryAx ty true`
       let ty := binders.foldr (init := b.appFn!.appArg!) fun (n, t, bi) ty ↦ .forallE n t ty bi
       let g ← match (← goals.get).find? (·.1 == ty) with
@@ -492,21 +492,21 @@ where
     | .proj s i b => return .proj s i (← go goals binders b)
     | e => return e
 
-/-- The lemma set for this call: the `@[cfc_simp]` set, or with `only` the empty set, adjusted by
+/-- The lemma set for this call: the `@[cfc_pull]` set, or with `only` the empty set, adjusted by
 the bracketed list. A listed lemma that is tagged keeps its entries, and so its priority; an
 untagged declaration or a local hypothesis is classified here, at `high` priority so that it
 outranks the tagged set. -/
-def elabLemmas (only : Bool) (lems? : Option (TSyntax ``cfcSimpLemmas)) :
+def elabLemmas (only : Bool) (lems? : Option (TSyntax ``cfcPullLemmas)) :
     TacticM (Array Entry) := do
-  let all := cfcSimpExt.getState (← getEnv)
+  let all := cfcPullExt.getState (← getEnv)
   let mut entries := if only then #[] else all
   let some stx := lems? | return entries
   for arg in stx.raw[1].getSepArgs do
-    if arg.isOfKind ``cfcSimpErase then
+    if arg.isOfKind ``cfcPullErase then
       let id : Ident := ⟨arg[1]⟩
       let declName ← realizeGlobalConstNoOverloadWithInfo id
       unless entries.any (·.origin.key == declName) do
-        throwErrorAt id "`{.ofConstName declName}` is not in the `cfc_simp` lemma set, so \
+        throwErrorAt id "`{.ofConstName declName}` is not in the `cfc_pull` lemma set, so \
           `-{id}` has nothing to remove"
       entries := entries.filter (·.origin.key != declName)
     else
@@ -523,9 +523,9 @@ def elabLemmas (only : Bool) (lems? : Option (TSyntax ``cfcSimpLemmas)) :
       entries := entries ++ new
   return entries
 
-/-- Elaborate the arguments of `cfc_simp`. -/
+/-- Elaborate the arguments of `cfc_pull`. -/
 def elabArgs (cfgStx : TSyntax ``optConfig) (only : Bool)
-    (lems? : Option (TSyntax ``cfcSimpLemmas)) (ring elem : Term) :
+    (lems? : Option (TSyntax ``cfcPullLemmas)) (ring elem : Term) :
     TacticM (Config × Setup × Array Entry) := do
   let cfg ← elabConfig cfgStx
   let R ← instantiateMVars (← Term.elabType ring)
@@ -536,11 +536,11 @@ def elabArgs (cfgStx : TSyntax ``optConfig) (only : Bool)
   let s ← getSetup cfg t entries (deferDischarge !cfg.defer) (← IO.mkRef #[]) (← IO.mkRef #[]) R
   return (cfg, s, entries)
 
-/-- The lemma list `cfc_simp?` suggests: the lemmas among `entries` that the run used, in order of
+/-- The lemma list `cfc_pull?` suggests: the lemmas among `entries` that the run used, in order of
 first use, by the shortest names that resolve to them here. An instantiated `target` lemma is
 used under the origin `.other (key ++ `inst)`. -/
 def mkOnlyLemmas (used : Array Origin) (entries : Array Entry) :
-    TacticM (TSyntax ``cfcSimpLemmas) := do
+    TacticM (TSyntax ``cfcPullLemmas) := do
   let mut ids : Array Ident := #[]
   let mut seen : Array Name := #[]
   for o in used do
@@ -555,7 +555,7 @@ def mkOnlyLemmas (used : Array Origin) (entries : Array Entry) :
     | .fvar id => ids := ids.push (mkIdent (← id.getUserName))
     | _ => continue
   let list := mkNullNode (mkSepArray ids (mkAtom ","))
-  return ⟨mkNode ``cfcSimpLemmas #[mkAtom "[", list, mkAtom "]"]⟩
+  return ⟨mkNode ``cfcPullLemmas #[mkAtom "[", list, mkAtom "]"]⟩
 
 /-- The side goals, deduplicated, and without those the tactic for their kind closes. -/
 def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := do
@@ -574,14 +574,14 @@ def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := d
     let mentions (n : Name) := (body.find? (·.isConstOf n)).isSome
     let isPred := body.isAppOf ``IsSelfAdjoint || body.isAppOf ``IsStarNormal || isNonneg
     let (tag, tacs) ← if isPred then
-        pure (`cfc_simp.predicate, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
+        pure (`cfc_pull.predicate, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
           `(tactic| exact cfcₙ_predicate _ _), `(tactic| cfc_tac)].mapM id)
       else if mentions ``Continuous || mentions ``ContinuousOn then
-        pure (`cfc_simp.continuity, ← [`(tactic| assumption), `(tactic| cfc_cont_tac)].mapM id)
+        pure (`cfc_pull.continuity, ← [`(tactic| assumption), `(tactic| cfc_cont_tac)].mapM id)
       else if body.eq?.any (·.2.2.zero?) then
-        pure (`cfc_simp.mapZero, ← [`(tactic| assumption), `(tactic| cfc_zero_tac)].mapM id)
+        pure (`cfc_pull.mapZero, ← [`(tactic| assumption), `(tactic| cfc_zero_tac)].mapM id)
       else
-        pure (`cfc_simp.side, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
+        pure (`cfc_pull.side, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
           `(tactic| exact cfcₙ_predicate _ _)].mapM id)
     g.setTag tag
     let tacs := if cfg.defer then [] else tacs
@@ -594,16 +594,16 @@ def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := d
         (do pure (← Tactic.run g (evalTactic tac)).isEmpty) fun _ => pure false
       if ok then closed := true; break
       saved.restore
-    trace[Tactic.cfc_simp] "side goal {ty}: {if closed then "closed" else "left"}"
+    trace[Tactic.cfc_pull] "side goal {ty}: {if closed then "closed" else "left"}"
     unless closed do out := out.push g
   return out.toList
 
-@[tactic cfcSimp, tactic cfcSimpTrace]
-def evalCFCSimp : Tactic := fun stx => withMainContext do
+@[tactic cfcPull, tactic cfcPullTrace]
+def evalCFCPull : Tactic := fun stx => withMainContext do
   let (tk, cfgStx, only?, lems?, ring, elem, loc?, arrow?, tac?) ← match stx with
-    | `(tactic| cfc_simp%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
+    | `(tactic| cfc_pull%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
         $[$loc?:location]? $[=>%$arrow? $tac?]?)
-    | `(tactic| cfc_simp?%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
+    | `(tactic| cfc_pull?%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
         $[$loc?:location]? $[=>%$arrow? $tac?]?) =>
       pure (tk, cfgStx, only?, lems?, ring, elem, loc?, arrow?, tac?)
     | _ => throwUnsupportedSyntax
@@ -620,20 +620,20 @@ def evalCFCSimp : Tactic := fun stx => withMainContext do
   root.assign proof
   let side ← sideGoals cfg goals
   appendGoals side
-  if stx.isOfKind ``cfcSimpTrace then
+  if stx.isOfKind ``cfcPullTrace then
     -- only the part up to the element is replaced, leaving any location and block as written
     let lems ← mkOnlyLemmas stats.usedTheorems.toArray entries
-    let sugg ← `(tactic| cfc_simp%$tk $cfgStx:optConfig only $lems $ring $elem)
+    let sugg ← `(tactic| cfc_pull%$tk $cfgStx:optConfig only $lems $ring $elem)
     TryThis.addSuggestion tk sugg (origSpan? := mkNullNode #[tk, elem])
   if let (some arrow, some tac) := (arrow?, tac?) then
     withRef arrow <| focusGoalsAndDone side.contains (evalTactic tac)
 
-@[tactic cfcSimpConv, tactic cfcSimpTraceConv]
-def evalCFCSimpConv : Tactic := fun stx => withMainContext do
+@[tactic cfcPullConv, tactic cfcPullTraceConv]
+def evalCFCPullConv : Tactic := fun stx => withMainContext do
   let (tk, cfgStx, only?, lems?, ring, elem, arrow?, tac?) ← match stx with
-    | `(conv| cfc_simp%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
+    | `(conv| cfc_pull%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
         $[=>%$arrow? $tac?]?)
-    | `(conv| cfc_simp?%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
+    | `(conv| cfc_pull?%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
         $[=>%$arrow? $tac?]?) =>
       pure (tk, cfgStx, only?, lems?, ring, elem, arrow?, tac?)
     | _ => throwUnsupportedSyntax
@@ -642,16 +642,16 @@ def evalCFCSimpConv : Tactic := fun stx => withMainContext do
   let lhs ← instantiateMVars (← Conv.getLhs)
   let (r, stats) ← Simp.main lhs s.ctx
     (methods := Simp.mkMethods s.simprocs s.disch (wellBehavedDischarge := false))
-  if r.expr == lhs then throwError "`cfc_simp` made no progress"
+  if r.expr == lhs then throwError "`cfc_pull` made no progress"
   let (proof, goals) ← replacePlaceholders (← r.getProof)
   Conv.applySimpResult { r with proof? := some proof }
   let side ← sideGoals cfg goals
   appendGoals side
-  if stx.isOfKind ``cfcSimpTraceConv then
+  if stx.isOfKind ``cfcPullTraceConv then
     let lems ← mkOnlyLemmas stats.usedTheorems.toArray entries
-    let sugg ← `(conv| cfc_simp%$tk $cfgStx:optConfig only $lems $ring $elem)
+    let sugg ← `(conv| cfc_pull%$tk $cfgStx:optConfig only $lems $ring $elem)
     TryThis.addSuggestion tk sugg (origSpan? := mkNullNode #[tk, elem])
   if let (some arrow, some tac) := (arrow?, tac?) then
     withRef arrow <| focusGoalsAndDone side.contains (evalTactic tac)
 
-end Mathlib.Tactic.CFCSimp
+end Mathlib.Tactic.CFCPull

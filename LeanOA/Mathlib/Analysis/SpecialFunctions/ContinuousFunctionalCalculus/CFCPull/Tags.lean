@@ -4,12 +4,12 @@ public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.RealImaginaryPart
 public import Mathlib.Analysis.Matrix.HermitianFunctionalCalculus
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.Lemmas
-public import LeanOA.Mathlib.Tactic.CFCSimp.Attr
+public import LeanOA.Mathlib.Tactic.CFCPull.Attr
 
 /-!
-# The `@[cfc_simp]` lemma set
+# The `@[cfc_pull]` lemma set
 
-This tags all the lemmas currently used by the `cfc_simp` tactic. We do it in a central location
+This tags all the lemmas currently used by the `cfc_pull` tactic. We do it in a central location
 for convenience for now, but upon upstreaming to Mathlib these should be distributed.
 For lemmas which are deliberately absent, we explain the reason.
 -/
@@ -22,29 +22,29 @@ open scoped NNReal
 
 The lemmas that say the calculus applied to the identity function is the element itself. -/
 
-attribute [cfc_simp] cfc_id' cfcₙ_id'
+attribute [cfc_pull] cfc_id' cfcₙ_id'
 
 /-! ### Unitality
 
 The bridge from the non-unital calculus to the unital one, used whenever a `cfcₙ` shows up in a
 goal that asks for a `cfc`, and conversely. -/
 
-attribute [cfc_simp] cfcₙ_eq_cfc
+attribute [cfc_pull] cfcₙ_eq_cfc
 
 /-! ### Scalars
 
 Widening (`ℝ≥0 → ℝ → ℂ`) and narrowing (`ℂ → ℝ → ℝ≥0`) conversions. The four narrowing lemmas
-carry a hypothesis the tactic cannot read off the syntax, which comes back as a `cfc_simp.side`
+carry a hypothesis the tactic cannot read off the syntax, which comes back as a `cfc_pull.side`
 goal; they are tagged all the same, so that any two of the three rings are reachable from one
 another. -/
 
-attribute [cfc_simp]
+attribute [cfc_pull]
   cfc_nnreal_eq_real cfcₙ_nnreal_eq_real cfc_real_eq_complex cfcₙ_real_eq_complex
   cfc_real_eq_nnreal cfcₙ_real_eq_nnreal cfc_complex_eq_real cfcₙ_complex_eq_real
 
 /-! ### Pulling, generic in the scalar ring: unital -/
 
-attribute [cfc_simp]
+attribute [cfc_pull]
   cfc_add cfc_sub cfc_neg cfc_mul cfc_pow cfc_smul cfc_star
   cfc_const cfc_const_one cfc_const_zero cfc_const_add cfc_add_const
   cfc_inv cfc_inv_id cfc_zpow cfc_ringInverse_id cfc_map_div
@@ -54,23 +54,23 @@ attribute [cfc_simp]
 
 -- preferred over `cfc_smul`, so that a scalar already living in the target ring produces
 -- `r * f x` rather than `r • f x`
-attribute [cfc_simp 1100] cfc_const_mul cfc_const_mul_id
+attribute [cfc_pull 1100] cfc_const_mul cfc_const_mul_id
 
 /-! ### Pulling, generic in the scalar ring: non-unital -/
 
-attribute [cfc_simp]
+attribute [cfc_pull]
   cfcₙ_add cfcₙ_sub cfcₙ_neg cfcₙ_mul cfcₙ_smul cfcₙ_star cfcₙ_const_zero
   cfcₙ_neg_id cfcₙ_smul_id cfcₙ_star_id
   cfcₙ_eq_cfcₙL cfcₙ_apply_mkD cfcₙ_eq_cfcₙL_mkD cfcₙHom_eq_cfcₙ_extend_zero
 
-attribute [cfc_simp 1100] cfcₙ_const_mul cfcₙ_const_mul_id
+attribute [cfc_pull 1100] cfcₙ_const_mul cfcₙ_const_mul_id
 
 /-! ### Sums
 
 `cfc_sum` and `cfcₙ_sum` collect a sum whose summands are applications of the calculus; `simp`
 pulls the summands under the binder first. -/
 
-attribute [cfc_simp] cfc_sum cfcₙ_sum
+attribute [cfc_pull] cfc_sum cfcₙ_sum
 
 /-! ### Pulling, at a concrete scalar ring
 
@@ -84,7 +84,7 @@ apply over `ℝ≥0` but are not tried first since they generate side goals.
 `CFC.real_exp_eq_normedSpace_exp` and `CFC.complex_exp_eq_normedSpace_exp` have higher priority so
 that `Real.exp`/`Complex.exp` are produced in preference to `NormedSpace.exp`. -/
 
-attribute [cfc_simp]
+attribute [cfc_pull]
   CFC.posPart_def CFC.negPart_def
   CFC.sqrt_def CFC.sqrt_eq_cfc CFC.sqrt_eq_real_sqrt CFC.abs_def
   CFC.nnrpow_def CFC.rpow_def CFC.rpow_eq_cfc_real
@@ -94,9 +94,9 @@ attribute [cfc_simp]
   Unitization.complex_cfcₙ_eq_cfc_inr Unitization.real_cfcₙ_eq_cfc_inr
   Unitization.nnreal_cfcₙ_eq_cfc_inr
 
-attribute [cfc_simp 1100] CFC.real_exp_eq_normedSpace_exp CFC.complex_exp_eq_normedSpace_exp
+attribute [cfc_pull 1100] CFC.real_exp_eq_normedSpace_exp CFC.complex_exp_eq_normedSpace_exp
 
-attribute [cfc_simp 900] cfc_tsub cfcₙ_tsub
+attribute [cfc_pull 900] cfc_tsub cfcₙ_tsub
 
 /- `CFC.sqrt_eq_cfc_complex_sqrt` and `CFC.sqrt_eq_cfcₙ_complex_sqrt` are not tagged, unlike
 their real counterparts. This is because `Complex.sqrt` is continuous only away from the negative
@@ -109,20 +109,20 @@ Note that the element to pull towards lives in the *codomain*.
 The morphism-specific lemmas should be used first, if possible, falling back to
 the generic ones when they cannot be used. -/
 
-attribute [cfc_simp] StarAlgHom.map_cfc NonUnitalStarAlgHom.map_cfcₙ
+attribute [cfc_pull] StarAlgHom.map_cfc NonUnitalStarAlgHom.map_cfcₙ
 
-attribute [cfc_simp 900] StarAlgHomClass.map_cfc NonUnitalStarAlgHomClass.map_cfcₙ
+attribute [cfc_pull 900] StarAlgHomClass.map_cfc NonUnitalStarAlgHomClass.map_cfcₙ
 
 /-! ### Composition -/
 
-attribute [cfc_simp]
+attribute [cfc_pull]
   cfc_comp' cfcₙ_comp'
   cfc_comp_pow cfc_comp_smul cfc_comp_star cfc_comp_neg cfc_comp_inv cfc_comp_zpow
   cfcₙ_comp_smul cfcₙ_comp_star cfcₙ_comp_neg
   cfc_comp_norm
   cfc_realPart cfc_imaginaryPart cfcₙ_realPart cfcₙ_imaginaryPart
 
-attribute [cfc_simp 1100]
+attribute [cfc_pull 1100]
   cfc_comp_const_mul cfcₙ_comp_const_mul
   cfc_real_comp_norm cfcₙ_real_comp_norm
   cfc_complex_comp_norm cfcₙ_complex_comp_norm
