@@ -251,6 +251,11 @@ def Lemmas.contains (s : Lemmas) (declName : Name) : Bool :=
     s.scalar.any (·.declName == declName) || s.unital.any (·.declName == declName) ||
     s.compose.any (·.declName == declName)
 
+/-- The priority of the entry for `declName`, if the database has one that carries a priority. -/
+def Lemmas.prio? (s : Lemmas) (declName : Name) : Option Nat :=
+  (s.pull.values.find? (·.declName == declName)).map (·.prio) <|>
+    (s.compose.find? (·.declName == declName)).map (·.prio)
+
 /-- Temporarily remove an entry for `declName` from the database. Only used when passing a list
 of lemmas to `cfc_pull` in brackets, e.g. `cfc_pull [-lemma1, -lemma2]`. -/
 def Lemmas.erase (s : Lemmas) (declName : Name) : Lemmas where

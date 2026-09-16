@@ -9,6 +9,7 @@ public import LeanOA.Mathlib.Tactic.CFCPull.Core
 public meta import LeanOA.Mathlib.Lean.Elab.Tactic.Basic
 public meta import Lean.Elab.Tactic.Conv.Basic
 public meta import Lean.Elab.Tactic.Location
+public meta import Lean.Meta.Tactic.TryThis
 public import Mathlib.Tactic.ContinuousFunctionalCalculus
 
 /-!
@@ -120,11 +121,13 @@ syntax cfcPullErase := "-" ident
 /-- `cfc_pull`'s bracketed lemma list, which adjusts the `@[cfc_pull]` set for one call. -/
 syntax cfcPullLemmas := " [" withoutPosition((cfcPullErase <|> ident),*,?) "]"
 
-/-- Apply the bracketed lemma list to the `@[cfc_pull]` set. Only global declarations allowed. -/
-def elabCFCPullLemmas (lemmas : Lemmas) (stx? : Option (TSyntax ``cfcPullLemmas)) :
+/-- Apply the bracketed lemma list to the `@[cfc_pull]` set, or with `only` to the empty set. Only
+global declarations allowed. -/
+def elabCFCPullLemmas (only : Bool) (stx? : Option (TSyntax ``cfcPullLemmas)) :
     TacticM Lemmas := do
+  let all ← getLemmas
+  let mut lemmas := if only then {} else all
   let some stx := stx? | return lemmas
-  let mut lemmas := lemmas
   for arg in stx.raw[1].getSepArgs do
     if arg.isOfKind ``cfcPullErase then
       let id : Ident := ⟨arg[1]⟩
@@ -142,19 +145,26 @@ def elabCFCPullLemmas (lemmas : Lemmas) (stx? : Option (TSyntax ``cfcPullLemmas)
           declaration names only: a `@[cfc_pull]` lemma is instantiated from its constant, so \
           there is nothing for a hypothesis to be. Rewrite with it first, as in `rw [{id}]`."
       let declName ← realizeGlobalConstNoOverloadWithInfo id
+      if lemmas.contains declName then continue
+      -- a tagged lemma keeps its priority, so that `only [..]` tries the lemmas in the same order
+      let prio := all.prio? declName |>.getD (eval_prio default)
       -- `withRef` points a rejection, or a `warnBoundHoles` warning, at the offending name
-      let entry ← withRef id <| mkEntry declName (prio := eval_prio default)
+      let entry ← withRef id <| mkEntry declName prio
       lemmas := lemmas.addEntry entry
   return lemmas
 
 /-! ### The tactic -/
 
+/-- Append the lemmas in `names` not already in `used`. -/
+def mergeUsed (used names : Array Name) : Array Name :=
+  names.foldl (init := used) fun used n ↦ if used.contains n then used else used.push n
+
 /-- Pull every top-level argument of `e` that lives in the algebra of `elem`: for `lhs = rhs` or
-`lhs ≤ rhs` these are `lhs` and `rhs`. Returns the new expression, a proof that `e` equals it, and
-the side goals. An argument that cannot be pulled is left as it is; this fails only if there is no
-such argument, or none of them changes. -/
+`lhs ≤ rhs` these are `lhs` and `rhs`. Returns the new expression, a proof that `e` equals it, the
+side goals, and the tagged lemmas used. An argument that cannot be pulled is left as it is; this
+fails only if there is no such argument, or none of them changes. -/
 def pullArgs (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
-    TacticM (Expr × Expr × Array (MVarId × SideGoalKind)) := do
+    TacticM (Expr × Expr × Array (MVarId × SideGoalKind) × Array Name) := do
   let alg ← inferType elem
   let e := (← instantiateMVars e).consumeMData
   let positions ← targetPositions e alg
@@ -164,6 +174,7 @@ def pullArgs (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
   let mut newArgs := args
   let mut proofs := #[]
   let mut sideGoals := #[]
+  let mut used := #[]
   let mut changed := false
   -- the failures are kept as `MessageData`, so that the expressions in them are pretty-printed
   -- in the reader's context; the string alongside is only the key that deduplicates them
@@ -171,17 +182,19 @@ def pullArgs (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
   for i in positions do
     let arg := args[i]!
     let mctx ← getMCtx
-    let attempt : Except MessageData (Expr × Expr × Array (MVarId × SideGoalKind)) ← (do
+    let attempt : Except MessageData (Expr × Expr × Array (MVarId × SideGoalKind) × Array Name) ←
+      (do
       try
         return .ok (← runPull cfg lemmas R elem arg)
       catch ex =>
         setMCtx mctx
         return .error ex.toMessageData)
     match attempt with
-    | .ok (newArg, proof, goals) =>
+    | .ok (newArg, proof, goals, names) =>
       newArgs := newArgs.set! i newArg
       proofs := proofs.push proof
       sideGoals := sideGoals ++ goals
+      used := mergeUsed used names
       unless newArg == arg do changed := true
     | .error msg =>
       -- the two sides of a relation usually fail for the same reason; do not say so twice
@@ -202,7 +215,7 @@ def pullArgs (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
     -- gives `F x₀ ⋯ xₙ = F y₀ ⋯ yₙ`. `F` is non-dependent by construction.
     proofs.foldlM (init := ← mkEqRefl F) fun h h' => mkCongr h h'
   let hcongr ← mkExpectedTypeHint hcongr (← mkEq e newE)
-  return (newE, hcongr, sideGoals)
+  return (newE, hcongr, sideGoals, used)
 
 /-- Pull at the locations `loc`: the goal, hypotheses, or everything (`at *`), each through
 `pullArgs`; the goal, once rewritten, is closed with `rfl` if possible. Each location's side goals
@@ -211,9 +224,10 @@ in `refTac?` (the `=> ..` block), and are an error if there is none. The syntax 
 `=>`, where goals the block leaves open are reported.
 
 Deferring side goals is only allowed at a single location, so that there is exactly one place for
-them to come from; under `at *` a location that fails is skipped. -/
+them to come from; under `at *` a location that fails is skipped. Returns the tagged lemmas used,
+at all locations. -/
 def cfcPullAt (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (loc : Location)
-    (refTac? : Option (Syntax × TacticM Unit)) : TacticM Unit := do
+    (refTac? : Option (Syntax × TacticM Unit)) : TacticM (Array Name) := do
   let multiple := match loc with
     | .wildcard => true
     | .targets hyps type => hyps.size + (if type then 1 else 0) > 1
@@ -228,18 +242,22 @@ def cfcPullAt (cfg : Config) (lemmas : Lemmas) (R elem : Expr) (loc : Location)
     replaceMainGoal (goals ++ survivors.toList)
     if let some (ref, tac) := refTac? then
       withRef ref <| focusGoalsAndDone survivors.contains tac
+  let used ← IO.mkRef #[]
   let atTarget : TacticM Unit := do
     let goal ← getMainGoal
-    let (newTarget, proof, sideGoals) ← pullArgs cfg lemmas R elem (← goal.getType)
+    let (newTarget, proof, sideGoals, names) ← pullArgs cfg lemmas R elem (← goal.getType)
+    used.modify (mergeUsed · names)
     let newGoal ← goal.replaceTargetEq newTarget proof
     let closed ← tryTacticOn newGoal (evalTactic (← `(tactic| with_reducible rfl)))
     finish (if closed then [] else [newGoal]) sideGoals
   let atLocal (fvarId : FVarId) : TacticM Unit := do
     let goal ← getMainGoal
-    let (newType, proof, sideGoals) ← pullArgs cfg lemmas R elem (← fvarId.getType)
+    let (newType, proof, sideGoals, names) ← pullArgs cfg lemmas R elem (← fvarId.getType)
+    used.modify (mergeUsed · names)
     finish [(← goal.replaceLocalDecl fvarId newType proof).mvarId] sideGoals
   withLocation loc atLocal atTarget fun _ =>
     throwError "`cfc_pull` made no progress at the goal or at any hypothesis"
+  used.get
 
 /-- Elaborate the scalar ring and the element. -/
 def elabRingAndElem (ring elem : Term) : TacticM (Expr × Expr) := do
@@ -281,6 +299,10 @@ example (ha : p a) : star a * a = cfc (eun x : R ↦ star x * x) a := by
   the `=> ..` block, which `+defer` requires.
 * `cfc_pull [lemma1, -lemma2] R a`: add `lemma1` to the list of lemmas used by `cfc_pull`, and
   remove `lemma2`; only global declaration name are permitted.
+* `cfc_pull only [lemma1, lemma2] R a`: use only `lemma1` and `lemma2`, not the `@[cfc_pull]`
+  lemmas.
+* `cfc_pull? R a`: the same as `cfc_pull R a`, but suggests replacing itself with
+  `cfc_pull only [..] R a`, listing the lemmas the rewrite used.
 * `cfc_pull +zetaDelta R a`: unfold `let`-bound variables.
 * `cfc_pull (disch := tac) R a`: run `tac` to attempt to discharge side goals (only applicable
   for side goals in the category `cfc_pull.side`).
@@ -291,12 +313,22 @@ example (ha : p a) : star a * a = cfc (eun x : R ↦ star x * x) a := by
 Detailed tracing can be enabled with `set_option trace.Tactic.cfc_pull true` showing which lemmas
 were tried and why they failed, which side goals were generated, or discharged.
 -/
-syntax (name := cfcPull) "cfc_pull" cfcPullConfig (cfcPullLemmas)?
+syntax (name := cfcPull) "cfc_pull" cfcPullConfig (&" only")? (cfcPullLemmas)?
   ppSpace colGt term:max ppSpace colGt term:max (location)?
   (" => " tacticSeq)? : tactic
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullConv) "cfc_pull" cfcPullConfig (cfcPullLemmas)?
+syntax (name := cfcPullTrace) "cfc_pull?" cfcPullConfig (&" only")? (cfcPullLemmas)?
+  ppSpace colGt term:max ppSpace colGt term:max (location)?
+  (" => " tacticSeq)? : tactic
+
+@[inherit_doc cfcPull]
+syntax (name := cfcPullConv) "cfc_pull" cfcPullConfig (&" only")? (cfcPullLemmas)?
+  ppSpace colGt term:max ppSpace colGt term:max
+  (" => " tacticSeq)? : conv
+
+@[inherit_doc cfcPull]
+syntax (name := cfcPullTraceConv) "cfc_pull?" cfcPullConfig (&" only")? (cfcPullLemmas)?
   ppSpace colGt term:max ppSpace colGt term:max
   (" => " tacticSeq)? : conv
 
@@ -323,34 +355,56 @@ def mkConfig (cfgStx : TSyntax ``cfcPullConfig) (block : Bool) : TacticM Config 
     throwError "`cfc_pull +defer` hands every side goal to a `=> ..` block, so it needs one."
   return cfg
 
-/-- Elaborator for the `cfc_pull` tactic. -/
-@[tactic cfcPull]
+/-- The lemma list `cfc_pull?` suggests: the lemmas in `used`, by the shortest names that resolve
+to them here. -/
+def mkOnlyLemmas (used : Array Name) : TacticM (TSyntax ``cfcPullLemmas) := do
+  let ids ← used.mapM fun n ↦ return mkIdent (← unresolveNameGlobalAvoidingLocals n)
+  let ids := mkNullNode (mkSepArray ids (mkAtom ","))
+  return ⟨mkNode ``cfcPullLemmas #[mkAtom "[", ids, mkAtom "]"]⟩
+
+/-- Elaborator for the `cfc_pull` and `cfc_pull?` tactics. -/
+@[tactic cfcPull, tactic cfcPullTrace]
 def evalCFCPull : Tactic := fun stx => withMainContext do
-  let `(tactic| cfc_pull%$tk $cfg:cfcPullConfig $[$lems?]? $ring $elem
-      $[$loc?:location]? $[=>%$arrow? $tac?]?) := stx
-    | throwUnsupportedSyntax
+  let (tk, cfg, only?, lems?, ring, elem, loc?, arrow?, tac?) ← match stx with
+    | `(tactic| cfc_pull%$tk $cfg:cfcPullConfig $[only%$only?]? $[$lems?]? $ring $elem
+        $[$loc?:location]? $[=>%$arrow? $tac?]?)
+    | `(tactic| cfc_pull?%$tk $cfg:cfcPullConfig $[only%$only?]? $[$lems?]? $ring $elem
+        $[$loc?:location]? $[=>%$arrow? $tac?]?) =>
+      pure (tk, cfg, only?, lems?, ring, elem, loc?, arrow?, tac?)
+    | _ => throwUnsupportedSyntax
   withRef tk do
-    let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
-    let (R, elem) ← elabRingAndElem ring elem
+    let lemmas ← elabCFCPullLemmas only?.isSome lems?
+    let (R, elem') ← elabRingAndElem ring elem
     let refTac? := return (← arrow?, evalTactic (← tac?))
     let loc := expandOptLocation (mkOptionalNode loc?)
-    cfcPullAt (← mkConfig cfg refTac?.isSome) lemmas R elem loc refTac?
+    let used ← cfcPullAt (← mkConfig cfg refTac?.isSome) lemmas R elem' loc refTac?
+    if stx.isOfKind ``cfcPullTrace then
+      -- only the part up to the element is replaced, leaving any location and block as written
+      let sugg ← `(tactic| cfc_pull%$tk $cfg:cfcPullConfig only $(← mkOnlyLemmas used) $ring $elem)
+      TryThis.addSuggestion tk sugg (origSpan? := mkNullNode #[tk, elem])
 
-/-- Elaborator for `cfc_pull` in `conv` mode. -/
-@[tactic cfcPullConv]
+/-- Elaborator for `cfc_pull` and `cfc_pull?` in `conv` mode. -/
+@[tactic cfcPullConv, tactic cfcPullTraceConv]
 def evalCFCPullConv : Tactic := fun stx => withMainContext do
-  let `(conv| cfc_pull%$tk $cfg:cfcPullConfig $[$lems?]? $ring $elem
-      $[=>%$arrow? $tac?]?) := stx
-    | throwUnsupportedSyntax
+  let (tk, cfg, only?, lems?, ring, elem, arrow?, tac?) ← match stx with
+    | `(conv| cfc_pull%$tk $cfg:cfcPullConfig $[only%$only?]? $[$lems?]? $ring $elem
+        $[=>%$arrow? $tac?]?)
+    | `(conv| cfc_pull?%$tk $cfg:cfcPullConfig $[only%$only?]? $[$lems?]? $ring $elem
+        $[=>%$arrow? $tac?]?) =>
+      pure (tk, cfg, only?, lems?, ring, elem, arrow?, tac?)
+    | _ => throwUnsupportedSyntax
   withRef tk do
     let lhs := (← Conv.getLhs).consumeMData
-    let lemmas ← elabCFCPullLemmas (← getLemmas) lems?
-    let (R, elem) ← elabRingAndElem ring elem
-    let cfg ← mkConfig cfg tac?.isSome
-    let (newLhs, proof, sideGoals) ← runPull cfg lemmas R elem lhs
+    let lemmas ← elabCFCPullLemmas only?.isSome lems?
+    let (R, elem') ← elabRingAndElem ring elem
+    let cfg' ← mkConfig cfg tac?.isSome
+    let (newLhs, proof, sideGoals, used) ← runPull cfg' lemmas R elem' lhs
     Conv.updateLhs newLhs proof
-    let sideGoals ← postProcessSideGoals cfg sideGoals (block := tac?.isSome)
+    let sideGoals ← postProcessSideGoals cfg' sideGoals (block := tac?.isSome)
     appendGoals sideGoals.toList
+    if stx.isOfKind ``cfcPullTraceConv then
+      let sugg ← `(conv| cfc_pull%$tk $cfg:cfcPullConfig only $(← mkOnlyLemmas used) $ring $elem)
+      TryThis.addSuggestion tk sugg (origSpan? := mkNullNode #[tk, elem])
     let (some arrow, some tac) := (arrow?, tac?) | return
     withRef arrow <| focusGoalsAndDone sideGoals.contains (evalTactic tac)
 

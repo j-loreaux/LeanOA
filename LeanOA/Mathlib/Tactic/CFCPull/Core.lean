@@ -141,13 +141,16 @@ def SideGoalKind.tag : SideGoalKind → Name
   | .mapZero => `cfc_pull.mapZero
   | .other => `cfc_pull.side
 
-/-- The mutable state of a `cfc_pull` run; consists of an array of side goals and the predicate
-information for the relevant functional calculi. -/
+/-- The mutable state of a `cfc_pull` run; consists of an array of side goals, the predicate
+information for the relevant functional calculi, and the lemmas used so far. -/
 structure State where
   /-- Side goals that must be discharged, each paired with the kind of hypothesis it came from. -/
   sideGoals : Array (MVarId × SideGoalKind) := #[]
   /-- Cached information about the calculus at each mode encountered so far. -/
   predicates : Array PredicateInfo := #[]
+  /-- The tagged lemmas the rewrite so far uses, in order of first use, for `cfc_pull?`. Like the
+  rest of the state, this is rolled back with a failed candidate. -/
+  usedLemmas : Array Name := #[]
 
 /-- The monad in which `cfc_pull` runs. -/
 abbrev PullM := ReaderT Context <| StateRefT State MetaM
@@ -221,6 +224,11 @@ def attempt? (header : MessageData) (x : PullM Result) : PullM (Option Result) :
 /-- Strip an `autoParam` wrapper, so that a deferred goal displays as the user expects. -/
 def stripAutoParam (e : Expr) : Expr :=
   if e.isAutoParam then e.appFn!.appArg! else e
+
+/-- Record that the rewrite uses the tagged lemma `declName`. -/
+def recordUse (declName : Name) : PullM Unit :=
+  modify fun s => if s.usedLemmas.contains declName then s
+    else { s with usedLemmas := s.usedLemmas.push declName }
 
 /-- Register a new side goal of the given type, named after its kind. -/
 def newSideGoal (type : Expr) (kind : SideGoalKind) : PullM Expr := do
@@ -374,6 +382,7 @@ def rewriteWithCFCLemma (declName : Name) (srcOnLhs : Bool) (e : Expr) (mode : M
   let step ← if srcOnLhs then pure proof else mkEqSymm proof
   let step ← mkExpectedTypeHint step (← mkEq e newApp.toExpr)
   collectHypotheses mvars bis mode
+  recordUse declName
   return (newApp, step)
 
 /-- Apply a transition lemma (a `Scalar` or `Unital` lemma) to a result. -/
@@ -470,6 +479,7 @@ def applyPullLemma (l : PullLemma) (e : Expr) (want : Mode)
   let total ← mkEqTrans hcongr lemProof
   let total ← mkExpectedTypeHint total (← mkEq e newApp.toExpr)
   collectHypotheses mvars bis mode
+  recordUse l.declName
   return { app := newApp, proof := total }
 
 /-- Apply a hole-free `Pull` lemma *without* insisting that its element be the one we are pulling
@@ -507,6 +517,7 @@ def applyLooseLemma (l : PullLemma) (e : Expr) (want : Mode) : PullM (Expr × Ex
   let step ← if l.cfcOnLhs then mkEqSymm proof else pure proof
   let step ← mkExpectedTypeHint step (← mkEq e newE)
   collectHypotheses mvars bis mode
+  recordUse l.declName
   return (newE, step)
 
 /-- Convert an `IdLemma` into the `PullLemma` that `applyPullLemma` expects. -/
@@ -672,9 +683,9 @@ def mkMode (cfg : Config) (R alg elem : Expr) : MetaM Mode := do
   return { ring := R, unital := false, alg, elem }
 
 /-- Run the core of `cfc_pull` on `e`: returns the rewritten expression, a proof that `e` equals
-it, and the side goals that proof depends on. -/
+it, the side goals that proof depends on, and the tagged lemmas it uses. -/
 def runPull (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
-    MetaM (Expr × Expr × Array (MVarId × SideGoalKind)) := do
+    MetaM (Expr × Expr × Array (MVarId × SideGoalKind) × Array Name) := do
   let e := e.consumeMData
   let alg ← inferType elem
   unless ← isDefEq (← inferType e) alg do
@@ -685,6 +696,6 @@ def runPull (cfg : Config) (lemmas : Lemmas) (R elem e : Expr) :
     withConfig (fun c => { c with zetaDelta := cfg.zetaDelta }) <|
       ((do let _ ← getPredicate target; pull e target).run ctx).run {}
   let goals ← st.sideGoals.filterM fun (g, _) => return !(← g.isAssigned)
-  return (← instantiateMVars res.app.toExpr, ← instantiateMVars res.proof, goals)
+  return (← instantiateMVars res.app.toExpr, ← instantiateMVars res.proof, goals, st.usedLemmas)
 
 end Mathlib.Tactic.CFCPull

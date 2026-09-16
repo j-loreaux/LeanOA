@@ -317,6 +317,86 @@ end LemmaListTest
 
 end LemmaList
 
+section Only
+
+/-! ## `only [..]` and `cfc_pull?` -/
+
+variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {a b : A}
+
+open scoped NNReal
+
+/--
+info: Try this:
+  [apply] cfc_pull only [cfc_star_id, cfc_id', cfc_mul] ℂ a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
+  cfc_pull? ℂ a
+
+example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
+  cfc_pull only [cfc_star_id, cfc_id', cfc_mul] ℂ a
+
+/--
+error: `cfc_pull` made no progress
+  `cfc_pull` got stuck on `star a * a`
+    (head symbol: HMul.hMul, target: cfc over ℂ at `a`)
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
+  cfc_pull only [cfc_star_id, cfc_id'] ℂ a
+
+/- The suggestion replaces everything up to the element, keeping the configuration and leaving any
+location or `=> ..` block as it is; lemmas used at several locations are listed once. -/
+/--
+info: Try this:
+  [apply] cfc_pull +defer only [CFC.rpow_def, cfc_mul] ℝ≥0 a
+-/
+#guard_msgs in
+example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
+    a ^ x * a ^ y = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ y) a := by
+  cfc_pull? +defer ℝ≥0 a => all_goals fun_prop
+
+example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
+    a ^ x * a ^ y = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ y) a := by
+  cfc_pull +defer only [CFC.rpow_def, cfc_mul] ℝ≥0 a => all_goals fun_prop
+
+/--
+info: Try this:
+  [apply] cfc_pull only [cfc_star_id, cfc_id', cfc_mul] ℂ a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) (h : star a * a = b) : star a * a = b := by
+  cfc_pull? ℂ a at *
+  exact h
+
+/--
+info: Try this:
+  [apply] cfc_pull only [CFC.log_def, cfc_mul] ℝ a
+-/
+#guard_msgs in
+example (ha : IsStrictlyPositive a) (h : CFC.log a * CFC.log a = b) :
+    cfc (fun x : ℝ ↦ Real.log x * Real.log x) a = b := by
+  cfc_pull? [-cfc_mul, cfc_mul] ℝ a at h =>
+    exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
+  exact h
+
+/--
+info: Try this:
+  [apply] cfc_pull +defer only [cfc_star_id, cfc_id', cfc_mul] ℂ a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) (b : A) : star a * a + b = cfc (fun x : ℂ ↦ star x * x) a + b := by
+  conv in star a * a => cfc_pull? +defer ℂ a =>
+    case cfc_pull.predicate => exact ha
+    all_goals fun_prop
+
+example (ha : IsStarNormal a) (b : A) : star a * a + b = cfc (fun x : ℂ ↦ star x * x) a + b := by
+  conv in star a * a => cfc_pull +defer only [cfc_star_id, cfc_id', cfc_mul] ℂ a =>
+    case cfc_pull.predicate => exact ha
+    all_goals fun_prop
+
+end Only
+
 section InTheWild
 
 /- Goals of this shape have appeared in Mathlib. -/
