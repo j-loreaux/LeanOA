@@ -6,7 +6,7 @@ Authors: Jireh Loreaux
 module
 
 public import LeanOA.Mathlib.Tactic.CFCSimp
-public import LeanOA.Mathlib.Tactic.CFCSimp.Lemmas
+public import LeanOA.Mathlib.Tactic.CFCSimp.Tags
 public import Mathlib.Analysis.CStarAlgebra.Classes
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Isometric
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
@@ -21,10 +21,12 @@ public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpo
 public import Mathlib.Analysis.SpecialFunctions.Pow.Continuity
 public import Mathlib.Tactic.Linarith
 
-/-!  # The `cfc_pull` test suite, run against the experimental `cfc_simp` -/
+/-!  # The `cfc_pull` test suite, run against `cfc_simp` -/
 
 set_option linter.privateModule false
 set_option linter.unusedVariables false
+set_option warn.sorry true
+
 
 section GenericUnital
 
@@ -111,7 +113,8 @@ example (ha : IsSelfAdjoint a) :
 
 example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
     a ^ x * a ^ y = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ y) a := by
-  cfc_simp ℝ≥0 a
+  cfc_simp +defer ℝ≥0 a =>
+    all_goals fun_prop
 
 example (ha : IsStarNormal a) (z : ℂ) :
     NormedSpace.exp (z • a) = cfc (fun w : ℂ ↦ Complex.exp (z * w)) a := by
@@ -148,31 +151,38 @@ open scoped NNReal
 
 example (ha : IsStrictlyPositive a) :
     CFC.log a * CFC.log a = cfc (fun x : ℝ ↦ Real.log x * Real.log x) a := by
-  cfc_simp ℝ a
+  cfc_simp ℝ a =>
+    exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
 
 example (ha : IsStrictlyPositive a) (x : ℝ) :
     a ^ x * a ^ x = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ x) a := by
-  cfc_simp ℝ≥0 a
+  cfc_simp ℝ≥0 a =>
+    exact NNReal.continuousOn_rpow_const (.inl (spectrum.zero_notMem ℝ≥0 ha.2))
 
 example (ha : IsSelfAdjoint a) (f : ℝ → ℝ) (hf : Continuous f)
     (hspec : spectrum ℝ a ⊆ Set.Icc (-1) 1) (hf0 : ∀ x ∈ Set.Icc (-1 : ℝ) 1, f x ≠ 0) :
     Ring.inverse (cfc f a) = cfc (fun x : ℝ ↦ (f x)⁻¹) a := by
-  cfc_simp ℝ a
+  cfc_simp +defer ℝ a =>
+    case cfc_pull.side => exact fun x hx ↦ hf0 x (hspec hx)
+    case cfc_pull.predicate => exact ha
+    case cfc_pull.continuity => fun_prop
 
 /- The tactic-valued options take a tactic sequence, like `(disch := ..)`, and all of them may
 appear in any order among the configuration items. -/
 example (ha : IsStrictlyPositive a) :
     CFC.log a * CFC.log a = cfc (fun x : ℝ ↦ Real.log x * Real.log x) a := by
-  cfc_simp ℝ a
+  cfc_simp ℝ a =>
+    exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
 
 example (ha : IsSelfAdjoint a) (f : ℝ → ℝ) (hf : Continuous f)
     (hspec : spectrum ℝ a ⊆ Set.Icc (-1) 1) (hf0 : ∀ x ∈ Set.Icc (-1 : ℝ) 1, f x ≠ 0) :
     Ring.inverse (cfc f a) = cfc (fun x : ℝ ↦ (f x)⁻¹) a := by
-  cfc_simp ℝ a
+  cfc_simp +zetaDelta ℝ a =>
+    first | (fun_prop) | (intro x hx; exact hf0 x (hspec hx))
 
 example (f : ℝ → ℝ) (hf : Continuous f) (hf0 : 0 = f 0) :
     cfcₙ f a + cfcₙ f a = cfcₙ (fun x ↦ f x + f x) a := by
-  cfc_simp -unital ℝ a
+  cfc_simp -unital ℝ a => all_goals first | (symm; exact hf0)
 
 end MessySideGoals
 
@@ -186,11 +196,14 @@ variable {a : A}
 example (ha : IsStrictlyPositive a) (b : A) :
     CFC.log a * CFC.log a + b = cfc (fun x : ℝ ↦ Real.log x * Real.log x) a + b := by
   conv in CFC.log a * CFC.log a =>
-    cfc_simp ℝ a
+    cfc_simp ℝ a =>
+      exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
 
 example (ha : IsStarNormal a) (b : A) : star a * a + b = cfc (fun x : ℂ ↦ star x * x) a + b := by
   conv in star a * a =>
-    cfc_simp ℂ a
+    cfc_simp +defer ℂ a =>
+      -- `IsStarNormal a` is a class, so `simp` finds `ha` by instance synthesis: no predicate goal
+      all_goals fun_prop
 
 end ConvSideGoals
 
@@ -246,7 +259,7 @@ open scoped NNReal
 
 
 example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
-  cfc_simp ℂ a
+  cfc_simp [cfc_star_id, cfc_id', cfc_mul] ℂ a
 
 
 /- The suggestion replaces everything up to the element, keeping the configuration and leaving any
@@ -254,14 +267,16 @@ location or `=> ..` block as it is; lemmas used at several locations are listed 
 
 example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
     a ^ x * a ^ y = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ y) a := by
-  cfc_simp ℝ≥0 a
+  cfc_simp +defer [CFC.rpow_def, cfc_mul] ℝ≥0 a => all_goals fun_prop
 
 
 
 
 example (ha : IsStarNormal a) (b : A) : star a * a + b = cfc (fun x : ℂ ↦ star x * x) a + b := by
   conv in star a * a =>
-    cfc_simp ℂ a
+    cfc_simp +defer [cfc_star_id, cfc_id', cfc_mul] ℂ a =>
+      -- `IsStarNormal a` is a class, so `simp` finds `ha` by instance synthesis: no predicate goal
+      all_goals fun_prop
 
 end Only
 
@@ -283,7 +298,9 @@ example : ((star a * a) * (1 - star a * a) ^ 2 : A⁺¹) =
 -- this is a bit of a weird example because it pulls towards `ℝ` rather than `ℂ`.
 example : ((star a * a) * (1 - star a * a) ^ 2 : A⁺¹) =
     cfc (fun x : ℂ => x * (1 - x) ^ 2) (star a * a : A⁺¹) := by
-  cfc_simp ℝ (star a * a : A⁺¹)
+  cfc_simp ℝ (star a * a : A⁺¹) =>
+    rw [← IsSelfAdjoint.spectrumRestricts (by cfc_tac) |>.algebraMap_image]
+    simp
   -- this is a bug with the `@[congr]` lemma `cfc_congr'`, fixed in #43689
   norm_cast
   norm_cast
@@ -307,7 +324,14 @@ example (ha : IsSelfAdjoint a) :
 whose hypothesis `0 ≤ 1 - a ^ 2` becomes a side goal. -/
 example [Nontrivial A] (ha : IsSelfAdjoint a) (ha_norm : ‖a‖ ≤ 1) :
     a + I • CFC.sqrt (1 - a ^ 2) = cfc (fun x ↦ ↑x.re + I * ↑√(1 - x.re ^ 2)) a := by
-  cfc_simp ℂ a
+  cfc_simp ℂ a =>
+    -- the side goal `0 ≤ 1 - a ^ 2` left by `CFC.sqrt_eq_real_sqrt`
+    have key : (1 : A) - a ^ 2 = cfc (fun x : ℝ ↦ 1 - x ^ 2) a := by cfc_simp ℝ a
+    rw [key]
+    refine cfc_nonneg fun x hx ↦ ?_
+    have hx' : |x| ≤ 1 := by
+      simpa [Real.norm_eq_abs] using (spectrum.norm_le_norm_of_mem hx).trans ha_norm
+    nlinarith [sq_abs x, abs_le.mp hx']
   refine cfc_congr fun x hx ↦ ?_
   rw [← SpectrumRestricts.real_iff.mp ha.spectrumRestricts _ hx]
 
@@ -368,16 +392,16 @@ example (f g : ℝ≥0 → ℝ≥0) (ha : 0 ≤ a) (hfg : ∀ x ∈ spectrum ℝ
   cfc_simp ℝ≥0 a
 
 /- With a concrete `f` and `g` the extra hypothesis is provable, but nothing in the calculus API
-is run on a `cfc_simp .side` goal, so it takes a discharger. -/
+is run on a `cfc_pull.side` goal, so it takes a discharger. -/
 example (ha : 0 ≤ a) :
     cfc (fun x : ℝ≥0 ↦ x + 1) a - a = cfc (fun x : ℝ≥0 ↦ x + 1 - x) a := by
-  cfc_simp ℝ≥0 a
+  cfc_simp ℝ≥0 a => all_goals first | (simp)
 
 /- Over `ℝ` the ordinary `cfc_sub` is preferred, so no such hypothesis appears at all. -/
 example (f g : ℝ → ℝ) (hf : ContinuousOn f (spectrum ℝ a))
     (hg : ContinuousOn g (spectrum ℝ a)) :
     cfc f a - cfc g a = cfc (fun x ↦ f x - g x) a := by
-  cfc_simp ℝ a
+  cfc_simp +defer ℝ a => all_goals assumption
 
 example (f g : ℝ≥0 → ℝ≥0) (ha : 0 ≤ a) (hfg : ∀ x ∈ quasispectrum ℝ≥0 a, g x ≤ f x)
     (hf : ContinuousOn f (quasispectrum ℝ≥0 a)) (hf0 : f 0 = 0)
@@ -481,6 +505,7 @@ end Unitization
 
 variable {A : Type*} [CStarAlgebra A] {a b : A}
 
+
 example (ha : IsStarNormal a) (h : star a * a = b) : cfc (fun x : ℂ ↦ star x * x) a = b := by
   cfc_simp ℂ a at h
   exact h
@@ -501,6 +526,6 @@ example (ha : IsStarNormal a) (h : star a * a = b) : star a * a = b := by
 /- Side goals raised at a hypothesis go to the `=> ..` block too. -/
 example [PartialOrder A] [StarOrderedRing A] (ha : IsStrictlyPositive a)
     (h : CFC.log a * CFC.log a = b) : cfc (fun x : ℝ ↦ Real.log x * Real.log x) a = b := by
-  cfc_simp ℝ a at h
+  cfc_simp ℝ a at h =>
+    exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
   exact h
-
