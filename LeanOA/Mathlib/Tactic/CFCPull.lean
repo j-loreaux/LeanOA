@@ -80,12 +80,11 @@ def mkClassApp (clsName : Name) (args : Array Expr) : MetaM Expr := do
 
 /-- Whether `alg` has a (non-)unital calculus over `R`. -/
 def hasCFC (unital : Bool) (R alg : Expr) : MetaM Bool := do
+  let cls :=
+    if unital then ``ContinuousFunctionalCalculus else ``NonUnitalContinuousFunctionalCalculus
   try
     let p ← mkFreshExprMVar (← mkArrow alg (.sort .zero))
-    let cls ← mkClassApp
-      (if unital then ``ContinuousFunctionalCalculus else ``NonUnitalContinuousFunctionalCalculus)
-      #[R, alg, p]
-    return (← trySynthInstance cls).toOption.isSome
+    return (← synthInstance? (← mkClassApp cls #[R, alg, p])).isSome
   catch _ => return false
 
 /-- The target at `s`, if its type has a calculus over `R`. -/
@@ -115,13 +114,11 @@ where
         let some (_, _, _, elem) := matchCFC? rhs | return #[]
         if elem.isMVar then return #[]
         unless ← withReducible <| isDefEq elem t do return #[]
-        let mut found := #[]
         let holes ← IO.mkRef #[]
         (← instantiateMVars lhs).forEach fun h ↦ do
           if let some (_, _, _, b) := matchCFC? h then
             unless b.hasMVar || b.hasLooseBVars do holes.modify (·.push b)
-        for b in ← holes.get do found := found.push b
-        return found
+        holes.get
       for b in found do
         if ← out.anyM fun o ↦ return o.elem == b then continue
         if let some tg ← mkTarget? cfg R b then
@@ -157,14 +154,10 @@ def ringDistances (R : Expr) (entries : Array Entry) : Array (Name × Nat) := Id
     frontier := next
   return dist
 
-/-- Set the binder infos of the leading lambdas of `e`. -/
-def setBinderInfos : Expr → List BinderInfo → Expr
-  | .lam n t b _, bi :: bis => .lam n t (setBinderInfos b bis) bi
-  | e, _ => e
-
 /-- Instantiate a `target` lemma at `R` and a target: its ring is `R`, and its element is the
 target itself if the left-hand side is the bare element, or else any element of the target's
-algebra. -/
+algebra. The arguments this leaves undetermined are metavariables, for the caller to abstract;
+`simp` synthesizes the instances among them at rewrite time. -/
 def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R) :
     MetaM (Option (Expr × Bool)) := do
   unless e.unital == t.unital do return none
@@ -187,24 +180,16 @@ def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R) :
     if m.isMVar && (← isType m) && (lhs.findMVar? (· == m.mvarId!)).isNone &&
         (lhsTy.findMVar? (· == m.mvarId!)).isNone then
       discard <| isDefEq m S
-  -- instances that can be found now are; the others stay binders for `simp` to synthesize
+  -- an instance that can be found now is, and one that cannot rules the lemma out
   for (m, bi) in mvars.zip bis do
     if bi.isInstImplicit && (← instantiateMVars m).isMVar then
       let ty ← instantiateMVars (← inferType m)
       unless ty.hasExprMVar do
-        let some inst ← (try some <$> synthInstance ty catch _ => pure none) | return none
+        let some inst ← synthInstance? ty | return none
         unless ← isDefEq m inst do return none
-  -- abstract what is left, keeping the binder infos
-  let mut rest := #[]
-  let mut restBis := #[]
-  for (m, bi) in mvars.zip bis do
-    let m ← instantiateMVars m
-    if m.isMVar then rest := rest.push m; restBis := restBis.push bi
-  let body := mkAppN c mvars
-  let body ← if e.inv then mkEqSymm body else pure body
-  let prf ← mkLambdaFVars rest (← instantiateMVars body)
-  let prf := setBinderInfos prf restBis.toList
-  return some (prf, lhs.isMVar)
+  let prf := mkAppN c mvars
+  let prf ← if e.inv then mkEqSymm prf else pure prf
+  return some (← instantiateMVars prf, lhs.isMVar)
 
 /-- Everything `simp` needs to pull towards one ring. -/
 structure Setup where
@@ -223,13 +208,15 @@ def isTargetElem (targets : Array Target) (e : Expr) : MetaM Bool :=
       return false
     withNewMCtxDepth <| withReducible <| isDefEq e t.elem
 
-/-- Replace the `i`th argument of `e` by the result `r` of simplifying it. -/
-def congrAt (e : Expr) (i : Nat) (r : Simp.Result) : MetaM Simp.Result := do
-  let args := e.getAppArgs
-  let some h := r.proof? | return { expr := mkAppN e.getAppFn (args.set! i r.expr) }
-  let motive ← withLocalDeclD `y (← inferType args[i]!) fun y =>
-    mkLambdaFVars #[y] (mkAppN e.getAppFn (args.set! i y))
-  return { expr := mkAppN e.getAppFn (args.set! i r.expr), proof? := ← mkCongrArg motive h }
+/-- The congruence `e = e'`, where `e'` is `e` with the arguments at the positions in `rs`
+replaced by the results there. -/
+def congrArgs (e : Expr) (rs : Array (Nat × Simp.Result)) : MetaM Simp.Result := do
+  let mut acc : Simp.Result := { expr := e.getAppFn }
+  for (arg, i) in e.getAppArgs.zipIdx do
+    acc ← match rs.find? (·.1 == i) with
+      | some (_, r) => Simp.mkCongr acc r
+      | none => Simp.mkCongrFun acc arg
+  return acc
 
 mutual
 
@@ -359,9 +346,7 @@ partial def flipPost (flip : SimpTheorems) (thms : Array SimpTheorems) : Simp.Si
   if flips.isEmpty then return .continue
   let candidates := if flips.size > 1 then #[flips] ++ flips.map (#[·]) else #[flips]
   for c in candidates do
-    let mut r₁ : Simp.Result := { expr := e }
-    for (i, r) in c do
-      r₁ ← r₁.mkEqTrans (← congrAt r₁.expr i r)
+    let r₁ ← congrArgs e c
     for s in thms do
       if let some r₂ ← Simp.rewrite? r₁.expr s.post s.erased "cfc_pull" false then
         return .visit (← r₁.mkEqTrans r₂)
@@ -440,57 +425,45 @@ placeholder. `simp` rejects a rewrite whose proof contains an assignable metavar
 placeholder is a `sorry`, marked so that `replacePlaceholders` can turn it into a goal
 afterwards. -/
 def deferDischarge (useHyps : Bool) : Simp.Discharge := fun e => do
-  let e ← instantiateMVars e
-  let e := if e.isAppOfArity ``autoParam 2 then e.appFn!.appArg! else e
+  let e := (← instantiateMVars e).consumeTypeAnnotations
   if e.hasExprMVar then return none
   -- a class about types (`NonUnitalAlgHomClass F S A B`) is for instance synthesis, which has
   -- already failed; a class about an element (`IsStarNormal a`) is a side goal like any other
   if (← isClass? e).isSome then
     if ← e.getAppArgs.allM fun x ↦ isType x <||> return (← isClass? (← inferType x)).isSome then
       return none
-  for d in ← getLCtx do
-    unless useHyps do break
-    if d.isImplementationDetail then continue
-    if ← withReducible <| isDefEq d.type e then return some d.toExpr
+  if useHyps then
+    if let some h ← (← getLCtx).findDeclM? fun d ↦ do
+        if !d.isImplementationDetail && (← withReducible <| isDefEq d.type e) then
+          return some d.toExpr
+        else return none then
+      return some h
   return some <| .mdata (KVMap.empty.insert `cfcPullSideGoal (.ofBool true)) (← mkSorry e true)
 
-/-- Replace the placeholders `deferDischarge` left in `proof` by new goals, one per statement. A
-placeholder below a binder of the proof (under the `funext` of a rewrite under `∀ n`, say) mentions
-the bound variables, so its goal is the statement quantified over the enclosing binders, applied
+/-- Replace the placeholders `deferDischarge` left in `proof` by new goals, one per statement.
+`transform` enters the binders of the proof (the `funext` of a rewrite under `∀ n`, say) as local
+hypotheses; a placeholder found under some is replaced by a goal quantified over them, applied
 back to them. -/
 def replacePlaceholders (proof : Expr) : MetaM (Expr × Array MVarId) := do
+  let outer ← getLCtx
   let goals ← IO.mkRef (#[] : Array (Expr × MVarId))
-  let proof ← go goals #[] (← instantiateMVars proof)
+  let proof ← Meta.transform (← instantiateMVars proof) fun e => do
+    let .mdata d b := e | return .continue
+    unless d.contains `cfcPullSideGoal do return .continue
+    let binders := (← getLCtx).foldl (init := #[]) fun xs d ↦
+      if outer.contains d.fvarId || d.isImplementationDetail then xs else xs.push d.toExpr
+    -- `b` is `sorryAx ty true`; a `let`-bound binder stays a `let` in the goal, so the goal is
+    -- applied to the others only
+    let ty ← mkForallFVars binders b.appFn!.appArg!
+    let g ← match (← goals.get).find? (·.1 == ty) with
+      | some (_, g) => pure g
+      | none =>
+        let g ← mkFreshExprSyntheticOpaqueMVar ty
+        goals.modify (·.push (ty, g.mvarId!))
+        pure g.mvarId!
+    let vars ← binders.filterM fun x ↦ return !(← x.fvarId!.getDecl).isLet
+    return .done (mkAppN (mkMVar g) vars)
   return (proof, (← goals.get).map (·.2))
-where
-  /-- `binders` are the enclosing binders, outermost first, with their types as written in the
-  term (so their loose bound variables refer to the earlier binders): closing over them is
-  nesting them back around the statement. -/
-  go (goals : IO.Ref (Array (Expr × MVarId))) (binders : Array (Name × Expr × BinderInfo)) :
-      Expr → MetaM Expr
-    | .mdata d b => do
-      unless d.contains `cfcPullSideGoal do return .mdata d (← go goals binders b)
-      -- `b` is `sorryAx ty true`
-      let ty := binders.foldr (init := b.appFn!.appArg!) fun (n, t, bi) ty ↦ .forallE n t ty bi
-      let g ← match (← goals.get).find? (·.1 == ty) with
-        | some (_, g) => pure g
-        | none =>
-          let g ← mkFreshExprSyntheticOpaqueMVar ty
-          goals.modify (·.push (ty, g.mvarId!))
-          pure g.mvarId!
-      let k := binders.size
-      return mkAppN (mkMVar g) ((Array.range k).map fun i ↦ .bvar (k - 1 - i))
-    | .app f x => return .app (← go goals binders f) (← go goals binders x)
-    | .lam n t b bi =>
-      return .lam n (← go goals binders t) (← go goals (binders.push (n, t, bi)) b) bi
-    | .forallE n t b bi =>
-      return .forallE n (← go goals binders t) (← go goals (binders.push (n, t, bi)) b) bi
-    | .letE n t v b nd =>
-      -- quantifying over the variable instead of `let`-binding it gives a stronger goal
-      return .letE n (← go goals binders t) (← go goals binders v)
-        (← go goals (binders.push (n, t, .default)) b) nd
-    | .proj s i b => return .proj s i (← go goals binders b)
-    | e => return e
 
 /-- The lemma set for this call: the `@[cfc_pull]` set, or with `only` the empty set, adjusted by
 the bracketed list. A listed lemma that is tagged keeps its entries, and so its priority; an
@@ -529,9 +502,7 @@ def elabArgs (cfgStx : TSyntax ``optConfig) (only : Bool)
     TacticM (Config × Setup × Array Entry) := do
   let cfg ← elabConfig cfgStx
   let R ← instantiateMVars (← Term.elabType ring)
-  let t ← Term.elabTerm elem none
-  Term.synthesizeSyntheticMVarsNoPostponing
-  let t ← instantiateMVars t
+  let t ← Term.elabTermAndSynthesize elem none
   let entries ← elabLemmas only lems?
   let s ← getSetup cfg t entries (deferDischarge !cfg.defer) (← IO.mkRef #[]) (← IO.mkRef #[]) R
   return (cfg, s, entries)
@@ -557,7 +528,18 @@ def mkOnlyLemmas (used : Array Origin) (entries : Array Entry) :
   let list := mkNullNode (mkSepArray ids (mkAtom ","))
   return ⟨mkNode ``cfcPullLemmas #[mkAtom "[", list, mkAtom "]"]⟩
 
-/-- The side goals, deduplicated, and without those the tactic for their kind closes. -/
+/-- Run `tac` on `g`, returning `true` iff it closes the goal; otherwise restore the state. -/
+def closes (g : MVarId) (tac : TSyntax `tactic) : TacticM Bool := do
+  let saved ← saveState
+  -- runtime exceptions too: `cfc_zero_tac` can loop, on `0 = f 0` say
+  let ok ← Term.withoutErrToSorry <| tryCatchRuntimeEx
+    (return (← Tactic.run g (evalTactic tac)).isEmpty) fun _ => pure false
+  unless ok do saved.restore
+  return ok
+
+/-- The side goals, deduplicated, tagged by kind, and without those the tactic for their kind
+closes: `cfc_cont_tac` for continuity, `cfc_zero_tac` for `f 0 = 0`, the predicate lemmas and
+`cfc_tac` for the predicate of the calculus, and `assumption` for all. -/
 def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := do
   let mut out : Array MVarId := #[]
   for g in goals do
@@ -565,38 +547,38 @@ def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := d
     let ty ← instantiateMVars (← g.getType)
     if let some g' ← out.findM? fun g' => do withReducible <| isDefEq ty (← g'.getType) then
       g.assign (mkMVar g'); continue
-    -- the tactic is chosen by the kind of goal, and other goals are left alone;
     -- a goal raised under a binder is quantified, so it is classified by its body
     let body := ty.getForallBody
-    let isNonneg := match body.le? with
-      | some (_, lhs, _) => lhs.zero?
-      | none => false
+    let isNonneg := body.le?.any fun (_, lhs, _) ↦ lhs.zero?
     let mentions (n : Name) := (body.find? (·.isConstOf n)).isSome
-    let isPred := body.isAppOf ``IsSelfAdjoint || body.isAppOf ``IsStarNormal || isNonneg
-    let (tag, tacs) ← if isPred then
-        pure (`cfc_pull.predicate, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
-          `(tactic| exact cfcₙ_predicate _ _), `(tactic| cfc_tac)].mapM id)
+    let (tag, tacs) ←
+      if body.isAppOf ``IsSelfAdjoint || body.isAppOf ``IsStarNormal || isNonneg then
+        pure (`cfc_pull.predicate, #[← `(tactic| exact cfc_predicate _ _),
+          ← `(tactic| exact cfcₙ_predicate _ _), ← `(tactic| cfc_tac)])
       else if mentions ``Continuous || mentions ``ContinuousOn then
-        pure (`cfc_pull.continuity, ← [`(tactic| assumption), `(tactic| cfc_cont_tac)].mapM id)
+        pure (`cfc_pull.continuity, #[← `(tactic| cfc_cont_tac)])
       else if body.eq?.any (·.2.2.zero?) then
-        pure (`cfc_pull.mapZero, ← [`(tactic| assumption), `(tactic| cfc_zero_tac)].mapM id)
+        pure (`cfc_pull.mapZero, #[← `(tactic| cfc_zero_tac)])
       else
-        pure (`cfc_pull.side, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
-          `(tactic| exact cfcₙ_predicate _ _)].mapM id)
+        pure (`cfc_pull.side, #[← `(tactic| exact cfc_predicate _ _),
+          ← `(tactic| exact cfcₙ_predicate _ _)])
     g.setTag tag
-    let tacs := if cfg.defer then [] else tacs
-    let mut closed := false
-    for tac in tacs do
-      let tac ← `(tactic| (intros; $tac))
-      let saved ← saveState
-      -- runtime exceptions too: `cfc_zero_tac` can loop, on `0 = f 0` say
-      let ok ← Term.withoutErrToSorry <| tryCatchRuntimeEx
-        (do pure (← Tactic.run g (evalTactic tac)).isEmpty) fun _ => pure false
-      if ok then closed := true; break
-      saved.restore
+    let tacs ← if cfg.defer then pure #[] else pure (#[← `(tactic| assumption)] ++ tacs)
+    let closed ← tacs.anyM fun tac ↦ do closes g (← `(tactic| (intros; $tac)))
     trace[Tactic.cfc_pull] "side goal {ty}: {if closed then "closed" else "left"}"
     unless closed do out := out.push g
   return out.toList
+
+/-- Turn the placeholders in `proof` into side goals and deal with them: those the tactic for
+their kind does not close are handed to the `=> ..` block, if there is one. -/
+def dischargeSideGoals (cfg : Config) (proof : Expr) (arrow? : Option Syntax)
+    (tac? : Option (TSyntax ``tacticSeq)) : TacticM Expr := do
+  let (proof, goals) ← replacePlaceholders proof
+  let side ← sideGoals cfg goals
+  appendGoals side
+  if let (some arrow, some tac) := (arrow?, tac?) then
+    withRef arrow <| focusGoalsAndDone side.contains (evalTactic tac)
+  return proof
 
 @[tactic cfcPull, tactic cfcPullTrace]
 def evalCFCPull : Tactic := fun stx => withMainContext do
@@ -615,18 +597,13 @@ def evalCFCPull : Tactic := fun stx => withMainContext do
   -- close the goal if it is now `rfl` up to reducible unfolding
   unless (← getGoals).isEmpty do
     if loc matches .wildcard || loc matches .targets _ true then
-      try evalTactic (← `(tactic| with_reducible rfl)) catch _ => pure ()
-  let (proof, goals) ← replacePlaceholders (mkMVar root)
-  root.assign proof
-  let side ← sideGoals cfg goals
-  appendGoals side
+      evalTactic (← `(tactic| try with_reducible rfl))
   if stx.isOfKind ``cfcPullTrace then
     -- only the part up to the element is replaced, leaving any location and block as written
     let lems ← mkOnlyLemmas stats.usedTheorems.toArray entries
     let sugg ← `(tactic| cfc_pull%$tk $cfgStx:optConfig only $lems $ring $elem)
     TryThis.addSuggestion tk sugg (origSpan? := mkNullNode #[tk, elem])
-  if let (some arrow, some tac) := (arrow?, tac?) then
-    withRef arrow <| focusGoalsAndDone side.contains (evalTactic tac)
+  root.assign (← dischargeSideGoals cfg (mkMVar root) arrow? tac?)
 
 @[tactic cfcPullConv, tactic cfcPullTraceConv]
 def evalCFCPullConv : Tactic := fun stx => withMainContext do
@@ -643,15 +620,11 @@ def evalCFCPullConv : Tactic := fun stx => withMainContext do
   let (r, stats) ← Simp.main lhs s.ctx
     (methods := Simp.mkMethods s.simprocs s.disch (wellBehavedDischarge := false))
   if r.expr == lhs then throwError "`cfc_pull` made no progress"
-  let (proof, goals) ← replacePlaceholders (← r.getProof)
-  Conv.applySimpResult { r with proof? := some proof }
-  let side ← sideGoals cfg goals
-  appendGoals side
   if stx.isOfKind ``cfcPullTraceConv then
     let lems ← mkOnlyLemmas stats.usedTheorems.toArray entries
     let sugg ← `(conv| cfc_pull%$tk $cfgStx:optConfig only $lems $ring $elem)
     TryThis.addSuggestion tk sugg (origSpan? := mkNullNode #[tk, elem])
-  if let (some arrow, some tac) := (arrow?, tac?) then
-    withRef arrow <| focusGoalsAndDone side.contains (evalTactic tac)
+  let proof ← dischargeSideGoals cfg (← r.getProof) arrow? tac?
+  Conv.applySimpResult { r with proof? := some proof }
 
 end Mathlib.Tactic.CFCPull
