@@ -247,6 +247,30 @@ example (ha : IsStarNormal a) : sq a = cfc (fun x : ℂ ↦ x * x) a := by
 
 end LemmaListTest
 
+/-! ### Local hypotheses in the lemma list -/
+
+section Hypotheses
+
+variable {A : Type*} [CStarAlgebra A] {a : A}
+
+/- A hypothesis is a rewrite rule like any other; here it outranks `cfc_star_id`. -/
+example (ha : IsStarNormal a) (f : ℂ → ℂ) (hf : star a = cfc f a) (hf' : Continuous f) :
+    star a * a = cfc (fun x ↦ f x * x) a := by
+  cfc_simp [hf] ℂ a
+
+/- With the calculus on the left: a composition with the inner element `a ^ 2`. -/
+example (ha : IsStarNormal a) (f : ℂ → ℂ) (hf : Continuous f)
+    (h : cfc f (a ^ 2) = cfc (fun x ↦ f (x ^ 2)) a) :
+    cfc f (a ^ 2) + a = cfc (fun x ↦ f (x ^ 2) + x) a := by
+  cfc_simp [h] ℂ a
+
+/- Quantified hypotheses work too. -/
+example (ha : IsStarNormal a) (g : ℕ → A) (hg : ∀ n, g n = cfc (fun x : ℂ ↦ x ^ n) a) :
+    g 2 * g 3 = cfc (fun x : ℂ ↦ x ^ 2 * x ^ 3) a := by
+  cfc_simp [hg] ℂ a
+
+end Hypotheses
+
 end LemmaList
 
 section Only

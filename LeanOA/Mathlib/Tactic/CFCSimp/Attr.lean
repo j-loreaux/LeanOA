@@ -43,8 +43,8 @@ inductive Kind where
 
 /-- A tagged lemma, in one of the orientations `cfc_simp` may use it in. -/
 structure Entry where
-  /-- The declaration. -/
-  declName : Name
+  /-- The lemma: a declaration, or, from the `[..]` list of `cfc_simp`, a local hypothesis. -/
+  origin : Origin
   /-- Whether `simp` uses it right to left. -/
   inv : Bool
   /-- Its kind. -/
@@ -80,15 +80,28 @@ def matchCFC? (e : Expr) : Option (Expr × Bool × Expr × Expr) := do
 /-- The head constant of a ring, if concrete. -/
 def ringKey (R : Expr) : Option Name := R.getAppFn.constName?
 
-/-- Classify a lemma: the entries recording how `cfc_simp` may use it. -/
-def mkEntries (declName : Name) (prio : Nat) : MetaM (Array Entry) := do
-  let info ← getConstInfo declName
-  forallTelescopeReducing info.type fun xs body => do
+/-- The lemma as a term, with fresh universe metavariables. -/
+def Entry.proof (e : Entry) : MetaM Expr :=
+  match e.origin with
+  | .decl n .. => mkConstWithFreshMVarLevels n
+  | .fvar id => return mkFVar id
+  | _ => do throwError "internal error: `cfc_simp` entry with origin `{← ppOrigin e.origin}`"
+
+/-- Add the lemma to a simp set, in its orientation. -/
+def Entry.addTo (e : Entry) (s : SimpTheorems) (prio : Nat := e.prio) : MetaM SimpTheorems :=
+  match e.origin with
+  | .decl n .. => s.addConst n (inv := e.inv) (prio := prio)
+  | .fvar id => s.add e.origin #[] (mkFVar id) (inv := e.inv) (prio := prio)
+  | _ => do throwError "internal error: `cfc_simp` entry with origin `{← ppOrigin e.origin}`"
+
+/-- Classify a lemma of type `type`: the entries recording how `cfc_simp` may use it. -/
+def mkEntries (origin : Origin) (type : Expr) (prio : Nat) : MetaM (Array Entry) := do
+  forallTelescopeReducing type fun xs body => do
     let some (_, lhs, rhs) := body.eq? |
-      throwError "`@[cfc_simp]` failed: `{declName}` is not an equation"
+      throwError "`cfc_simp`: `{← ppOrigin origin}` is not an equation"
     match matchCFC? lhs, matchCFC? rhs with
     | none, none =>
-      throwError "`@[cfc_simp]` failed: neither side of `{declName}` has `cfc` or `cfcₙ` as \
+      throwError "`cfc_simp`: neither side of `{← ppOrigin origin}` has `cfc` or `cfcₙ` as \
         its head symbol"
     | some c, none => pullEntry xs rhs lhs c true
     | none, some c => pullEntry xs lhs rhs c false
@@ -96,15 +109,15 @@ def mkEntries (declName : Name) (prio : Nat) : MetaM (Array Entry) := do
       if el == er then
         -- a conversion; record both directions, `cfc_simp` picks one
         return #[
-          { declName, inv := false, kind := .conv, prio, ring := ringKey Rr, unital := ur,
+          { origin, inv := false, kind := .conv, prio, ring := ringKey Rr, unital := ur,
             srcRing := ringKey Rl, srcUnital := ul },
-          { declName, inv := true, kind := .conv, prio, ring := ringKey Rl, unital := ul,
+          { origin, inv := true, kind := .conv, prio, ring := ringKey Rl, unital := ul,
             srcRing := ringKey Rr, srcUnital := ur }]
       else
         -- a composition: the side whose element is more complicated goes on the left
         let inv := el.approxDepth < er.approxDepth
         let (R, u) := if inv then (Rl, ul) else (Rr, ur)
-        return #[{ declName, inv, kind := .compose, prio, ring := ringKey R, unital := u }]
+        return #[{ origin, inv, kind := .compose, prio, ring := ringKey R, unital := u }]
 where
   /-- A lemma with the calculus on exactly one side, `cfcSide`; `inv` says it is the left one. -/
   pullEntry (xs : Array Expr) (alg cfcSide : Expr) (c : Expr × Bool × Expr × Expr) (inv : Bool) :
@@ -115,7 +128,7 @@ where
       return (← isType x) && !alg.containsFVar x.fvarId! && !cfcSide.containsFVar x.fvarId!
     let kind := if R.isFVar && !alg.containsFVar R.fvarId! || freeType then .target else .pull
     let holes := (alg.find? fun e ↦ (matchCFC? e).isSome).isSome
-    return #[{ declName, inv, kind, prio, ring := ringKey R, unital, holes }]
+    return #[{ origin, inv, kind, prio, ring := ringKey R, unital, holes }]
 
 /-- The `cfc_simp` attribute marks lemmas for use by the `cfc_simp` tactic; see the module
 docstring for the shapes it accepts. -/
@@ -126,7 +139,7 @@ initialize registerBuiltinAttribute {
   descr := "lemma used by the `cfc_simp` tactic"
   add := fun declName stx kind => MetaM.run' do
     let prio ← getAttrParamOptPrio stx[1]
-    for e in ← mkEntries declName prio do
+    for e in ← mkEntries (.decl declName) (← getConstInfo declName).type prio do
       cfcSimpExt.add e kind
 }
 

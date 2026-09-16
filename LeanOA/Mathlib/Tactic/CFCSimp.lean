@@ -93,8 +93,7 @@ where
       unless e.kind matches .pull | .target do continue
       unless e.holes do continue
       let found ← withoutModifyingState do
-        let (_, _, ty) ← forallMetaTelescopeReducing (← inferType (← mkConstWithFreshMVarLevels
-          e.declName))
+        let (_, _, ty) ← forallMetaTelescopeReducing (← inferType (← e.proof))
         let some (_, lhs, rhs) := ty.eq? | return #[]
         let some (_, _, _, elem) := matchCFC? rhs | return #[]
         if elem.isMVar then return #[]
@@ -152,7 +151,7 @@ algebra. -/
 def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R) :
     MetaM (Option (Expr × Bool)) := do
   unless e.unital == t.unital do return none
-  let c ← mkConstWithFreshMVarLevels e.declName
+  let c ← e.proof
   let (mvars, bis, ty) ← forallMetaTelescopeReducing (← inferType c)
   let some (_, lhs, rhs) := ty.eq? | return none
   let (lhs, rhs) := if e.inv then (rhs, lhs) else (lhs, rhs)
@@ -239,21 +238,19 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
   for n in [``eq_self, ``iff_self, ``implies_true] do
     pull ← pull.addConst n
   for e in entries do
-    let (name, inv) := (e.declName, e.inv)
     match e.kind with
     | .pull =>
-      if e.holes then pull ← pull.addConst name (inv := inv) (prio := boost distOf cfg.unital e)
-      else loose ← loose.addConst name (inv := inv) (prio := boost distOf cfg.unital e)
-    | .compose =>
-      compose ← compose.addConst name (inv := inv) (prio := boost distOf cfg.unital e)
+      if e.holes then pull ← e.addTo pull (prio := boost distOf cfg.unital e)
+      else loose ← e.addTo loose (prio := boost distOf cfg.unital e)
+    | .compose => compose ← e.addTo compose (prio := boost distOf cfg.unital e)
     | .conv =>
       if e.unital != e.srcUnital then
-        flip ← flip.addConst name (inv := inv)
+        flip ← e.addTo flip (prio := eval_prio default)
         -- towards the requested unitality
-        if e.unital == cfg.unital then conv ← conv.addConst name (inv := inv) (prio := 2000)
+        if e.unital == cfg.unital then conv ← e.addTo conv (prio := 2000)
       else if let (some d, some d') := (distOf e.ring, distOf e.srcRing) then
         -- towards the requested ring
-        if d < d' then conv ← conv.addConst name (inv := inv)
+        if d < d' then conv ← e.addTo conv (prio := eval_prio default)
     | .target =>
       for (tg, i) in targets.zipIdx do
         let mut seen : Array Expr := #[]
@@ -263,8 +260,8 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
           let r ← abstractMVars prf
           if seen.contains r.expr then continue
           seen := seen.push r.expr
-          trace[Tactic.cfc_simp] "{e.declName} at {tg.elem}: {← inferType prf}"
-          let id := .other (e.declName ++ `inst)
+          trace[Tactic.cfc_simp] "{← ppOrigin e.origin} at {tg.elem}: {← inferType prf}"
+          let id := .other (e.origin.key ++ `inst)
           if bare then
             atom ← atom.add id r.paramNames r.expr
           else if e.holes then
@@ -348,7 +345,8 @@ syntax cfcSimpLemmas := " [" withoutPosition(ident,*,?) "]"
 
 /-- `cfc_simp R a`: a `simp`-based `cfc_pull R a`. Rewrites the goal (or the location `at ..`)
 so that the calculus over `R` is at the head of every maximal subexpression in the algebra of
-`a`, using the `@[cfc_simp]` lemmas together with those in `[..]`. Side goals are attempted with
+`a`, using the `@[cfc_simp]` lemmas together with those in `[..]`, which may be local
+hypotheses. Side goals are attempted with
 the tactic for their kind, as in `cfc_pull`, and the survivors are handed to the `=> ..` block, or
 left open; `+defer` attempts none of them. `-unital` asks for `cfcₙ`; `+zetaDelta` unfolds
 `let`-bound variables. -/
@@ -425,11 +423,17 @@ def elabArgs (cfgStx : TSyntax ``optConfig) (lems? : Option (TSyntax ``cfcSimpLe
   Term.synthesizeSyntheticMVarsNoPostponing
   let t ← instantiateMVars t
   let mut entries := cfcSimpExt.getState (← getEnv)
+  -- the `[..]` list: local hypotheses, or declarations; an untagged one outranks the tagged set
   if let some stx := lems? then
     for id in stx.raw[1].getSepArgs do
-      let declName ← realizeGlobalConstNoOverloadWithInfo id
-      if entries.any (·.declName == declName) then continue
-      entries := entries ++ (← withRef id <| mkEntries declName (eval_prio default))
+      let id : Ident := ⟨id⟩
+      let (origin, type) ← if let some d := (← getLCtx).findFromUserName? id.getId then
+          pure (Origin.fvar d.fvarId, d.type)
+        else
+          let declName ← realizeGlobalConstNoOverloadWithInfo id
+          pure (Origin.decl declName, (← getConstInfo declName).type)
+      if entries.any (·.origin.key == origin.key) then continue
+      entries := entries ++ (← withRef id <| mkEntries origin type (eval_prio high))
   let s ← getSetup cfg t entries (deferDischarge !cfg.defer) (← IO.mkRef #[]) (← IO.mkRef #[]) R
   return (cfg, s)
 
@@ -448,7 +452,8 @@ def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := d
       | some (_, lhs, _) => lhs.zero?
       | none => false
     let mentions (n : Name) := (body.find? (·.isConstOf n)).isSome
-    let (tag, tacs) ← if body.isAppOf ``IsSelfAdjoint || body.isAppOf ``IsStarNormal || isNonneg then
+    let isPred := body.isAppOf ``IsSelfAdjoint || body.isAppOf ``IsStarNormal || isNonneg
+    let (tag, tacs) ← if isPred then
         pure (`cfc_pull.predicate, ← [`(tactic| assumption), `(tactic| exact cfc_predicate _ _),
           `(tactic| exact cfcₙ_predicate _ _), `(tactic| cfc_tac)].mapM id)
       else if mentions ``Continuous || mentions ``ContinuousOn then
