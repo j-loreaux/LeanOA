@@ -32,7 +32,7 @@ open Lean Meta
 inductive Kind where
   /-- `⟨algebraic expression⟩ = cfc f a`, usable as a plain `simp` lemma. -/
   | pull
-  /-- Like `pull`, but the ring (and so the element) is not determined by the algebraic side,
+  /-- Like `pull`, but the ring or the element is not determined by the algebraic side,
   e.g. `a = cfc (fun x : R ↦ x) a`. `cfc_pull` instantiates these at its targets. -/
   | target
   /-- `cfc f ⟨structured element⟩ = cfc g a`, e.g. `cfc f (CFC.abs a) = cfc (f ‖·‖) a`. -/
@@ -122,11 +122,14 @@ where
   /-- A lemma with the calculus on exactly one side, `cfcSide`; `inv` says it is the left one. -/
   pullEntry (xs : Array Expr) (alg cfcSide : Expr) (c : Expr × Bool × Expr × Expr) (inv : Bool) :
       MetaM (Array Entry) := do
-    let (R, unital, _, _) := c
+    let (R, unital, _, elem) := c
     -- a type only determined by instances that are not `outParam`s cannot be found by `simp`
     let freeType ← xs.anyM fun x => do
       return (← isType x) && !alg.containsFVar x.fvarId! && !cfcSide.containsFVar x.fvarId!
-    let kind := if R.isFVar && !alg.containsFVar R.fvarId! || freeType then .target else .pull
+    -- the ring, or the element (`cfc_const : cfc (fun _ ↦ r) a = algebraMap R A r`), may be
+    -- absent from the algebraic side too
+    let free (x : Expr) := x.isFVar && !alg.containsFVar x.fvarId!
+    let kind := if free R || free elem || freeType then .target else .pull
     let holes := (alg.find? fun e ↦ (matchCFC? e).isSome).isSome
     return #[{ origin, inv, kind, prio, ring := ringKey R, unital, holes }]
 

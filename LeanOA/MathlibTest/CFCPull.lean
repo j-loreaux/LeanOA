@@ -633,6 +633,37 @@ example (ha : IsStarNormal a) :
 
 end Unitization
 
+section Regressions
+
+/-! ## Shapes that once failed -/
+
+variable {A : Type*} [CStarAlgebra A] {a : A}
+
+/- `cfc_const` mentions the element only on its calculus side, so it is instantiated at the
+target like `cfc_const_one`. -/
+example (ha : IsStarNormal a) (z : ℂ) : algebraMap ℂ A z * a = cfc (fun x : ℂ ↦ z * x) a := by
+  cfc_pull ℂ a
+
+example (ha : IsStarNormal a) (z : ℂ) : algebraMap ℂ A z = cfc (fun _ : ℂ ↦ z) a := by
+  cfc_pull ℂ a
+
+/- A lemma generic in its ring is specialized to the ring asked for before it is matched: the
+real scalar is pulled as `t • x`, not as `↑(t * x.re)` through the real calculus. -/
+example (ha : IsStarNormal a) (t : ℝ) : t • a = cfc (fun x : ℂ ↦ t • x) a := by cfc_pull ℂ a
+
+/- The inner element of `cfc g (a ^ 2 + a)` is pulled before composing, so that the composition
+happens at `a`, whose predicate is known, rather than at `a ^ 2 + a`. -/
+example (ha : IsStarNormal a) (f g : ℂ → ℂ) (hf : Continuous f) (hg : Continuous g) :
+    cfc f (cfc g (a ^ 2 + a)) = cfc (fun x : ℂ ↦ f (g (x ^ 2 + x))) a := by
+  cfc_pull ℂ a
+
+/- The target may itself be an application of the calculus. -/
+example (ha : IsStarNormal a) (f g : ℂ → ℂ) (hf : Continuous f) (hg : Continuous g) :
+    cfc g (cfc f a) * cfc f a = cfc (fun x : ℂ ↦ g x * x) (cfc f a) := by
+  cfc_pull ℂ (cfc f a)
+
+end Regressions
+
 
 /-! # `at` -/
 

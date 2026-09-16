@@ -191,6 +191,21 @@ def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R) :
   let prf ← if e.inv then mkEqSymm prf else pure prf
   return some (← instantiateMVars prf, lhs.isMVar)
 
+/-- Add a `pull` lemma to a simp set, specialized to the ring `R` if it is generic in its ring.
+Left generic, `cfc_const_mul_id : r * a = cfc (fun x ↦ r * x) a` would match `t • a` with `t : ℝ`
+at a complex calculus, and the result be converted afterwards. -/
+def addAt (R : Expr) (s : SimpTheorems) (e : Entry) (prio : Nat) : MetaM SimpTheorems := do
+  if e.ring.isSome then return ← e.addTo s prio
+  let c ← e.proof
+  let (mvars, _, ty) ← forallMetaTelescopeReducing (← inferType c)
+  let some (_, lhs, rhs) := ty.eq? | e.addTo s prio
+  let some (R', _, _, _) := matchCFC? (if e.inv then lhs else rhs) | e.addTo s prio
+  unless ← isDefEq R' R do return s
+  let prf := mkAppN c mvars
+  let prf ← if e.inv then mkEqSymm prf else pure prf
+  let r ← abstractMVars (← instantiateMVars prf)
+  s.add e.origin r.paramNames r.expr (prio := prio)
+
 /-- Everything `simp` needs to pull towards one ring. -/
 structure Setup where
   /-- The simp context. -/
@@ -244,8 +259,9 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
   for e in entries do
     match e.kind with
     | .pull =>
-      if e.holes then pull ← e.addTo pull (prio := boost distOf cfg.unital e)
-      else loose ← e.addTo loose (prio := boost distOf cfg.unital e)
+      if e.holes then pull ← addAt R pull e (boost distOf cfg.unital e)
+      else loose ← addAt R loose e (boost distOf cfg.unital e)
+    -- compositions and conversions apply at the ring of the calculus they meet, whatever it is
     | .compose => compose ← e.addTo compose (prio := boost distOf cfg.unital e)
     | .conv =>
       if e.unital != e.srcUnital then
@@ -290,23 +306,30 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
 /-- The pre-simproc. A target is wrapped as `cfc id a` before `simp` can look inside it. On
 `cfc f b`: compose; simplify `b` (never `f`) unless it is a target, at the ring of this `cfc` if
 that is not the requested one, so that an inner element is pulled at the ring of the calculus
-applied to it; and only then convert towards the requested unitality, then ring. -/
+applied to it; and only then convert towards the requested unitality, then ring. When `b` is
+itself the calculus applied to something other than a target, it is simplified *before* composing:
+composing first would ask for the predicate at that something, when the target's is known. -/
 partial def cfcPre (R : Expr) (targets : Array Target) (atom loose conv compose : SimpTheorems)
     (stack : IO.Ref (Array Expr)) (setup : Expr → MetaM Setup) : Simp.Simproc := fun e => do
+  -- a target first of all: it may be an application of the calculus itself
+  if ← isTargetElem targets e then
+    if let some r ← Simp.rewrite? e atom.post atom.erased "cfc_pull atom" false then
+      return .visit r
+    return .continue
   let some (S, _, _, b) := matchCFC? e |
-    if ← isTargetElem targets e then
-      if let some r ← Simp.rewrite? e atom.post atom.erased "cfc_pull atom" false then
-        return .visit r
-      return .continue
     if let some r ← Simp.rewrite? e loose.post loose.erased "cfc_pull loose" false then
       return .visit r
     return .continue
   unless e.getAppNumArgs == (← getConstInfo e.getAppFn.constName!).type.getForallArity do
     return .continue
   let isTarget ← isTargetElem targets b
-  unless isTarget do
-    if let some r ← Simp.rewrite? e compose.post compose.erased "cfc_pull compose" false then
-      return .visit r
+  let innerElsewhere ← match matchCFC? b with
+    | some (_, _, _, c) => pure (!isTarget && !(← isTargetElem targets c))
+    | none => pure false
+  let compose? : SimpM (Option Simp.Result) :=
+    Simp.rewrite? e compose.post compose.erased "cfc_pull compose" false
+  unless isTarget || innerElsewhere do
+    if let some r ← compose? then return .visit r
   -- an element already being simplified further up is left alone, or `ψ a ↦ cfc id (ψ a)` loops
   if !isTarget && !(← stack.get).contains b then
     stack.modify (·.push b)
@@ -325,6 +348,8 @@ partial def cfcPre (R : Expr) (targets : Array Target) (atom loose conv compose 
       -- the nested run has its own statistics; `cfc_pull?` wants its lemmas too
       for o in nestedUsed do Simp.recordSimpTheorem o
       return .visit (← Simp.mkCongrArg e.appFn! rb)
+  if innerElsewhere then
+    if let some r ← compose? then return .visit r
   if let some r ← Simp.rewrite? e conv.post conv.erased "cfc_pull conv" false then
     return .visit r
   return .done { expr := e }
