@@ -315,22 +315,22 @@ were tried and why they failed, which side goals were generated, or discharged.
 -/
 syntax (name := cfcPull) "cfc_pull" cfcPullConfig (&" only")? (cfcPullLemmas)?
   ppSpace colGt term:max ppSpace colGt term:max (location)?
-  (" => " tacticSeq)? : tactic
+  (" => " colGt tacticSeq)? : tactic
 
 @[inherit_doc cfcPull]
 syntax (name := cfcPullTrace) "cfc_pull?" cfcPullConfig (&" only")? (cfcPullLemmas)?
   ppSpace colGt term:max ppSpace colGt term:max (location)?
-  (" => " tacticSeq)? : tactic
+  (" => " colGt tacticSeq)? : tactic
 
 @[inherit_doc cfcPull]
 syntax (name := cfcPullConv) "cfc_pull" cfcPullConfig (&" only")? (cfcPullLemmas)?
   ppSpace colGt term:max ppSpace colGt term:max
-  (" => " tacticSeq)? : conv
+  (" => " colGt tacticSeq)? : conv
 
 @[inherit_doc cfcPull]
 syntax (name := cfcPullTraceConv) "cfc_pull?" cfcPullConfig (&" only")? (cfcPullLemmas)?
   ppSpace colGt term:max ppSpace colGt term:max
-  (" => " tacticSeq)? : conv
+  (" => " colGt tacticSeq)? : conv
 
 /-- Read the configuration, together with the tactic-valued options and the `(disch := ..)`
 clause, which `elabCFCPullConfig` cannot see. `block` says whether there is a `=> ..` block, which

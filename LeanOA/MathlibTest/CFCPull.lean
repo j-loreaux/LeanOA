@@ -109,7 +109,8 @@ example (ha : IsSelfAdjoint a) :
 
 example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
     a ^ x * a ^ y = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ y) a := by
-  cfc_pull +defer ℝ≥0 a => all_goals fun_prop
+  cfc_pull +defer ℝ≥0 a =>
+    all_goals fun_prop
 
 example (ha : IsStarNormal a) (z : ℂ) :
     NormedSpace.exp (z • a) = cfc (fun w : ℂ ↦ Complex.exp (z * w)) a := by
@@ -195,9 +196,10 @@ example (ha : IsStrictlyPositive a) (b : A) :
       exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
 
 example (ha : IsStarNormal a) (b : A) : star a * a + b = cfc (fun x : ℂ ↦ star x * x) a + b := by
-  conv in star a * a => cfc_pull +defer ℂ a =>
-    case cfc_pull.predicate => exact ha
-    all_goals fun_prop
+  conv in star a * a =>
+    cfc_pull +defer ℂ a =>
+      case cfc_pull.predicate => exact ha
+      all_goals fun_prop
 
 end ConvSideGoals
 
@@ -386,14 +388,16 @@ info: Try this:
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) (b : A) : star a * a + b = cfc (fun x : ℂ ↦ star x * x) a + b := by
-  conv in star a * a => cfc_pull? +defer ℂ a =>
-    case cfc_pull.predicate => exact ha
-    all_goals fun_prop
+  conv in star a * a =>
+    cfc_pull? +defer ℂ a =>
+      case cfc_pull.predicate => exact ha
+      all_goals fun_prop
 
 example (ha : IsStarNormal a) (b : A) : star a * a + b = cfc (fun x : ℂ ↦ star x * x) a + b := by
-  conv in star a * a => cfc_pull +defer only [cfc_star_id, cfc_id', cfc_mul] ℂ a =>
-    case cfc_pull.predicate => exact ha
-    all_goals fun_prop
+  conv in star a * a =>
+    cfc_pull +defer only [cfc_star_id, cfc_id', cfc_mul] ℂ a =>
+      case cfc_pull.predicate => exact ha
+      all_goals fun_prop
 
 end Only
 
