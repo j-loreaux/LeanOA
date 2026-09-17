@@ -617,11 +617,11 @@ def mkOnlyLemmas (used : Simp.UsedSimps) (entries : Array Entry) :
   return ⟨mkNode ``simpArgs #[mkAtom "[", list, mkAtom "]"]⟩
 
 /-- Run `tac` on `g`, returning `true` iff it closes the goal; otherwise restore the state. -/
-def closes (g : MVarId) (tac : TSyntax `tactic) : TacticM Bool := do
+def closes (g : MVarId) (tac : TacticM Unit) : TacticM Bool := do
   let saved ← saveState
   -- runtime exceptions too: `cfc_zero_tac` can loop, on `0 = f 0` say
   let ok ← Term.withoutErrToSorry <| tryCatchRuntimeEx
-    (return (← Tactic.run g (evalTactic tac)).isEmpty) fun _ => pure false
+    (return (← Tactic.run g tac).isEmpty) fun _ => pure false
   unless ok do saved.restore
   return ok
 
@@ -652,8 +652,8 @@ def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := d
           ← `(tactic| exact cfcₙ_predicate _ _)])
     g.setTag tag
     let tacs ← if cfg.defer then pure #[] else pure (#[← `(tactic| assumption)] ++ tacs)
-    let closed ← tacs.anyM fun tac ↦ do closes g (← `(tactic| (intros; $tac)))
-    trace[Tactic.cfc_pull] "side goal {ty}: {if closed then "closed" else "left"}"
+    let closed ← tacs.anyM fun tac ↦ do closes g (evalTactic (← `(tactic| (intros; $tac))))
+    trace[Tactic.cfc_pull] "side goal {ty}: {if closed then "closed" else "unsolved"}"
     unless closed do out := out.push g
   return out.toList
 

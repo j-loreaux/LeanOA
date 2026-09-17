@@ -868,3 +868,9 @@ example [PartialOrder A] [StarOrderedRing A] (ha : IsStrictlyPositive a)
   cfc_pull ℝ a at h =>
     exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
   exact h
+
+example [PartialOrder A] [StarOrderedRing A] (ha : IsStrictlyPositive a)
+    (h : CFC.log a * CFC.log a = b) : CFC.log a * CFC.log a = b := by
+  cfc_pull ℝ a at h ⊢ =>
+    exact Real.continuousOn_log.mono fun x hx h ↦ spectrum.zero_notMem ℝ ha.2 (h ▸ hx)
+  exact h
