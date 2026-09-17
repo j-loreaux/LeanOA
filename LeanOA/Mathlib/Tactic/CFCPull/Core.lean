@@ -191,9 +191,11 @@ def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R)
     if m.isMVar && (← isType m) && (lhs.findMVar? (· == m.mvarId!)).isNone &&
         (lhsTy.findMVar? (· == m.mvarId!)).isNone then
       discard <| isDefEq m S
-  -- an instance that can be found now is, and one that cannot rules the lemma out
+  -- the instances are left to `simp`, which synthesizes them when it rewrites, and only for the
+  -- lemmas it uses. With a guessed type they are what tells a good guess from a bad one: an
+  -- instance that can be found now is, and one that cannot rules the guess out
   for (m, bi) in mvars.zip bis do
-    if bi.isInstImplicit && (← instantiateMVars m).isMVar then
+    if e.freeType && bi.isInstImplicit && (← instantiateMVars m).isMVar then
       let ty ← instantiateMVars (← inferType m)
       unless ty.hasExprMVar do
         let some inst ← synthInstance? ty | return none
@@ -327,10 +329,15 @@ partial def getSetup (roots : Array Expr) (R : Expr) : PullM Setup := do
         -- towards the requested ring
         if d < d' then conv ← e.addTo conv (prio := eval_prio default)
     | .target =>
+      -- a lemma towards a structured element, `φ a`, is of use only if a target is of that shape;
+      -- those with a free type are worth the check, being instantiated at several rings each
+      if e.freeType && e.elemHead.isSome &&
+          !targets.any (·.elem.consumeMData.getAppFn.constName? == e.elemHead) then continue
       for (tg, i) in targets.zipIdx do
         let mut seen : Array Expr := #[]
-        -- the rings of the conversion graph, all of which are constants
-        for S in #[R] ++ dist.map (mkConst ·.1) do
+        -- a type the lemma leaves free is guessed among the rings of the conversion graph, all of
+        -- which are constants
+        for S in if e.freeType then #[R] ++ dist.map (mkConst ·.1) else #[R] do
           let some (prf, bare) ← instantiateTarget R tg e S (constants := !shared[i]!) | continue
           let r ← abstractMVars prf
           if seen.contains r.expr then continue

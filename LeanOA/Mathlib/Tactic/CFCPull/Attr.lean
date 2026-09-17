@@ -55,6 +55,12 @@ structure Entry where
   /-- For `pull` and `target` lemmas: whether the algebraic side has applications of the calculus
   in it (*holes*). A lemma without holes is applied top-down, before its argument is simplified. -/
   holes : Bool := true
+  /-- For `target` lemmas: whether some type appears in neither side of the equation, like the `S`
+  of `StarAlgHomClass.map_cfc`. `cfc_pull` has to guess it, and tries the scalar rings it knows. -/
+  freeType : Bool := false
+  /-- For `pull` and `target` lemmas: the head constant of the element the calculus is applied to,
+  if it is structured: `DFunLike.coe` for the `φ a` of `φ (cfc f a) = cfc f (φ a)`. -/
+  elemHead : Option Name := none
   deriving Inhabited
 
 /-- The environment extension holding the `@[cfc_pull]` lemmas. -/
@@ -128,7 +134,9 @@ where
     let free (x : Expr) := x.isFVar && !alg.containsFVar x.fvarId!
     let kind := if free R || free elem || freeType then .target else .pull
     let holes := (alg.find? fun e ↦ (matchCFC? e).isSome).isSome
-    return #[{ origin, inv, kind, prio, ring := R.getAppFn.constName?, unital, holes }]
+    let ring := R.getAppFn.constName?
+    let elemHead := elem.getAppFn.constName?
+    return #[{ origin, inv, kind, prio, ring, unital, holes, freeType, elemHead }]
 
 /-- Classify a lemma of type `type`, which must be one `cfc_pull` can use. -/
 def mkEntries (origin : Origin) (type : Expr) (prio : Nat) : MetaM (Array Entry) := do
