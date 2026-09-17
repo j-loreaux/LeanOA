@@ -147,6 +147,15 @@ lemma cfc_complex_comp_norm [Algebra ℂ A] [NonnegSpectrumClass ℝ A]
     cfc (f ‖·‖) a = cfc f (abs a) :=
   cfc_comp_norm f a
 
+/-- `CFC.abs_eq_cfcₙ_coe_norm` at `ℂ`, with the coercion `ℝ → ℂ` as it elaborates at `ℂ`, and the
+unital calculus. -/
+lemma CFC.abs_eq_cfc_complex_norm [Algebra ℂ A] [NonnegSpectrumClass ℝ A]
+    [ContinuousFunctionalCalculus ℂ A IsStarNormal] (a : A)
+    (ha : IsStarNormal a := by cfc_tac) :
+    abs a = cfc (fun x : ℂ ↦ (‖x‖ : ℂ)) a :=
+  -- a term, as the two coercions are only equal at default transparency
+  (abs_eq_cfcₙ_coe_norm ℂ a ha).trans cfcₙ_eq_cfc
+
 end Unital
 
 section NonUnital
@@ -169,6 +178,13 @@ lemma cfcₙ_complex_comp_norm [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarT
     (hf : ContinuousOn f ((‖·‖) '' quasispectrum ℂ a) := by cfc_cont_tac) :
     cfcₙ (f ‖·‖) a = cfcₙ f (abs a) :=
   cfcₙ_comp_norm f a
+
+/-- `CFC.abs_eq_cfcₙ_coe_norm` at `ℂ`, with the coercion `ℝ → ℂ` as it elaborates at `ℂ`. -/
+lemma CFC.abs_eq_cfcₙ_complex_norm [Module ℂ A] [SMulCommClass ℂ A A] [IsScalarTower ℂ A A]
+    [NonnegSpectrumClass ℝ A] [NonUnitalContinuousFunctionalCalculus ℂ A IsStarNormal] (a : A)
+    (ha : IsStarNormal a := by cfc_tac) :
+    abs a = cfcₙ (fun x : ℂ ↦ (‖x‖ : ℂ)) a :=
+  abs_eq_cfcₙ_coe_norm ℂ a ha
 
 end NonUnital
 

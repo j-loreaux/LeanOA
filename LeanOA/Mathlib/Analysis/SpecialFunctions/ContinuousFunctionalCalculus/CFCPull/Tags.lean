@@ -98,6 +98,16 @@ attribute [cfc_pull]
 
 attribute [cfc_pull 1100] CFC.real_exp_eq_normedSpace_exp CFC.complex_exp_eq_normedSpace_exp
 
+/- `CFC.abs_def` goes through the calculus over `ℝ≥0`, so pulling `abs a` towards `a` at another
+ring asks for `0 ≤ a`; these express `abs a` as the calculus applied to the norm at `ℝ` and at
+`ℂ`, for a merely self-adjoint or normal `a`. At `ℝ≥0` the ring match still makes `abs_def` win.
+The generic `CFC.abs_eq_cfcₙ_coe_norm` is not tagged: at `ℂ` its coercion `ℝ → ℂ` is
+`RCLike.ofReal`, which is not reducibly `Complex.ofReal`, the coercion a statement at `ℂ`
+elaborates to (the same reason `cfc_complex_comp_norm` exists). -/
+attribute [cfc_pull 1100]
+  CFC.abs_eq_cfcₙ_norm CFC.abs_eq_cfc_norm
+  CFC.abs_eq_cfcₙ_complex_norm CFC.abs_eq_cfc_complex_norm
+
 attribute [cfc_pull 900] cfc_tsub cfcₙ_tsub
 
 /- `CFC.sqrt_eq_cfc_complex_sqrt` and `CFC.sqrt_eq_cfcₙ_complex_sqrt` are not tagged, unlike

@@ -166,7 +166,6 @@ algebra. The arguments this leaves undetermined are metavariables, for the calle
 `simp` synthesizes the instances among them at rewrite time. -/
 def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R) :
     MetaM (Option (Expr × Bool)) := do
-  unless e.unital == t.unital do return none
   let c ← e.proof
   let (mvars, bis, ty) ← forallMetaTelescopeReducing (← inferType c)
   let some (_, lhs, rhs) := ty.eq? | return none
@@ -289,6 +288,8 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
           trace[Tactic.cfc_pull] "{← ppOrigin e.origin} at {tg.elem}: {← inferType prf}"
           let id := .other (e.origin.key ++ `inst)
           if bare then
+            -- the unital and non-unital identity lemmas would otherwise compete on equal terms
+            unless e.unital == tg.unital do continue
             atom ← atom.add id r.paramNames r.expr
           else if e.holes then
             tgt ← tgt.add id r.paramNames r.expr

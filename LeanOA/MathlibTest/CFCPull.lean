@@ -511,6 +511,24 @@ example (f : ℝ → ℝ) (ha : IsSelfAdjoint a)
 
 end AbsNorm
 
+section AbsNormal
+
+/-! ## `abs` of a merely normal element -/
+
+variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {a : A}
+
+example (ha : IsStarNormal a) : CFC.abs a * a = cfc (fun x : ℂ ↦ (‖x‖ : ℂ) * x) a := by
+  cfc_pull ℂ a
+
+example (ha : IsSelfAdjoint a) : CFC.abs a - a = cfc (fun x : ℝ ↦ ‖x‖ - x) a := by
+  cfc_pull ℝ a
+
+example {B : Type*} [NonUnitalCStarAlgebra B] [PartialOrder B] [StarOrderedRing B] {b : B}
+    (hb : IsStarNormal b) : CFC.abs b = cfcₙ (fun x : ℂ ↦ (‖x‖ : ℂ)) b := by
+  cfc_pull ℂ b
+
+end AbsNormal
+
 section Tsub
 
 /-! ## Truncated subtraction over `ℝ≥0` -/
