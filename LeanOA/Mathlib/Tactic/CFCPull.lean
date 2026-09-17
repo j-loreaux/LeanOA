@@ -141,7 +141,7 @@ def boost (dist : Option Name → Option Nat) (unital : Bool) (e : Entry) : Nat 
 
 /-- Distances from the key of `R` in the graph of scalar conversions. -/
 def ringDistances (R : Expr) (entries : Array Entry) : Array (Name × Nat) := Id.run do
-  let some r := ringKey R | return #[]
+  let some r := R.getAppFn.constName? | return #[]
   let edges := entries.filterMap fun e =>
     if e.kind == .conv && e.ring != e.srcRing then
       match e.ring, e.srcRing with
@@ -252,7 +252,7 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
   let distOf (n : Option Name) : Option Nat := n.bind fun n ↦ (dist.find? (·.1 == n)).map (·.2)
   -- a concrete ring that is not a node of the conversion graph is only usable if it is `R`
   let distOf (n : Option Name) : Option Nat :=
-    if n == ringKey R then some 0 else distOf n
+    if n == R.getAppFn.constName? then some 0 else distOf n
   let mut pull : SimpTheorems := {}
   let mut loose : SimpTheorems := {}
   let mut conv : SimpTheorems := {}

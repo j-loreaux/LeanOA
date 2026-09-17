@@ -47,14 +47,14 @@ structure Entry where
   origin : Origin
   /-- Whether `simp` uses it right to left. -/
   inv : Bool
-  /-- Its kind. -/
+  /-- Its `CFCPUll.Kind`: `pull`, `target`, `compose` or `conv`. -/
   kind : Kind
   /-- The attribute priority. -/
   prio : Nat
-  /-- The head constant of the scalar ring of the right-hand side (as `simp` sees it), if it is
+  /-- The head constant of the scalar ring of the right-hand side, if it is
   concrete. -/
   ring : Option Name
-  /-- Whether the right-hand side (as `simp` sees it) is `cfc` rather than `cfcₙ`. -/
+  /-- Whether the right-hand side is `cfc` rather than `cfcₙ`. -/
   unital : Bool
   /-- For `conv` lemmas: the ring of the left-hand side. -/
   srcRing : Option Name := none
@@ -76,9 +76,6 @@ def matchCFC? (e : Expr) : Option (Expr × Bool × Expr × Expr) := do
   let args := e.getAppArgs
   guard <| args.size ≥ 5
   return (args[0]!, unital, args[args.size - 2]!, args[args.size - 1]!)
-
-/-- The head constant of a ring, if concrete. -/
-def ringKey (R : Expr) : Option Name := R.getAppFn.constName?
 
 /-- The lemma as a term, with fresh universe metavariables. -/
 def Entry.proof (e : Entry) : MetaM Expr :=
@@ -112,15 +109,16 @@ def mkEntries (origin : Origin) (type : Expr) (prio : Nat) : MetaM (Array Entry)
             applied to the same element; there is nothing for `cfc_pull` to do with it"
         -- a conversion; record both directions, `cfc_pull` picks one
         return #[
-          { origin, inv := false, kind := .conv, prio, ring := ringKey Rr, unital := ur,
-            srcRing := ringKey Rl, srcUnital := ul },
-          { origin, inv := true, kind := .conv, prio, ring := ringKey Rl, unital := ul,
-            srcRing := ringKey Rr, srcUnital := ur }]
+          { origin, inv := false, kind := .conv, prio, ring := Rr.getAppFn.constName?, unital := ur,
+            srcRing := Rl.getAppFn.constName?, srcUnital := ul },
+          { origin, inv := true, kind := .conv, prio, ring := Rl.getAppFn.constName?, unital := ul,
+            srcRing := Rr.getAppFn.constName?, srcUnital := ur }]
       else
         -- a composition: the side whose element is more complicated goes on the left
         let inv := el.approxDepth < er.approxDepth
         let (R, u) := if inv then (Rl, ul) else (Rr, ur)
-        return #[{ origin, inv, kind := .compose, prio, ring := ringKey R, unital := u }]
+        return #[
+          { origin, inv, kind := .compose, prio, ring := R.getAppFn.constName?, unital := u }]
 where
   /-- A lemma with the calculus on exactly one side, `cfcSide`; `inv` says it is the left one. -/
   pullEntry (xs : Array Expr) (alg cfcSide : Expr) (c : Expr × Bool × Expr × Expr) (inv : Bool) :
@@ -134,7 +132,7 @@ where
     let free (x : Expr) := x.isFVar && !alg.containsFVar x.fvarId!
     let kind := if free R || free elem || freeType then .target else .pull
     let holes := (alg.find? fun e ↦ (matchCFC? e).isSome).isSome
-    return #[{ origin, inv, kind, prio, ring := ringKey R, unital, holes }]
+    return #[{ origin, inv, kind, prio, ring := R.getAppFn.constName?, unital, holes }]
 
 /-- The `cfc_pull` attribute marks lemmas for use by the `cfc_pull` tactic; see the module
 docstring for the shapes it accepts. -/
