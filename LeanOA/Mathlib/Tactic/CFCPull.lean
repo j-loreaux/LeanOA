@@ -19,8 +19,9 @@ of every maximal subexpression whose type is that of `a`: each such subexpressio
 
 It is `simp only` with those lemmas, plus what cannot be expressed without knowing `R` and `a`:
 
-* *targets*: `a`, and the elements that the holes of a lemma with a structured element
-  (`φ (cfc f a) = cfc f (φ a)`) are at when that element is a target, such as `x` in `φ x`;
+* *targets*: `a` (or each of the elements given, if several), and the elements that the holes of
+  a lemma with a structured element (`φ (cfc f a) = cfc f (φ a)`) are at when that element is a
+  target, such as `x` in `φ x`;
 * the `target` lemmas (`a = cfc id a`, `1 = cfc 1 a`, `star b = cfc star b`, ..), whose algebraic
   side does not determine the ring, instantiated at `R` (and, when the left-hand side is the bare
   element, at the target);
@@ -28,7 +29,10 @@ It is `simp only` with those lemmas, plus what cannot be expressed without knowi
 * one pre-simproc on `cfc f b` / `cfcₙ f b`, which applies composition lemmas, simplifies `b`
   (never `f`) unless `b` is a target, and converts the scalar ring and unitality towards the
   requested ones (conversion lemmas are included only in that direction, so they cannot loop);
-* one post-simproc, which flips the unitality of an argument when no lemma applies otherwise.
+* one post-simproc, which flips the unitality of an argument when no lemma applies otherwise;
+  and, when there are several elements of one type, pulls a constant argument towards the target
+  the other arguments are at (`siblingPost`): the `target` lemmas for constants, which would send
+  every `1` to the first target, are then left out.
 
 The lemmas are the real ones, hypotheses included. `simp` rejects a rewrite whose proof contains
 an assignable metavariable, so the discharger cannot leave a goal behind; instead it fills each
@@ -106,12 +110,12 @@ def mkTarget? (cfg : Config) (R s : Expr) : MetaM (Option Target) := do
   if ← hasCFC false R alg then return some { elem := s, alg, unital := false }
   return none
 
-/-- The targets: `t` itself, and the elements that the holes of a lemma with a
+/-- The targets: the `roots` themselves, and the elements that the holes of a lemma with a
 structured element (`φ (cfc f a) = cfc f (φ a)`) are at when that element is a target. -/
-partial def findTargets (cfg : Config) (entries : Array Entry) (R t : Expr) :
+partial def findTargets (cfg : Config) (entries : Array Entry) (R : Expr) (roots : Array Expr) :
     MetaM (Array Target) := do
-  let some tg ← mkTarget? cfg R t | return #[]
-  go #[tg] #[t]
+  let tgs ← roots.filterMapM (mkTarget? cfg R)
+  go tgs (tgs.map (·.elem)).reverse
 where
   go (out : Array Target) (todo : Array Expr) : MetaM (Array Target) := do
     let some t := todo.back? | return out
@@ -185,8 +189,8 @@ def ringDistances (R : Expr) (entries : Array Entry) : Array (Name × Nat) := Id
 target itself if the left-hand side is the bare element, or else any element of the target's
 algebra. The arguments this leaves undetermined are metavariables, for the caller to abstract;
 `simp` synthesizes the instances among them at rewrite time. -/
-def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R) :
-    MetaM (Option (Expr × Bool)) := do
+def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R)
+    (constants : Bool := true) : MetaM (Option (Expr × Bool)) := do
   let c ← e.proof
   let (mvars, bis, ty) ← forallMetaTelescopeReducing (← inferType c)
   let some (_, lhs, rhs) := ty.eq? | return none
@@ -197,6 +201,8 @@ def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R) :
   unless ← isDefEq (← inferType elem) t.alg do return none
   -- an element the left-hand side does not determine must be the target
   if elem.isMVar then
+    -- a constant (`1 = cfc 1 a`) is any target's, which is of no use when there are several
+    unless constants || (lhs.findMVar? (· == elem.mvarId!)).isSome do return none
     unless ← isDefEq elem t.elem do return none
   -- a type nothing determines (the `S` of an `AlgHomClass F S A B`, which is not an `outParam`)
   -- is taken to be `S`; the caller tries `R` and the rings of the conversion graph
@@ -262,14 +268,20 @@ def congrArgs (e : Expr) (rs : Array (Nat × Simp.Result)) : MetaM Simp.Result :
 
 mutual
 
-/-- The simp context and simprocs pulling towards `R`, cached per ring. -/
-partial def getSetup (cfg : Config) (t : Expr) (lems : Lemmas) (disch : Simp.Discharge)
-    (cache : IO.Ref (Array (Expr × Setup))) (stack : IO.Ref (Array Expr)) (R : Expr) :
-    MetaM Setup := do
+/-- The simp context and simprocs pulling towards the `roots` at `R`, cached per ring and
+roots. -/
+partial def getSetup (cfg : Config) (lems : Lemmas) (disch : Simp.Discharge)
+    (cache : IO.Ref (Array (Expr × Array Expr × Setup))) (stack : IO.Ref (Array Expr))
+    (roots : Array Expr) (R : Expr) : MetaM Setup := do
   let entries := lems.entries
-  for (R', s) in ← cache.get do
-    if ← withNewMCtxDepth <| isDefEq R R' then return s
-  let targets ← findTargets cfg entries R t
+  for (R', roots', s) in ← cache.get do
+    if roots == roots' && (← withNewMCtxDepth <| isDefEq R R') then return s
+  let targets ← findTargets cfg entries R roots
+  -- a constant belongs to no target in particular if another root shares the algebra
+  let shared ← targets.mapM fun tg ↦ do
+    let same ← roots.filterM fun r ↦ do
+      withNewMCtxDepth <| isDefEq (← inferType r) tg.alg
+    return decide (same.size > 1)
   let dist := ringDistances R entries
   let distOf (n : Option Name) : Option Nat := n.bind fun n ↦ (dist.find? (·.1 == n)).map (·.2)
   -- a concrete ring that is not a node of the conversion graph is only usable if it is `R`
@@ -310,7 +322,7 @@ partial def getSetup (cfg : Config) (t : Expr) (lems : Lemmas) (disch : Simp.Dis
         let mut seen : Array Expr := #[]
         -- the rings of the conversion graph, all of which are constants
         for S in #[R] ++ dist.map (mkConst ·.1) do
-          let some (prf, bare) ← instantiateTarget R tg e S | continue
+          let some (prf, bare) ← instantiateTarget R tg e S (constants := !shared[i]!) | continue
           let r ← abstractMVars prf
           if seen.contains r.expr then continue
           seen := seen.push r.expr
@@ -326,16 +338,18 @@ partial def getSetup (cfg : Config) (t : Expr) (lems : Lemmas) (disch : Simp.Dis
             loose ← loose.add id r.paramNames r.expr (prio := prio e i)
   -- the rest of the list first: it is what the user asked for
   let ctx := lems.ctx.setSimpTheorems (lems.ctx.simpTheorems ++ #[pull, tgt])
-  let procs := getSetup cfg t lems disch cache stack
+  let procs := getSetup cfg lems disch cache stack
+  let post : Simp.Simproc := if shared.any id then
+      flipPost flip #[pull, tgt] >> siblingPost targets (procs · R)
+    else flipPost flip #[pull, tgt]
   let simprocs : Simp.Simprocs := {
     pre := DiscrTree.empty.insertKeyValue #[.star]
       { declName := `cfcPullPre, post := false, keys := #[.star],
-        proc := .inl (cfcPre R targets atom loose conv compose stack procs) }
+        proc := .inl (cfcPre R targets atom loose conv compose stack (procs roots)) }
     post := DiscrTree.empty.insertKeyValue #[.star]
-      { declName := `cfcPullFlip, post := true, keys := #[.star],
-        proc := .inl (flipPost flip #[pull, tgt]) } }
+      { declName := `cfcPullPost, post := true, keys := #[.star], proc := .inl post } }
   let s := { ctx, simprocs := #[simprocs] ++ lems.simprocs, disch }
-  cache.modify (·.push (R, s))
+  cache.modify (·.push (R, roots, s))
   return s
 
 /-- The pre-simproc. A target is wrapped as `cfc id a` before `simp` can look inside it. On
@@ -418,7 +432,41 @@ partial def flipPost (flip : SimpTheorems) (thms : Array SimpTheorems) : Simp.Si
   modify fun s => { s with usedTheorems := used }
   return .continue
 
+/-- The post-simproc for several targets in one algebra, where a constant (`1`, `algebraMap R A r`,
+`1 + 1`) is not pulled on sight, there being no telling towards which target. Here it is an
+argument next to applications of the calculus that are all at one target, and is pulled towards
+that one alone. -/
+partial def siblingPost (targets : Array Target) (setup : Array Expr → MetaM Setup) :
+    Simp.Simproc := fun e => do
+  if (matchCFC? e).isSome then return .continue
+  let args := e.getAppArgs
+  let mut elems : Array Expr := #[]
+  for arg in args do
+    if let some (_, _, _, b) := matchCFC? arg then
+      if (← isTargetElem targets b) && !elems.contains b then elems := elems.push b
+  let #[b] := elems | return .continue
+  let alg ← inferType b
+  let mut pulled : Array (Nat × Simp.Result) := #[]
+  for h : i in [0:args.size] do
+    let arg := args[i]
+    if (matchCFC? arg).isSome then continue
+    unless ← withReducible <| isDefEq (← inferType arg) alg do continue
+    let s ← setup #[b]
+    let (r, stats) ← Simp.main arg s.ctx
+      (methods := Simp.mkMethods s.simprocs s.disch (wellBehavedDischarge := false))
+    let some (_, _, _, b') := matchCFC? r.expr | continue
+    unless b' == b do continue
+    for o in stats.usedTheorems.toArray do Simp.recordSimpTheorem o
+    pulled := pulled.push (i, r)
+  if pulled.isEmpty then return .continue
+  let some r ← (try some <$> congrArgs e pulled catch _ => pure none) | return .continue
+  return .visit r
+
 end
+
+/-- The elements `cfc_pull` pulls towards. What follows them, `only` and `[..]`, would otherwise
+be read as one more. -/
+syntax cfcPullElems := (ppSpace colGt !&"only" !"[" term:max)+
 
 /--
 `cfc_pull R a` rewrites the goal so that the continuous functional calculus is at the head of
@@ -438,6 +486,10 @@ example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by
 * `cfc_pull R a`: with `a : A` attempts to write maximal subexpressions of the goal with type `A`
   in the form `cfc f a` for some function `f : R → R`, wherever they occur: under binders, and
   inside terms of other types. Side goals that cannot be discharged automatically are left open.
+* `cfc_pull R a b`: pull towards several elements at once, each subexpression towards the element
+  it is an expression in. When two of the elements have the same type, a constant (`1`,
+  `algebraMap R A r`) is pulled towards the element its neighbours are at, as the `1` of `b + 1`
+  is, and left alone if it has none.
 * `cfc_pull R a at h₁ h₂ ⊢`: rewrite the hypotheses `h₁` and `h₂` in the same way, and the goal
   (without `⊢`, the goal is left alone); `cfc_pull R a at *` rewrites everywhere it can.
 * `cfc_pull -unital R a`: the same, but for `cfcₙ` instead; if only a non-unital instance of
@@ -449,16 +501,16 @@ example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by
   `cfc_pull.mapZero` and `cfc_pull.side`.
 * `cfc_pull +defer R a => tacticSeq`: attempt to discharge no side goals, and hand all of them to
   the `=> ..` block.
-* `cfc_pull [lemma1, -lemma2, h, e] R a`: the list is that of `simp`. An equation with `cfc` or
+* `cfc_pull R a [lemma1, -lemma2, h, e]`: the list is that of `simp`. An equation with `cfc` or
   `cfcₙ` at the head of a side, such as `lemma1`, the local hypothesis `h`, or a term `hg n`, is
   added to the lemmas used by `cfc_pull`, as if it were tagged `@[cfc_pull]` (`cfc_pull` orients
   it, so `←`, `↓` and `↑` have no effect); `-lemma2` removes `lemma2`. Everything else is handed
   to `simp` as it is: rewrite rules, definitions and `let`-variables to unfold, simp sets,
   simprocs, `*`.
-* `cfc_pull only [lemma1, lemma2] R a`: use only `lemma1` and `lemma2`, not the `@[cfc_pull]`
+* `cfc_pull R a only [lemma1, lemma2]`: use only `lemma1` and `lemma2`, not the `@[cfc_pull]`
   lemmas.
 * `cfc_pull? R a`: the same as `cfc_pull R a`, but suggests replacing itself with
-  `cfc_pull only [..] R a`, listing the lemmas the rewrite used.
+  `cfc_pull R a only [..]`, listing the lemmas the rewrite used.
 
 Side goals are first attempted with a tactic chosen by their kind: `cfc_cont_tac` for continuity,
 `cfc_zero_tac` for `f 0 = 0`, and the predicate lemmas `cfc_predicate`/`cfcₙ_predicate` followed
@@ -467,20 +519,20 @@ by `cfc_tac` for the predicate of the calculus; `assumption` is tried on all of 
 Tracing of the `simp` call is available with `set_option trace.Meta.Tactic.simp true`, and of the
 side goals with `set_option trace.Tactic.cfc_pull true`.
 -/
-syntax (name := cfcPull) "cfc_pull" optConfig (&" only")? (simpArgs)? ppSpace colGt term:max
-  ppSpace colGt term:max (location)? (" => " colGt tacticSeq)? : tactic
+syntax (name := cfcPull) "cfc_pull" optConfig ppSpace colGt term:max cfcPullElems (&" only")?
+  (simpArgs)? (location)? (" => " colGt tacticSeq)? : tactic
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullTrace) "cfc_pull?" optConfig (&" only")? (simpArgs)? ppSpace colGt
-  term:max ppSpace colGt term:max (location)? (" => " colGt tacticSeq)? : tactic
+syntax (name := cfcPullTrace) "cfc_pull?" optConfig ppSpace colGt term:max cfcPullElems
+  (&" only")? (simpArgs)? (location)? (" => " colGt tacticSeq)? : tactic
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullConv) "cfc_pull" optConfig (&" only")? (simpArgs)? ppSpace colGt
-  term:max ppSpace colGt term:max (" => " colGt tacticSeq)? : conv
+syntax (name := cfcPullConv) "cfc_pull" optConfig ppSpace colGt term:max cfcPullElems (&" only")?
+  (simpArgs)? (" => " colGt tacticSeq)? : conv
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullTraceConv) "cfc_pull?" optConfig (&" only")? (simpArgs)? ppSpace
-  colGt term:max ppSpace colGt term:max (" => " colGt tacticSeq)? : conv
+syntax (name := cfcPullTraceConv) "cfc_pull?" optConfig ppSpace colGt term:max cfcPullElems
+  (&" only")? (simpArgs)? (" => " colGt tacticSeq)? : conv
 
 /-- Discharge a hypothesis with a local hypothesis if there is one, and otherwise with a
 placeholder. `simp` rejects a rewrite whose proof contains an assignable metavariable, so the
@@ -575,13 +627,15 @@ def elabLemmas (only : Bool) (args? : Option (TSyntax ``simpArgs)) : TacticM Lem
 
 /-- Elaborate the arguments of `cfc_pull`. -/
 def elabArgs (cfgStx : TSyntax ``optConfig) (only : Bool)
-    (lems? : Option (TSyntax ``simpArgs)) (ring elem : Term) :
+    (lems? : Option (TSyntax ``simpArgs)) (ring : Term) (elems : TSyntax ``cfcPullElems) :
     TacticM (Config × Setup × Array Entry) := do
   let cfg ← elabConfig cfgStx
   let R ← instantiateMVars (← Term.elabType ring)
-  let t ← Term.elabTermAndSynthesize elem none
+  -- each is a `group`, of which the term is the last component
+  let ts ← elems.raw[0].getArgs.mapM fun g ↦
+    Term.elabTermAndSynthesize g[g.getNumArgs - 1] none
   let lems ← elabLemmas only lems?
-  let s ← getSetup cfg t lems (deferDischarge !cfg.defer) (← IO.mkRef #[]) (← IO.mkRef #[]) R
+  let s ← getSetup cfg lems (deferDischarge !cfg.defer) (← IO.mkRef #[]) (← IO.mkRef #[]) ts R
   return (cfg, s, lems.entries)
 
 /-- The lemma list `cfc_pull?` suggests. First the lemmas among `entries` that the run used, in
@@ -671,14 +725,15 @@ def dischargeSideGoals (cfg : Config) (proof : Expr) (arrow? : Option Syntax)
 @[tactic cfcPull, tactic cfcPullTrace]
 def evalCFCPull : Tactic := fun stx => withMainContext do
   let (tk, cfgStx, only?, lems?, ring, elem, loc?, arrow?, tac?) ← match stx with
-    | `(tactic| cfc_pull%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
+    | `(tactic| cfc_pull%$tk $cfgStx:optConfig $ring $elem $[only%$only?]? $[$lems?]?
         $[$loc?:location]? $[=>%$arrow? $tac?]?)
-    | `(tactic| cfc_pull?%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
+    | `(tactic| cfc_pull?%$tk $cfgStx:optConfig $ring $elem $[only%$only?]? $[$lems?]?
         $[$loc?:location]? $[=>%$arrow? $tac?]?) =>
       pure (tk, cfgStx, only?, lems?, ring, elem, loc?, arrow?, tac?)
     | _ => throwUnsupportedSyntax
   withRef tk do
   let (cfg, s, entries) ← elabArgs cfgStx only?.isSome lems? ring elem
+  let last : Array Syntax := only?.toArray ++ (lems?.map (·.raw)).toArray
   let root ← getMainGoal
   let loc := expandOptLocation (mkOptionalNode loc?)
   let stats ← simpLocation s.ctx s.simprocs s.disch loc
@@ -687,31 +742,32 @@ def evalCFCPull : Tactic := fun stx => withMainContext do
     if loc matches .wildcard || loc matches .targets _ true then
       evalTactic (← `(tactic| try with_reducible rfl))
   if stx.isOfKind ``cfcPullTrace then
-    -- only the part up to the element is replaced, leaving any location and block as written
+    -- only the part up to the lemma list is replaced, leaving any location and block as written
     let lems ← mkOnlyLemmas stats.usedTheorems entries
-    let sugg ← `(tactic| cfc_pull%$tk $cfgStx:optConfig only $lems $ring $elem)
-    TryThis.addSuggestion tk sugg (origSpan? := mkNullNode #[tk, elem])
+    let sugg ← `(tactic| cfc_pull%$tk $cfgStx:optConfig $ring $elem only $lems)
+    TryThis.addSuggestion tk sugg (origSpan? := mkNullNode (#[tk, elem] ++ last))
   root.assign (← dischargeSideGoals cfg (.mvar root) arrow? tac?)
 
 @[tactic cfcPullConv, tactic cfcPullTraceConv]
 def evalCFCPullConv : Tactic := fun stx => withMainContext do
   let (tk, cfgStx, only?, lems?, ring, elem, arrow?, tac?) ← match stx with
-    | `(conv| cfc_pull%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
+    | `(conv| cfc_pull%$tk $cfgStx:optConfig $ring $elem $[only%$only?]? $[$lems?]?
         $[=>%$arrow? $tac?]?)
-    | `(conv| cfc_pull?%$tk $cfgStx:optConfig $[only%$only?]? $[$lems?]? $ring $elem
+    | `(conv| cfc_pull?%$tk $cfgStx:optConfig $ring $elem $[only%$only?]? $[$lems?]?
         $[=>%$arrow? $tac?]?) =>
       pure (tk, cfgStx, only?, lems?, ring, elem, arrow?, tac?)
     | _ => throwUnsupportedSyntax
   withRef tk do
   let (cfg, s, entries) ← elabArgs cfgStx only?.isSome lems? ring elem
+  let last : Array Syntax := only?.toArray ++ (lems?.map (·.raw)).toArray
   let lhs ← instantiateMVars (← Conv.getLhs)
   let (r, stats) ← Simp.main lhs s.ctx
     (methods := Simp.mkMethods s.simprocs s.disch (wellBehavedDischarge := false))
   if r.expr == lhs then throwError "`cfc_pull` made no progress"
   if stx.isOfKind ``cfcPullTraceConv then
     let lems ← mkOnlyLemmas stats.usedTheorems entries
-    let sugg ← `(conv| cfc_pull%$tk $cfgStx:optConfig only $lems $ring $elem)
-    TryThis.addSuggestion tk sugg (origSpan? := mkNullNode #[tk, elem])
+    let sugg ← `(conv| cfc_pull%$tk $cfgStx:optConfig $ring $elem only $lems)
+    TryThis.addSuggestion tk sugg (origSpan? := mkNullNode (#[tk, elem] ++ last))
   let proof ← dischargeSideGoals cfg (← r.getProof) arrow? tac?
   Conv.applySimpResult { r with proof? := some proof }
 

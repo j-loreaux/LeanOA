@@ -101,7 +101,7 @@ example (f : ℝ≥0 → ℝ≥0) (hf0 : f 0 = 0)
   cfc_pull -unital ℝ≥0 (CFC.sqrt (a ^ 2))
 
 example (ha : 0 ≤ a) : CFC.sqrt a * CFC.sqrt a = cfc (fun x : ℂ ↦ x.sqrt * x.sqrt) a := by
-  cfc_pull [CFC.sqrt_eq_cfc_complex_sqrt] ℂ a
+  cfc_pull ℂ a [CFC.sqrt_eq_cfc_complex_sqrt]
 
 example : a⁺ - a⁻ = cfcₙ (fun x : ℝ ↦ x⁺ - x⁻) a := by
   cfc_pull -unital ℝ a
@@ -117,7 +117,7 @@ example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
 
 example (ha : IsStarNormal a) (z : ℂ) :
     NormedSpace.exp (z • a) = cfc (fun w : ℂ ↦ Complex.exp (z * w)) a := by
-  cfc_pull [cfc_comp_smul] ℂ a
+  cfc_pull ℂ a [cfc_comp_smul]
 
 example (ha : IsSelfAdjoint a) :
     CFC.log (NormedSpace.exp a) = cfc (fun x : ℝ ↦ Real.log (Real.exp x)) a := by
@@ -216,20 +216,67 @@ example (ha : IsStarNormal a) :
     let u : A := star a; let v : A := u * a
     v = cfc (fun x : ℂ ↦ star x * x) a := by
   extract_lets u v
-  cfc_pull [u, v] ℂ a
+  cfc_pull ℂ a [u, v]
 
 /--
 info: Try this:
-  [apply] cfc_pull only [cfc_star_id, cfc_id', cfc_mul, v, u] ℂ a
+  [apply] cfc_pull ℂ a only [cfc_star_id, cfc_id', cfc_mul, v, u]
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) :
     let u : A := star a; let v : A := u * a
     v = cfc (fun x : ℂ ↦ star x * x) a := by
   extract_lets u v
-  cfc_pull? [u, v] ℂ a
+  cfc_pull? ℂ a [u, v]
 
 end LetBound
+
+section Several
+
+/-! ## Several elements -/
+
+variable {A : Type*} [CStarAlgebra A] {a b : A}
+
+/- Each subexpression is pulled towards the element it is an expression in. -/
+example (ha : IsStarNormal a) (hb : IsStarNormal b) :
+    a * a * (b + star b) = cfc (fun x : ℂ ↦ x * x) a * cfc (fun x : ℂ ↦ x + star x) b := by
+  cfc_pull ℂ a b
+
+/- A constant is pulled towards the element its neighbours are at. -/
+example (ha : IsStarNormal a) (hb : IsStarNormal b) :
+    (a * a + 1) * (2 + b + (1 + 1)) =
+      cfc (fun x : ℂ ↦ x * x + 1) a * cfc (fun x : ℂ ↦ 2 + x + (1 + 1)) b := by
+  cfc_pull ℂ a b
+
+example (ha : IsStarNormal a) (hb : IsStarNormal b) (z : ℂ) :
+    algebraMap ℂ A z = cfc (fun x : ℂ ↦ x - x + z) b := by
+  cfc_pull ℂ a b
+  guard_target = cfc (fun _ : ℂ ↦ z) b = cfc (fun x : ℂ ↦ x - x + z) b
+  exact cfc_congr fun x _ ↦ by simp
+
+example (ha : IsStarNormal a) (hb : IsStarNormal b) :
+    a * (1 + 1) * b = cfc (fun x : ℂ ↦ x * (1 + 1)) a * cfc (fun x : ℂ ↦ x) b := by
+  cfc_pull ℂ a b
+
+/- Standing alone, it is left as it is when there are multiple targets. -/
+example (ha : IsStarNormal a) (hb : IsStarNormal b) (c : A) (h : c = 1 + 1) : (1 : A) + 1 = c := by
+  fail_if_success cfc_pull ℂ a b
+  exact h.symm
+
+/- With one element, a constant is that element's. -/
+example (ha : IsStarNormal a) : (1 : A) + 1 = cfc (fun _ : ℂ ↦ 1 + 1) a := by
+  cfc_pull ℂ a
+
+/--
+info: Try this:
+  [apply] cfc_pull ℂ a b only [cfc_id', cfc_mul, cfc_const_one, cfc_add]
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) (hb : IsStarNormal b) :
+    a * a * (b + 1) = cfc (fun x : ℂ ↦ x * x) a * cfc (fun x : ℂ ↦ x + 1) b := by
+  cfc_pull? ℂ a b
+
+end Several
 
 section LemmaList
 
@@ -249,7 +296,7 @@ theorem cfc_sq (f : ℂ → ℂ) (a : A)
 
 
 example (ha : IsStarNormal a) : sq a = cfc (fun x : ℂ ↦ x * x) a := by
-  cfc_pull [cfc_sq] ℂ a
+  cfc_pull ℂ a [cfc_sq]
 
 
 
@@ -265,37 +312,37 @@ variable {A : Type*} [CStarAlgebra A] {a : A}
 /- A hypothesis is a rewrite rule like any other; here it outranks `cfc_star_id`. -/
 example (ha : IsStarNormal a) (f : ℂ → ℂ) (hf : star a = cfc f a) (hf' : Continuous f) :
     star a * a = cfc (fun x ↦ f x * x) a := by
-  cfc_pull [hf] ℂ a
+  cfc_pull ℂ a [hf]
 
 /- With the calculus on the left: a composition with the inner element `a ^ 2`. -/
 example (ha : IsStarNormal a) (f : ℂ → ℂ) (hf : Continuous f)
     (h : cfc f (a ^ 2) = cfc (fun x ↦ f (x ^ 2)) a) :
     cfc f (a ^ 2) + a = cfc (fun x ↦ f (x ^ 2) + x) a := by
-  cfc_pull [h] ℂ a
+  cfc_pull ℂ a [h]
 
 /- Quantified hypotheses work too. -/
 example (ha : IsStarNormal a) (g : ℕ → A) (hg : ∀ n, g n = cfc (fun x : ℂ ↦ x ^ n) a) :
     g 2 * g 3 = cfc (fun x : ℂ ↦ x ^ 2 * x ^ 3) a := by
-  cfc_pull [hg] ℂ a
+  cfc_pull ℂ a [hg]
 
 /- As do terms. -/
 example (ha : IsStarNormal a) (g : ℕ → A) (hg : ∀ n, g n = cfc (fun x : ℂ ↦ x ^ n) a) :
     g 2 * g 3 = cfc (fun x : ℂ ↦ x ^ 2 * x ^ 3) a := by
-  cfc_pull [hg 2, hg _] ℂ a
+  cfc_pull ℂ a [hg 2, hg _]
 
 /--
 info: Try this:
-  [apply] cfc_pull only [hg 2, hg _, cfc_mul] ℂ a
+  [apply] cfc_pull ℂ a only [hg 2, hg _, cfc_mul]
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) (g : ℕ → A) (hg : ∀ n, g n = cfc (fun x : ℂ ↦ x ^ n) a) :
     g 2 * g 3 = cfc (fun x : ℂ ↦ x ^ 2 * x ^ 3) a := by
-  cfc_pull? [hg 2, hg _] ℂ a
+  cfc_pull? ℂ a [hg 2, hg _]
 
 /- `*` is all the hypotheses, the ones `cfc_pull` can use classified. -/
 example (ha : IsStarNormal a) (b : A) (hb : b = a * a) (f : ℂ → ℂ) (hf : star a = cfc f a)
     (hf' : Continuous f) : star a * b = cfc (fun x ↦ f x * (x * x)) a := by
-  cfc_pull [*] ℂ a
+  cfc_pull ℂ a [*]
 
 end Hypotheses
 
@@ -310,20 +357,20 @@ def LemmaListTest.cube (a : A) : A := a * a * a
 /- A definition to unfold, a rewrite rule, a reversed one. -/
 example (ha : IsStarNormal a) (b c : A) (hb : b = a * a) (hc : star a = c) :
     LemmaListTest.cube a + b + c = cfc (fun x : ℂ ↦ x * x * x + x * x + star x) a := by
-  cfc_pull [LemmaListTest.cube, hb, ← hc] ℂ a
+  cfc_pull ℂ a [LemmaListTest.cube, hb, ← hc]
 
 /--
 info: Try this:
-  [apply] cfc_pull only [cfc_id', cfc_mul, cfc_add, cfc_star_id, LemmaListTest.cube, hb, ← hc] ℂ a
+  [apply] cfc_pull ℂ a only [cfc_id', cfc_mul, cfc_add, cfc_star_id, LemmaListTest.cube, hb, ← hc]
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) (b c : A) (hb : b = a * a) (hc : star a = c) :
     LemmaListTest.cube a + b + c = cfc (fun x : ℂ ↦ x * x * x + x * x + star x) a := by
-  cfc_pull? [LemmaListTest.cube, hb, ← hc] ℂ a
+  cfc_pull? ℂ a [LemmaListTest.cube, hb, ← hc]
 
 example (ha : IsStarNormal a) (b c : A) (hb : b = a * a) (hc : star a = c) :
     LemmaListTest.cube a + b + c = cfc (fun x : ℂ ↦ x * x * x + x * x + star x) a := by
-  cfc_pull only [cfc_id', cfc_mul, cfc_add, cfc_star_id, LemmaListTest.cube, hb, ← hc] ℂ a
+  cfc_pull ℂ a only [cfc_id', cfc_mul, cfc_add, cfc_star_id, LemmaListTest.cube, hb, ← hc]
 
 end Simp
 
@@ -344,18 +391,18 @@ ha : IsStarNormal a
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) : a * a = cfc (fun x : ℂ ↦ x * x) a := by
-  cfc_pull [-cfc_mul, -cfcₙ_mul] ℂ a
+  cfc_pull ℂ a [-cfc_mul, -cfcₙ_mul]
 
 /- With `cfc_mul` alone gone, `cfcₙ_mul` and the unitality conversion take over. -/
 example (ha : IsStarNormal a) : a * a = cfc (fun x : ℂ ↦ x * x) a := by
-  cfc_pull [-cfc_mul] ℂ a
+  cfc_pull ℂ a [-cfc_mul]
 
 /--
 error: `Nat.add_comm` is not in the `cfc_pull` lemma set, so `-Nat.add_comm` has nothing to remove
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) : a * a = cfc (fun x : ℂ ↦ x * x) a := by
-  cfc_pull [-Nat.add_comm] ℂ a
+  cfc_pull ℂ a [-Nat.add_comm]
 
 end Erase
 
@@ -371,14 +418,14 @@ open scoped NNReal
 
 /--
 info: Try this:
-  [apply] cfc_pull only [cfc_star_id, cfc_id', cfc_mul] ℂ a
+  [apply] cfc_pull ℂ a only [cfc_star_id, cfc_id', cfc_mul]
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
   cfc_pull? ℂ a
 
 example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
-  cfc_pull only [cfc_star_id, cfc_id', cfc_mul] ℂ a
+  cfc_pull ℂ a only [cfc_star_id, cfc_id', cfc_mul]
 
 /--
 error: unsolved goals
@@ -392,13 +439,13 @@ ha : IsStarNormal a
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
-  cfc_pull only [cfc_star_id, cfc_id'] ℂ a
+  cfc_pull ℂ a only [cfc_star_id, cfc_id']
 
 /- The suggestion replaces everything up to the element, keeping the configuration and leaving any
 location or `=> ..` block as it is; lemmas used at several locations are listed once. -/
 /--
 info: Try this:
-  [apply] cfc_pull +defer only [CFC.rpow_def, cfc_mul] ℝ≥0 a
+  [apply] cfc_pull +defer ℝ≥0 a only [CFC.rpow_def, cfc_mul]
 -/
 #guard_msgs in
 example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
@@ -407,12 +454,12 @@ example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
 
 example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
     a ^ x * a ^ y = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ y) a := by
-  cfc_pull +defer only [CFC.rpow_def, cfc_mul] ℝ≥0 a => all_goals fun_prop
+  cfc_pull +defer ℝ≥0 a only [CFC.rpow_def, cfc_mul] => all_goals fun_prop
 
 /- `at *` visits the hypotheses first, `ha` included, so `cfc_id'` is used before `cfc_star_id`. -/
 /--
 info: Try this:
-  [apply] cfc_pull only [cfc_id', cfc_star_id, cfc_mul] ℂ a
+  [apply] cfc_pull ℂ a only [cfc_id', cfc_star_id, cfc_mul]
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) (h : star a * a = b) : star a * a = b := by
@@ -422,16 +469,16 @@ example (ha : IsStarNormal a) (h : star a * a = b) : star a * a = b := by
 /- A hypothesis in the list is suggested by name. -/
 /--
 info: Try this:
-  [apply] cfc_pull only [hf, cfc_id', cfc_mul] ℂ a
+  [apply] cfc_pull ℂ a only [hf, cfc_id', cfc_mul]
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) (f : ℂ → ℂ) (hf : star a = cfc f a) (hf' : Continuous f) :
     star a * a = cfc (fun x ↦ f x * x) a := by
-  cfc_pull? [hf] ℂ a
+  cfc_pull? ℂ a [hf]
 
 /--
 info: Try this:
-  [apply] cfc_pull only [cfc_star_id, cfc_id', cfc_mul] ℂ a
+  [apply] cfc_pull ℂ a only [cfc_star_id, cfc_id', cfc_mul]
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) (b : A) : star a * a + b = cfc (fun x : ℂ ↦ star x * x) a + b := by
@@ -449,7 +496,7 @@ open scoped NNReal
 
 
 example (ha : IsStarNormal a) : star a * a = cfc (fun x : ℂ ↦ star x * x) a := by
-  cfc_pull [cfc_star_id, cfc_id', cfc_mul] ℂ a
+  cfc_pull ℂ a [cfc_star_id, cfc_id', cfc_mul]
 
 
 /- The suggestion replaces everything up to the element, keeping the configuration and leaving any
@@ -457,14 +504,14 @@ location or `=> ..` block as it is; lemmas used at several locations are listed 
 
 example (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) :
     a ^ x * a ^ y = cfc (fun t : ℝ≥0 ↦ t ^ x * t ^ y) a := by
-  cfc_pull +defer [CFC.rpow_def, cfc_mul] ℝ≥0 a => all_goals fun_prop
+  cfc_pull +defer ℝ≥0 a [CFC.rpow_def, cfc_mul] => all_goals fun_prop
 
 
 
 
 example (ha : IsStarNormal a) (b : A) : star a * a + b = cfc (fun x : ℂ ↦ star x * x) a + b := by
   conv in star a * a =>
-    cfc_pull +defer [cfc_star_id, cfc_id', cfc_mul] ℂ a =>
+    cfc_pull +defer ℂ a [cfc_star_id, cfc_id', cfc_mul] =>
       -- `IsStarNormal a` is a class, so `simp` finds `ha` by instance synthesis: no predicate goal
       all_goals fun_prop
 
@@ -813,7 +860,7 @@ error: `cfc_pull`: both sides of `h` are the same calculus applied to the same e
 -/
 #guard_msgs in
 example (ha : IsStarNormal a) (f g : ℂ → ℂ) (h : cfc f a = cfc g a) : cfc f a = cfc g a := by
-  cfc_pull [h] ℂ a
+  cfc_pull ℂ a [h]
 
 /- Inside the calculus, an inner element that does not become the calculus applied to something
 is left alone: `cfc f (a + b)` does not become `cfc f (cfc id a + b)`. -/
@@ -830,7 +877,7 @@ variable {A B : Type*} [CStarAlgebra A] [CStarAlgebra B] {a : A}
 /- The lemma for the specific homomorphism is preferred to the one for the class. -/
 /--
 info: Try this:
-  [apply] cfc_pull only [StarAlgHom.map_cfc] ℂ (φ a)
+  [apply] cfc_pull ℂ (φ a) only [StarAlgHom.map_cfc]
 -/
 #guard_msgs in
 example (φ : A →⋆ₐ[ℂ] B) (ha : IsStarNormal a) (hφ : Continuous φ) (f : ℂ → ℂ)

@@ -78,6 +78,6 @@ tagged `@[cfc_pull]` because it could generate side goals involving continuity o
 which are not easily discharged by `fun_prop`. -/
 lemma CFC.sqrt_eq_cfc_complex_sqrt (ha : 0 ≤ a) :
     CFC.sqrt a = cfc (fun x : ℂ ↦ x.sqrt) a := by
-  cfc_pull -unital [CFC.sqrt_eq_cfcₙ_complex_sqrt] ℂ a
+  cfc_pull -unital ℂ a [CFC.sqrt_eq_cfcₙ_complex_sqrt]
 
 end Unital
