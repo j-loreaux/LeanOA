@@ -15,7 +15,8 @@ public meta import Lean.Meta.Tactic.TryThis
 
 `cfc_pull R a` rewrites the goal so that the continuous functional calculus over `R` is at the head
 of every maximal subexpression whose type is that of `a`: each such subexpression becomes `cfc f a`
-(or `cfcₙ f a`) for a function `f : R → R` read off its structure with the `@[cfc_pull]` lemmas.
+(or `cfcₙ f a`) for a function `f : R → R`. This is a wrapper around a simproc that uses lemmas
+tagged with the `@[cfc_pull]` attribute.
 
 It is `simp only` with those lemmas, plus what cannot be expressed without knowing `R` and `a`:
 
@@ -33,26 +34,6 @@ It is `simp only` with those lemmas, plus what cannot be expressed without knowi
   and, when there are several elements of one type, pulls a constant argument towards the target
   the other arguments are at (`siblingPost`): the `target` lemmas for constants, which would send
   every `1` to the first target, are then left out.
-
-The lemmas are the real ones, hypotheses included. `simp` rejects a rewrite whose proof contains
-an assignable metavariable, so the discharger cannot leave a goal behind; instead it fills each
-hypothesis it cannot prove with a marked placeholder, which the tactic turns into a side goal once
-`simp` is done (`deferDischarge`, `replacePlaceholders`). The side goals are then attempted with
-a tactic chosen by their kind, and the survivors handed to the `=> ..` block.
-
-## Unsupported
-
-* **Compositions that also change the scalar ring.**
-  `cfc_comp_re : cfc (fun x : ℂ ↦ f (re x)) a = cfc f (ℜ a : A)` is a composition that changes the
-  scalar ring from `ℝ` to `ℂ` on the way. The attribute classifies such a lemma as a composition
-  at the ring of its simpler side, which is not enough: the composition would have to be followed
-  by a conversion, at the inner element. These lemmas are deliberately left untagged.
-* **Elements with a parameter.** `cfc_map_pi : cfc f a = fun i ↦ cfc f (a i)` has its hole at
-  `a i` under a binder, so the element to pull towards is a family. Supporting it would take
-  targets with parameters: `findTargets` keeping the binders a hole is under instead of skipping
-  it, `isTargetElem` matching with fresh metavariables for them, and the `target` lemmas
-  instantiated at the family, `∀ i, a i = cfc id (a i)`. Pairs (`cfc_map_prod`) need none of
-  this: their holes are at the closed components.
 -/
 
 public meta section
@@ -70,17 +51,16 @@ structure Config where
 
 declare_config_elab elabConfig Config
 
-/-- What the `[..]` list of `cfc_pull` amounts to. -/
+/-- The decomposition of the `[..]` list of `cfc_pull` into `cfc` lemmas, and the simp context. -/
 structure Lemmas where
   /-- The `cfc_pull` lemmas: the `@[cfc_pull]` set, adjusted by the list. -/
   entries : Array Entry
-  /-- The simp context `simp` elaborated the rest of the list into: its lemmas, declarations and
-  `let`-variables to unfold, and simp sets. -/
+  /-- The simp context `simp` elaborated the rest of the list into. -/
   ctx : Simp.Context
   /-- The simprocs of the list. -/
   simprocs : Simp.SimprocsArray := #[]
 
-/-- An element pulled towards. -/
+/-- An element `cfc_pull` pulls towards. -/
 structure Target where
   /-- The element. -/
   elem : Expr
@@ -143,10 +123,9 @@ where
           out := out.push tg; todo := todo.push b
     go out todo
 
-/-- What decides which of two lemmas is tried first, most significant first. -/
+/-- `Rank` dictates which of two lemmas is tried first by `cfc_pull`, most significant first. -/
 structure Rank where
-  /-- The scalar conversions from the lemma's ring to the requested one; fewer first. A lemma
-  generic in its ring needs none, and a ring not connected to the requested one is furthest. -/
+  /-- The scalar conversions from the lemma's ring to the requested one; fewer first. -/
   conversions : Nat
   /-- Whether the lemma is not at the requested unitality; the requested one first. -/
   flipped : Bool
@@ -191,8 +170,8 @@ algebra. The arguments this leaves undetermined are metavariables, for the calle
 `simp` synthesizes the instances among them at rewrite time. -/
 def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R)
     (constants : Bool := true) : MetaM (Option (Expr × Bool)) := do
-  let c ← e.proof
-  let (mvars, bis, ty) ← forallMetaTelescopeReducing (← inferType c)
+  let prf ← e.proof
+  let (mvars, bis, ty) ← forallMetaTelescopeReducing (← inferType prf)
   let some (_, lhs, rhs) := ty.eq? | return none
   let (lhs, rhs) := if e.inv then (rhs, lhs) else (lhs, rhs)
   let some (R', _, _, elem) := matchCFC? rhs | return none
@@ -204,8 +183,8 @@ def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R)
     -- a constant (`1 = cfc 1 a`) is any target's, which is of no use when there are several
     unless constants || (lhs.findMVar? (· == elem.mvarId!)).isSome do return none
     unless ← isDefEq elem t.elem do return none
-  -- a type nothing determines (the `S` of an `AlgHomClass F S A B`, which is not an `outParam`)
-  -- is taken to be `S`; the caller tries `R` and the rings of the conversion graph
+  -- a type not appearing in the goal, the `S` of `StarAlgHomClass.map_cfc` say, is taken to
+  -- be `S`; the caller tries `R` and the rings of the conversion graph.
   let lhsTy ← instantiateMVars (← inferType lhs)
   for m in mvars do
     let m ← instantiateMVars m
@@ -219,8 +198,7 @@ def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R)
       unless ty.hasExprMVar do
         let some inst ← synthInstance? ty | return none
         unless ← isDefEq m inst do return none
-  let prf := c.beta mvars
-  let prf ← if e.inv then mkEqSymm prf else pure prf
+  let prf ← if e.inv then mkEqSymm (prf.beta mvars) else pure (prf.beta mvars)
   return some (← instantiateMVars prf, lhs.isMVar)
 
 /-- Add a `pull` lemma to a simp set, specialized to the ring `R` if it is generic in its ring.
@@ -228,13 +206,12 @@ Left generic, `cfc_const_mul_id : r * a = cfc (fun x ↦ r * x) a` would match `
 at a complex calculus, and the result be converted afterwards. -/
 def addAt (R : Expr) (s : SimpTheorems) (e : Entry) (prio : Nat) : MetaM SimpTheorems := do
   if e.ring.isSome then return ← e.addTo s prio
-  let c ← e.proof
-  let (mvars, _, ty) ← forallMetaTelescopeReducing (← inferType c)
+  let prf ← e.proof
+  let (mvars, _, ty) ← forallMetaTelescopeReducing (← inferType prf)
   let some (_, lhs, rhs) := ty.eq? | e.addTo s prio
   let some (R', _, _, _) := matchCFC? (if e.inv then lhs else rhs) | e.addTo s prio
   unless ← isDefEq R' R do return s
-  let prf := c.beta mvars
-  let prf ← if e.inv then mkEqSymm prf else pure prf
+  let prf ← if e.inv then mkEqSymm (prf.beta mvars) else pure (prf.beta mvars)
   let r ← abstractMVars (← instantiateMVars prf)
   s.add e.origin r.paramNames r.expr (prio := prio)
 
@@ -554,10 +531,7 @@ def deferDischarge (useHyps : Bool) : Simp.Discharge := fun e => do
       return some h
   return some <| .mdata (KVMap.empty.insert `cfcPullSideGoal (.ofBool true)) (← mkSorry e true)
 
-/-- Replace the placeholders `deferDischarge` left in `proof` by new goals, one per statement.
-`transform` enters the binders of the proof (the `funext` of a rewrite under `∀ n`, say) as local
-hypotheses; a placeholder found under some is replaced by a goal quantified over them, applied
-back to them. -/
+/-- Replace the placeholders `deferDischarge` left in `proof` by new goals, one per statement. -/
 def replacePlaceholders (proof : Expr) : MetaM (Expr × Array MVarId) := do
   let outer ← getLCtx
   let outerInsts ← getLocalInstances
@@ -584,8 +558,7 @@ def replacePlaceholders (proof : Expr) : MetaM (Expr × Array MVarId) := do
 /-- The lemma set for this call: the `@[cfc_pull]` set, or with `only` the empty set, adjusted by
 the bracketed list. The list is elaborated by `simp`. The lemmas `cfc_pull` can classify are then
 taken back out of the simp set: a tagged one keeps its entries, and so its priority; any other is
-classified here, at `high` priority so that it outranks the tagged set. `-lemma` is `cfc_pull`'s
-own: the simp set of the list starts empty, and `simp` would reject the erasure. -/
+classified here, at `high` priority so that it outranks the tagged set. -/
 def elabLemmas (only : Bool) (args? : Option (TSyntax ``simpArgs)) : TacticM Lemmas := do
   let all := cfcPullExt.getState (← getEnv)
   let mut entries := if only then #[] else all
