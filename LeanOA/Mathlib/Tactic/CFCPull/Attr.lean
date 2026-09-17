@@ -6,20 +6,8 @@ public import Lean.Meta.Tactic.Simp
 /-!
 # The `@[cfc_pull]` attribute
 
-A lemma tagged `@[cfc_pull]` is an equation with `cfc` or `cfcₙ` at the head of at least one side.
-The attribute sorts it into one of the kinds below and records, alongside, the orientation in which
-`simp` should use it (towards the calculus), its scalar ring and unitality, and whether its
-algebraic side contains applications of the calculus (*holes*).
-
-| kind      | shape                                                   | example               |
-| --------- | ------------------------------------------------------- | --------------------- |
-| `pull`    | `cfc f a = ⟨an expression in the algebra⟩`              | `cfc_mul`             |
-| `target`  | a `pull` lemma whose algebraic side does not fix `R`    | `cfc_id'`             |
-| `conv`    | `cfc (f : R → R) a = cfc (g : S → S) a`, `cfcₙ f a = cfc f a` | `cfcₙ_eq_cfc`   |
-| `compose` | `cfc (f ∘ g) a = cfc f ⟨an expression in `a`⟩`          | `cfc_comp_pow`        |
-
-The lemmas are used as they are, hypotheses included: `cfc_pull`'s discharger defers those it
-cannot prove as side goals.
+The `cfc_pull` attribute marks lemmas for use by the `cfc_pull` tactic and categorizes them
+according to their shape, and records other information used by the tactic.
 -/
 
 public meta section
@@ -149,8 +137,18 @@ def mkEntries (origin : Origin) (type : Expr) (prio : Nat) : MetaM (Array Entry)
       head symbol of a side"
   return entries
 
-/-- The `cfc_pull` attribute marks lemmas for use by the `cfc_pull` tactic; see the module
-docstring for the shapes it accepts. -/
+/-- The `cfc_pull` attribute marks lemmas for use by the `cfc_pull` tactic. Such a lemma is
+an equation with `cfc` or `cfcₙ` at the head of at least one side. The attribute sorts lemmas
+into the following categories and records other information used by the tactic, including
+the scalar ring, unitality, and whether the algebraic side contains applications of `cfc` (*holes*).
+
+| category  | shape                                                   | example               |
+| --------- | ------------------------------------------------------- | --------------------- |
+| `pull`    | `cfc f a = ⟨an expression in the algebra⟩`              | `cfc_mul`             |
+| `target`  | a `pull` lemma whose algebraic side does not fix `R`    | `cfc_id'`             |
+| `conv`    | `cfc (f : R → R) a = cfc (g : S → S) a`, `cfcₙ f a = cfc f a` | `cfcₙ_eq_cfc`   |
+| `compose` | `cfc (f ∘ g) a = cfc f ⟨an expression in `a`⟩`          | `cfc_comp_pow`        |
+-/
 syntax (name := cfcPullAttr) "cfc_pull" (ppSpace prio)? : attr
 
 initialize registerBuiltinAttribute {
