@@ -52,6 +52,7 @@ attribute [cfc_pull]
   cfc_map_polynomial cfc_polynomial
   cfc_neg_id cfc_pow_id cfc_smul_id cfc_star_id
   cfc_eq_cfcL cfc_apply_mkD cfc_eq_cfcL_mkD cfcHom_eq_cfc_extend_zero
+  cfc_natCast cfc_ofNat cfc_intCast
 
 -- preferred over `cfc_smul`, so that a scalar already living in the target ring produces
 -- `r * f x` rather than `r • f x`

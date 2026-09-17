@@ -652,6 +652,22 @@ example (c : A × B) (hc : IsStarNormal c) (h₁ : IsStarNormal c.1) (h₂ : IsS
 
 end Products
 
+section Numerals
+
+/-! ## Numerals -/
+
+variable {A : Type*} [CStarAlgebra A] {a : A}
+
+example (ha : IsStarNormal a) : (2 : A) * a = cfc (fun x : ℂ ↦ 2 * x) a := by cfc_pull ℂ a
+
+example (ha : IsStarNormal a) (n : ℕ) : a + n = cfc (fun x : ℂ ↦ x + n) a := by cfc_pull ℂ a
+
+example (ha : IsSelfAdjoint a) (n : ℤ) : n * a = cfc (fun x : ℝ ↦ n * x) a := by cfc_pull ℝ a
+
+example (ha : IsStarNormal a) : a - 3 = cfc (fun x : ℂ ↦ x - 3) a := by cfc_pull ℂ a
+
+end Numerals
+
 section Regressions
 
 /-! ## Shapes that once failed -/

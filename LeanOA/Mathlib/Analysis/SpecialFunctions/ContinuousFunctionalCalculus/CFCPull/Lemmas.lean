@@ -33,7 +33,32 @@ lemma cfcHom_eq_cfc_extend_zero {a : A} (ha : p a) (f : C(spectrum R a, R)) :
     cfcHom ha f = cfc (Function.extend Subtype.val f 0) a :=
   cfcHom_eq_cfc_extend 0 ha f
 
+/-! ### Numerals
+
+`cfc_const` covers `algebraMap R A r`; these cover the numerals, which are `Nat.cast` and
+`Int.cast` into `A`. -/
+
+lemma cfc_natCast (n : ℕ) (a : A) (ha : p a := by cfc_tac) :
+    cfc (fun _ : R ↦ (n : R)) a = (n : A) := by
+  rw [cfc_const _ a ha, map_natCast]
+
+lemma cfc_ofNat (n : ℕ) [n.AtLeastTwo] (a : A) (ha : p a := by cfc_tac) :
+    cfc (fun _ : R ↦ (OfNat.ofNat n : R)) a = (OfNat.ofNat n : A) :=
+  cfc_natCast n a ha
+
 end Unital
+
+section IntCast
+
+variable {R A : Type*} {p : A → Prop} [CommRing R] [StarRing R] [MetricSpace R]
+  [IsTopologicalRing R] [ContinuousStar R] [TopologicalSpace A] [Ring A] [StarRing A]
+  [Algebra R A] [ContinuousFunctionalCalculus R A p]
+
+lemma cfc_intCast (n : ℤ) (a : A) (ha : p a := by cfc_tac) :
+    cfc (fun _ : R ↦ (n : R)) a = (n : A) := by
+  rw [cfc_const _ a ha, map_intCast]
+
+end IntCast
 
 section NonUnital
 
