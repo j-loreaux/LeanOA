@@ -225,7 +225,8 @@ structure Setup where
   disch : Simp.Discharge
 
 /-- What one call of `cfc_pull` works with, from start to finish. The simprocs run in `SimpM`, at
-`simp`'s pace and in nested runs of it, so what they share and change is in references. -/
+`simp`'s pace and in nested runs of it, so what they share and change, the `cache`, is in a
+reference. -/
 structure Context where
   /-- The configuration. -/
   cfg : Config
@@ -236,19 +237,32 @@ structure Context where
   /-- The setups built so far, by ring and roots: the rings and roots needed are only found out
   during the run, and a setup is expensive. -/
   cache : IO.Ref (Array (Expr × Array Expr × Setup))
-  /-- The elements being simplified further up, which `cfcPre` leaves alone. -/
-  stack : IO.Ref (Array Expr)
 
 /-- `MetaM` with the `Context` of the call. -/
 abbrev PullM := ReaderT Context MetaM
 
-/-- Whether `e` is (reducibly) one of the targets. -/
-def isTargetElem (targets : Array Target) (e : Expr) : MetaM Bool :=
+/-- Whether `e` is (reducibly) one of the targets. This must not miss: `cfcPre` simplifies an
+element that is not a target, and if that produces the calculus applied to the same element (as
+it does when the element is a target after all), it does so again, without end. -/
+def isTargetElem (targets : Array Target) (e : Expr) : MetaM Bool := do
   let e := e.consumeMData
+  let env ← getEnv
+  -- an application of the constructor of a structure: `(c.1, c.2)` is the target `c`, by eta
+  let isStructMk (e : Expr) : Bool := match e.getAppFn with
+    | .const n _ => match env.find? n with
+      | some (.ctorInfo i) => isStructure env i.induct
+      | _ => false
+    | _ => false
   targets.anyM fun t => do
     if e == t.elem then return true
-    unless e.getAppFn == t.elem.getAppFn && e.getAppNumArgs == t.elem.getAppNumArgs do
-      return false
+    if isStructMk e != isStructMk t.elem then
+      return ← withNewMCtxDepth <| withReducible <| isDefEq e t.elem
+    -- a cheap filter; the heads are compared up to universe levels, which may be the same without
+    -- being written the same (after a rewrite with a lemma at other level parameters, say)
+    let sameHead := match e.getAppFn, t.elem.getAppFn with
+      | .const n _, .const n' _ => n == n'
+      | f, f' => f == f'
+    unless sameHead && e.getAppNumArgs == t.elem.getAppNumArgs do return false
     withNewMCtxDepth <| withReducible <| isDefEq e t.elem
 
 /-- The congruence `e = e'`, where `e'` is `e` with the arguments at the positions in `rs`
@@ -354,7 +368,6 @@ itself the calculus applied to something other than a target, it is simplified *
 composing first would ask for the predicate at that something, when the target's is known. -/
 partial def cfcPre (c : Context) (roots : Array Expr) (R : Expr) (targets : Array Target)
     (atom loose conv compose : SimpTheorems) : Simp.Simproc := fun e => do
-  let stack := c.stack
   -- a target first of all: it may be an application of the calculus itself, and it is atomic:
   -- no lemma reads it as an expression in something else (`cfc_const` would read the target
   -- `algebraMap ℂ A z` as a constant)
@@ -376,16 +389,13 @@ partial def cfcPre (c : Context) (roots : Array Expr) (R : Expr) (targets : Arra
     Simp.rewrite? e compose.post compose.erased "cfc_pull compose" false
   unless isTarget || innerElsewhere do
     if let some r ← compose? then return .visit r
-  -- an element already being simplified further up is left alone, or `ψ a ↦ cfc id (ψ a)` loops
-  if !isTarget && !(← stack.get).contains b then
-    stack.modify (·.push b)
-    let (rb, nestedUsed) ← try
-        if ← withNewMCtxDepth <| isDefEq S R then pure (← Simp.simp b, #[]) else do
-          let s ← (getSetup roots S).run c
-          let (rb, stats) ← Simp.main b s.ctx
-            (methods := Simp.mkMethods s.simprocs s.disch (wellBehavedDischarge := false))
-          pure (rb, stats.usedTheorems.toArray)
-      finally stack.modify (·.pop)
+  if !isTarget then
+    let (rb, nestedUsed) ←
+      if ← withNewMCtxDepth <| isDefEq S R then pure (← Simp.simp b, #[]) else do
+        let s ← (getSetup roots S).run c
+        let (rb, stats) ← Simp.main b s.ctx
+          (methods := Simp.mkMethods s.simprocs s.disch (wellBehavedDischarge := false))
+        pure (rb, stats.usedTheorems.toArray)
     -- inside the calculus, only `b` becoming the calculus applied to something is progress
     -- (composition can then happen); `cfc f (a + b)` with `b` foreign is left alone rather than
     -- becoming `cfc f (cfc id a + b)`, and `cfc id b` itself would compose back to `e` and loop
@@ -628,7 +638,7 @@ def elabArgs (cfgStx : TSyntax ``optConfig) (only : Bool)
   let lems ← elabLemmas only lems?
   let s ← (getSetup ts R).run {
     cfg, lems, disch := deferDischarge !cfg.defer
-    cache := ← IO.mkRef #[], stack := ← IO.mkRef #[] }
+    cache := ← IO.mkRef #[] }
   return (cfg, s, lems.entries)
 
 /-- The lemma list `cfc_pull?` suggests. First the lemmas among `entries` that the run used, in
