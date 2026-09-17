@@ -61,12 +61,20 @@ open Lean Meta Elab Tactic Parser.Tactic
 structure Config where
   /-- Prefer the unital calculus. -/
   unital : Bool := true
-  /-- Unfold `let`-bound local variables. -/
-  zetaDelta : Bool := false
   /-- Hand every side goal to the `=> ..` block, attempting none. -/
   defer : Bool := false
 
 declare_config_elab elabConfig Config
+
+/-- What the `[..]` list of `cfc_pull` amounts to. -/
+structure Lemmas where
+  /-- The `cfc_pull` lemmas: the `@[cfc_pull]` set, adjusted by the list. -/
+  entries : Array Entry
+  /-- The simp context `simp` elaborated the rest of the list into: its lemmas, declarations and
+  `let`-variables to unfold, and simp sets. -/
+  ctx : Simp.Context
+  /-- The simprocs of the list. -/
+  simprocs : Simp.SimprocsArray := #[]
 
 /-- An element pulled towards. -/
 structure Target where
@@ -131,13 +139,26 @@ where
           out := out.push tg; todo := todo.push b
     go out todo
 
-/-- Priority adjusted for the requested ring and unitality: fewer scalar
-conversions first, then the right unitality, then the priority. -/
-def boost (dist : Option Name → Option Nat) (unital : Bool) (e : Entry) : Nat :=
-  let conversions := match e.ring with
-    | none => 0
-    | some n => (dist (some n)).getD 9
-  e.prio + 20000 * (10 - conversions) + (if e.unital == unital then 10000 else 0)
+/-- What decides which of two lemmas is tried first, most significant first. -/
+structure Rank where
+  /-- The scalar conversions from the lemma's ring to the requested one; fewer first. A lemma
+  generic in its ring needs none, and a ring not connected to the requested one is furthest. -/
+  conversions : Nat
+  /-- Whether the lemma is not at the requested unitality; the requested one first. -/
+  flipped : Bool
+  /-- The priority of the lemma; higher first. -/
+  prio : Nat
+  /-- For a `target` lemma, the index of the target it is instantiated at; earlier first. -/
+  target : Nat
+
+/-- `.gt` if `a` is tried before `b`. -/
+def Rank.compare (a b : Rank) : Ordering :=
+  (Ord.compare b.conversions a.conversions).then <| (Ord.compare b.flipped a.flipped).then <|
+    (Ord.compare a.prio b.prio).then (Ord.compare b.target a.target)
+
+/-- The `simp` priority realizing a rank among `ranks`: the number of them it is tried before. -/
+def Rank.toPrio (ranks : Array Rank) (r : Rank) : Nat :=
+  ranks.countP (r.compare · == .gt)
 
 /-- Distances from the key of `R` in the graph of scalar conversions. -/
 def ringDistances (R : Expr) (entries : Array Entry) : Array (Name × Nat) := Id.run do
@@ -192,7 +213,7 @@ def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R) :
       unless ty.hasExprMVar do
         let some inst ← synthInstance? ty | return none
         unless ← isDefEq m inst do return none
-  let prf := mkAppN c mvars
+  let prf := c.beta mvars
   let prf ← if e.inv then mkEqSymm prf else pure prf
   return some (← instantiateMVars prf, lhs.isMVar)
 
@@ -206,7 +227,7 @@ def addAt (R : Expr) (s : SimpTheorems) (e : Entry) (prio : Nat) : MetaM SimpThe
   let some (_, lhs, rhs) := ty.eq? | e.addTo s prio
   let some (R', _, _, _) := matchCFC? (if e.inv then lhs else rhs) | e.addTo s prio
   unless ← isDefEq R' R do return s
-  let prf := mkAppN c mvars
+  let prf := c.beta mvars
   let prf ← if e.inv then mkEqSymm prf else pure prf
   let r ← abstractMVars (← instantiateMVars prf)
   s.add e.origin r.paramNames r.expr (prio := prio)
@@ -242,9 +263,10 @@ def congrArgs (e : Expr) (rs : Array (Nat × Simp.Result)) : MetaM Simp.Result :
 mutual
 
 /-- The simp context and simprocs pulling towards `R`, cached per ring. -/
-partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : Simp.Discharge)
+partial def getSetup (cfg : Config) (t : Expr) (lems : Lemmas) (disch : Simp.Discharge)
     (cache : IO.Ref (Array (Expr × Setup))) (stack : IO.Ref (Array Expr)) (R : Expr) :
     MetaM Setup := do
+  let entries := lems.entries
   for (R', s) in ← cache.get do
     if ← withNewMCtxDepth <| isDefEq R R' then return s
   let targets ← findTargets cfg entries R t
@@ -253,6 +275,12 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
   -- a concrete ring that is not a node of the conversion graph is only usable if it is `R`
   let distOf (n : Option Name) : Option Nat :=
     if n == R.getAppFn.constName? then some 0 else distOf n
+  let rank (e : Entry) (target : Nat := 0) : Rank :=
+    { conversions := if e.ring.isNone then 0 else (distOf e.ring).getD (dist.size + 1)
+      flipped := e.unital != cfg.unital, prio := e.prio, target }
+  let ranks := entries.flatMap fun e ↦
+    if e.kind == .target then (Array.range targets.size).map (rank e ·) else #[rank e]
+  let prio (e : Entry) (target : Nat := 0) : Nat := (rank e target).toPrio ranks
   let mut pull : SimpTheorems := {}
   let mut loose : SimpTheorems := {}
   let mut conv : SimpTheorems := {}
@@ -265,10 +293,10 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
   for e in entries do
     match e.kind with
     | .pull =>
-      if e.holes then pull ← addAt R pull e (boost distOf cfg.unital e)
-      else loose ← addAt R loose e (boost distOf cfg.unital e)
+      if e.holes then pull ← addAt R pull e (prio e)
+      else loose ← addAt R loose e (prio e)
     -- compositions and conversions apply at the ring of the calculus they meet, whatever it is
-    | .compose => compose ← e.addTo compose (prio := boost distOf cfg.unital e)
+    | .compose => compose ← e.addTo compose (prio := prio e)
     | .conv =>
       if e.unital != e.srcUnital then
         flip ← e.addTo flip (prio := eval_prio default)
@@ -293,12 +321,12 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
             unless e.unital == tg.unital do continue
             atom ← atom.add id r.paramNames r.expr
           else if e.holes then
-            tgt ← tgt.add id r.paramNames r.expr (prio := boost distOf cfg.unital e - 100 * i)
+            tgt ← tgt.add id r.paramNames r.expr (prio := prio e i)
           else
-            loose ← loose.add id r.paramNames r.expr
-              (prio := boost distOf cfg.unital e - 100 * i)
-  let ctx ← Simp.mkContext { zetaDelta := cfg.zetaDelta } (simpTheorems := #[pull, tgt])
-  let procs := getSetup cfg t entries disch cache stack
+            loose ← loose.add id r.paramNames r.expr (prio := prio e i)
+  -- the rest of the list first: it is what the user asked for
+  let ctx := lems.ctx.setSimpTheorems (lems.ctx.simpTheorems ++ #[pull, tgt])
+  let procs := getSetup cfg t lems disch cache stack
   let simprocs : Simp.Simprocs := {
     pre := DiscrTree.empty.insertKeyValue #[.star]
       { declName := `cfcPullPre, post := false, keys := #[.star],
@@ -306,7 +334,7 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
     post := DiscrTree.empty.insertKeyValue #[.star]
       { declName := `cfcPullFlip, post := true, keys := #[.star],
         proc := .inl (flipPost flip #[pull, tgt]) } }
-  let s := { ctx, simprocs := #[simprocs], disch }
+  let s := { ctx, simprocs := #[simprocs] ++ lems.simprocs, disch }
   cache.modify (·.push (R, s))
   return s
 
@@ -392,12 +420,6 @@ partial def flipPost (flip : SimpTheorems) (thms : Array SimpTheorems) : Simp.Si
 
 end
 
-/-- Remove the lemma from the `cfc_pull` set for this call. -/
-syntax cfcPullErase := "-" ident
-
-/-- The lemma list of `cfc_pull`: declarations or local hypotheses to add, `-lemma`s to remove. -/
-syntax cfcPullLemmas := " [" withoutPosition((cfcPullErase <|> ident),*,?) "]"
-
 /--
 `cfc_pull R a` rewrites the goal so that the continuous functional calculus is at the head of
 maximal subexpressions whose type matches that of `a`: each such subexpression is replaced by
@@ -427,13 +449,16 @@ example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by
   `cfc_pull.mapZero` and `cfc_pull.side`.
 * `cfc_pull +defer R a => tacticSeq`: attempt to discharge no side goals, and hand all of them to
   the `=> ..` block.
-* `cfc_pull [lemma1, -lemma2, h] R a`: add `lemma1` and the local hypothesis `h` to the lemmas
-  used by `cfc_pull`, and remove `lemma2`.
+* `cfc_pull [lemma1, -lemma2, h, e] R a`: the list is that of `simp`. An equation with `cfc` or
+  `cfcₙ` at the head of a side, such as `lemma1`, the local hypothesis `h`, or a term `hg n`, is
+  added to the lemmas used by `cfc_pull`, as if it were tagged `@[cfc_pull]` (`cfc_pull` orients
+  it, so `←`, `↓` and `↑` have no effect); `-lemma2` removes `lemma2`. Everything else is handed
+  to `simp` as it is: rewrite rules, definitions and `let`-variables to unfold, simp sets,
+  simprocs, `*`.
 * `cfc_pull only [lemma1, lemma2] R a`: use only `lemma1` and `lemma2`, not the `@[cfc_pull]`
   lemmas.
 * `cfc_pull? R a`: the same as `cfc_pull R a`, but suggests replacing itself with
   `cfc_pull only [..] R a`, listing the lemmas the rewrite used.
-* `cfc_pull +zetaDelta R a`: unfold `let`-bound variables.
 
 Side goals are first attempted with a tactic chosen by their kind: `cfc_cont_tac` for continuity,
 `cfc_zero_tac` for `f 0 = 0`, and the predicate lemmas `cfc_predicate`/`cfcₙ_predicate` followed
@@ -442,19 +467,19 @@ by `cfc_tac` for the predicate of the calculus; `assumption` is tried on all of 
 Tracing of the `simp` call is available with `set_option trace.Meta.Tactic.simp true`, and of the
 side goals with `set_option trace.Tactic.cfc_pull true`.
 -/
-syntax (name := cfcPull) "cfc_pull" optConfig (&" only")? (cfcPullLemmas)? ppSpace colGt term:max
+syntax (name := cfcPull) "cfc_pull" optConfig (&" only")? (simpArgs)? ppSpace colGt term:max
   ppSpace colGt term:max (location)? (" => " colGt tacticSeq)? : tactic
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullTrace) "cfc_pull?" optConfig (&" only")? (cfcPullLemmas)? ppSpace colGt
+syntax (name := cfcPullTrace) "cfc_pull?" optConfig (&" only")? (simpArgs)? ppSpace colGt
   term:max ppSpace colGt term:max (location)? (" => " colGt tacticSeq)? : tactic
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullConv) "cfc_pull" optConfig (&" only")? (cfcPullLemmas)? ppSpace colGt
+syntax (name := cfcPullConv) "cfc_pull" optConfig (&" only")? (simpArgs)? ppSpace colGt
   term:max ppSpace colGt term:max (" => " colGt tacticSeq)? : conv
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullTraceConv) "cfc_pull?" optConfig (&" only")? (cfcPullLemmas)? ppSpace
+syntax (name := cfcPullTraceConv) "cfc_pull?" optConfig (&" only")? (simpArgs)? ppSpace
   colGt term:max ppSpace colGt term:max (" => " colGt tacticSeq)? : conv
 
 /-- Discharge a hypothesis with a local hypothesis if there is one, and otherwise with a
@@ -501,71 +526,95 @@ def replacePlaceholders (proof : Expr) : MetaM (Expr × Array MVarId) := do
         goals.modify (·.push (ty, g.mvarId!))
         pure g.mvarId!
     let vars ← binders.filterM fun x ↦ return !(← x.fvarId!.getDecl).isLet
-    return .done (mkAppN (mkMVar g) vars)
+    return .done (mkAppN (.mvar g) vars)
   return (proof, (← goals.get).map (·.2))
 
 /-- The lemma set for this call: the `@[cfc_pull]` set, or with `only` the empty set, adjusted by
-the bracketed list. A listed lemma that is tagged keeps its entries, and so its priority; an
-untagged declaration or a local hypothesis is classified here, at `high` priority so that it
-outranks the tagged set. -/
-def elabLemmas (only : Bool) (lems? : Option (TSyntax ``cfcPullLemmas)) :
-    TacticM (Array Entry) := do
+the bracketed list. The list is elaborated by `simp`. The lemmas `cfc_pull` can classify are then
+taken back out of the simp set: a tagged one keeps its entries, and so its priority; any other is
+classified here, at `high` priority so that it outranks the tagged set. `-lemma` is `cfc_pull`'s
+own: the simp set of the list starts empty, and `simp` would reject the erasure. -/
+def elabLemmas (only : Bool) (args? : Option (TSyntax ``simpArgs)) : TacticM Lemmas := do
   let all := cfcPullExt.getState (← getEnv)
   let mut entries := if only then #[] else all
-  let some stx := lems? | return entries
-  for arg in stx.raw[1].getSepArgs do
-    if arg.isOfKind ``cfcPullErase then
-      let id : Ident := ⟨arg[1]⟩
-      let declName ← realizeGlobalConstNoOverloadWithInfo id
-      unless entries.any (·.origin.key == declName) do
-        throwErrorAt id "`{.ofConstName declName}` is not in the `cfc_pull` lemma set, so \
-          `-{id}` has nothing to remove"
-      entries := entries.filter (·.origin.key != declName)
-    else
-      let id : Ident := ⟨arg⟩
-      let (origin, type) ← if let some d := (← getLCtx).findFromUserName? id.getId then
-          pure (Origin.fvar d.fvarId, d.type)
-        else
-          let declName ← realizeGlobalConstNoOverloadWithInfo id
-          pure (Origin.decl declName, (← getConstInfo declName).type)
-      if entries.any (·.origin.key == origin.key) then continue
-      let tagged := all.filter (·.origin.key == origin.key)
-      let new ← if tagged.isEmpty then withRef id <| mkEntries origin type (eval_prio high)
-        else pure tagged
+  let ctx ← Simp.mkContext (simpTheorems := #[{}])
+  let some stx := args? | return { entries, ctx }
+  let (erase, rest) := stx.raw[1].getSepArgs.partition (·.isOfKind ``simpErase)
+  let list := mkNullNode #[mkAtom "[", mkNullNode (mkSepArray rest (mkAtom ",")), mkAtom "]"]
+  let res ← elabSimpArgs list ctx #[] (eraseLocal := false) (kind := .simp)
+  let mut thms := res.ctx.simpTheorems[0]!
+  for (arg, r) in res.simpArgs do
+    let #[thm] := r.simpTheorems | continue
+    if entries.any (·.origin.key == thm.origin.key) then
+      thms := thms.eraseCore thm.origin; continue
+    let tagged := all.filter (·.origin.key == thm.origin.key)
+    let new? ← if !tagged.isEmpty then pure (some tagged) else withRef arg do
+      match thm.origin with
+      | .decl n .. => mkEntries? (.decl n) (← getConstInfo n).type (eval_prio high)
+      | o =>
+        mkEntries? o (← inferType thm.proof) (eval_prio high) (some (thm.levelParams, thm.proof))
+    let some new := new? | continue
+    entries := entries ++ new
+    thms := thms.eraseCore thm.origin
+  if res.simpArgs.any (·.2 matches .star) then
+    for h in ← getPropHyps do
+      let some new ← mkEntries? (.fvar h) (← h.getType) (eval_prio high) | continue
       entries := entries ++ new
-  return entries
+      thms := thms.eraseCore (.fvar h)
+  let mut thmsArray := res.ctx.simpTheorems.set! 0 thms
+  for arg in erase do
+    let id := arg[1]
+    let declName ← realizeGlobalConstNoOverloadWithInfo id
+    let o : Origin := .decl declName
+    unless entries.any (·.origin.key == declName) || thmsArray.any (·.isLemma o) do
+      throwErrorAt id "`{.ofConstName declName}` is not in the `cfc_pull` lemma set, so \
+        `-{id}` has nothing to remove"
+    entries := entries.filter (·.origin.key != declName)
+    thmsArray := thmsArray.map (·.eraseCore o)
+  return { entries, ctx := res.ctx.setSimpTheorems thmsArray, simprocs := res.simprocs }
 
 /-- Elaborate the arguments of `cfc_pull`. -/
 def elabArgs (cfgStx : TSyntax ``optConfig) (only : Bool)
-    (lems? : Option (TSyntax ``cfcPullLemmas)) (ring elem : Term) :
+    (lems? : Option (TSyntax ``simpArgs)) (ring elem : Term) :
     TacticM (Config × Setup × Array Entry) := do
   let cfg ← elabConfig cfgStx
   let R ← instantiateMVars (← Term.elabType ring)
   let t ← Term.elabTermAndSynthesize elem none
-  let entries ← elabLemmas only lems?
-  let s ← getSetup cfg t entries (deferDischarge !cfg.defer) (← IO.mkRef #[]) (← IO.mkRef #[]) R
-  return (cfg, s, entries)
+  let lems ← elabLemmas only lems?
+  let s ← getSetup cfg t lems (deferDischarge !cfg.defer) (← IO.mkRef #[]) (← IO.mkRef #[]) R
+  return (cfg, s, lems.entries)
 
-/-- The lemma list `cfc_pull?` suggests: the lemmas among `entries` that the run used, in order of
-first use, by the shortest names that resolve to them here. An instantiated `target` lemma is
-used under the origin `.other (key ++ `inst)`. -/
-def mkOnlyLemmas (used : Array Origin) (entries : Array Entry) :
-    TacticM (TSyntax ``cfcPullLemmas) := do
-  let mut ids : Array Ident := #[]
+/-- The lemma list `cfc_pull?` suggests. First the lemmas among `entries` that the run used, in
+order of first use: declarations by the shortest names that resolve to them here, terms as they
+were written. An instantiated `target` lemma is used under the origin `.other (key ++ `inst)`.
+Then what `simp?` would list for the other lemmas used. -/
+def mkOnlyLemmas (used : Simp.UsedSimps) (entries : Array Entry) :
+    TacticM (TSyntax ``simpArgs) := do
+  let mut args : Array Syntax := #[]
   let mut seen : Array Name := #[]
-  for o in used do
+  let mut rest : Simp.UsedSimps := {}
+  for o in used.toArray do
     let key := match o with
       | .other n => n.getPrefix
       | _ => o.key
-    if seen.contains key then continue
-    let some e := entries.find? (·.origin.key == key) | continue
-    seen := seen.push key
-    match e.origin with
-    | .decl n .. => ids := ids.push (mkIdent (← unresolveNameGlobalAvoidingLocals n))
-    | .fvar id => ids := ids.push (mkIdent (← id.getUserName))
-    | _ => continue
-  let list := mkNullNode (mkSepArray ids (mkAtom ","))
-  return ⟨mkNode ``cfcPullLemmas #[mkAtom "[", list, mkAtom "]"]⟩
+    match entries.find? (·.origin.key == key) with
+    | none =>
+      -- the lemmas `getSetup` adds by itself
+      unless [``eq_self, ``iff_self, ``implies_true].contains key do rest := rest.insert o
+    | some e =>
+      if seen.contains key then continue
+      seen := seen.push key
+      match e.origin with
+      | .decl n .. =>
+        let id := mkIdent (← unresolveNameGlobalAvoidingLocals n)
+        args := args.push (← `(simpLemma| $id:ident))
+      | .fvar id => args := args.push (← `(simpLemma| $(mkIdent (← id.getUserName)):ident))
+      | .stx _ ref => args := args.push ref
+      | .other _ => continue
+  let simpOnly ← mkSimpOnly (← `(tactic| simp only [])) rest
+  args := args ++ simpOnly[simpParamsPos][1].getSepArgs
+  let list := mkNullNode (mkSepArray args (mkAtom ","))
+  return ⟨mkNode ``simpArgs #[mkAtom "[", list, mkAtom "]"]⟩
 
 /-- Run `tac` on `g`, returning `true` iff it closes the goal; otherwise restore the state. -/
 def closes (g : MVarId) (tac : TSyntax `tactic) : TacticM Bool := do
@@ -585,7 +634,7 @@ def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := d
     if ← g.isAssigned then continue
     let ty ← instantiateMVars (← g.getType)
     if let some g' ← out.findM? fun g' => do withReducible <| isDefEq ty (← g'.getType) then
-      g.assign (mkMVar g'); continue
+      g.assign (.mvar g'); continue
     -- a goal raised under a binder is quantified, so it is classified by its body
     let body := ty.getForallBody
     let isNonneg := body.le?.any fun (_, lhs, _) ↦ lhs.zero?
@@ -639,10 +688,10 @@ def evalCFCPull : Tactic := fun stx => withMainContext do
       evalTactic (← `(tactic| try with_reducible rfl))
   if stx.isOfKind ``cfcPullTrace then
     -- only the part up to the element is replaced, leaving any location and block as written
-    let lems ← mkOnlyLemmas stats.usedTheorems.toArray entries
+    let lems ← mkOnlyLemmas stats.usedTheorems entries
     let sugg ← `(tactic| cfc_pull%$tk $cfgStx:optConfig only $lems $ring $elem)
     TryThis.addSuggestion tk sugg (origSpan? := mkNullNode #[tk, elem])
-  root.assign (← dischargeSideGoals cfg (mkMVar root) arrow? tac?)
+  root.assign (← dischargeSideGoals cfg (.mvar root) arrow? tac?)
 
 @[tactic cfcPullConv, tactic cfcPullTraceConv]
 def evalCFCPullConv : Tactic := fun stx => withMainContext do
@@ -660,7 +709,7 @@ def evalCFCPullConv : Tactic := fun stx => withMainContext do
     (methods := Simp.mkMethods s.simprocs s.disch (wellBehavedDischarge := false))
   if r.expr == lhs then throwError "`cfc_pull` made no progress"
   if stx.isOfKind ``cfcPullTraceConv then
-    let lems ← mkOnlyLemmas stats.usedTheorems.toArray entries
+    let lems ← mkOnlyLemmas stats.usedTheorems entries
     let sugg ← `(conv| cfc_pull%$tk $cfgStx:optConfig only $lems $ring $elem)
     TryThis.addSuggestion tk sugg (origSpan? := mkNullNode #[tk, elem])
   let proof ← dischargeSideGoals cfg (← r.getProof) arrow? tac?

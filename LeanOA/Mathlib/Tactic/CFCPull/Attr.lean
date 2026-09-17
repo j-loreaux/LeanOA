@@ -43,8 +43,12 @@ inductive Kind where
 
 /-- A tagged lemma, in one of the orientations `cfc_pull` may use it in. -/
 structure Entry where
-  /-- The lemma: a declaration, or, from the `[..]` list of `cfc_pull`, a local hypothesis. -/
+  /-- The lemma: a declaration, or, from the `[..]` list of `cfc_pull`, a local hypothesis (`*`)
+  or a term. -/
   origin : Origin
+  /-- The proof and its universe parameters, as `simp` elaborated them, when the lemma is a term
+  from the `[..]` list of `cfc_pull`. -/
+  term? : Option (Array Name × Expr) := none
   /-- Whether `simp` uses it right to left. -/
   inv : Bool
   /-- Its `CFCPUll.Kind`: `pull`, `target`, `compose` or `conv`. -/
@@ -78,28 +82,31 @@ def matchCFC? (e : Expr) : Option (Expr × Bool × Expr × Expr) := do
   return (args[0]!, unital, args[args.size - 2]!, args[args.size - 1]!)
 
 /-- The lemma as a term, with fresh universe metavariables. -/
-def Entry.proof (e : Entry) : MetaM Expr :=
+def Entry.proof (e : Entry) : MetaM Expr := do
+  if let some (ps, prf) := e.term? then
+    return prf.instantiateLevelParamsArray ps (← ps.mapM fun _ ↦ mkFreshLevelMVar)
   match e.origin with
   | .decl n .. => mkConstWithFreshMVarLevels n
   | .fvar id => return mkFVar id
   | _ => do throwError "internal error: `cfc_pull` entry with origin `{← ppOrigin e.origin}`"
 
 /-- Add the lemma to a simp set, in its orientation. -/
-def Entry.addTo (e : Entry) (s : SimpTheorems) (prio : Nat := e.prio) : MetaM SimpTheorems :=
+def Entry.addTo (e : Entry) (s : SimpTheorems) (prio : Nat := e.prio) : MetaM SimpTheorems := do
+  if let some (ps, prf) := e.term? then
+    return ← s.add e.origin ps prf (inv := e.inv) (prio := prio)
   match e.origin with
   | .decl n .. => s.addConst n (inv := e.inv) (prio := prio)
   | .fvar id => s.add e.origin #[] (mkFVar id) (inv := e.inv) (prio := prio)
   | _ => do throwError "internal error: `cfc_pull` entry with origin `{← ppOrigin e.origin}`"
 
-/-- Classify a lemma of type `type`: the entries recording how `cfc_pull` may use it. -/
-def mkEntries (origin : Origin) (type : Expr) (prio : Nat) : MetaM (Array Entry) := do
+/-- Classify a lemma of type `type`: the entries recording how `cfc_pull` may use it, or `none`
+if it is not an equation with `cfc` or `cfcₙ` at the head of a side. -/
+def mkEntries? (origin : Origin) (type : Expr) (prio : Nat)
+    (term? : Option (Array Name × Expr) := none) : MetaM (Option (Array Entry)) := do
   forallTelescopeReducing type fun xs body => do
-    let some (_, lhs, rhs) := body.eq? |
-      throwError "`cfc_pull`: `{← ppOrigin origin}` is not an equation"
-    match matchCFC? lhs, matchCFC? rhs with
-    | none, none =>
-      throwError "`cfc_pull`: neither side of `{← ppOrigin origin}` has `cfc` or `cfcₙ` as \
-        its head symbol"
+    let some (_, lhs, rhs) := body.eq? | return none
+    let entries ← match matchCFC? lhs, matchCFC? rhs with
+    | none, none => return none
     | some c, none => pullEntry xs rhs lhs c true
     | none, some c => pullEntry xs lhs rhs c false
     | some (Rl, ul, _, el), some (Rr, ur, _, er) =>
@@ -108,7 +115,7 @@ def mkEntries (origin : Origin) (type : Expr) (prio : Nat) : MetaM (Array Entry)
           throwError "`cfc_pull`: both sides of `{← ppOrigin origin}` are the same calculus \
             applied to the same element; there is nothing for `cfc_pull` to do with it"
         -- a conversion; record both directions, `cfc_pull` picks one
-        return #[
+        pure #[
           { origin, inv := false, kind := .conv, prio, ring := Rr.getAppFn.constName?, unital := ur,
             srcRing := Rl.getAppFn.constName?, srcUnital := ul },
           { origin, inv := true, kind := .conv, prio, ring := Rl.getAppFn.constName?, unital := ul,
@@ -117,8 +124,9 @@ def mkEntries (origin : Origin) (type : Expr) (prio : Nat) : MetaM (Array Entry)
         -- a composition: the side whose element is more complicated goes on the left
         let inv := el.approxDepth < er.approxDepth
         let (R, u) := if inv then (Rl, ul) else (Rr, ur)
-        return #[
+        pure #[
           { origin, inv, kind := .compose, prio, ring := R.getAppFn.constName?, unital := u }]
+    return some (entries.map ({ · with term? }))
 where
   /-- A lemma with the calculus on exactly one side, `cfcSide`; `inv` says it is the left one. -/
   pullEntry (xs : Array Expr) (alg cfcSide : Expr) (c : Expr × Bool × Expr × Expr) (inv : Bool) :
@@ -133,6 +141,13 @@ where
     let kind := if free R || free elem || freeType then .target else .pull
     let holes := (alg.find? fun e ↦ (matchCFC? e).isSome).isSome
     return #[{ origin, inv, kind, prio, ring := R.getAppFn.constName?, unital, holes }]
+
+/-- Classify a lemma of type `type`, which must be one `cfc_pull` can use. -/
+def mkEntries (origin : Origin) (type : Expr) (prio : Nat) : MetaM (Array Entry) := do
+  let some entries ← mkEntries? origin type prio |
+    throwError "`cfc_pull`: `{← ppOrigin origin}` is not an equation with `cfc` or `cfcₙ` as the \
+      head symbol of a side"
+  return entries
 
 /-- The `cfc_pull` attribute marks lemmas for use by the `cfc_pull` tactic; see the module
 docstring for the shapes it accepts. -/

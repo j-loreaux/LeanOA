@@ -176,7 +176,7 @@ example (ha : IsStrictlyPositive a) :
 example (ha : IsSelfAdjoint a) (f : ℝ → ℝ) (hf : Continuous f)
     (hspec : spectrum ℝ a ⊆ Set.Icc (-1) 1) (hf0 : ∀ x ∈ Set.Icc (-1 : ℝ) 1, f x ≠ 0) :
     Ring.inverse (cfc f a) = cfc (fun x : ℝ ↦ (f x)⁻¹) a := by
-  cfc_pull +zetaDelta ℝ a =>
+  cfc_pull ℝ a =>
     first | (fun_prop) | (intro x hx; exact hf0 x (hspec hx))
 
 example (f : ℝ → ℝ) (hf : Continuous f) (hf0 : 0 = f 0) :
@@ -208,16 +208,26 @@ end ConvSideGoals
 
 section LetBound
 
-/-! ## `let`-bound variables and `+zetaDelta` -/
+/-! ## `let`-bound variables are unfolded when listed, as by `simp` -/
 
 variable {A : Type*} [CStarAlgebra A] {a : A}
 
 example (ha : IsStarNormal a) :
     let u : A := star a; let v : A := u * a
     v = cfc (fun x : ℂ ↦ star x * x) a := by
-  extract_lets
-  cfc_pull +zetaDelta ℂ a
+  extract_lets u v
+  cfc_pull [u, v] ℂ a
 
+/--
+info: Try this:
+  [apply] cfc_pull only [cfc_star_id, cfc_id', cfc_mul, v, u] ℂ a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) :
+    let u : A := star a; let v : A := u * a
+    v = cfc (fun x : ℂ ↦ star x * x) a := by
+  extract_lets u v
+  cfc_pull? [u, v] ℂ a
 
 end LetBound
 
@@ -268,7 +278,54 @@ example (ha : IsStarNormal a) (g : ℕ → A) (hg : ∀ n, g n = cfc (fun x : �
     g 2 * g 3 = cfc (fun x : ℂ ↦ x ^ 2 * x ^ 3) a := by
   cfc_pull [hg] ℂ a
 
+/- As do terms. -/
+example (ha : IsStarNormal a) (g : ℕ → A) (hg : ∀ n, g n = cfc (fun x : ℂ ↦ x ^ n) a) :
+    g 2 * g 3 = cfc (fun x : ℂ ↦ x ^ 2 * x ^ 3) a := by
+  cfc_pull [hg 2, hg _] ℂ a
+
+/--
+info: Try this:
+  [apply] cfc_pull only [hg 2, hg _, cfc_mul] ℂ a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) (g : ℕ → A) (hg : ∀ n, g n = cfc (fun x : ℂ ↦ x ^ n) a) :
+    g 2 * g 3 = cfc (fun x : ℂ ↦ x ^ 2 * x ^ 3) a := by
+  cfc_pull? [hg 2, hg _] ℂ a
+
+/- `*` is all the hypotheses, the ones `cfc_pull` can use classified. -/
+example (ha : IsStarNormal a) (b : A) (hb : b = a * a) (f : ℂ → ℂ) (hf : star a = cfc f a)
+    (hf' : Continuous f) : star a * b = cfc (fun x ↦ f x * (x * x)) a := by
+  cfc_pull [*] ℂ a
+
 end Hypotheses
+
+/-! ### Anything else in the list is `simp`'s -/
+
+section Simp
+
+variable {A : Type*} [CStarAlgebra A] {a : A}
+
+def LemmaListTest.cube (a : A) : A := a * a * a
+
+/- A definition to unfold, a rewrite rule, a reversed one. -/
+example (ha : IsStarNormal a) (b c : A) (hb : b = a * a) (hc : star a = c) :
+    LemmaListTest.cube a + b + c = cfc (fun x : ℂ ↦ x * x * x + x * x + star x) a := by
+  cfc_pull [LemmaListTest.cube, hb, ← hc] ℂ a
+
+/--
+info: Try this:
+  [apply] cfc_pull only [cfc_id', cfc_mul, cfc_add, cfc_star_id, LemmaListTest.cube, hb, ← hc] ℂ a
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) (b c : A) (hb : b = a * a) (hc : star a = c) :
+    LemmaListTest.cube a + b + c = cfc (fun x : ℂ ↦ x * x * x + x * x + star x) a := by
+  cfc_pull? [LemmaListTest.cube, hb, ← hc] ℂ a
+
+example (ha : IsStarNormal a) (b c : A) (hb : b = a * a) (hc : star a = c) :
+    LemmaListTest.cube a + b + c = cfc (fun x : ℂ ↦ x * x * x + x * x + star x) a := by
+  cfc_pull only [cfc_id', cfc_mul, cfc_add, cfc_star_id, LemmaListTest.cube, hb, ← hc] ℂ a
+
+end Simp
 
 /-! ### `-lemma` -/
 
@@ -446,6 +503,10 @@ variable {a : A}
 example (ha : IsSelfAdjoint a) :
     a + I • cfcₙ Real.sqrt (1 - a ^ 2) = cfc (fun x ↦ x + I * ↑√(1 - x.re ^ 2)) a := by
   cfc_pull ℂ a
+
+example (ha : IsSelfAdjoint a) :
+    a + I • cfcₙ Real.sqrt (1 - a ^ 2) = cfc (fun x ↦ ↑x.re + I * ↑√(1 - x.re ^ 2)) a := by
+  conv_lhs => cfc_pull ℝ a; cfc_pull ℂ a
 
 example (ha : IsSelfAdjoint a) :
     a + I • cfcₙ Real.sqrt (1 - a ^ 2) = cfc (fun x ↦ ↑x.re + I * ↑√(1 - x.re ^ 2)) a := by
