@@ -633,6 +633,25 @@ example (ha : IsStarNormal a) :
 
 end Unitization
 
+section Products
+
+/-! ## Pairs -/
+
+variable {A B : Type*} [CStarAlgebra A] [CStarAlgebra B] {a : A} {b : B}
+
+/- The components of a pair are targets. `cfc_map_prod`'s hypotheses about the predicate at the
+pair and at its components come back as side goals. -/
+example (hab : IsStarNormal (a, b)) (ha : IsStarNormal a) (hb : IsStarNormal b) :
+    (star a * a, star b * b) = cfc (fun x : ℂ ↦ star x * x) (a, b) := by
+  cfc_pull ℂ (a, b)
+
+/- A pair given as a variable is matched up to structure eta. -/
+example (c : A × B) (hc : IsStarNormal c) (h₁ : IsStarNormal c.1) (h₂ : IsStarNormal c.2) :
+    (star c.1 * c.1, star c.2 * c.2) = cfc (fun x : ℂ ↦ star x * x) c := by
+  cfc_pull ℂ c
+
+end Products
+
 section Regressions
 
 /-! ## Shapes that once failed -/

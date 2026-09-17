@@ -3,6 +3,7 @@ module
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.RealImaginaryPart
 public import Mathlib.Analysis.Matrix.HermitianFunctionalCalculus
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Pi
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.Lemmas
 public import LeanOA.Mathlib.Tactic.CFCPull.Attr
 
@@ -102,6 +103,15 @@ attribute [cfc_pull 900] cfc_tsub cfcₙ_tsub
 their real counterparts. This is because `Complex.sqrt` is continuous only away from the negative
 reals, creating continuity side goals that are harder to discharge via `fun_prop`. -/
 
+/-! ### Products
+
+The components of a pair are pulled towards, as the components of `φ x` are: the holes of
+`cfc_map_prod : cfc f (a, b) = (cfc f a, cfc f b)` are at `a` and `b`. Its hypotheses about the
+predicate at the pair and at its components are not related by any tactic, so they come back as
+`cfc_pull.predicate` goals. -/
+
+attribute [cfc_pull] cfc_map_prod cfcₙ_map_prod
+
 /-! ### Pulling through a homomorphism
 
 Note that the element to pull towards lives in the *codomain*.
@@ -130,5 +140,7 @@ attribute [cfc_pull 1100]
 /- The lemmas `cfc_comp_re`, `cfc_comp_im`, `cfcₙ_comp_re` and `cfcₙ_comp_im` are
 deliberately *not* tagged. They change the scalar ring *and* the element and so are unsupported.
 
-The lemmas `cfc_apply_pi`, `cfc_map_pi`, `cfc_map_prod` and `cfcₙ_map_prod` are not tagged either,
-but this is because there is no single element to pull towards. -/
+The lemmas `cfc_map_pi` and `cfcₙ_map_pi` are not tagged either: their holes, `cfc f (a i)`, are
+under the binder of `fun i ↦ ..`, so the element `a i` to pull towards has a parameter, which the
+targets of `cfc_pull` do not have. `cfc_apply_pi` and `cfcₙ_apply_pi` relate a family of
+applications of the calculus to `cfcHom`, and are not pull lemmas at all. -/

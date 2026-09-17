@@ -43,8 +43,12 @@ a tactic chosen by their kind, and the survivors handed to the `=> ..` block.
   scalar ring from `ℝ` to `ℂ` on the way. The attribute classifies such a lemma as a composition
   at the ring of its simpler side, which is not enough: the composition would have to be followed
   by a conversion, at the inner element. These lemmas are deliberately left untagged.
-* **Several elements at once** (`cfc_apply_pi`, `cfc_map_prod`): there is no single element to
-  pull towards.
+* **Elements with a parameter.** `cfc_map_pi : cfc f a = fun i ↦ cfc f (a i)` has its hole at
+  `a i` under a binder, so the element to pull towards is a family. Supporting it would take
+  targets with parameters: `findTargets` keeping the binders a hole is under instead of skipping
+  it, `isTargetElem` matching with fresh metavariables for them, and the `target` lemmas
+  instantiated at the family, `∀ i, a i = cfc id (a i)`. Pairs (`cfc_map_prod`) need none of
+  this: their holes are at the closed components.
 -/
 
 public meta section
@@ -111,6 +115,8 @@ where
       let found ← withoutModifyingState do
         let (_, _, ty) ← forallMetaTelescopeReducing (← inferType (← e.proof))
         let some (_, lhs, rhs) := ty.eq? | return #[]
+        -- the calculus is on the right as `simp` sees the lemma
+        let (lhs, rhs) := if e.inv then (rhs, lhs) else (lhs, rhs)
         let some (_, _, _, elem) := matchCFC? rhs | return #[]
         if elem.isMVar then return #[]
         unless ← withReducible <| isDefEq elem t do return #[]
