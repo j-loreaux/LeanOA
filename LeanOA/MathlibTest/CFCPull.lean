@@ -715,7 +715,68 @@ example (ha : IsStarNormal a) (f g : ℂ → ℂ) (hf : Continuous f) (hg : Cont
     cfc g (cfc f a) * cfc f a = cfc (fun x : ℂ ↦ g x * x) (cfc f a) := by
   cfc_pull ℂ (cfc f a)
 
+/- A side goal raised under a binder is quantified over it; its context is the goal's, not the
+binder's. -/
+/--
+error: unsolved goals
+case cfc_pull.continuity
+A : Type u_1
+inst✝ : CStarAlgebra A
+a : A
+ha : IsStarNormal a
+f : ℕ → ℂ → ℂ
+⊢ ∀ (n : ℕ), ContinuousOn (f n) (spectrum ℂ a)
+
+case cfc_pull.continuity
+A : Type u_1
+inst✝ : CStarAlgebra A
+a : A
+ha : IsStarNormal a
+f : ℕ → ℂ → ℂ
+⊢ ∀ (n : ℕ), ContinuousOn (fun x ↦ x) (spectrum ℂ a)
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) (f : ℕ → ℂ → ℂ) :
+    ∀ n, cfc (f n) a * a = cfc (fun x ↦ f n x * x) a := by
+  cfc_pull +defer ℂ a => skip
+
+/- Flipping the unitality of an argument of a dependent function is not a congruence; the
+attempt is skipped rather than failing `simp`. -/
+example (ha : IsStarNormal a) (f : ℂ → ℂ) (hf : Continuous f) :
+    (⟨cfc f a * a, rfl⟩ : {x : A // x = x}) = ⟨cfc (fun x ↦ f x * x) a, rfl⟩ := by
+  cfc_pull ℂ a
+
+/- A hypothesis with the same calculus at the same element on both sides is not a pull. -/
+/--
+error: `cfc_pull`: both sides of `h` are the same calculus applied to the same element; there is nothing for `cfc_pull` to do with it
+-/
+#guard_msgs in
+example (ha : IsStarNormal a) (f g : ℂ → ℂ) (h : cfc f a = cfc g a) : cfc f a = cfc g a := by
+  cfc_pull [h] ℂ a
+
+/- Inside the calculus, an inner element that does not become the calculus applied to something
+is left alone: `cfc f (a + b)` does not become `cfc f (cfc id a + b)`. -/
+example (ha : IsStarNormal a) (f : ℂ → ℂ) (b : A) :
+    cfc f (a + b) * a = cfc f (a + b) * cfc (fun x : ℂ ↦ x) a := by
+  cfc_pull ℂ a
+
 end Regressions
+
+section HomOrder
+
+variable {A B : Type*} [CStarAlgebra A] [CStarAlgebra B] {a : A}
+
+/- The lemma for the specific homomorphism is preferred to the one for the class. -/
+/--
+info: Try this:
+  [apply] cfc_pull only [StarAlgHom.map_cfc] ℂ (φ a)
+-/
+#guard_msgs in
+example (φ : A →⋆ₐ[ℂ] B) (ha : IsStarNormal a) (hφ : Continuous φ) (f : ℂ → ℂ)
+    (hf : Continuous f) : φ (cfc f a) = cfc f (φ a) := by
+  cfc_pull? ℂ (φ a)
+
+end HomOrder
 
 
 /-! # `at` -/

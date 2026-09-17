@@ -222,6 +222,7 @@ structure Setup where
 
 /-- Whether `e` is (reducibly) one of the targets. -/
 def isTargetElem (targets : Array Target) (e : Expr) : MetaM Bool :=
+  let e := e.consumeMData
   targets.anyM fun t => do
     if e == t.elem then return true
     unless e.getAppFn == t.elem.getAppFn && e.getAppNumArgs == t.elem.getAppNumArgs do
@@ -292,8 +293,7 @@ partial def getSetup (cfg : Config) (t : Expr) (entries : Array Entry) (disch : 
             unless e.unital == tg.unital do continue
             atom ← atom.add id r.paramNames r.expr
           else if e.holes then
-            tgt ← tgt.add id r.paramNames r.expr
-              (prio := 100000 + boost distOf cfg.unital e - 100 * i)
+            tgt ← tgt.add id r.paramNames r.expr (prio := boost distOf cfg.unital e - 100 * i)
           else
             loose ← loose.add id r.paramNames r.expr
               (prio := boost distOf cfg.unital e - 100 * i)
@@ -318,7 +318,9 @@ itself the calculus applied to something other than a target, it is simplified *
 composing first would ask for the predicate at that something, when the target's is known. -/
 partial def cfcPre (R : Expr) (targets : Array Target) (atom loose conv compose : SimpTheorems)
     (stack : IO.Ref (Array Expr)) (setup : Expr → MetaM Setup) : Simp.Simproc := fun e => do
-  -- a target first of all: it may be an application of the calculus itself
+  -- a target first of all: it may be an application of the calculus itself, and it is atomic:
+  -- no lemma reads it as an expression in something else (`cfc_const` would read the target
+  -- `algebraMap ℂ A z` as a constant)
   if ← isTargetElem targets e then
     if let some r ← Simp.rewrite? e atom.post atom.erased "cfc_pull atom" false then
       return .visit r
@@ -347,11 +349,13 @@ partial def cfcPre (R : Expr) (targets : Array Target) (atom loose conv compose 
             (methods := Simp.mkMethods s.simprocs s.disch (wellBehavedDischarge := false))
           pure (rb, stats.usedTheorems.toArray)
       finally stack.modify (·.pop)
-    -- `cfc id b`, say, is no progress: composing would give `e` back, and loop
-    let same := match matchCFC? rb.expr with
-      | some (_, _, _, b') => b' == b
+    -- inside the calculus, only `b` becoming the calculus applied to something is progress
+    -- (composition can then happen); `cfc f (a + b)` with `b` foreign is left alone rather than
+    -- becoming `cfc f (cfc id a + b)`, and `cfc id b` itself would compose back to `e` and loop
+    let progress := rb.expr != b && match matchCFC? rb.expr with
+      | some (_, _, _, b') => b' != b
       | none => false
-    if rb.expr != b && !same then
+    if progress then
       -- the nested run has its own statistics; `cfc_pull?` wants its lemmas too
       for o in nestedUsed do Simp.recordSimpTheorem o
       return .visit (← Simp.mkCongrArg e.appFn! rb)
@@ -378,7 +382,8 @@ partial def flipPost (flip : SimpTheorems) (thms : Array SimpTheorems) : Simp.Si
   if flips.isEmpty then return .continue
   let candidates := if flips.size > 1 then #[flips] ++ flips.map (#[·]) else #[flips]
   for c in candidates do
-    let r₁ ← congrArgs e c
+    -- the congruence fails for a dependent function, `⟨cfc f a, h⟩ : {x // ..}` say
+    let some r₁ ← (try some <$> congrArgs e c catch _ => pure none) | continue
     for s in thms do
       if let some r₂ ← Simp.rewrite? r₁.expr s.post s.erased "cfc_pull" false then
         return .visit (← r₁.mkEqTrans r₂)
@@ -478,6 +483,7 @@ hypotheses; a placeholder found under some is replaced by a goal quantified over
 back to them. -/
 def replacePlaceholders (proof : Expr) : MetaM (Expr × Array MVarId) := do
   let outer ← getLCtx
+  let outerInsts ← getLocalInstances
   let goals ← IO.mkRef (#[] : Array (Expr × MVarId))
   let proof ← Meta.transform (← instantiateMVars proof) fun e => do
     let .mdata d b := e | return .continue
@@ -490,7 +496,8 @@ def replacePlaceholders (proof : Expr) : MetaM (Expr × Array MVarId) := do
     let g ← match (← goals.get).find? (·.1 == ty) with
       | some (_, g) => pure g
       | none =>
-        let g ← mkFreshExprSyntheticOpaqueMVar ty
+        -- in the goal's context, not the binders': the goal quantifies over those
+        let g ← withLCtx outer outerInsts <| mkFreshExprSyntheticOpaqueMVar ty
         goals.modify (·.push (ty, g.mvarId!))
         pure g.mvarId!
     let vars ← binders.filterM fun x ↦ return !(← x.fvarId!.getDecl).isLet

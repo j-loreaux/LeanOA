@@ -107,6 +107,9 @@ def mkEntries (origin : Origin) (type : Expr) (prio : Nat) : MetaM (Array Entry)
     | none, some c => pullEntry xs lhs rhs c false
     | some (Rl, ul, _, el), some (Rr, ur, _, er) =>
       if el == er then
+        if ul == ur && Rl == Rr then
+          throwError "`cfc_pull`: both sides of `{← ppOrigin origin}` are the same calculus \
+            applied to the same element; there is nothing for `cfc_pull` to do with it"
         -- a conversion; record both directions, `cfc_pull` picks one
         return #[
           { origin, inv := false, kind := .conv, prio, ring := ringKey Rr, unital := ur,
