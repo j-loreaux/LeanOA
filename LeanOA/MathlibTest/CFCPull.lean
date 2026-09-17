@@ -109,6 +109,12 @@ example (ha : IsSelfAdjoint a) (f : ℝ → ℝ) (hf : Continuous f)
     case cfc_pull.predicate => exact ha
     case cfc_pull.continuity => fun_prop
 
+/- `(disch := ..)` is for the `cfc_pull.side` goals, here `∀ x ∈ spectrum ℝ a, f x ≠ 0`. -/
+example (ha : IsSelfAdjoint a) (f : ℝ → ℝ) (hf : Continuous f)
+    (hspec : spectrum ℝ a ⊆ Set.Icc (-1) 1) (hf0 : ∀ x ∈ Set.Icc (-1 : ℝ) 1, f x ≠ 0) :
+    Ring.inverse (cfc f a) = cfc (fun x : ℝ ↦ (f x)⁻¹) a := by
+  cfc_pull (disch := grind) ℝ a
+
 example (f : ℝ → ℝ) (hf : Continuous f) (hf0 : 0 = f 0) :
     cfcₙ f a + cfcₙ f a = cfcₙ (fun x ↦ f x + f x) a := by
   cfc_pull -unital ℝ a => all_goals first | (symm; exact hf0)

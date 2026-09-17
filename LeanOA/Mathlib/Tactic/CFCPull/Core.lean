@@ -510,6 +510,10 @@ example (ha : p a) : star a * a = cfc (fun x : R ↦ star x * x) a := by
   script, which sees only those goals and must close all of them. `case cfc_pull.continuity => ..`
   and so on select goals by kind: `cfc_pull.predicate`, `cfc_pull.continuity`,
   `cfc_pull.mapZero` and `cfc_pull.side`.
+* `cfc_pull (disch := tacticSeq) R a`: try `tacticSeq` on the `cfc_pull.side` goals, the side goals
+  that are neither about continuity, nor `f 0 = 0`, nor the predicate of the calculus, and that
+  `cfc_pull` has no tactic of its own for. Those it does not close are left, or handed to the
+  `=> ..` block, as usual.
 * `cfc_pull +defer R a => tacticSeq`: attempt to discharge no side goals, and hand all of them to
   the `=> ..` block.
 * `cfc_pull R a [lemma1, -lemma2, h, e]`: the list is that of `simp`. An equation with `cfc` or
@@ -530,20 +534,20 @@ by `cfc_tac` for the predicate of the calculus; `assumption` is tried on all of 
 Tracing of the `simp` call is available with `set_option trace.Meta.Tactic.simp true`, and of the
 side goals with `set_option trace.Tactic.cfc_pull true`.
 -/
-syntax (name := cfcPull) "cfc_pull" optConfig ppSpace colGt term:max cfcPullElems (&" only")?
-  (simpArgs)? (location)? (" => " colGt tacticSeq)? : tactic
+syntax (name := cfcPull) "cfc_pull" optConfig (discharger)? ppSpace colGt term:max
+  cfcPullElems (&" only")? (simpArgs)? (location)? (" => " colGt tacticSeq)? : tactic
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullTrace) "cfc_pull?" optConfig ppSpace colGt term:max cfcPullElems
-  (&" only")? (simpArgs)? (location)? (" => " colGt tacticSeq)? : tactic
+syntax (name := cfcPullTrace) "cfc_pull?" optConfig (discharger)? ppSpace colGt
+  term:max cfcPullElems (&" only")? (simpArgs)? (location)? (" => " colGt tacticSeq)? : tactic
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullConv) "cfc_pull" optConfig ppSpace colGt term:max cfcPullElems (&" only")?
-  (simpArgs)? (" => " colGt tacticSeq)? : conv
+syntax (name := cfcPullConv) "cfc_pull" optConfig (discharger)? ppSpace colGt term:max
+  cfcPullElems (&" only")? (simpArgs)? (" => " colGt tacticSeq)? : conv
 
 @[inherit_doc cfcPull]
-syntax (name := cfcPullTraceConv) "cfc_pull?" optConfig ppSpace colGt term:max cfcPullElems
-  (&" only")? (simpArgs)? (" => " colGt tacticSeq)? : conv
+syntax (name := cfcPullTraceConv) "cfc_pull?" optConfig (discharger)? ppSpace colGt
+  term:max cfcPullElems (&" only")? (simpArgs)? (" => " colGt tacticSeq)? : conv
 
 /-- Discharge a hypothesis with a local hypothesis if there is one, and otherwise with a
 placeholder. `simp` rejects a rewrite whose proof contains an assignable metavariable, so the
@@ -690,8 +694,10 @@ def closes (g : MVarId) (tac : TacticM Unit) : TacticM Bool := do
 
 /-- The side goals, deduplicated, tagged by kind, and without those the tactic for their kind
 closes: `cfc_cont_tac` for continuity, `cfc_zero_tac` for `f 0 = 0`, the predicate lemmas and
-`cfc_tac` for the predicate of the calculus, and `assumption` for all. -/
-def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := do
+`cfc_tac` for the predicate of the calculus, the discharger `(disch := ..)`, if there is one, for
+the goals of no particular kind, and `assumption` for all. -/
+def sideGoals (cfg : Config) (disch? : Option (TSyntax ``discharger)) (goals : Array MVarId) :
+    TacticM (List MVarId) := do
   let mut out : Array MVarId := #[]
   for g in goals do
     if ← g.isAssigned then continue
@@ -715,17 +721,22 @@ def sideGoals (cfg : Config) (goals : Array MVarId) : TacticM (List MVarId) := d
           ← `(tactic| exact cfcₙ_predicate _ _)])
     g.setTag tag
     let tacs ← if cfg.defer then pure #[] else pure (#[← `(tactic| assumption)] ++ tacs)
-    let closed ← tacs.anyM fun tac ↦ do closes g (evalTactic (← `(tactic| (intros; $tac))))
+    let mut closed ← tacs.anyM fun tac ↦ do closes g (evalTactic (← `(tactic| (intros; $tac))))
+    -- the discharger sees the goal as it is: `intros` would take `f x ≠ 0` apart
+    if let some disch := disch? then
+      if !closed && !cfg.defer && tag == `cfc_pull.side then
+        closed ← closes g (evalTactic disch.raw[3])
     trace[Tactic.cfc_pull] "side goal {ty}: {if closed then "closed" else "unsolved"}"
     unless closed do out := out.push g
   return out.toList
 
 /-- Turn the placeholders in `proof` into side goals and deal with them: those the tactic for
 their kind does not close are handed to the `=> ..` block, if there is one. -/
-def dischargeSideGoals (cfg : Config) (proof : Expr) (arrow? : Option Syntax)
+def dischargeSideGoals (cfg : Config) (proof : Expr) (disch? : Option (TSyntax ``discharger))
+    (arrow? : Option Syntax)
     (tac? : Option (TSyntax ``tacticSeq)) : TacticM Expr := do
   let (proof, goals) ← replacePlaceholders proof
-  let side ← sideGoals cfg goals
+  let side ← sideGoals cfg disch? goals
   appendGoals side
   if let (some arrow, some tac) := (arrow?, tac?) then
     withRef arrow <| focusGoalsAndDone side.contains (evalTactic tac)
@@ -733,12 +744,12 @@ def dischargeSideGoals (cfg : Config) (proof : Expr) (arrow? : Option Syntax)
 
 @[tactic cfcPull, tactic cfcPullTrace]
 def evalCFCPull : Tactic := fun stx => withMainContext do
-  let (tk, cfgStx, only?, lems?, ring, elem, loc?, arrow?, tac?) ← match stx with
-    | `(tactic| cfc_pull%$tk $cfgStx:optConfig $ring $elem $[only%$only?]? $[$lems?]?
-        $[$loc?:location]? $[=>%$arrow? $tac?]?)
-    | `(tactic| cfc_pull?%$tk $cfgStx:optConfig $ring $elem $[only%$only?]? $[$lems?]?
-        $[$loc?:location]? $[=>%$arrow? $tac?]?) =>
-      pure (tk, cfgStx, only?, lems?, ring, elem, loc?, arrow?, tac?)
+  let (tk, cfgStx, disch?, only?, lems?, ring, elem, loc?, arrow?, tac?) ← match stx with
+    | `(tactic| cfc_pull%$tk $cfgStx:optConfig $[$disch?:discharger]? $ring $elem
+        $[only%$only?]? $[$lems?]? $[$loc?:location]? $[=>%$arrow? $tac?]?)
+    | `(tactic| cfc_pull?%$tk $cfgStx:optConfig $[$disch?:discharger]? $ring $elem
+        $[only%$only?]? $[$lems?]? $[$loc?:location]? $[=>%$arrow? $tac?]?) =>
+      pure (tk, cfgStx, disch?, only?, lems?, ring, elem, loc?, arrow?, tac?)
     | _ => throwUnsupportedSyntax
   withRef tk do
   let (cfg, s, entries) ← elabArgs cfgStx only?.isSome lems? ring elem
@@ -755,18 +766,18 @@ def evalCFCPull : Tactic := fun stx => withMainContext do
     let lems ← mkOnlyLemmas stats.usedTheorems entries
     -- a comment after the call is trailing whitespace of its last token
     let elem : TSyntax ``cfcPullElems := ⟨elem.raw.unsetTrailing⟩
-    let sugg ← `(tactic| cfc_pull%$tk $cfgStx:optConfig $ring $elem only $lems)
+    let sugg ← `(tactic| cfc_pull%$tk $cfgStx:optConfig $[$disch?]? $ring $elem only $lems)
     TryThis.addSuggestion tk sugg (origSpan? := mkNullNode (#[tk, elem] ++ last))
-  root.assign (← dischargeSideGoals cfg (.mvar root) arrow? tac?)
+  root.assign (← dischargeSideGoals cfg (.mvar root) disch? arrow? tac?)
 
 @[tactic cfcPullConv, tactic cfcPullTraceConv]
 def evalCFCPullConv : Tactic := fun stx => withMainContext do
-  let (tk, cfgStx, only?, lems?, ring, elem, arrow?, tac?) ← match stx with
-    | `(conv| cfc_pull%$tk $cfgStx:optConfig $ring $elem $[only%$only?]? $[$lems?]?
-        $[=>%$arrow? $tac?]?)
-    | `(conv| cfc_pull?%$tk $cfgStx:optConfig $ring $elem $[only%$only?]? $[$lems?]?
-        $[=>%$arrow? $tac?]?) =>
-      pure (tk, cfgStx, only?, lems?, ring, elem, arrow?, tac?)
+  let (tk, cfgStx, disch?, only?, lems?, ring, elem, arrow?, tac?) ← match stx with
+    | `(conv| cfc_pull%$tk $cfgStx:optConfig $[$disch?:discharger]? $ring $elem
+        $[only%$only?]? $[$lems?]? $[=>%$arrow? $tac?]?)
+    | `(conv| cfc_pull?%$tk $cfgStx:optConfig $[$disch?:discharger]? $ring $elem
+        $[only%$only?]? $[$lems?]? $[=>%$arrow? $tac?]?) =>
+      pure (tk, cfgStx, disch?, only?, lems?, ring, elem, arrow?, tac?)
     | _ => throwUnsupportedSyntax
   withRef tk do
   let (cfg, s, entries) ← elabArgs cfgStx only?.isSome lems? ring elem
@@ -779,9 +790,9 @@ def evalCFCPullConv : Tactic := fun stx => withMainContext do
     let lems ← mkOnlyLemmas stats.usedTheorems entries
     -- a comment after the call is trailing whitespace of its last token
     let elem : TSyntax ``cfcPullElems := ⟨elem.raw.unsetTrailing⟩
-    let sugg ← `(conv| cfc_pull%$tk $cfgStx:optConfig $ring $elem only $lems)
+    let sugg ← `(conv| cfc_pull%$tk $cfgStx:optConfig $[$disch?]? $ring $elem only $lems)
     TryThis.addSuggestion tk sugg (origSpan? := mkNullNode (#[tk, elem] ++ last))
-  let proof ← dischargeSideGoals cfg (← r.getProof) arrow? tac?
+  let proof ← dischargeSideGoals cfg (← r.getProof) disch? arrow? tac?
   Conv.applySimpResult { r with proof? := some proof }
 
 end Mathlib.Tactic.CFCPull
