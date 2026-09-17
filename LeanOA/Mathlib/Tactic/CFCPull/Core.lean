@@ -737,6 +737,8 @@ def evalCFCPull : Tactic := fun stx => withMainContext do
   if stx.isOfKind ``cfcPullTrace then
     -- only the part up to the lemma list is replaced, leaving any location and block as written
     let lems ← mkOnlyLemmas stats.usedTheorems entries
+    -- a comment after the call is trailing whitespace of its last token
+    let elem : TSyntax ``cfcPullElems := ⟨elem.raw.unsetTrailing⟩
     let sugg ← `(tactic| cfc_pull%$tk $cfgStx:optConfig $ring $elem only $lems)
     TryThis.addSuggestion tk sugg (origSpan? := mkNullNode (#[tk, elem] ++ last))
   root.assign (← dischargeSideGoals cfg (.mvar root) arrow? tac?)
@@ -759,6 +761,8 @@ def evalCFCPullConv : Tactic := fun stx => withMainContext do
   if r.expr == lhs then throwError "`cfc_pull` made no progress"
   if stx.isOfKind ``cfcPullTraceConv then
     let lems ← mkOnlyLemmas stats.usedTheorems entries
+    -- a comment after the call is trailing whitespace of its last token
+    let elem : TSyntax ``cfcPullElems := ⟨elem.raw.unsetTrailing⟩
     let sugg ← `(conv| cfc_pull%$tk $cfgStx:optConfig $ring $elem only $lems)
     TryThis.addSuggestion tk sugg (origSpan? := mkNullNode (#[tk, elem] ++ last))
   let proof ← dischargeSideGoals cfg (← r.getProof) arrow? tac?
