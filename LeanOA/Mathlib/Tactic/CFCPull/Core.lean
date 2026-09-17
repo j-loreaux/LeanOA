@@ -24,9 +24,12 @@ It is `simp only` with those lemmas, plus what cannot be expressed without knowi
   a lemma with a structured element (`φ (cfc f a) = cfc f (φ a)`) are at when that element is a
   target, such as `x` in `φ x`;
 * the `target` lemmas (`a = cfc id a`, `1 = cfc 1 a`, `star b = cfc star b`, ..), whose algebraic
-  side does not determine the ring, instantiated at `R` (and, when the left-hand side is the bare
-  element, at the target);
-* priorities, boosted for lemmas at the ring `R` and the requested unitality;
+  side does not determine the ring, specialized at `R`. `simp` finds the element by unification,
+  and the rewrite is accepted if that element is a target; only when the algebraic side is the
+  bare element, or does not mention it, is the lemma instantiated at each target as well;
+* the order of the simp sets. The lemmas `simp` can use on its own are put in simp sets when they
+  are tagged, one for each use, ring and unitality; for each use, the sets at fewer scalar
+  conversions from `R` are tried first, then those at the requested unitality;
 * one pre-simproc on `cfc f b` / `cfcₙ f b`, which applies composition lemmas, simplifies `b`
   (never `f`) unless `b` is a target, and converts the scalar ring and unitality towards the
   requested ones (conversion lemmas are included only in that direction, so they cannot loop);
@@ -53,8 +56,8 @@ declare_config_elab elabConfig Config
 
 /-- The decomposition of the `[..]` list of `cfc_pull` into `cfc` lemmas, and the simp context. -/
 structure Lemmas where
-  /-- The `cfc_pull` lemmas: the `@[cfc_pull]` set, adjusted by the list. -/
-  entries : Array Entry
+  /-- The `cfc_pull` lemmas and their simp sets: the `@[cfc_pull]` ones, adjusted by the list. -/
+  state : State
   /-- The simp context `simp` elaborated the rest of the list into. -/
   ctx : Simp.Context
   /-- The simprocs of the list. -/
@@ -123,26 +126,6 @@ where
           out := out.push tg; todo := todo.push b
     go out todo
 
-/-- `Rank` dictates which of two lemmas is tried first by `cfc_pull`, most significant first. -/
-structure Rank where
-  /-- The scalar conversions from the lemma's ring to the requested one; fewer first. -/
-  conversions : Nat
-  /-- Whether the lemma is not at the requested unitality; the requested one first. -/
-  flipped : Bool
-  /-- The priority of the lemma; higher first. -/
-  prio : Nat
-  /-- For a `target` lemma, the index of the target it is instantiated at; earlier first. -/
-  target : Nat
-
-/-- `.gt` if `a` is tried before `b`. -/
-def Rank.compare (a b : Rank) : Ordering :=
-  (Ord.compare b.conversions a.conversions).then <| (Ord.compare b.flipped a.flipped).then <|
-    (Ord.compare a.prio b.prio).then (Ord.compare b.target a.target)
-
-/-- The `simp` priority realizing a rank among `ranks`: the number of them it is tried before. -/
-def Rank.toPrio (ranks : Array Rank) (r : Rank) : Nat :=
-  ranks.countP (r.compare · == .gt)
-
 /-- Distances from the key of `R` in the graph of scalar conversions. -/
 def ringDistances (R : Expr) (entries : Array Entry) : Array (Name × Nat) := Id.run do
   let some r := R.getAppFn.constName? | return #[]
@@ -164,24 +147,20 @@ def ringDistances (R : Expr) (entries : Array Entry) : Array (Name × Nat) := Id
     frontier := next
   return dist
 
-/-- Instantiate a `target` lemma at `R` and a target: its ring is `R`, and its element is the
-target itself if the left-hand side is the bare element, or else any element of the target's
-algebra. The arguments this leaves undetermined are metavariables, for the caller to abstract;
-`simp` synthesizes the instances among them at rewrite time. -/
-def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R)
-    (constants : Bool := true) : MetaM (Option (Expr × Bool)) := do
+/-- Specialize a `target` lemma at the ring `R` and, if it is given, at a target, which is then
+the element of the lemma. The arguments this leaves undetermined are metavariables, for the caller
+to abstract; `simp` synthesizes the instances among them at rewrite time. Also returned is whether
+the left-hand side is the bare element. -/
+def instantiateTarget (R : Expr) (t? : Option Target) (e : Entry) (S : Expr := R) :
+    MetaM (Option (Expr × Bool)) := do
   let prf ← e.proof
   let (mvars, bis, ty) ← forallMetaTelescopeReducing (← inferType prf)
   let some (_, lhs, rhs) := ty.eq? | return none
   let (lhs, rhs) := if e.inv then (rhs, lhs) else (lhs, rhs)
   let some (R', _, _, elem) := matchCFC? rhs | return none
   unless ← isDefEq R' R do return none
-
-  unless ← isDefEq (← inferType elem) t.alg do return none
-  -- an element the left-hand side does not determine must be the target
-  if elem.isMVar then
-    -- a constant (`1 = cfc 1 a`) is any target's, which is of no use when there are several
-    unless constants || (lhs.findMVar? (· == elem.mvarId!)).isSome do return none
+  if let some t := t? then
+    unless ← isDefEq (← inferType elem) t.alg do return none
     unless ← isDefEq elem t.elem do return none
   -- a type not appearing in the goal, the `S` of `StarAlgHomClass.map_cfc` say, is taken to
   -- be `S`; the caller tries `R` and the rings of the conversion graph.
@@ -202,20 +181,6 @@ def instantiateTarget (R : Expr) (t : Target) (e : Entry) (S : Expr := R)
         unless ← isDefEq m inst do return none
   let prf ← if e.inv then mkEqSymm (prf.beta mvars) else pure (prf.beta mvars)
   return some (← instantiateMVars prf, lhs.isMVar)
-
-/-- Add a `pull` lemma to a simp set, specialized to the ring `R` if it is generic in its ring.
-Left generic, `cfc_const_mul_id : r * a = cfc (fun x ↦ r * x) a` would match `t • a` with `t : ℝ`
-at a complex calculus, and the result be converted afterwards. -/
-def addAt (R : Expr) (s : SimpTheorems) (e : Entry) (prio : Nat) : MetaM SimpTheorems := do
-  if e.ring.isSome then return ← e.addTo s prio
-  let prf ← e.proof
-  let (mvars, _, ty) ← forallMetaTelescopeReducing (← inferType prf)
-  let some (_, lhs, rhs) := ty.eq? | e.addTo s prio
-  let some (R', _, _, _) := matchCFC? (if e.inv then lhs else rhs) | e.addTo s prio
-  unless ← isDefEq R' R do return s
-  let prf ← if e.inv then mkEqSymm (prf.beta mvars) else pure (prf.beta mvars)
-  let r ← abstractMVars (← instantiateMVars prf)
-  s.add e.origin r.paramNames r.expr (prio := prio)
 
 /-- Everything `simp` needs to pull towards one ring. -/
 structure Setup where
@@ -267,6 +232,30 @@ def isTargetElem (targets : Array Target) (e : Expr) : MetaM Bool := do
     unless sameHead && e.getAppNumArgs == t.elem.getAppNumArgs do return false
     withNewMCtxDepth <| withReducible <| isDefEq e t.elem
 
+/-- Rewrite with the first of the simp sets that has a lemma for `e`. -/
+def rewriteAny (sets : Array SimpTheorems) (e : Expr) (tag : String) :
+    SimpM (Option Simp.Result) := do
+  for s in sets do
+    if let some r ← Simp.rewrite? e s.post s.erased tag false then return some r
+  return none
+
+/-- Rewrite with lemmas in which `simp` finds the element by unification: the rewrite is accepted
+if it is towards a target, `star a ↦ cfc star a` but not `star b ↦ cfc star b`, and at the ring
+`R?`, if that is given. -/
+def rewriteTowards (targets : Array Target) (sets : Array SimpTheorems) (e : Expr)
+    (R? : Option Expr := none) : SimpM (Option Simp.Result) := do
+  -- a rewrite turned down is not a use of the lemma, as far as `cfc_pull?` is concerned
+  let used := (← get).usedTheorems
+  for s in sets do
+    let some r ← Simp.rewrite? e s.post s.erased "cfc_pull towards" false | continue
+    if let some (S, _, _, b) := matchCFC? r.expr then
+      let ringOk ← match R? with
+        | some R => withNewMCtxDepth <| isDefEq S R
+        | none => pure true
+      if ringOk && (← isTargetElem targets b) then return some r
+    modify fun st ↦ { st with usedTheorems := used }
+  return none
+
 /-- The congruence `e = e'`, where `e'` is `e` with the arguments at the positions in `rs`
 replaced by the results there. -/
 def congrArgs (e : Expr) (rs : Array (Nat × Simp.Result)) : MetaM Simp.Result := do
@@ -284,7 +273,7 @@ roots. -/
 partial def getSetup (roots : Array Expr) (R : Expr) : PullM Setup := do
   let c ← read
   let { cfg, lems, disch, cache, .. } := c
-  let entries := lems.entries
+  let entries := lems.state.entries
   for (R', roots', s) in ← cache.get do
     if roots == roots' && (← withNewMCtxDepth <| isDefEq R R') then return s
   let targets ← findTargets cfg entries R roots
@@ -298,69 +287,78 @@ partial def getSetup (roots : Array Expr) (R : Expr) : PullM Setup := do
   -- a concrete ring that is not a node of the conversion graph is only usable if it is `R`
   let distOf (n : Option Name) : Option Nat :=
     if n == R.getAppFn.constName? then some 0 else distOf n
-  let rank (e : Entry) (target : Nat := 0) : Rank :=
-    { conversions := if e.ring.isNone then 0 else (distOf e.ring).getD (dist.size + 1)
-      flipped := e.unital != cfg.unital, prio := e.prio, target }
-  let ranks := entries.flatMap fun e ↦
-    if e.kind == .target then (Array.range targets.size).map (rank e ·) else #[rank e]
-  let prio (e : Entry) (target : Nat := 0) : Nat := (rank e target).toPrio ranks
-  let mut pull : SimpTheorems := {}
-  let mut loose : SimpTheorems := {}
-  let mut conv : SimpTheorems := {}
-  let mut flip : SimpTheorems := {}
-  let mut compose : SimpTheorems := {}
-  let mut tgt : SimpTheorems := {}
+  let mut st := lems.state
   let mut atom : SimpTheorems := {}
-  for n in [``eq_self, ``iff_self, ``implies_true] do
-    pull ← pull.addConst n
+  -- the lemmas `simp` cannot use on its own; the others are in the simp sets of `st` already
   for e in entries do
-    match e.kind with
-    | .pull =>
-      if e.holes then pull ← addAt R pull e (prio e)
-      else loose ← addAt R loose e (prio e)
-    -- compositions and conversions apply at the ring of the calculus they meet, whatever it is
-    | .compose => compose ← e.addTo compose (prio := prio e)
-    | .conv =>
-      if e.unital != e.srcUnital then
-        flip ← e.addTo flip (prio := eval_prio default)
-        -- towards the requested unitality
-        if e.unital == cfg.unital then conv ← e.addTo conv (prio := 2000)
-      else if let (some d, some d') := (distOf e.ring, distOf e.srcRing) then
-        -- towards the requested ring
-        if d < d' then conv ← e.addTo conv (prio := eval_prio default)
-    | .target =>
-      -- a lemma towards a structured element, `φ a`, is of use only if a target is of that shape;
-      -- those with a free type are worth the check, being instantiated at several rings each
-      if e.freeType && e.elemHead.isSome &&
-          !targets.any (·.elem.consumeMData.getAppFn.constName? == e.elemHead) then continue
-      for (tg, i) in targets.zipIdx do
-        let mut seen : Array Expr := #[]
-        -- a type the lemma leaves free is guessed among the rings of the conversion graph, all of
-        -- which are constants
-        for S in if e.freeType then #[R] ++ dist.map (mkConst ·.1) else #[R] do
-          let some (prf, bare) ← instantiateTarget R tg e S (constants := !shared[i]!) | continue
-          let r ← abstractMVars prf
-          if seen.contains r.expr then continue
-          seen := seen.push r.expr
-          trace[Tactic.cfc_pull] "{← ppOrigin e.origin} at {tg.elem}: {← inferType prf}"
-          let id := .other (e.origin.key ++ `inst)
-          if bare then
-            -- the unital and non-unital identity lemmas would otherwise compete on equal terms
-            unless e.unital == tg.unital do continue
-            atom ← atom.add id r.paramNames r.expr
-          else if e.holes then
-            tgt ← tgt.add id r.paramNames r.expr (prio := prio e i)
-          else
-            loose ← loose.add id r.paramNames r.expr (prio := prio e i)
+    unless e.kind == .target do continue
+    -- a lemma towards a structured element, `φ a`, is of use only if a target is of that shape;
+    -- those with a free type are worth the check, being specialized at several rings each
+    if e.freeType && e.elemHead.isSome &&
+        !targets.any (·.elem.consumeMData.getAppFn.constName? == e.elemHead) then continue
+    let id := .other (e.origin.key ++ `inst)
+    let add (st : State) (set : SetKind) (r : AbstractMVarsResult) : MetaM State := do
+      let thms ← mkSimpTheoremFromExpr id r.paramNames r.expr (prio := e.prio)
+      return st.insert { set, ring := none, unital := e.unital } thms
+    unless e.elemFree do
+      -- `simp` finds the element, and the simprocs accept it if it is a target
+      let mut seen : Array Expr := #[]
+      -- a type the lemma leaves free is guessed among the rings of the conversion graph, all of
+      -- which are constants
+      for S in if e.freeType then #[R] ++ dist.map (mkConst ·.1) else #[R] do
+        let some (prf, _) ← instantiateTarget R none e S | continue
+        let r ← abstractMVars prf
+        if seen.contains r.expr then continue
+        seen := seen.push r.expr
+        trace[Tactic.cfc_pull] "{← ppOrigin e.origin} at {R}: {← inferType prf}"
+        st ← add st (if e.holes then .towards else .looseTowards) r
+      continue
+    for (tg, i) in targets.zipIdx do
+      let some (prf, bare) ← instantiateTarget R tg e | continue
+      let r ← abstractMVars prf
+      trace[Tactic.cfc_pull] "{← ppOrigin e.origin} at {tg.elem}: {← inferType prf}"
+      if bare then
+        -- the unital and non-unital identity lemmas would otherwise compete on equal terms
+        unless e.unital == tg.unital do continue
+        atom ← atom.add id r.paramNames r.expr
+      -- a constant (`1 = cfc 1 a`) is any target's, which is of no use when there are several
+      else if shared[i]! then continue
+      else st ← add st (if e.holes then .pull else .loose) r
+  -- the simp sets for one use, in the order they are tried in: fewer scalar conversions first,
+  -- then the requested unitality
+  let weight (k : Key) : Nat :=
+    2 * (if k.ring.isNone then 0 else (distOf k.ring).getD (dist.size + 1)) +
+      (if k.unital == cfg.unital then 0 else 1)
+  let sets := st.sets.qsort fun (k, _) (k', _) ↦
+    weight k < weight k' || (weight k == weight k' && toString k.ring < toString k'.ring)
+  let ordered (set : SetKind) : Array SimpTheorems := (sets.filter (·.1.set == set)).map (·.2)
+  let pull := ordered .pull
+  let towards := ordered .towards
+  -- conversions between the two calculi, and those among them towards the requested unitality;
+  -- then those towards the requested ring. They apply at the ring of the calculus they meet
+  let convs := sets.filter (·.1.set == .conv)
+  let flip := (convs.filter fun (k, _) ↦ k.unital != k.srcUnital).map (·.2)
+  let conv := (convs.filter fun (k, _) ↦ k.unital != k.srcUnital && k.unital == cfg.unital) ++
+    convs.filter fun (k, _) ↦ k.unital == k.srcUnital &&
+      match distOf k.ring, distOf k.srcRing with
+      | some d, some d' => d < d'
+      | _, _ => false
+  let conv := conv.map (·.2)
+  let mut builtin : SimpTheorems := {}
+  for n in [``eq_self, ``iff_self, ``implies_true] do
+    builtin ← builtin.addConst n
   -- the rest of the list first: it is what the user asked for
-  let ctx := lems.ctx.setSimpTheorems (lems.ctx.simpTheorems ++ #[pull, tgt])
-  let post : Simp.Simproc := if shared.any id then
-      flipPost flip #[pull, tgt] >> siblingPost c R targets
-    else flipPost flip #[pull, tgt]
+  let ctx := lems.ctx.setSimpTheorems (lems.ctx.simpTheorems ++ #[builtin] ++ pull)
+  let tgtPost : Simp.Simproc := fun e ↦ do
+    let some r ← rewriteTowards targets towards e | return .continue
+    return .visit r
+  let post := tgtPost >> flipPost targets flip pull towards
+  let post := if shared.any id then post >> siblingPost c R targets else post
   let simprocs : Simp.Simprocs := {
     pre := DiscrTree.empty.insertKeyValue #[.star]
       { declName := `cfcPullPre, post := false, keys := #[.star],
-        proc := .inl (cfcPre c roots R targets atom loose conv compose) }
+        proc := .inl (cfcPre c roots R targets atom (ordered .loose) (ordered .looseTowards) conv
+          (ordered .compose)) }
     post := DiscrTree.empty.insertKeyValue #[.star]
       { declName := `cfcPullPost, post := true, keys := #[.star], proc := .inl post } }
   let s := { ctx, simprocs := #[simprocs] ++ lems.simprocs, disch }
@@ -374,7 +372,8 @@ applied to it; and only then convert towards the requested unitality, then ring.
 itself the calculus applied to something other than a target, it is simplified *before* composing:
 composing first would ask for the predicate at that something, when the target's is known. -/
 partial def cfcPre (c : Context) (roots : Array Expr) (R : Expr) (targets : Array Target)
-    (atom loose conv compose : SimpTheorems) : Simp.Simproc := fun e => do
+    (atom : SimpTheorems) (loose looseTowards conv compose : Array SimpTheorems) : Simp.Simproc :=
+    fun e => do
   -- a target first of all: it may be an application of the calculus itself, and it is atomic:
   -- no lemma reads it as an expression in something else (`cfc_const` would read the target
   -- `algebraMap ℂ A z` as a constant)
@@ -383,8 +382,8 @@ partial def cfcPre (c : Context) (roots : Array Expr) (R : Expr) (targets : Arra
       return .visit r
     return .continue
   let some (S, _, _, b) := matchCFC? e |
-    if let some r ← Simp.rewrite? e loose.post loose.erased "cfc_pull loose" false then
-      return .visit r
+    if let some r ← rewriteAny loose e "cfc_pull loose" then return .visit r
+    if let some r ← rewriteTowards targets looseTowards e R then return .visit r
     return .continue
   unless e.getAppNumArgs == (← getConstInfo e.getAppFn.constName!).type.getForallArity do
     return .continue
@@ -393,7 +392,7 @@ partial def cfcPre (c : Context) (roots : Array Expr) (R : Expr) (targets : Arra
     | some (_, _, _, c) => pure (!isTarget && !(← isTargetElem targets c))
     | none => pure false
   let compose? : SimpM (Option Simp.Result) :=
-    Simp.rewrite? e compose.post compose.erased "cfc_pull compose" false
+    rewriteAny compose e "cfc_pull compose"
   unless isTarget || innerElsewhere do
     if let some r ← compose? then return .visit r
   if !isTarget then
@@ -415,14 +414,14 @@ partial def cfcPre (c : Context) (roots : Array Expr) (R : Expr) (targets : Arra
       return .visit (← Simp.mkCongrArg e.appFn! rb)
   if innerElsewhere then
     if let some r ← compose? then return .visit r
-  if let some r ← Simp.rewrite? e conv.post conv.erased "cfc_pull conv" false then
-    return .visit r
+  if let some r ← rewriteAny conv e "cfc_pull conv" then return .visit r
   return .done { expr := e }
 
 /-- The post-simproc, run when no lemma applies to `e`: flip the unitality of the arguments that
 are applications of the calculus — all of them together first, then each on its own — and try the
 lemmas again. -/
-partial def flipPost (flip : SimpTheorems) (thms : Array SimpTheorems) : Simp.Simproc := fun e => do
+partial def flipPost (targets : Array Target) (flip pull towards : Array SimpTheorems) :
+    Simp.Simproc := fun e => do
   if (matchCFC? e).isSome then return .continue
   let args := e.getAppArgs
   -- a flip that leads nowhere is not a use of the lemma, as far as `cfc_pull?` is concerned
@@ -431,16 +430,16 @@ partial def flipPost (flip : SimpTheorems) (thms : Array SimpTheorems) : Simp.Si
   for h : i in [0:args.size] do
     let arg := args[i]
     unless (matchCFC? arg).isSome do continue
-    if let some r ← Simp.rewrite? arg flip.post flip.erased "cfc_pull flip" false then
-      flips := flips.push (i, r)
+    if let some r ← rewriteAny flip arg "cfc_pull flip" then flips := flips.push (i, r)
   if flips.isEmpty then return .continue
   let candidates := if flips.size > 1 then #[flips] ++ flips.map (#[·]) else #[flips]
   for c in candidates do
     -- the congruence fails for a dependent function, `⟨cfc f a, h⟩ : {x // ..}` say
     let some r₁ ← (try some <$> congrArgs e c catch _ => pure none) | continue
-    for s in thms do
-      if let some r₂ ← Simp.rewrite? r₁.expr s.post s.erased "cfc_pull" false then
-        return .visit (← r₁.mkEqTrans r₂)
+    if let some r₂ ← rewriteAny pull r₁.expr "cfc_pull" then
+      return .visit (← r₁.mkEqTrans r₂)
+    if let some r₂ ← rewriteTowards targets towards r₁.expr then
+      return .visit (← r₁.mkEqTrans r₂)
   modify fun s => { s with usedTheorems := used }
   return .continue
 
@@ -596,42 +595,42 @@ taken back out of the simp set: a tagged one keeps its entries, and so its prior
 classified here, at `high` priority so that it outranks the tagged set. -/
 def elabLemmas (only : Bool) (args? : Option (TSyntax ``simpArgs)) : TacticM Lemmas := do
   let all := cfcPullExt.getState (← getEnv)
-  let mut entries := if only then #[] else all
+  let mut state : State := if only then {} else all
   let ctx ← Simp.mkContext (simpTheorems := #[{}])
-  let some stx := args? | return { entries, ctx }
+  let some stx := args? | return { state, ctx }
   let (erase, rest) := stx.raw[1].getSepArgs.partition (·.isOfKind ``simpErase)
   let list := mkNullNode #[mkAtom "[", mkNullNode (mkSepArray rest (mkAtom ",")), mkAtom "]"]
   let res ← elabSimpArgs list ctx #[] (eraseLocal := false) (kind := .simp)
   let mut thms := res.ctx.simpTheorems[0]!
   for (arg, r) in res.simpArgs do
     let #[thm] := r.simpTheorems | continue
-    if entries.any (·.origin.key == thm.origin.key) then
+    if state.entries.any (·.origin.key == thm.origin.key) then
       thms := thms.eraseCore thm.origin; continue
-    let tagged := all.filter (·.origin.key == thm.origin.key)
+    let tagged := all.entries.filter (·.origin.key == thm.origin.key)
     let new? ← if !tagged.isEmpty then pure (some tagged) else withRef arg do
       match thm.origin with
       | .decl n .. => mkEntries? (.decl n) (← getConstInfo n).type (eval_prio high)
       | o =>
         mkEntries? o (← inferType thm.proof) (eval_prio high) (some (thm.levelParams, thm.proof))
     let some new := new? | continue
-    entries := entries ++ new
+    state := new.foldl (·.add ·) state
     thms := thms.eraseCore thm.origin
   if res.simpArgs.any (·.2 matches .star) then
     for h in ← getPropHyps do
       let some new ← mkEntries? (.fvar h) (← h.getType) (eval_prio high) | continue
-      entries := entries ++ new
+      state := new.foldl (·.add ·) state
       thms := thms.eraseCore (.fvar h)
   let mut thmsArray := res.ctx.simpTheorems.set! 0 thms
   for arg in erase do
     let id := arg[1]
     let declName ← realizeGlobalConstNoOverloadWithInfo id
     let o : Origin := .decl declName
-    unless entries.any (·.origin.key == declName) || thmsArray.any (·.isLemma o) do
+    unless state.entries.any (·.origin.key == declName) || thmsArray.any (·.isLemma o) do
       throwErrorAt id "`{.ofConstName declName}` is not in the `cfc_pull` lemma set, so \
         `-{id}` has nothing to remove"
-    entries := entries.filter (·.origin.key != declName)
+    state := state.erase declName
     thmsArray := thmsArray.map (·.eraseCore o)
-  return { entries, ctx := res.ctx.setSimpTheorems thmsArray, simprocs := res.simprocs }
+  return { state, ctx := res.ctx.setSimpTheorems thmsArray, simprocs := res.simprocs }
 
 /-- Elaborate the arguments of `cfc_pull`. -/
 def elabArgs (cfgStx : TSyntax ``optConfig) (only : Bool)
@@ -646,7 +645,7 @@ def elabArgs (cfgStx : TSyntax ``optConfig) (only : Bool)
   let s ← (getSetup ts R).run {
     cfg, lems, disch := deferDischarge !cfg.defer
     cache := ← IO.mkRef #[] }
-  return (cfg, s, lems.entries)
+  return (cfg, s, lems.state.entries)
 
 /-- The lemma list `cfc_pull?` suggests. First the lemmas among `entries` that the run used, in
 order of first use: declarations by the shortest names that resolve to them here, terms as they

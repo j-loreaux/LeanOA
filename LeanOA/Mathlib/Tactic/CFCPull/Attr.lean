@@ -20,8 +20,9 @@ open Lean Meta
 inductive Kind where
   /-- `⟨algebraic expression⟩ = cfc f a`, usable as a plain `simp` lemma. -/
   | pull
-  /-- Like `pull`, but the ring or the element is not determined by the algebraic side,
-  e.g. `a = cfc (fun x : R ↦ x) a`. `cfc_pull` instantiates these at its targets. -/
+  /-- Like `pull`, but the ring, the element or a type is not determined by the algebraic side,
+  e.g. `a = cfc (fun x : R ↦ x) a`, so `simp` cannot use the lemma as it is. `cfc_pull`
+  specializes these at the ring asked for and, if need be (`Entry.elemFree`), at its targets. -/
   | target
   /-- `cfc f ⟨structured element⟩ = cfc g a`, e.g. `cfc f (CFC.abs a) = cfc (f ‖·‖) a`. -/
   | compose
@@ -58,14 +59,97 @@ structure Entry where
   /-- For `target` lemmas: whether some type appears in neither side of the equation, like the `S`
   of `StarAlgHomClass.map_cfc`. `cfc_pull` has to guess it, and tries the scalar rings it knows. -/
   freeType : Bool := false
+  /-- For `target` lemmas: whether the element has to be supplied, because the algebraic side is
+  the bare element (`a = cfc (fun x ↦ x) a`, which would match anything) or does not mention it
+  (`1 = cfc (fun _ ↦ 1) a`). Otherwise `simp` finds the element by unification, and `cfc_pull`
+  accepts the rewrite if it is a target. -/
+  elemFree : Bool := false
   /-- For `pull` and `target` lemmas: the head constant of the element the calculus is applied to,
   if it is structured: `DFunLike.coe` for the `φ a` of `φ (cfc f a) = cfc f (φ a)`. -/
   elemHead : Option Name := none
+  /-- The lemma as `simp` uses it, in its orientation and at its priority, if `simp` can use it on
+  its own, finding the ring and the element by unification: that is, unless it is a `target`
+  lemma, which `cfc_pull` specializes when it is called. -/
+  thms : Array SimpTheorem := #[]
   deriving Inhabited
 
+/-- What the lemmas of a simp set of `cfc_pull` are for. -/
+inductive SetKind where
+  /-- `pull` lemmas with holes: `simp` uses them itself. -/
+  | pull
+  /-- `pull` lemmas with holes towards a structured element (`φ (cfc f a) = cfc f (φ a)`), used
+  only if that element is a target. -/
+  | towards
+  /-- `pull` lemmas without holes, at a concrete ring (`CFC.sqrt a = cfc √· a`): used top-down. -/
+  | loose
+  /-- `pull` lemmas without holes that are generic in their ring, which they find in a scalar
+  (`r • a = cfc (r * ·) a`): used top-down, if `r` is in the ring asked for and `a` is a target. -/
+  | looseTowards
+  /-- `compose` lemmas. -/
+  | compose
+  /-- `conv` lemmas, in one direction. -/
+  | conv
+  deriving Inhabited, BEq, Repr
+
+/-- The lemmas of one simp set have the same use, ring and unitality. `cfc_pull` orders the sets
+for one use when it knows which ring and unitality are asked for: fewer scalar conversions first,
+then the requested unitality. Inside a set the priority decides, as always. -/
+structure Key where
+  /-- The use. -/
+  set : SetKind
+  /-- The head constant of the scalar ring, if it is concrete. -/
+  ring : Option Name
+  /-- Whether the calculus is `cfc` rather than `cfcₙ`. -/
+  unital : Bool
+  /-- For `conv` lemmas: the ring converted from. -/
+  srcRing : Option Name := none
+  /-- For `conv` lemmas: the unitality converted from. -/
+  srcUnital : Bool := true
+  deriving Inhabited, BEq
+
+/-- The simp set a lemma goes to when it is tagged, if it is not one `cfc_pull` specializes. -/
+def Entry.key? (e : Entry) : Option Key :=
+  let set? : Option SetKind := match e.kind with
+    | .target => none
+    | .compose => some .compose
+    | .conv => some .conv
+    | .pull => some <|
+      if e.holes then (if e.elemHead.isSome then .towards else .pull)
+      else if e.ring.isNone then .looseTowards else .loose
+  set?.map fun set ↦
+    { set, ring := e.ring, unital := e.unital, srcRing := e.srcRing, srcUnital := e.srcUnital }
+
+/-- The `@[cfc_pull]` lemmas, and the simp sets of those `simp` can use on its own. -/
+structure State where
+  /-- The lemmas. -/
+  entries : Array Entry := #[]
+  /-- The simp sets. -/
+  sets : Array (Key × SimpTheorems) := #[]
+  deriving Inhabited
+
+/-- Add lemmas to a simp set. -/
+def State.insert (s : State) (k : Key) (thms : Array SimpTheorem) : State :=
+  let add (t : SimpTheorems) := thms.foldl (·.addSimpTheorem ·) t
+  match s.sets.findIdx? (·.1 == k) with
+  | some i => { s with sets := s.sets.modify i fun (k, t) ↦ (k, add t) }
+  | none => { s with sets := s.sets.push (k, add {}) }
+
+/-- Add a lemma, to its simp set too if it has one. -/
+def State.add (s : State) (e : Entry) : State :=
+  let s := { s with entries := s.entries.push e }
+  match e.key? with
+  | some k => s.insert k e.thms
+  | none => s
+
+/-- Remove the lemmas of a declaration. -/
+def State.erase (s : State) (declName : Name) : State :=
+  let (gone, entries) := s.entries.partition (·.origin.key == declName)
+  let origins := gone.flatMap (·.thms.map (·.origin))
+  { entries, sets := s.sets.map fun (k, t) ↦ (k, origins.foldl (·.eraseCore ·) t) }
+
 /-- The environment extension holding the `@[cfc_pull]` lemmas. -/
-initialize cfcPullExt : SimpleScopedEnvExtension Entry (Array Entry) ←
-  registerSimpleScopedEnvExtension { initial := #[], addEntry := Array.push }
+initialize cfcPullExt : SimpleScopedEnvExtension Entry State ←
+  registerSimpleScopedEnvExtension { initial := {}, addEntry := State.add }
 
 /-- Recognise `cfc f a` or `cfcₙ f a`: `(ring, unital, fn, elem)`. -/
 def matchCFC? (e : Expr) : Option (Expr × Bool × Expr × Expr) := do
@@ -82,15 +166,6 @@ def Entry.proof (e : Entry) : MetaM Expr := do
   match e.origin with
   | .decl n .. => mkConstWithFreshMVarLevels n
   | .fvar id => return mkFVar id
-  | _ => do throwError "internal error: `cfc_pull` entry with origin `{← ppOrigin e.origin}`"
-
-/-- Add the lemma to a simp set, in its orientation. -/
-def Entry.addTo (e : Entry) (s : SimpTheorems) (prio : Nat := e.prio) : MetaM SimpTheorems := do
-  if let some (ps, prf) := e.term? then
-    return ← s.add e.origin ps prf (inv := e.inv) (prio := prio)
-  match e.origin with
-  | .decl n .. => s.addConst n (inv := e.inv) (prio := prio)
-  | .fvar id => s.add e.origin #[] (mkFVar id) (inv := e.inv) (prio := prio)
   | _ => do throwError "internal error: `cfc_pull` entry with origin `{← ppOrigin e.origin}`"
 
 /-- Classify a lemma of type `type`: the entries recording how `cfc_pull` may use it, or `none`
@@ -120,7 +195,16 @@ def mkEntries? (origin : Origin) (type : Expr) (prio : Nat)
         let (R, u) := if inv then (Rl, ul) else (Rr, ur)
         pure #[
           { origin, inv, kind := .compose, prio, ring := R.getAppFn.constName?, unital := u }]
-    return some (entries.map ({ · with term? }))
+    entries.mapM fun e ↦ do
+      let e := { e with term? }
+      if e.kind == Kind.target then return e
+      -- what `simp` makes of the lemma, once and for all
+      let thms ← match origin, term? with
+        | _, some (ps, prf) => mkSimpTheoremFromExpr origin ps prf (inv := e.inv) (prio := prio)
+        | .decl n .., _ => mkSimpTheoremFromConst n (inv := e.inv) (prio := prio)
+        | .fvar id, _ => mkSimpTheoremFromExpr origin #[] (mkFVar id) (inv := e.inv) (prio := prio)
+        | _, _ => throwError "internal error: `cfc_pull` lemma `{← ppOrigin origin}`"
+      return { e with thms }
 where
   /-- A lemma with the calculus on exactly one side, `cfcSide`; `inv` says it is the left one. -/
   pullEntry (xs : Array Expr) (alg cfcSide : Expr) (c : Expr × Bool × Expr × Expr) (inv : Bool) :
@@ -136,7 +220,8 @@ where
     let holes := (alg.find? fun e ↦ (matchCFC? e).isSome).isSome
     let ring := R.getAppFn.constName?
     let elemHead := elem.getAppFn.constName?
-    return #[{ origin, inv, kind, prio, ring, unital, holes, freeType, elemHead }]
+    let elemFree := elem.isFVar && (alg == elem || !alg.containsFVar elem.fvarId!)
+    return #[{ origin, inv, kind, prio, ring, unital, holes, freeType, elemHead, elemFree }]
 
 /-- Classify a lemma of type `type`, which must be one `cfc_pull` can use. -/
 def mkEntries (origin : Origin) (type : Expr) (prio : Nat) : MetaM (Array Entry) := do

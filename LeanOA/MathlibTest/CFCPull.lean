@@ -228,6 +228,16 @@ example (ha : IsStarNormal a) (f : ℂ → ℂ) (b : A) :
     cfc f (a + b) * a = cfc f (a + b) * cfc (fun x : ℂ ↦ x) a := by
   cfc_pull ℂ a
 
+/- Only towards the target: what is an expression in another element is left alone. -/
+example (ha : IsStarNormal a) :
+    star b * a ^ 2 + (3 : ℂ) • b = star b * cfc (fun x : ℂ ↦ x ^ 2) a + (3 : ℂ) • b := by
+  cfc_pull ℂ a
+
+/- The shortcut `r • a = cfc (r * ·) a` is not taken at `r • a ^ 2`, where it would ask for the
+predicate at `a ^ 2`; with nothing deferred to it, the `=> ..` block has nothing to do. -/
+example (ha : IsStarNormal a) : (3 : ℂ) • a ^ 2 = cfc (fun x : ℂ ↦ 3 * x ^ 2) a := by
+  cfc_pull ℂ a => skip
+
 end CStarAlgebra
 
 section Structured
@@ -265,6 +275,12 @@ example (φ : A →⋆ₐ[ℂ] B) (ha : IsStarNormal a) (hφ : Continuous φ) (f
 example (c : B) (hac : IsStarNormal (a, c)) (ha : IsStarNormal a) (hc : IsStarNormal c) :
     (star a * a, star c * c) = cfc (fun x : ℂ ↦ star x * x) (a, c) := by
   cfc_pull ℂ (a, c)
+
+/- A homomorphism is pulled through only towards a target: not towards `φ a` when it is `a`. -/
+example (φ : A →⋆ₐ[ℂ] B) (ha : IsStarNormal a) (f : ℂ → ℂ) (h : φ (cfc f a) = 0) :
+    φ (cfc f a) = 0 := by
+  fail_if_success cfc_pull ℂ a
+  exact h
 
 end Structured
 
@@ -324,8 +340,8 @@ example (ha : IsSelfAdjoint a) :
 whose hypothesis `0 ≤ 1 - a ^ 2` becomes a side goal. -/
 example [Nontrivial A] (ha : IsSelfAdjoint a) (ha_norm : ‖a‖ ≤ 1) :
     a + I • CFC.sqrt (1 - a ^ 2) = cfc (fun x ↦ ↑x.re + I * ↑√(1 - x.re ^ 2)) a := by
-  cfc_pull ℂ a only [cfc_id', cfc_const_mul_id, CFC.sqrt_eq_real_sqrt, cfc_const_one, cfc_pow_id,
-    cfc_sub, cfcₙ_eq_cfc, cfc_comp', cfc_real_eq_complex, cfc_add] =>
+  cfc_pull ℂ a only [cfc_id', CFC.sqrt_eq_real_sqrt, cfc_const_one, cfc_pow_id, cfc_sub,
+    cfcₙ_eq_cfc, cfc_comp', cfc_real_eq_complex, cfc_const_mul, cfc_add] =>
     -- the side goal `0 ≤ 1 - a ^ 2` left by `CFC.sqrt_eq_real_sqrt`
     have key : (1 : A) - a ^ 2 = cfc (fun x : ℝ ↦ 1 - x ^ 2) a := by cfc_pull ℝ a
     rw [key]
