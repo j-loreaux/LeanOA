@@ -6,7 +6,7 @@ Authors: Jireh Loreaux
 module
 
 public import Mathlib.Analysis.Complex.SqrtDeriv
-public import LeanOA.Mathlib.Tactic.CFCPull
+public import LeanOA.Mathlib.Tactic.CFCPull.Core
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.Tags
 
 /-!  # `CFC.sqrt` via the complex functional calculus -/

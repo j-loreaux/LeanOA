@@ -39,8 +39,8 @@ public import LeanOA.Mathlib.Data.Set.Function
 public import LeanOA.Mathlib.Lean.Elab.Tactic.Basic
 public import LeanOA.Mathlib.Misc
 public import LeanOA.Mathlib.Order.Hom.Basic
-public import LeanOA.Mathlib.Tactic.CFCPull
 public import LeanOA.Mathlib.Tactic.CFCPull.Attr
+public import LeanOA.Mathlib.Tactic.CFCPull.Core
 public import LeanOA.Mathlib.Topology.Algebra.Module.LinearMap
 public import LeanOA.Mathlib.Topology.Algebra.Module.PolarTopology
 public import LeanOA.Mathlib.Topology.Algebra.Module.Spaces.UniformConvergenceCLM

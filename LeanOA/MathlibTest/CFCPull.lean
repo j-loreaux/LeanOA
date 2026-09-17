@@ -5,7 +5,7 @@ Authors: Jireh Loreaux
 -/
 module
 
-public import LeanOA.Mathlib.Tactic.CFCPull
+public import LeanOA.Mathlib.Tactic.CFCPull.Core
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.Tags
 public import Mathlib.Analysis.CStarAlgebra.Classes
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Isometric
