@@ -224,6 +224,24 @@ structure Setup where
   /-- The discharger. -/
   disch : Simp.Discharge
 
+/-- What one call of `cfc_pull` works with, from start to finish. The simprocs run in `SimpM`, at
+`simp`'s pace and in nested runs of it, so what they share and change is in references. -/
+structure Context where
+  /-- The configuration. -/
+  cfg : Config
+  /-- The lemmas. -/
+  lems : Lemmas
+  /-- The discharger. -/
+  disch : Simp.Discharge
+  /-- The setups built so far, by ring and roots: the rings and roots needed are only found out
+  during the run, and a setup is expensive. -/
+  cache : IO.Ref (Array (Expr × Array Expr × Setup))
+  /-- The elements being simplified further up, which `cfcPre` leaves alone. -/
+  stack : IO.Ref (Array Expr)
+
+/-- `MetaM` with the `Context` of the call. -/
+abbrev PullM := ReaderT Context MetaM
+
 /-- Whether `e` is (reducibly) one of the targets. -/
 def isTargetElem (targets : Array Target) (e : Expr) : MetaM Bool :=
   let e := e.consumeMData
@@ -247,9 +265,9 @@ mutual
 
 /-- The simp context and simprocs pulling towards the `roots` at `R`, cached per ring and
 roots. -/
-partial def getSetup (cfg : Config) (lems : Lemmas) (disch : Simp.Discharge)
-    (cache : IO.Ref (Array (Expr × Array Expr × Setup))) (stack : IO.Ref (Array Expr))
-    (roots : Array Expr) (R : Expr) : MetaM Setup := do
+partial def getSetup (roots : Array Expr) (R : Expr) : PullM Setup := do
+  let c ← read
+  let { cfg, lems, disch, cache, .. } := c
   let entries := lems.entries
   for (R', roots', s) in ← cache.get do
     if roots == roots' && (← withNewMCtxDepth <| isDefEq R R') then return s
@@ -315,14 +333,13 @@ partial def getSetup (cfg : Config) (lems : Lemmas) (disch : Simp.Discharge)
             loose ← loose.add id r.paramNames r.expr (prio := prio e i)
   -- the rest of the list first: it is what the user asked for
   let ctx := lems.ctx.setSimpTheorems (lems.ctx.simpTheorems ++ #[pull, tgt])
-  let procs := getSetup cfg lems disch cache stack
   let post : Simp.Simproc := if shared.any id then
-      flipPost flip #[pull, tgt] >> siblingPost targets (procs · R)
+      flipPost flip #[pull, tgt] >> siblingPost c R targets
     else flipPost flip #[pull, tgt]
   let simprocs : Simp.Simprocs := {
     pre := DiscrTree.empty.insertKeyValue #[.star]
       { declName := `cfcPullPre, post := false, keys := #[.star],
-        proc := .inl (cfcPre R targets atom loose conv compose stack (procs roots)) }
+        proc := .inl (cfcPre c roots R targets atom loose conv compose) }
     post := DiscrTree.empty.insertKeyValue #[.star]
       { declName := `cfcPullPost, post := true, keys := #[.star], proc := .inl post } }
   let s := { ctx, simprocs := #[simprocs] ++ lems.simprocs, disch }
@@ -335,8 +352,9 @@ that is not the requested one, so that an inner element is pulled at the ring of
 applied to it; and only then convert towards the requested unitality, then ring. When `b` is
 itself the calculus applied to something other than a target, it is simplified *before* composing:
 composing first would ask for the predicate at that something, when the target's is known. -/
-partial def cfcPre (R : Expr) (targets : Array Target) (atom loose conv compose : SimpTheorems)
-    (stack : IO.Ref (Array Expr)) (setup : Expr → MetaM Setup) : Simp.Simproc := fun e => do
+partial def cfcPre (c : Context) (roots : Array Expr) (R : Expr) (targets : Array Target)
+    (atom loose conv compose : SimpTheorems) : Simp.Simproc := fun e => do
+  let stack := c.stack
   -- a target first of all: it may be an application of the calculus itself, and it is atomic:
   -- no lemma reads it as an expression in something else (`cfc_const` would read the target
   -- `algebraMap ℂ A z` as a constant)
@@ -363,7 +381,7 @@ partial def cfcPre (R : Expr) (targets : Array Target) (atom loose conv compose 
     stack.modify (·.push b)
     let (rb, nestedUsed) ← try
         if ← withNewMCtxDepth <| isDefEq S R then pure (← Simp.simp b, #[]) else do
-          let s ← setup S
+          let s ← (getSetup roots S).run c
           let (rb, stats) ← Simp.main b s.ctx
             (methods := Simp.mkMethods s.simprocs s.disch (wellBehavedDischarge := false))
           pure (rb, stats.usedTheorems.toArray)
@@ -413,8 +431,8 @@ partial def flipPost (flip : SimpTheorems) (thms : Array SimpTheorems) : Simp.Si
 `1 + 1`) is not pulled on sight, there being no telling towards which target. Here it is an
 argument next to applications of the calculus that are all at one target, and is pulled towards
 that one alone. -/
-partial def siblingPost (targets : Array Target) (setup : Array Expr → MetaM Setup) :
-    Simp.Simproc := fun e => do
+partial def siblingPost (c : Context) (R : Expr) (targets : Array Target) : Simp.Simproc :=
+    fun e => do
   if (matchCFC? e).isSome then return .continue
   let args := e.getAppArgs
   let mut elems : Array Expr := #[]
@@ -428,7 +446,7 @@ partial def siblingPost (targets : Array Target) (setup : Array Expr → MetaM S
     let arg := args[i]
     if (matchCFC? arg).isSome then continue
     unless ← withReducible <| isDefEq (← inferType arg) alg do continue
-    let s ← setup #[b]
+    let s ← (getSetup #[b] R).run c
     let (r, stats) ← Simp.main arg s.ctx
       (methods := Simp.mkMethods s.simprocs s.disch (wellBehavedDischarge := false))
     let some (_, _, _, b') := matchCFC? r.expr | continue
@@ -608,7 +626,9 @@ def elabArgs (cfgStx : TSyntax ``optConfig) (only : Bool)
   let ts ← elems.raw[0].getArgs.mapM fun g ↦
     Term.elabTermAndSynthesize g[g.getNumArgs - 1] none
   let lems ← elabLemmas only lems?
-  let s ← getSetup cfg lems (deferDischarge !cfg.defer) (← IO.mkRef #[]) (← IO.mkRef #[]) ts R
+  let s ← (getSetup ts R).run {
+    cfg, lems, disch := deferDischarge !cfg.defer
+    cache := ← IO.mkRef #[], stack := ← IO.mkRef #[] }
   return (cfg, s, lems.entries)
 
 /-- The lemma list `cfc_pull?` suggests. First the lemmas among `entries` that the run used, in
