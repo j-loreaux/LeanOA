@@ -54,6 +54,9 @@ structure Config where
 
 declare_config_elab elabConfig Config
 
+/-- Elaborate the configuration for the `cfc_pull` tactic. -/
+add_decl_doc elabConfig
+
 /-- The decomposition of the `[..]` list of `cfc_pull` into `cfc` lemmas, and the simp context. -/
 structure Lemmas where
   /-- The `cfc_pull` lemmas and their simp sets: the `@[cfc_pull]` ones, adjusted by the list. -/
@@ -742,7 +745,7 @@ def dischargeSideGoals (cfg : Config) (proof : Expr) (disch? : Option (TSyntax `
     withRef arrow <| focusGoalsAndDone side.contains (evalTactic tac)
   return proof
 
-@[tactic cfcPull, tactic cfcPullTrace]
+@[tactic cfcPull, tactic cfcPullTrace, inherit_doc cfcPull]
 def evalCFCPull : Tactic := fun stx => withMainContext do
   let (tk, cfgStx, disch?, only?, lems?, ring, elem, loc?, arrow?, tac?) ← match stx with
     | `(tactic| cfc_pull%$tk $cfgStx:optConfig $[$disch?:discharger]? $ring $elem
@@ -770,7 +773,7 @@ def evalCFCPull : Tactic := fun stx => withMainContext do
     TryThis.addSuggestion tk sugg (origSpan? := mkNullNode (#[tk, elem] ++ last))
   root.assign (← dischargeSideGoals cfg (.mvar root) disch? arrow? tac?)
 
-@[tactic cfcPullConv, tactic cfcPullTraceConv]
+@[tactic cfcPullConv, tactic cfcPullTraceConv, inherit_doc cfcPull]
 def evalCFCPullConv : Tactic := fun stx => withMainContext do
   let (tk, cfgStx, disch?, only?, lems?, ring, elem, arrow?, tac?) ← match stx with
     | `(conv| cfc_pull%$tk $cfgStx:optConfig $[$disch?:discharger]? $ring $elem
