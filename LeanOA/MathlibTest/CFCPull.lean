@@ -64,10 +64,16 @@ variable {A B : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] [CS
   {a b : A}
 
 open Complex
-open scoped NNReal
+open scoped NNReal CStarAlgebra
 
 example (ha : IsStarNormal a) : NormedSpace.exp (I • a) = cfc (fun x ↦ Complex.exp (I * x)) a := by
   cfc_pull ℂ a
+
+example (φ : A →⋆ₐ[ℂ] B) (f g : ℂ → ℂ) (ha : IsStarNormal a) (hf : Continuous f)
+    (hg : Continuous g) :
+    star (φ (cfc f a)) * NormedSpace.exp (φ (cfc g a)) =
+      cfc (fun x ↦ star (f x) * Complex.exp (g x)) (φ a) := by
+  cfc_pull ℂ (φ a)
 
 example (ha : 0 ≤ a) : 1 - CFC.sqrt a = cfc (fun x ↦ 1 - √x) a := by cfc_pull ℝ a
 
