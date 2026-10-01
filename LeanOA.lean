@@ -18,7 +18,6 @@ public import LeanOA.Masa
 public import LeanOA.Mathlib.Algebra.Group.Idempotent
 public import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
-public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
@@ -31,11 +30,17 @@ public import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
+public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.ComplexSqrt
+public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.Lemmas
+public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.Tags
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 public import LeanOA.Mathlib.Data.Real.Archimedean
 public import LeanOA.Mathlib.Data.Set.Function
+public import LeanOA.Mathlib.Lean.Elab.Tactic.Basic
 public import LeanOA.Mathlib.Misc
 public import LeanOA.Mathlib.Order.Hom.Basic
+public import LeanOA.Mathlib.Tactic.CFCPull.Attr
+public import LeanOA.Mathlib.Tactic.CFCPull.Core
 public import LeanOA.Mathlib.Topology.Algebra.Module.LinearMap
 public import LeanOA.Mathlib.Topology.Algebra.Module.PolarTopology
 public import LeanOA.Mathlib.Topology.Algebra.Module.Spaces.UniformConvergenceCLM
@@ -43,6 +48,7 @@ public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
 public import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
+public import LeanOA.MathlibTest.CFCPull
 public import LeanOA.Notation
 public import LeanOA.PositiveContinuousLinearMap
 public import LeanOA.TendstoZero.Defs
