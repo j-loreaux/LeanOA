@@ -70,6 +70,7 @@ public import LeanOA.Ultraweak.Masa
 public import LeanOA.Ultraweak.Multiplication
 public import LeanOA.Ultraweak.Normal
 public import LeanOA.Ultraweak.OrderClosed
+public import LeanOA.Ultraweak.Sakai
 public import LeanOA.Ultraweak.SeparatingDual
 public import LeanOA.Ultraweak.SpanProjection
 public import LeanOA.Ultraweak.Uniformity
