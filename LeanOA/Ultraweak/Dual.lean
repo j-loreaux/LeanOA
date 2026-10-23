@@ -68,6 +68,23 @@ lemma pairing_apply (x : σ(M, P)_𝕜) (p : P) :
     pairing 𝕜 M P x p = Predual.equivDual (𝕜 := 𝕜) (ofUltraweak x) p :=
   rfl
 
+/-- The pairing identifies `σ(M, P)_𝕜` with the dual of `P`. -/
+instance : (pairing 𝕜 M P).flip.IsCompatibleDual :=
+  LinearEquiv.IsCompatibleDual _ ((linearEquiv 𝕜 M P).trans Predual.equivDual.toLinearEquiv) <| by
+    ext; rfl
+
+lemma isCompatibleDual_equiv_apply (x : σ(M, P)_𝕜) :
+    LinearMap.IsCompatibleDual.equiv (pairing 𝕜 M P).flip x =
+      Predual.equivDual (𝕜 := 𝕜) (ofUltraweak x) :=
+  rfl
+
+/-- The closed balls of `σ(M, P)_𝕜` as the dual of `P` are those of `M`. -/
+lemma isCompatibleDual_equiv_preimage_closedBall (r : ℝ) :
+    LinearMap.IsCompatibleDual.equiv (pairing 𝕜 M P).flip ⁻¹' closedBall 0 r =
+      ofUltraweak ⁻¹' closedBall (0 : M) r := by
+  ext
+  simp [isCompatibleDual_equiv_apply]
+
 /-- A linear functional on `M` is ultraweakly continuous if and only if it is evaluation at some
 element of the predual. -/
 theorem continuous_iff_exists_eq (f : M →ₗ[𝕜] 𝕜) :
@@ -93,24 +110,13 @@ theorem isClosed_setOf_continuous [CompleteSpace P] :
 
 variable [CompleteSpace P]
 
-set_option backward.isDefEq.respectTransparency false in
 /-- **Krein–Smulian** for linear functionals: a linear functional on `σ(M, P)_𝕜` is continuous
 if it is continuous on the closed unit ball. -/
 theorem continuous_of_continuousOn_closedBall_of_dual (f : σ(M, P)_𝕜 →ₗ[𝕜] 𝕜)
     (hf : ContinuousOn f (ofUltraweak ⁻¹' closedBall (0 : M) 1)) :
-    Continuous f := by
-  -- transport the problem to the weak dual of `P`, then apply Krein–Smulian there.
-  let e := weakDualCLE 𝕜 M P
-  let g : WeakDual 𝕜 P →ₗ[𝕜] 𝕜 := f ∘ₗ e.symm.toLinearEquiv.toLinearMap
-  suffices Continuous g by
-    simpa [g, Function.comp_def] using this.comp (map_continuous e)
-  refine g.continuous_of_isClosed_ker <| krein_smulian_of_submodule (g.ker.restrictScalars ℝ≥0) ?_
-  have hg : ContinuousOn g (WeakDual.toStrongDual ⁻¹' closedBall 0 1) := by
-    refine hf.comp (map_continuous e.symm).continuousOn fun x hx ↦ ?_
-    rw [ofUltraweak_preimage_closedBall]
-    simpa [e] using hx
-  rw [Set.inter_comm]
-  exact hg.preimage_isClosed_of_isClosed (WeakDual.isClosed_closedBall 0 1) isClosed_singleton
+    Continuous f :=
+  LinearMap.IsWeak.continuous_of_continuousOn_closedBall_of_dual (pairing 𝕜 M P) f <| by
+    rwa [isCompatibleDual_equiv_preimage_closedBall]
 
 /-- A linear map from `σ(M, P)_𝕜` into a space carrying the weak topology of a pairing is
 continuous if it is continuous on the closed unit ball. -/
@@ -118,9 +124,8 @@ theorem continuous_of_continuousOn_closedBall {X F : Type*} [AddCommGroup X] [Mo
     [TopologicalSpace X] [AddCommGroup F] [Module 𝕜 F] (B : X →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.IsWeak]
     (f : σ(M, P)_𝕜 →ₗ[𝕜] X) (hf : ContinuousOn f (ofUltraweak ⁻¹' closedBall (0 : M) 1)) :
     Continuous f :=
-  LinearMap.IsWeak.continuous_of_continuous_eval B fun y ↦
-    continuous_of_continuousOn_closedBall_of_dual (B.flip y ∘ₗ f) <|
-      (LinearMap.IsWeak.continuous_eval B y).comp_continuousOn hf
+  LinearMap.IsWeak.continuous_of_continuousOn_closedBall (pairing 𝕜 M P) B f <| by
+    rwa [isCompatibleDual_equiv_preimage_closedBall]
 
 /-- A bounded idempotent linear map on `σ(M, P)_𝕜` whose range and kernel are both ultraweakly
 closed is ultraweakly continuous. -/
