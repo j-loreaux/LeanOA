@@ -99,7 +99,7 @@ If $`P : \mathcal{P}(M) \to \mathrm{Prop}` is a predicate, the usual ordering $`
 projections induces an order on the set $`\{p \in \mathcal{P}(M) \mid P(p)\}`. In what
 follows there will be no confusion if we also denote this induced order by $`\le`.
 
-:::lemma_ "lem:exists_uw_ge_normal" (uses := "lem:uw_pos_sep_pts")
+:::lemma_ "lem:exists_uw_ge_normal" (lean := "Ultraweak.exists_lt_of_ne_zero") (uses := "lem:uw_pos_sep_pts")
 For every positive normal linear functional $`\varphi` and nonzero $`p \in \mathcal{P}(M)`
 there exists a positive $`\sigma(M, M_*)`-continuous linear functional $`\psi` such that
 $`\varphi(p) < \psi(p)`.
@@ -111,7 +111,7 @@ functional $`\psi_0` on $`M` such that $`\psi_0(p) \ne 0`. Rescale this function
 positive constant to obtain $`\psi` such that $`\varphi(p) < \psi(p)`.
 :::
 
-:::lemma_ "lem:msr_th_lemma" (uses := "lem:sigma_cont_of_normal_Sak_1_7_4, prop:proj_compl_lat_wstar_Sak_1_10_2, cor:proj_sub_of_subproj")
+:::lemma_ "lem:msr_th_lemma" (lean := "Ultraweak.exists_forall_lt") (uses := "lem:sigma_cont_of_normal_Sak_1_7_4, lem:directed_sup_proj, cor:proj_sub_of_subproj")
 For all positive linear functionals $`\varphi, \psi` with $`\varphi` normal and $`\psi`
 $`\sigma(M, M_*)`-continuous and every nonzero $`p \in \mathcal{P}(M)` such that
 $`\varphi(p) < \psi(p)`, there exists a nonzero $`p_1 \in \mathcal{P}(M)` such that
@@ -126,7 +126,7 @@ $`\varphi(q) \ge \psi(q)`. In particular, (letting $`p_1 = q`) there is a $`q \l
 that $`\varphi(q) \ge \psi(q)`. If $`(q_\alpha)` is a chain of such nonzero projections, then
 $`q_\alpha \to \sup q_\alpha` in the $`\sigma`-topology by
 {bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[], and by
-{bpref "prop:proj_compl_lat_wstar_Sak_1_10_2"}[] we know this supremum is a subprojection of
+{bpref "lem:directed_sup_proj"}[] we know this supremum is a subprojection of
 $`p_1`. Since $`\varphi` is positive and normal, and $`\psi` is positive and
 $`\sigma`-continuous, we have
 $`\varphi(\sup q_\alpha) \ge \psi(\sup q_\alpha)`.
@@ -144,7 +144,7 @@ $`\varphi(p) < \psi(p)`.
 The following likely contains the most crucial use of the normality of $`\varphi` for the
 later proof of {bpref "thm:sigma_cts_of_normal_Sak_1_13_2"}[].
 
-:::lemma_ "lem:zorn_base" (uses := "cor:proj_sub_of_subproj, lem:selfadjoint_le_norm, lem:sigma_cont_of_normal_Sak_1_7_4, prop:proj_compl_lat_wstar_Sak_1_10_2, def:sigma_top")
+:::lemma_ "lem:zorn_base" (lean := "Ultraweak.exists_maximal_continuous_mul_right") (uses := "cor:proj_sub_of_subproj, lem:selfadjoint_le_norm, lem:sigma_cont_of_normal_Sak_1_7_4, lem:directed_sup_proj, prop:loc_cvx_result, def:sigma_top")
 Let $`\varphi` be a normal positive linear functional on $`M` and consider the predicate
 $`P : \mathcal{P}(M) \to \mathrm{Prop}` defined, for $`p \in \mathcal{P}(M)`, by
 "$`M \ni x \mapsto \varphi(xp)` is $`\sigma(M, M_*)`-continuous". If $`(p_\alpha)` is a chain
@@ -156,7 +156,7 @@ $`p_0 \in \mathcal{P}(M)` such that $`P(p_0)` is true.
 :::proof "lem:zorn_base"
 Let $`x` be on the unit sphere and let $`p` be the supremum of the $`p_\alpha`. By
 {bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[] and
-{bpref "prop:proj_compl_lat_wstar_Sak_1_10_2"}[] we know $`p_\alpha` converges in the
+{bpref "lem:directed_sup_proj"}[] we know $`p_\alpha` converges in the
 $`\sigma`-topology to $`p`, and $`p` is a projection. By
 {bpref "cor:proj_sub_of_subproj"}[] we know $`p - p_\alpha` is a projection. By the
 $`C^*`-property of the norm ($`\|x^* x\| = \|x\|^2`),
@@ -184,7 +184,40 @@ $`\varphi(\cdot\, p)` is $`\sigma`-continuous. We obtain a maximal $`p_0` by Zor
 $`s`-continuous).
 :::
 
-:::theorem "thm:sigma_cts_of_normal_Sak_1_13_2" (uses := "def:sigma_top, cor:sigma_eq_s_on_ball, lem:zorn_base, lem:exists_uw_ge_normal, lem:msr_th_lemma, lem:cut_down_of_wstar, lem:spec_masa_wstar_stonean_Sak_1_7_5, lem:fin_lin_approx_of_stonean_Sak_1_3_1, lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10, lem:wstar_of_masa")
+:::lemma_ "lem:dominated_sigma_cts" (lean := "Ultraweak.continuous_of_norm_sq_le") (uses := "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8, prop:loc_cvx_result")
+Let $`\psi` be a $`\sigma`-continuous positive linear functional on $`M`, and let $`\omega` be a
+bounded linear functional on $`M` such that $`|\omega(x)|^2 \le C \psi(x^* x)` for all
+$`x \in M`. Then $`\omega` is $`\sigma`-continuous.
+:::
+
+:::proof "lem:dominated_sigma_cts"
+The functional $`\omega` factors through a bounded functional on the GNS Hilbert space
+$`H_\psi` of $`\psi`, which by the Riesz representation theorem is $`\langle \eta, \cdot \rangle`
+for some $`\eta \in H_\psi`. Approximating $`\eta` by the classes $`\hat y` of elements
+$`y \in M`, the functionals $`x \mapsto \psi(y^* x)` converge in norm to $`\omega`. These are
+$`\sigma`-continuous by {bpref "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8"}[], and the
+$`\sigma`-continuous functionals form a norm closed subspace of $`M^*`
+({bpref "prop:loc_cvx_result"}[]).
+:::
+
+This replaces the use of the $`s`-topology ({bpref "thm:sigma_le_s_le_tau"}[],
+{bpref "cor:sigma_eq_s_on_ball"}[] and {bpref "lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10"}[]) in
+Sakai's proof of {bpref "thm:sigma_cts_of_normal_Sak_1_13_2"}[].
+
+:::lemma_ "lem:corner_comparison" (lean := "Ultraweak.map_le_map_of_forall_lt") (uses := "lem:cut_down_of_wstar, lem:wstar_pos_approx_proj")
+Let $`\varphi, \psi` be positive linear functionals on $`M` and $`p` a projection such that
+$`\varphi(q) < \psi(q)` for every nonzero projection $`q \le p`. Then
+$`\varphi(a) \le \psi(a)` for every positive $`a \in pMp`.
+:::
+
+:::proof "lem:corner_comparison"
+By {bpref "lem:cut_down_of_wstar"}[], $`pMp` is a $`W^*`-algebra whose projections are exactly the
+projections $`q \le p` of $`M`. By {bpref "lem:wstar_pos_approx_proj"}[] applied in $`pMp`, every
+positive $`a \in pMp` is a norm limit of nonnegative combinations of such projections, and the set
+where $`\varphi \le \psi` is a norm closed convex cone.
+:::
+
+:::theorem "thm:sigma_cts_of_normal_Sak_1_13_2" (lean := "Ultraweak.continuous_of_scottContinuousOn") (uses := "def:sigma_top, lem:zorn_base, lem:exists_uw_ge_normal, lem:msr_th_lemma, lem:corner_comparison, lem:dominated_sigma_cts, lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8")
 (Sakai 1.13.2) Every positive normal linear functional $`\varphi` on $`M` is
 $`\sigma(M, M_*)`-continuous.
 :::
@@ -199,34 +232,52 @@ functional $`\psi` on $`M` such that $`\varphi(1 - p_0) < \psi(1 - p_0)`. By
 {bpref "lem:msr_th_lemma"}[] there is a nonzero subprojection $`p \le 1 - p_0` in $`M` such
 that $`\varphi(q) < \psi(q)` for every nonzero $`q \le p` in $`M`.
 
-Let $`x \in pMp` be on the unit sphere. Then $`x^* x` is positive and hence normal, so the
-$`C^*`-subalgebra of $`pMp` generated by $`x^* x` and $`p` is commutative, and is hence
-contained in a maximal abelian $`*`-subalgebra $`A` of $`pMp`. Now $`A` is a
-$`W^*`-subalgebra of $`pMp` by {bpref "lem:wstar_of_masa"}[] and hence is a maximal
-commutative $`C^*`-subalgebra of $`pMp`. Via the Gelfand Transform, $`A` is
-$`*`-isomorphic to $`C(K)`, where $`K` is Stonean by
-{bpref "lem:cut_down_of_wstar"}[] and
-{bpref "lem:spec_masa_wstar_stonean_Sak_1_7_5"}[]. By
-{bpref "lem:fin_lin_approx_of_stonean_Sak_1_3_1"}[] it follows that
-$`\varphi(a) \le \psi(a)` for every $`a \ge 0` in $`A`, which holds a fortiori for
-$`a \ge 0` in $`C^*(x^* x, p)`. In particular,
-$`\varphi(p x^* x p) \le \psi(p x^* x p)`. Therefore,
+By {bpref "lem:corner_comparison"}[], $`\varphi(p x^* x p) \le \psi(p x^* x p)` for every
+$`x \in M`. The functional $`\psi' = \psi(p \cdot p)` is positive and $`\sigma`-continuous by
+{bpref "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8"}[], and by the Cauchy–Schwarz inequality
 
-$$`\begin{aligned}
-|\varphi(x(p_0 + p))|
-  &\le |\varphi(x p_0)| + |\varphi(xp)| \\
-  &\le |\varphi(x p_0)| + \varphi(1)^{1/2} \varphi(p x^* x p)^{1/2} \\
-  &\le |\varphi(x p_0)| + \varphi(1)^{1/2} \psi(p x^* x p)^{1/2}.
-\end{aligned}`
+$$`|\varphi(xp)|^2 \le \varphi(1) \varphi(p x^* x p) \le \varphi(1) \psi'(x^* x).`
 
-Since $`x \mapsto \varphi(x p_0)` is $`\sigma`-continuous, it is $`s`-continuous by
-{bpref "lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10"}[]. The seminorm
-$`x \mapsto \psi(p x^* x p)^{1/2}` is a defining seminorm for the $`s`-topology on $`M`. It
-follows that $`x \mapsto \varphi(x(p_0 + p))` is $`s`-continuous and therefore
-$`\sigma`-continuous, by {bpref "cor:sigma_eq_s_on_ball"}[]. This contradicts the maximality
+Hence $`x \mapsto \varphi(xp)` is $`\sigma`-continuous by {bpref "lem:dominated_sigma_cts"}[], and
+therefore so is $`x \mapsto \varphi(x(p_0 + p)) = \varphi(x p_0) + \varphi(xp)`. Since $`p_0 + p` is a
+projection strictly larger than $`p_0`, this contradicts the maximality
 of $`p_0`, and therefore $`p_0 = 1` and the result follows.
 :::
 
 The above result gives us that the $`\sigma`-weak continuity of a positive functional is
 determined entirely by the order structure on $`M`, and thus is independent of the choice of
 predual.
+
+# Sakai's Theorem and the Uniqueness of the Predual
+
+:::theorem "thm:sakai_normal_iff" (lean := "Ultraweak.positive_tfae") (uses := "lem:sigma_cont_of_normal_Sak_1_7_4, thm:sigma_cts_of_normal_Sak_1_13_2, prop:loc_cvx_result")
+For a positive linear functional $`\varphi` on a $`W^*`-algebra $`M` with predual $`M_*`, the
+following are equivalent:
+
+1. $`\varphi` is $`\sigma(M, M_*)`-continuous;
+2. $`\varphi` lies in (the image of) $`M_*`;
+3. $`\varphi` preserves suprema of bounded directed sets;
+4. $`\varphi` preserves suprema of directed sets of projections.
+:::
+
+:::proof "thm:sakai_normal_iff"
+(1) and (2) are equivalent by {bpref "prop:loc_cvx_result"}[]. (1) implies (3) by
+{bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[], (3) trivially implies (4), and (4) implies (1) by
+{bpref "thm:sigma_cts_of_normal_Sak_1_13_2"}[].
+:::
+
+:::theorem "thm:predual_unique" (lean := "Ultraweak.continuousLinearEquivOfPredual, Predual.uniqueEquiv") (uses := "thm:sakai_normal_iff, lem:sigma_cont_of_normal_Sak_1_7_4, prop:loc_cvx_result")
+If $`P` and $`Q` are preduals of a $`W^*`-algebra $`M`, then $`\sigma(M, P) = \sigma(M, Q)`, and
+there is a canonical isometric isomorphism $`P \cong Q` compatible with the pairings with $`M`.
+:::
+
+:::proof "thm:predual_unique"
+By {bpref "thm:sakai_normal_iff"}[], the positive $`\sigma(M, P)`-continuous functionals are the
+positive $`\sigma(M, Q)`-continuous functionals, since condition (4) does not mention the predual.
+On bounded sets, each ultraweak topology is the weak topology induced by its positive continuous
+functionals (see the proof of {bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[]), so the two
+topologies agree on the unit ball. By the Krein–Smulian theorem, the identity of $`M` is a
+homeomorphism $`\sigma(M, P) \to \sigma(M, Q)`. Hence $`P` and $`Q` are identified, via their
+isometric embeddings into $`M^*`, with the same subspace of $`M^*`
+({bpref "prop:loc_cvx_result"}[]).
+:::

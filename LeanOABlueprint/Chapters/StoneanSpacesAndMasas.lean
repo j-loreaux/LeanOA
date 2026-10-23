@@ -15,7 +15,7 @@ and is contained in $`\{0, 1\}`. Furthermore, $`p^{-1}\{0\} = K \setminus p^{-1}
 so both of these sets are clopen, and identify connected components of $`K`. If $`K` is
 Stonean, there are many such connected components:
 
-:::lemma_ "lem:fin_lin_approx_of_stonean_Sak_1_3_1" (uses := "cor:spec_sa_homeo_spec_cstar")
+:::lemma_ "lem:fin_lin_approx_of_stonean_Sak_1_3_1" (lean := "ContinuousMap.mem_closure_span_isIdempotentElem_of_nonneg, CommCStarAlgebra.mem_closure_span_isStarProjection_of_nonneg") (uses := "cor:spec_sa_homeo_spec_cstar")
 (Sakai 1.3.1) Let $`K` be a Stonean space. Then every positive self-adjoint element $`a` in
 $`C(K)` can be uniformly approximated by finite linear combinations of projections in
 $`C(K)` having nonnegative coefficients.
@@ -99,4 +99,18 @@ $`C` is a linear combination of unitary elements from $`C`, we have that
 $`\sup_\lambda a_\lambda \in C`. The result follows from
 {bpref "prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2"}[] after applying the Gelfand
 transform.
+:::
+
+:::lemma_ "lem:wstar_pos_approx_proj" (lean := "WStarAlgebra.mem_closure_span_isStarProjection_of_nonneg, WStarAlgebra.topologicalClosure_span_isStarProjection") (uses := "lem:spec_masa_wstar_stonean_Sak_1_7_5, lem:fin_lin_approx_of_stonean_Sak_1_3_1")
+In a $`W^*`-algebra $`M`, every positive element is a norm limit of finite linear combinations of
+projections with nonnegative coefficients. Consequently, the linear span of the projections of
+$`M` is norm dense.
+:::
+
+:::proof "lem:wstar_pos_approx_proj"
+Place the positive element $`a` in a maximal abelian $`*`-subalgebra $`C` of $`M`. By
+{bpref "lem:spec_masa_wstar_stonean_Sak_1_7_5"}[] the spectrum space of $`C` is Stonean, so
+{bpref "lem:fin_lin_approx_of_stonean_Sak_1_3_1"}[] applies to the Gelfand transform of $`a`.
+The second statement follows since every element of $`M` is a linear combination of positive
+elements.
 :::

@@ -92,3 +92,21 @@ a lower bound for all the $`e_i` then $`Mp \subseteq Me_i` for every $`i \in \ma
 so $`Mp \subseteq \bigcap_i Me_i = Me_2` and we obtain $`p \le e_2`. It follows that
 $`e_1 = \sup(e_i)` and $`e_2 = \inf(e_i)`.
 :::
+
+The following replaces the use of the full projection lattice
+({bpref "prop:proj_compl_lat_wstar_Sak_1_10_2"}[]) in the proof of
+{bpref "thm:sigma_cts_of_normal_Sak_1_13_2"}[], where only suprema of chains are needed.
+
+:::lemma_ "lem:directed_sup_proj" (lean := "Ultraweak.isStarProjection_of_isLUB") (uses := "lem:sigma_cont_of_normal_Sak_1_7_4, lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8, lem:pos_sa_sigma_closed_Sak_1_7_1")
+In a $`W^*`-algebra $`M`, the supremum of a nonempty directed set of projections is a projection.
+:::
+
+:::proof "lem:directed_sup_proj"
+Let $`e` be the supremum of the directed set $`(q_\alpha)` of projections; it is the
+$`\sigma`-limit of the $`q_\alpha` by {bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[], hence is
+self-adjoint by {bpref "lem:pos_sa_sigma_closed_Sak_1_7_1"}[]. Since $`0 \le e - q_\alpha \le 1`,
+we have $`(e - q_\alpha)^2 \le e - q_\alpha`, so $`\varphi((e - q_\alpha)^2) \to 0` for every
+$`\sigma`-continuous positive $`\varphi`, whence $`(e - q_\alpha)^2 \to 0`. On the other hand
+$`(e - q_\alpha)^2 = e^2 - e q_\alpha - q_\alpha e + q_\alpha \to e - e^2` by
+{bpref "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8"}[]. Hence $`e^2 = e`.
+:::

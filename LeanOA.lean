@@ -74,4 +74,5 @@ public import LeanOA.Ultraweak.Sakai
 public import LeanOA.Ultraweak.SeparatingDual
 public import LeanOA.Ultraweak.SpanProjection
 public import LeanOA.Ultraweak.Uniformity
+public import LeanOA.Ultraweak.UniquePredual
 public import LeanOA.WeakDual.UniformSpace
