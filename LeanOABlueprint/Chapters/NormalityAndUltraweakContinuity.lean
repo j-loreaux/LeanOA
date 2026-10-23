@@ -204,7 +204,7 @@ This replaces the use of the $`s`-topology ({bpref "thm:sigma_le_s_le_tau"}[],
 {bpref "cor:sigma_eq_s_on_ball"}[] and {bpref "lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10"}[]) in
 Sakai's proof of {bpref "thm:sigma_cts_of_normal_Sak_1_13_2"}[].
 
-:::lemma_ "lem:corner_comparison" (lean := "Ultraweak.map_le_map_of_forall_lt") (uses := "lem:cut_down_of_wstar, lem:wstar_pos_approx_proj")
+:::lemma_ "lem:corner_comparison" (lean := "Ultraweak.map_le_map_of_forall_lt, PositiveLinearMap.le_of_le_on_isStarProjection") (uses := "lem:cut_down_of_wstar, lem:wstar_pos_approx_proj")
 Let $`\varphi, \psi` be positive linear functionals on $`M` and $`p` a projection such that
 $`\varphi(q) < \psi(q)` for every nonzero projection $`q \le p`. Then
 $`\varphi(a) \le \psi(a)` for every positive $`a \in pMp`.

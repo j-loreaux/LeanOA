@@ -3,7 +3,7 @@ module
 public import LeanOA.CStarAlgebra.OffDiagonal
 public import LeanOA.Ultraweak.Corner
 public import LeanOA.Ultraweak.Dual
-public import LeanOA.Ultraweak.SpanProjection
+public import LeanOA.Ultraweak.FiniteSpectrum
 
 @[expose] public section
 
@@ -218,8 +218,9 @@ private theorem continuous_mul_left (a : σ(M, P)) : Continuous (fun x : σ(M, P
   have hT_proj : Submodule.span ℂ {p : M | IsStarProjection p} ≤ T :=
     Submodule.span_le.mpr fun p hp ↦ (hT_iff p).mpr <|
       continuous_mul_left_of_isStarProjection (P := P) (p := toUltraweak ℂ P p) hp
+  have : CStarAlgebra.FiniteSpectrum M := CStarAlgebra.finiteSpectrum_of_predual (P := P)
   have := Submodule.topologicalClosure_minimal _ hT_proj hT_closed
-  rw [WStarAlgebra.topologicalClosure_span_isStarProjection (P := P)] at this
+  rw [CStarAlgebra.FiniteSpectrum.topologicalClosure_span_complex_isStarProjection] at this
   exact (hT_iff (ofUltraweak a)).mp (this trivial)
 
 /-- **Sakai 1.7.8**: multiplication on `σ(M, P)` is separately ultraweakly continuous. -/

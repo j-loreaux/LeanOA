@@ -2,7 +2,7 @@ module
 
 public import LeanOA.Ultraweak.Normal
 public import LeanOA.Ultraweak.ClosedSubspace
-public import LeanOA.Ultraweak.SpanProjection
+public import LeanOA.Ultraweak.FiniteSpectrum
 public import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import Mathlib.Analysis.InnerProductSpace.Dual
 public import Mathlib.Analysis.InnerProductSpace.Completion
@@ -274,30 +274,22 @@ lemma map_le_map_of_forall_lt {φ ψ : M →ₚ[ℂ] ℂ} {p : M} (hp : IsStarPr
   let _ := hp.cornerCStarAlgebra
   have := hp.isClosed_corner
   let _ := hp.cornerPredual P
-  let a' : NonUnitalStarSubalgebra.corner ℂ p := ⟨a, hp.mem_corner_iff'.mpr hpa⟩
-  have key := WStarAlgebra.mem_closure_span_isStarProjection_of_nonneg
-    (P := Ultraweak.Subpredual P (NonUnitalStarSubalgebra.corner ℂ p).toSubmodule)
-    (show 0 ≤ a' from ha)
-  /- The set where `φ ≤ ψ` is closed and contains the nonnegative combinations of projections. -/
-  let K : Set (NonUnitalStarSubalgebra.corner ℂ p) := {z | φ z ≤ ψ z}
-  have hK : IsClosed K :=
-    isClosed_le (φ.toContinuousLinearMap.continuous.comp continuous_subtype_val)
-      (ψ.toContinuousLinearMap.continuous.comp continuous_subtype_val)
-  refine hK.closure_subset_iff.mpr (fun z hz ↦ ?_) key
-  induction hz using Submodule.span_induction with
-  | mem q hq =>
-    have hq' : IsStarProjection (q : M) :=
-      ⟨congr(Subtype.val $hq.isIdempotentElem.eq), congr(Subtype.val $hq.isSelfAdjoint.star_eq)⟩
-    by_cases hq0 : (q : M) = 0
-    · simp [K, hq0]
-    · exact (h q hq' hq0 <| (hq'.le_iff_mul_eq_right hp).mpr (hp.mul_eq_of_mem_corner q.2)).le
-  | zero => simp [K]
-  | add x y _ _ hx hy => simpa [K] using add_le_add hx hy
-  | smul c x _ hx =>
-    simp only [K, Set.mem_ofPred_eq] at hx ⊢
-    rw [NonUnitalStarSubalgebra.coe_smul, NNReal.smul_def, ← Complex.coe_smul, map_smul,
-      map_smul, smul_eq_mul, smul_eq_mul]
-    exact mul_le_mul_of_nonneg_left hx (Complex.zero_le_real.mpr c.2)
+  have : CStarAlgebra.FiniteSpectrum (NonUnitalStarSubalgebra.corner ℂ p) :=
+    CStarAlgebra.finiteSpectrum_of_predual
+      (P := Ultraweak.Subpredual P (NonUnitalStarSubalgebra.corner ℂ p).toSubmodule)
+  /- The inclusion of the corner `p * M * p` into `M` is positive, and since the corner is FS,
+  it suffices to compare `φ` and `ψ` on the projections of the corner, which are exactly the
+  projections `q ≤ p` of `M`. -/
+  let ι : NonUnitalStarSubalgebra.corner ℂ p →ₚ[ℂ] M :=
+    .mk₀ { toFun := Subtype.val, map_add' _ _ := rfl, map_smul' _ _ := rfl } fun _ ↦ id
+  refine PositiveLinearMap.le_of_le_on_isStarProjection (φ.comp ι) (ψ.comp ι) (fun q hq ↦ ?_)
+    (x := ⟨a, hp.mem_corner_iff'.mpr hpa⟩) ha
+  change φ (q : M) ≤ ψ (q : M)
+  have hq' : IsStarProjection (q : M) :=
+    ⟨congr(Subtype.val $hq.isIdempotentElem.eq), congr(Subtype.val $hq.isSelfAdjoint.star_eq)⟩
+  by_cases hq0 : (q : M) = 0
+  · simp [hq0]
+  · exact (h q hq' hq0 <| (hq'.le_iff_mul_eq_right hp).mpr (hp.mul_eq_of_mem_corner q.2)).le
 
 include P in
 /-- **Sakai 1.13.2**, in its strongest form: a positive linear functional on a W⋆-algebra which
