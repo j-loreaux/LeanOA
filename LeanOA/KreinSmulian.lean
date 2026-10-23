@@ -420,4 +420,46 @@ theorem LinearMap.IsWeak.continuous_of_continuousOn_closedBall {Y G : Type*} [Ad
     continuous_of_continuousOn_closedBall_of_dual B (C.flip y ∘ₗ f) <|
       (LinearMap.IsWeak.continuous_eval C y).comp_continuousOn hf
 
+variable [Module ℝ X] [IsScalarTower ℝ 𝕜 X]
+
+set_option backward.isDefEq.respectTransparency false in
+/-- **Krein–Smulian** for real linear functionals: a real linear functional on a space with the
+weak topology of a pairing `B` with a Banach space `E` is continuous if it is continuous on the
+closed unit ball. -/
+theorem LinearMap.IsWeak.continuous_of_continuousOn_closedBall_of_dual_of_real (f : X →ₗ[ℝ] ℝ)
+    (hf : ContinuousOn f (LinearMap.IsCompatibleDual.equiv B.flip ⁻¹' closedBall 0 1)) :
+    Continuous f := by
+  -- transport the problem to the weak dual of `E`, then apply Krein–Smulian there.
+  let e := LinearMap.IsCompatibleDual.weakDualCLE' B.flip
+  let g : WeakDual 𝕜 E →ₗ[ℝ] ℝ := f ∘ₗ e.symm.toLinearEquiv.toLinearMap.restrictScalars ℝ
+  suffices Continuous g by
+    simpa [g, Function.comp_def] using this.comp (map_continuous e)
+  refine g.continuous_of_isClosed_ker <| krein_smulian_of_submodule (g.ker.restrictScalars ℝ≥0) ?_
+  have hg : ContinuousOn g (toStrongDual ⁻¹' closedBall 0 1) :=
+    hf.comp (map_continuous e.symm).continuousOn fun x hx ↦ by
+      simpa [e, LinearMap.IsCompatibleDual.weakDualCLE'] using hx
+  rw [Set.inter_comm]
+  exact hg.preimage_isClosed_of_isClosed (WeakDual.isClosed_closedBall 0 1) isClosed_singleton
+
+/-- A real linear map from a space with the weak topology of a pairing `B` with a Banach space
+into a space carrying the weak topology of another pairing `C` is continuous if it is continuous
+on the closed unit ball. -/
+theorem LinearMap.IsWeak.continuous_of_continuousOn_closedBall_of_real {Y G : Type*}
+    [AddCommGroup Y] [Module 𝕜 Y] [Module ℝ Y] [IsScalarTower ℝ 𝕜 Y] [TopologicalSpace Y]
+    [AddCommGroup G] [Module 𝕜 G] (C : Y →ₗ[𝕜] G →ₗ[𝕜] 𝕜) [C.IsWeak] (f : X →ₗ[ℝ] Y)
+    (hf : ContinuousOn f (LinearMap.IsCompatibleDual.equiv B.flip ⁻¹' closedBall 0 1)) :
+    Continuous f :=
+  LinearMap.IsWeak.continuous_of_continuous_eval C fun y ↦ by
+    /- Each `x ↦ C (f x) y` is continuous since its real and imaginary parts are. -/
+    let h : X →ₗ[ℝ] 𝕜 := (C.flip y).restrictScalars ℝ ∘ₗ f
+    have hh : ContinuousOn h (LinearMap.IsCompatibleDual.equiv B.flip ⁻¹' closedBall 0 1) :=
+      (LinearMap.IsWeak.continuous_eval C y).comp_continuousOn hf
+    have hre := continuous_of_continuousOn_closedBall_of_dual_of_real B (RCLike.reLm ∘ₗ h)
+      (RCLike.continuous_re.comp_continuousOn hh)
+    have him := continuous_of_continuousOn_closedBall_of_dual_of_real B (RCLike.imLm ∘ₗ h)
+      (RCLike.continuous_im.comp_continuousOn hh)
+    have := (RCLike.continuous_ofReal.comp hre).add
+      ((RCLike.continuous_ofReal.comp him).mul (continuous_const (y := (RCLike.I : 𝕜))))
+    exact this.congr fun x ↦ by simp [h, RCLike.re_add_im]
+
 end IsWeak

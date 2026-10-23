@@ -127,13 +127,27 @@ theorem continuous_of_continuousOn_closedBall {X F : Type*} [AddCommGroup X] [Mo
   LinearMap.IsWeak.continuous_of_continuousOn_closedBall (pairing 𝕜 M P) B f <| by
     rwa [isCompatibleDual_equiv_preimage_closedBall]
 
-/-- A bounded idempotent linear map on `σ(M, P)_𝕜` whose range and kernel are both ultraweakly
-closed is ultraweakly continuous. -/
-theorem continuous_of_isIdempotentElem (E : σ(M, P)_𝕜 →ₗ[𝕜] σ(M, P)_𝕜) (hE : IsIdempotentElem E)
-    (C : ℝ) (hC : ∀ x, ‖ofUltraweak (E x)‖ ≤ C * ‖ofUltraweak x‖)
+section Real
+
+variable [Module ℝ M] [IsScalarTower ℝ 𝕜 M]
+
+/-- A real linear map from `σ(M, P)_𝕜` into a space carrying the weak topology of a pairing is
+continuous if it is continuous on the closed unit ball. -/
+theorem continuous_of_continuousOn_closedBall_of_real {X F : Type*} [AddCommGroup X] [Module 𝕜 X]
+    [Module ℝ X] [IsScalarTower ℝ 𝕜 X] [TopologicalSpace X] [AddCommGroup F] [Module 𝕜 F]
+    (B : X →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.IsWeak] (f : σ(M, P)_𝕜 →ₗ[ℝ] X)
+    (hf : ContinuousOn f (ofUltraweak ⁻¹' closedBall (0 : M) 1)) :
+    Continuous f :=
+  LinearMap.IsWeak.continuous_of_continuousOn_closedBall_of_real (pairing 𝕜 M P) B f <| by
+    rwa [isCompatibleDual_equiv_preimage_closedBall]
+
+/-- A bounded idempotent real linear map on `σ(M, P)_𝕜` whose range and kernel are both
+ultraweakly closed is ultraweakly continuous. -/
+theorem continuous_of_isIdempotentElem_of_real (E : σ(M, P)_𝕜 →ₗ[ℝ] σ(M, P)_𝕜)
+    (hE : IsIdempotentElem E) (C : ℝ) (hC : ∀ x, ‖ofUltraweak (E x)‖ ≤ C * ‖ofUltraweak x‖)
     (h_range : IsClosed (Set.range E)) (h_ker : IsClosed (LinearMap.ker E : Set (σ(M, P)_𝕜))) :
     Continuous E := by
-  refine continuous_of_continuousOn_closedBall (pairing 𝕜 M P) E fun x hx ↦ ?_
+  refine continuous_of_continuousOn_closedBall_of_real (pairing 𝕜 M P) E fun x hx ↦ ?_
   have hE' (y : σ(M, P)_𝕜) : E (E y) = E y := congr($hE y)
   /- `E` maps the closed unit ball into the compact set `ofUltraweak ⁻¹' closedBall 0 C`, so it
   suffices to show that every cluster point `y` of `E` at `x` within the ball is `E x`. -/
@@ -154,5 +168,16 @@ theorem continuous_of_isIdempotentElem (E : σ(M, P)_𝕜 →ₗ[𝕜] σ(M, P)_
   have h₂ : y ∈ Set.range E := h_range.mem_of_tendsto hly <| .of_forall fun z ↦ ⟨z, rfl⟩
   obtain ⟨w, rfl⟩ := h₂
   exact (sub_eq_zero.mp (by simpa [hE'] using h₁)).symm
+
+/-- A bounded idempotent linear map on `σ(M, P)_𝕜` whose range and kernel are both ultraweakly
+closed is ultraweakly continuous. -/
+theorem continuous_of_isIdempotentElem (E : σ(M, P)_𝕜 →ₗ[𝕜] σ(M, P)_𝕜) (hE : IsIdempotentElem E)
+    (C : ℝ) (hC : ∀ x, ‖ofUltraweak (E x)‖ ≤ C * ‖ofUltraweak x‖)
+    (h_range : IsClosed (Set.range E)) (h_ker : IsClosed (LinearMap.ker E : Set (σ(M, P)_𝕜))) :
+    Continuous E :=
+  continuous_of_isIdempotentElem_of_real (E.restrictScalars ℝ)
+    (LinearMap.ext fun x ↦ congr($hE x)) C hC h_range h_ker
+
+end Real
 
 end Ultraweak
