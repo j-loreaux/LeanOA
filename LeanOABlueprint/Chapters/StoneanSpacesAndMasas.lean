@@ -62,7 +62,7 @@ The usual order is a partial order, and given $`f, g \in C(K)` supported on $`U`
 $`f \vee g \in C(K)`, supported on $`U`, where $`(f \vee g)(t) = \max\{f(t), g(t)\}`.
 :::
 
-:::proposition "prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2" (uses := "lem:cts_fns_ge_zero_le_one_directed, lem:selfadjoint_le_norm")
+:::proposition "prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2" (lean := "ExtremallyDisconnected.ofConditionallyCompletePartialOrderSupContinuousMap") (uses := "lem:cts_fns_ge_zero_le_one_directed, lem:selfadjoint_le_norm")
 (Sakai 1.3.2) Let $`K` be a compact Hausdorff space. Suppose every bounded increasing net of
 real-valued, non-negative functions in $`C(K)` has a least upper bound in $`C(K)`. Then $`K`
 is Stonean.
@@ -86,7 +86,7 @@ $`p \in \overline{U}`, and by continuity $`f_s(p) = 0`. But $`f_s(p) = 1` by the
 is a contradiction.
 :::
 
-:::lemma_ "lem:spec_masa_wstar_stonean_Sak_1_7_5" (uses := "prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2, def:cstar_def, thm:comm_cstar_cts_fcns_Sak_1_2_1")
+:::lemma_ "lem:spec_masa_wstar_stonean_Sak_1_7_5" (lean := "StarSubalgebra.IsMasa.extremallyDisconnected_characterSpace") (uses := "prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2, def:cstar_def, thm:comm_cstar_cts_fcns_Sak_1_2_1")
 (Sakai 1.7.5) If $`C` is any maximal commutative $`C^*`-subalgebra of the $`W^*`-algebra
 $`M`, its spectrum space (maximal ideal space) is Stonean.
 :::

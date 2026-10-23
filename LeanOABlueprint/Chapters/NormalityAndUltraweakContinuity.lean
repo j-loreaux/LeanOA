@@ -28,7 +28,7 @@ Every continuous bijection from a compact space to a Hausdorff space is a homeom
 in the weak-$`*` topology.
 :::
 
-:::theorem "lem:sigma_cont_of_normal_Sak_1_7_4" (uses := "thm:Banach_Alaoglu, lem:homeo_of_cts_bij_cpt_haus, lem:uw_pos_sep_pts, lem:selfadjoint_le_norm, def:sigma_top, thm:comm_cstar_cts_fcns_Sak_1_2_1")
+:::theorem "lem:sigma_cont_of_normal_Sak_1_7_4" (lean := "Ultraweak.DirectedOn.exists_isLUB, Ultraweak.DirectedOn.isLUB_star_right_conjugate") (uses := "thm:Banach_Alaoglu, lem:homeo_of_cts_bij_cpt_haus, lem:uw_pos_sep_pts, lem:selfadjoint_le_norm, def:sigma_top, thm:comm_cstar_cts_fcns_Sak_1_2_1")
 (Sakai 1.7.4) Every uniformly bounded, increasing net in $`M^s` converges to its least upper
 bound in the $`\sigma`-topology. Further, if $`x = \sup_\lambda x_\lambda` then
 $`a^* x a = \sup_\lambda a^* x_\lambda a`.
