@@ -19,6 +19,7 @@ public import LeanOA.Mathlib.Algebra.Group.Idempotent
 public import LeanOA.Mathlib.Algebra.Order.Star.Conjugate
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.GelfandDuality
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
@@ -48,6 +49,7 @@ public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
 public import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
+public import LeanOA.Mathlib.Topology.ContinuousMap.LocallyConstant
 public import LeanOA.MathlibTest.CFCPull
 public import LeanOA.Notation
 public import LeanOA.PositiveContinuousLinearMap
@@ -63,5 +65,6 @@ public import LeanOA.Ultraweak.LUB
 public import LeanOA.Ultraweak.Masa
 public import LeanOA.Ultraweak.OrderClosed
 public import LeanOA.Ultraweak.SeparatingDual
+public import LeanOA.Ultraweak.SpanProjection
 public import LeanOA.Ultraweak.Uniformity
 public import LeanOA.WeakDual.UniformSpace
