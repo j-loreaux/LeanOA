@@ -45,7 +45,6 @@ theorem continuous_of_norm_sq_le (ψ : M →ₚ[ℂ] ℂ)
     (hω : ∀ x, ‖ω x‖ ^ 2 ≤ C * ‖ψ (star x * x)‖) :
     Continuous fun x : σ(M, P) ↦ ω (ofUltraweak x) := by
   set C' := √(max C 0)
-  have hC' : 0 ≤ C' := Real.sqrt_nonneg _
   /- `‖ω x‖ ≤ C' * ‖x‖` in the GNS (semi)norm. -/
   have hbound (x : M) : ‖ω x‖ ≤ C' * ‖ψ.toPreGNS x‖ := by
     rw [ψ.preGNS_norm_def', ψ.ofPreGNS_toPreGNS, ← Real.sqrt_mul' _ (norm_nonneg _),
@@ -326,14 +325,13 @@ theorem continuous_of_scottContinuousOn (φ : M →ₚ[ℂ] ℂ)
   let ω : StrongDual ℂ M := φ.toContinuousLinearMap ∘L (ContinuousLinearMap.mul ℂ M).flip p₁
   have hωc := continuous_of_norm_sq_le (P := P) ψ' hψ'c ω ‖φ 1‖ fun x ↦ by
     have h₁ := PositiveLinearMap.norm_map_star_mul_sq_le φ 1 (x * p₁)
-    have h₂ : φ (p₁ * (star x * x) * p₁) ≤ ψ (p₁ * (star x * x) * p₁) :=
-      map_le_map_of_forall_lt (P := P) hp₁ hall
-        (by simpa [hp₁.isSelfAdjoint.star_eq, mul_assoc] using
-          star_left_conjugate_nonneg (star_mul_self_nonneg x) p₁)
-        (by simp [← mul_assoc, hp₁.isIdempotentElem.eq, mul_assoc _ p₁ p₁])
-    have h₃ := CStarAlgebra.norm_le_norm_of_le_of_nonneg h₂ (map_nonneg φ <| by
+    have hnn : 0 ≤ p₁ * (star x * x) * p₁ := by
       simpa [hp₁.isSelfAdjoint.star_eq, mul_assoc] using
-        star_left_conjugate_nonneg (star_mul_self_nonneg x) p₁)
+        star_left_conjugate_nonneg (star_mul_self_nonneg x) p₁
+    have h₂ : φ (p₁ * (star x * x) * p₁) ≤ ψ (p₁ * (star x * x) * p₁) :=
+      map_le_map_of_forall_lt (P := P) hp₁ hall hnn
+        (by simp [← mul_assoc, hp₁.isIdempotentElem.eq, mul_assoc _ p₁ p₁])
+    have h₃ := CStarAlgebra.norm_le_norm_of_le_of_nonneg h₂ (map_nonneg φ hnn)
     simp only [star_one, one_mul, star_mul, hp₁.isSelfAdjoint.star_eq, ← mul_assoc] at h₁
     simp only [ω, ψ', ContinuousLinearMap.coe_comp, Function.comp_apply,
       ContinuousLinearMap.flip_apply, ContinuousLinearMap.mul_apply',
@@ -342,8 +340,8 @@ theorem continuous_of_scottContinuousOn (φ : M →ₚ[ℂ] ℂ)
     simpa [mul_assoc] using h₃
   /- Hence `x ↦ φ (x * (p₀ + p₁))` is ultraweakly continuous, contradicting maximality. -/
   have horth : p₀ * p₁ = 0 := hp₀.mul_eq_zero_of_le_one_sub hp₁ hp₁le
-  have hcont : Continuous fun x : σ(M, P) ↦ φ (ofUltraweak x * (p₀ + p₁)) := by
-    exact (hc₀.add hωc).congr fun x ↦ by simp [mul_add, ω]
+  have hcont : Continuous fun x : σ(M, P) ↦ φ (ofUltraweak x * (p₀ + p₁)) :=
+    (hc₀.add hωc).congr fun x ↦ by simp [mul_add, ω]
   have := hmax ⟨hp₀.add hp₁ horth, hcont⟩ (le_add_of_nonneg_right hp₁.nonneg)
   exact hp₁0 (le_antisymm (by simpa using this) hp₁.nonneg)
 

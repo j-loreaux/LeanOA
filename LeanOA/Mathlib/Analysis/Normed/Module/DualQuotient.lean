@@ -48,6 +48,17 @@ instance isClosed_preannihilator : IsClosed (N.preannihilator : Set X) := by
   rw [this]
   exact isClosed_biInter fun f _ ↦ isClosed_singleton.preimage f.continuous
 
+/-- A bound on a function on `X ⧸ S` along the quotient map passes to the quotient norm. -/
+private lemma norm_le_of_forall_mk {S : Submodule 𝕜 X} {g : X ⧸ S → 𝕜} {C : ℝ} (hC : 0 ≤ C)
+    (h : ∀ y : X, ‖g (Submodule.Quotient.mk y)‖ ≤ C * ‖y‖) (x : X ⧸ S) : ‖g x‖ ≤ C * ‖x‖ := by
+  rcases hC.eq_or_lt with rfl | hC
+  · obtain ⟨y, rfl⟩ := Submodule.Quotient.mk_surjective S x
+    simpa using h y
+  · rw [← div_le_iff₀' hC]
+    refine QuotientAddGroup.le_norm_iff.mpr fun y hy ↦ (div_le_iff₀' hC).mpr ?_
+    rw [← hy]
+    exact h y
+
 /-- The isometric embedding of the dual of `X ⧸ N.preannihilator` into the dual of `X` given by
 precomposition with the quotient map. -/
 noncomputable def dualQuotientPreannihilator :
@@ -60,20 +71,8 @@ noncomputable def dualQuotientPreannihilator :
     · refine (g.opNorm_comp_le _).trans <| mul_le_of_le_one_right (norm_nonneg _) ?_
       exact (N.preannihilator.mkQL : X →L[𝕜] X ⧸ N.preannihilator).opNorm_le_bound zero_le_one
         fun x ↦ by simpa using Submodule.Quotient.norm_mk_le (S := N.preannihilator) x
-    · refine g.opNorm_le_bound (norm_nonneg _) fun x ↦ ?_
-      refine le_of_forall_pos_lt_add fun ε hε ↦ ?_
-      /- Lift `x` to an element `y` of `X` of norm at most `‖x‖ + δ` for small `δ`. -/
-      set C := ‖g.comp N.preannihilator.mkQL‖
-      obtain ⟨δ, hδ, hδε⟩ : ∃ δ > 0, C * δ < ε :=
-        ⟨ε / (C + 1), by positivity, by
-          rw [mul_div_assoc', div_lt_iff₀ (by positivity)]
-          nlinarith [show 0 ≤ C from norm_nonneg _]⟩
-      obtain ⟨y, rfl, hy⟩ := Submodule.Quotient.norm_mk_lt x hδ
-      calc ‖g (Submodule.Quotient.mk y)‖ = ‖g.comp N.preannihilator.mkQL y‖ := rfl
-        _ ≤ C * ‖y‖ := ContinuousLinearMap.le_opNorm _ _
-        _ ≤ C * (‖(Submodule.Quotient.mk y : X ⧸ N.preannihilator)‖ + δ) := by gcongr
-        _ < C * ‖(Submodule.Quotient.mk y : X ⧸ N.preannihilator)‖ + ε := by
-          rw [mul_add]; gcongr
+    · exact g.opNorm_le_bound (norm_nonneg _) <| norm_le_of_forall_mk (norm_nonneg _)
+        (g.comp N.preannihilator.mkQL).le_opNorm
 
 @[simp]
 lemma dualQuotientPreannihilator_apply (g : StrongDual 𝕜 (X ⧸ N.preannihilator)) (x : X) :
@@ -85,17 +84,7 @@ lemma exists_dualQuotientPreannihilator_eq {f : StrongDual 𝕜 X}
     (hf : ∀ x ∈ N.preannihilator, f x = 0) :
     ∃ g, N.dualQuotientPreannihilator g = f := by
   let g₀ : X ⧸ N.preannihilator →ₗ[𝕜] 𝕜 := N.preannihilator.liftQ f.toLinearMap fun x hx ↦ hf x hx
-  refine ⟨g₀.mkContinuous ‖f‖ fun x ↦ ?_, by ext; rfl⟩
-  refine le_of_forall_pos_lt_add fun ε hε ↦ ?_
-  obtain ⟨δ, hδ, hδε⟩ : ∃ δ > 0, ‖f‖ * δ < ε :=
-    ⟨ε / (‖f‖ + 1), by positivity, by
-      rw [mul_div_assoc', div_lt_iff₀ (by positivity)]; nlinarith [norm_nonneg f]⟩
-  obtain ⟨y, rfl, hy⟩ := Submodule.Quotient.norm_mk_lt x hδ
-  calc ‖g₀ (Submodule.Quotient.mk y)‖ = ‖f y‖ := rfl
-    _ ≤ ‖f‖ * ‖y‖ := f.le_opNorm y
-    _ ≤ ‖f‖ * (‖(Submodule.Quotient.mk y : X ⧸ N.preannihilator)‖ + δ) := by gcongr
-    _ < ‖f‖ * ‖(Submodule.Quotient.mk y : X ⧸ N.preannihilator)‖ + ε := by
-      rw [mul_add]; gcongr
+  exact ⟨g₀.mkContinuous ‖f‖ (norm_le_of_forall_mk (norm_nonneg f) f.le_opNorm), by ext; rfl⟩
 
 open WeakDual in
 /-- **Bipolar theorem** for weak⋆ closed subspaces: a functional vanishing on the preannihilator of

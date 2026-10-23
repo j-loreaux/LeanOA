@@ -20,7 +20,8 @@ open Filter Complex
 variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 omit [PartialOrder A] [StarOrderedRing A] in
-private lemma norm_mul₃_le_one {a b c : A} (ha : ‖a‖ ≤ 1) (hb : ‖b‖ ≤ 1) (hc : ‖c‖ ≤ 1) :
+/-- A product of three elements of the closed unit ball lies in the closed unit ball. -/
+lemma norm_mul₃_le_one {a b c : A} (ha : ‖a‖ ≤ 1) (hb : ‖b‖ ≤ 1) (hc : ‖c‖ ≤ 1) :
     ‖a * b * c‖ ≤ 1 :=
   calc ‖a * b * c‖ ≤ ‖a‖ * ‖b‖ * ‖c‖ := norm_mul₃_le
     _ ≤ 1 * 1 * 1 := by gcongr
@@ -46,6 +47,14 @@ lemma neg_norm_smul_le_of_mul_mul_eq {a : A} (ha : IsSelfAdjoint a) (hpa : p * a
     -(‖a‖ • p) ≤ a := by
   have := hp.le_norm_smul_of_mul_mul_eq ha.neg (by rw [mul_neg, neg_mul, hpa])
   rwa [norm_neg, neg_le] at this
+
+/-- If `z * p = z`, then `star z * z ≤ ‖z‖ ^ 2 • p`. -/
+lemma star_mul_self_le_of_mul_eq {z : A} (hz : z * p = z) : star z * z ≤ ‖z‖ ^ 2 • p := by
+  have h : p * star z = star z := by rw [← hp.isSelfAdjoint.star_eq, ← star_mul, hz]
+  have hpz : p * (star z * z) * p = star z * z := by
+    rw [show p * (star z * z) * p = (p * star z) * (z * p) by simp only [mul_assoc], h, hz]
+  have := hp.le_norm_smul_of_mul_mul_eq (.star_mul_self z) hpz
+  rwa [CStarRing.norm_star_mul_self, ← sq] at this
 
 variable {q : A} (hq : IsStarProjection q) (hpq : p * q = 0)
 include hq hpq
@@ -189,25 +198,13 @@ lemma norm_mul_mul_add_le_max {y : A} (hy : ‖y‖ ≤ 1) {b : A} (hb : q * b *
       simp [x, star_mul, mul_assoc, hp.isSelfAdjoint.star_eq, hpb]
     have h₂ : star b * x = 0 := by simp [x, ← mul_assoc, hbp]
     simp [add_mul, mul_add, h₁, h₂]
-  have hxx : star x * x ≤ m ^ 2 • q := by
-    have hqx : q * (star x * x) * q = star x * x := by
-      have h : q * star x = star x := by
-        rw [← hq.isSelfAdjoint.star_eq, ← star_mul, hxq]
-      rw [show q * (star x * x) * q = (q * star x) * (x * q) by simp only [mul_assoc], h, hxq]
-    refine (hq.le_norm_smul_of_mul_mul_eq (.star_mul_self x) hqx).trans <|
-      smul_le_smul_of_nonneg_right ?_ hq.nonneg
-    rw [CStarRing.norm_star_mul_self, ← sq]
-    exact pow_le_pow_left₀ (norm_nonneg _) (hx.trans (le_max_left _ _)) 2
-  have hbb : star b * b ≤ m ^ 2 • p := by
-    have hpbb : p * (star b * b) * p = star b * b := by
-      have hbp' : b * p = b := by rw [← hb]; simp [mul_assoc, hp.isIdempotentElem.eq]
-      have h : p * star b = star b := by
-        rw [← hp.isSelfAdjoint.star_eq, ← star_mul, hbp']
-      rw [show p * (star b * b) * p = (p * star b) * (b * p) by simp only [mul_assoc], h, hbp']
-    refine (hp.le_norm_smul_of_mul_mul_eq (.star_mul_self b) hpbb).trans <|
-      smul_le_smul_of_nonneg_right ?_ hp.nonneg
-    rw [CStarRing.norm_star_mul_self, ← sq]
-    exact pow_le_pow_left₀ (norm_nonneg _) (le_max_right _ _) 2
+  have hbp' : b * p = b := by rw [← hb]; simp [mul_assoc, hp.isIdempotentElem.eq]
+  have hxx : star x * x ≤ m ^ 2 • q := (hq.star_mul_self_le_of_mul_eq hxq).trans <|
+    smul_le_smul_of_nonneg_right (pow_le_pow_left₀ (norm_nonneg _) (hx.trans (le_max_left _ _)) 2)
+      hq.nonneg
+  have hbb : star b * b ≤ m ^ 2 • p := (hp.star_mul_self_le_of_mul_eq hbp').trans <|
+    smul_le_smul_of_nonneg_right (pow_le_pow_left₀ (norm_nonneg _) (le_max_right _ _) 2)
+      hp.nonneg
   have hle : star (x + b) * (x + b) ≤ algebraMap ℝ A (m ^ 2) := by
     rw [hz, Algebra.algebraMap_eq_smul_one, ← hpq₁, smul_add, add_comm (m ^ 2 • p)]
     exact add_le_add hxx hbb

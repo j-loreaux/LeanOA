@@ -106,9 +106,7 @@ lemma closure_image_mul_mul_subset :
     refine (isClosed_closedBall ℂ P (0 : M) 1).closure_subset_iff.mpr ?_ hx
     rintro - ⟨y, hy, rfl⟩
     simp only [mem_preimage, mem_closedBall, dist_zero_right, ofUltraweak_mul] at hy ⊢
-    calc ‖p' * ofUltraweak y * q'‖ ≤ ‖p'‖ * ‖ofUltraweak y‖ * ‖q'‖ := norm_mul₃_le
-      _ ≤ 1 * 1 * 1 := by gcongr; exacts [hp'.norm_le, hq'.norm_le]
-      _ = 1 := by ring
+    exact norm_mul₃_le_one hp'.norm_le hy hq'.norm_le
   refine ⟨x, hx_ball, ?_⟩
   apply ofUltraweak_injective
   simpa [hqxp] using hx_dec.symm
@@ -125,10 +123,7 @@ lemma isCompact_image_mul_left :
   have h_norm (a y b : σ(M, P)) (ha : ‖ofUltraweak a‖ ≤ 1) (hb : ‖ofUltraweak b‖ ≤ 1)
       (hy : y ∈ S) : a * y * b ∈ S := by
     simp only [S, mem_preimage, mem_closedBall, dist_zero_right, ofUltraweak_mul] at hy ⊢
-    calc ‖ofUltraweak a * ofUltraweak y * ofUltraweak b‖
-        _ ≤ ‖ofUltraweak a‖ * ‖ofUltraweak y‖ * ‖ofUltraweak b‖ := norm_mul₃_le
-        _ ≤ 1 * 1 * 1 := by gcongr
-        _ = 1 := by ring
+    exact norm_mul₃_le_one ha hy hb
   have h_one : ‖ofUltraweak (1 : σ(M, P))‖ ≤ 1 := (IsStarProjection.one M).norm_le
   have h_off : IsCompact ((fun y ↦ p * y * q) '' S) :=
     hS.of_isClosed_subset
