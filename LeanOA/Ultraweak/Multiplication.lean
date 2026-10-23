@@ -22,8 +22,8 @@ adjoints.
 
 ## Main declarations
 
-+ `Ultraweak.continuous_mul_left`: `fun x ↦ a * x` is ultraweakly continuous.
-+ `Ultraweak.continuous_mul_right`: `fun x ↦ x * a` is ultraweakly continuous.
++ `Ultraweak.instSeparatelyContinuousMul`: multiplication on `σ(M, P)` is separately continuous,
+  so that `σ(M, P)` is a semitopological ring (`Ultraweak.instIsSemitopologicalRing`).
 -/
 
 open scoped Ultraweak NNReal Pointwise Topology
@@ -193,7 +193,7 @@ lemma continuous_mul_left_of_isStarProjection : Continuous (fun x : σ(M, P) ↦
 end LeftMulProjection
 
 /-- Left multiplication is ultraweakly continuous. -/
-theorem continuous_mul_left (a : σ(M, P)) : Continuous (fun x : σ(M, P) ↦ a * x) := by
+private theorem continuous_mul_left (a : σ(M, P)) : Continuous (fun x : σ(M, P) ↦ a * x) := by
   /- For each `ρ : P`, let `Φ ρ : M →L[ℂ] StrongDual ℂ M` send `b` to `x ↦ equivDual (b * x) ρ`.
   Then the set `T` of those `b` for which left multiplication by `b` is ultraweakly continuous is
   the intersection of the preimages under the maps `Φ ρ` of the (norm closed) range of
@@ -222,13 +222,14 @@ theorem continuous_mul_left (a : σ(M, P)) : Continuous (fun x : σ(M, P) ↦ a 
   rw [WStarAlgebra.topologicalClosure_span_isStarProjection (P := P)] at this
   exact (hT_iff (ofUltraweak a)).mp (this trivial)
 
-/-- Right multiplication is ultraweakly continuous. -/
-theorem continuous_mul_right (a : σ(M, P)) : Continuous (fun x : σ(M, P) ↦ x * a) := by
-  have := (continuous_star.comp (continuous_mul_left (star a))).comp continuous_star
-  simpa [Function.comp_def, star_mul] using this
+/-- **Sakai 1.7.8**: multiplication on `σ(M, P)` is separately ultraweakly continuous. -/
+instance instSeparatelyContinuousMul : SeparatelyContinuousMul σ(M, P) where
+  continuous_const_mul := continuous_mul_left _
+  continuous_mul_const {a} := by
+    have := (continuous_star.comp (continuous_mul_left (star a))).comp continuous_star
+    simpa [Function.comp_def, star_mul] using this
 
-/-- Two-sided multiplication is ultraweakly continuous. -/
-theorem continuous_mul_mul (a b : σ(M, P)) : Continuous (fun x : σ(M, P) ↦ a * x * b) :=
-  (continuous_mul_right b).comp (continuous_mul_left a)
+/-- `σ(M, P)` is a semitopological ring. -/
+instance instIsSemitopologicalRing : IsSemitopologicalRing σ(M, P) where
 
 end Ultraweak

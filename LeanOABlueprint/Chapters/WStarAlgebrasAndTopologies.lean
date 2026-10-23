@@ -170,7 +170,7 @@ has an extreme point by the Krein-Milman Theorem. By
 {bpref "thm:cstar_unital_iff_extreme_Sak_1_6_1"}[], the result follows.
 :::
 
-:::lemma_ "lem:cut_down_sigma_closed_cts" (lean := "IsStarProjection.isClosed_corner_of_ultraweak, Ultraweak.continuous_mul_mul") (uses := "def:sigma_top")
+:::lemma_ "lem:cut_down_sigma_closed_cts" (lean := "IsStarProjection.isClosed_corner_of_ultraweak, Ultraweak.instSeparatelyContinuousMul") (uses := "def:sigma_top")
 (Sakai 1.7.6) Let $`p` be any projection in $`M`. Then the subalgebra $`pMp` is
 $`\sigma`-closed and the mapping $`x \mapsto pxp` is $`\sigma`-continuous.
 :::
@@ -207,7 +207,7 @@ $`qM` are $`\sigma`-closed, and such a map is $`\sigma`-continuous (by compactne
 ball and the Krein–Smulian theorem). The claim for $`x \mapsto xp` follows by taking adjoints.
 :::
 
-:::lemma_ "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8" (lean := "Ultraweak.continuous_mul_left, Ultraweak.continuous_mul_right") (uses := "def:sigma_top, lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7, lem:wstar_pos_approx_proj, prop:loc_cvx_result")
+:::lemma_ "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8" (lean := "Ultraweak.instSeparatelyContinuousMul, Ultraweak.instIsSemitopologicalRing") (uses := "def:sigma_top, lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7, lem:wstar_pos_approx_proj, prop:loc_cvx_result")
 (Sakai 1.7.8) The mappings $`x \mapsto x^*`, $`x \mapsto ax`, and $`x \mapsto xa` are
 $`\sigma`-continuous for $`x, a \in M`.
 :::

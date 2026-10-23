@@ -81,7 +81,7 @@ theorem continuous_of_norm_sq_le (ψ : M →ₚ[ℂ] ℂ)
   have hy : ‖η - (ψ.toPreGNS y : ψ.GNS)‖ < ε / (s + 1) := by
     simpa [y, dist_eq_norm] using hz
   let g : StrongDual ℂ M := ψL ∘L ContinuousLinearMap.mul ℂ M (star y)
-  refine ⟨g, hψ.comp (continuous_mul_left (toUltraweak ℂ P (star y))), ?_⟩
+  refine ⟨g, hψ.comp (continuous_const_mul (toUltraweak ℂ P (star y))), ?_⟩
   rw [dist_eq_norm]
   set r := ‖η - (ψ.toPreGNS y : ψ.GNS)‖
   refine (ContinuousLinearMap.opNorm_le_bound (ω - g) (show 0 ≤ r * s by positivity)
@@ -321,7 +321,8 @@ theorem continuous_of_scottContinuousOn (φ : M →ₚ[ℂ] ℂ)
   so `x ↦ φ (x * p₁)` is ultraweakly continuous. -/
   let ψ' : M →ₚ[ℂ] ℂ := ψ.comp (conjugatePLM hp₁.isSelfAdjoint)
   have hψ'c : Continuous fun x : σ(M, P) ↦ ψ' (ofUltraweak x) :=
-    hψc.comp (continuous_mul_mul (toUltraweak ℂ P p₁) (toUltraweak ℂ P p₁))
+    hψc.comp ((continuous_mul_const (toUltraweak ℂ P p₁)).comp
+      (continuous_const_mul (toUltraweak ℂ P p₁)))
   let ω : StrongDual ℂ M := φ.toContinuousLinearMap ∘L (ContinuousLinearMap.mul ℂ M).flip p₁
   have hωc := continuous_of_norm_sq_le (P := P) ψ' hψ'c ω ‖φ 1‖ fun x ↦ by
     have h₁ := PositiveLinearMap.norm_map_star_mul_sq_le φ 1 (x * p₁)

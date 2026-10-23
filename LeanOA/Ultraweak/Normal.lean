@@ -77,8 +77,8 @@ theorem isStarProjection_of_isLUB {d : Set M} (hne : d.Nonempty) (hd : DirectedO
       (map_nonneg φ <| toUltraweak_nonneg.mpr (hx q).1.isSelfAdjoint.mul_self_nonneg)
   /- On the other hand, `(e - q) * (e - q) = e * e - e * q - q * e + q` tends to `e - e * e`,
   since multiplication is separately ultraweakly continuous. Hence `e * e = e`. -/
-  have hL := ((continuous_mul_left (toUltraweak ℂ P e)).tendsto _).comp h₁
-  have hR := ((continuous_mul_right (toUltraweak ℂ P e)).tendsto _).comp h₁
+  have hL := ((continuous_const_mul (toUltraweak ℂ P e)).tendsto _).comp h₁
+  have hR := ((continuous_mul_const (toUltraweak ℂ P e)).tendsto _).comp h₁
   have h₃ := ((tendsto_const_nhds (x := toUltraweak ℂ P (e * e))).sub hL |>.sub hR).add h₁
   have h₄ : Tendsto (fun q : d ↦ toUltraweak ℂ P ((e - q) * (e - q))) atTop
       (𝓝 (toUltraweak ℂ P (e - e * e))) := by
