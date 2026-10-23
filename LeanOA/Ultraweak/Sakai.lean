@@ -106,17 +106,16 @@ private lemma _root_.Complex.le_of_not_lt_of_nonneg {a b : ℂ} (ha : 0 ≤ a) (
   exact h ⟨h', by simp_all⟩
 
 omit [StarOrderedRing M] in
-/-- Along a nonempty directed set of projections, a normal functional tends to its value at the
-supremum. -/
-lemma tendsto_of_scottContinuousOn {φ : M →ₚ[ℂ] ℂ}
-    (hφ : ScottContinuousOn {d : Set M | ∀ q ∈ d, IsStarProjection q} φ) {d : Set M}
-    (hdp : ∀ q ∈ d, IsStarProjection q) (hne : d.Nonempty) (hdir : DirectedOn (· ≤ ·) d)
-    {e : M} (he : IsLUB d e) :
+/-- If a positive functional `φ` is Scott continuous on a family `D` of sets, then along a
+nonempty directed `d ∈ D`, `φ` tends to its value at the supremum of `d`. -/
+lemma tendsto_of_scottContinuousOn {φ : M →ₚ[ℂ] ℂ} {D : Set (Set M)}
+    (hφ : ScottContinuousOn D φ) {d : Set M} (hd : d ∈ D) (hne : d.Nonempty)
+    (hdir : DirectedOn (· ≤ ·) d) {e : M} (he : IsLUB d e) :
     Tendsto (fun q : d ↦ φ (q : M)) atTop (𝓝 (φ e)) := by
   refine tendsto_atTop_isLUB ((OrderHomClass.mono φ).comp (Subtype.mono_coe _)) ?_
   change IsLUB (Set.range (φ ∘ Subtype.val)) _
   rw [Set.range_comp, Subtype.range_coe]
-  exact hφ hdp hne hdir he
+  exact hφ hd hne hdir he
 
 /-- The positive linear map `x ↦ a * x * a` for a selfadjoint `a`. -/
 noncomputable def conjugatePLM {a : M} (ha : IsSelfAdjoint a) : M →ₚ[ℂ] M :=
@@ -141,7 +140,7 @@ include P in
 /-- For a normal positive functional `φ`, there is a maximal projection `p₀` for which
 `x ↦ φ (x * p₀)` is ultraweakly continuous. -/
 lemma exists_maximal_continuous_mul_right {φ : M →ₚ[ℂ] ℂ}
-    (hφ : ScottContinuousOn {d : Set M | ∀ q ∈ d, IsStarProjection q} φ) :
+    (hφ : ScottContinuousOn {d : Set M | (∀ q ∈ d, IsStarProjection q) ∧ IsChain (· ≤ ·) d} φ) :
     ∃ p₀, Maximal (fun p ↦ IsStarProjection p ∧
       Continuous fun x : σ(M, P) ↦ φ (ofUltraweak x * p)) p₀ := by
   let _ := WStarAlgebra.instCCPO M P
@@ -162,7 +161,8 @@ lemma exists_maximal_continuous_mul_right {φ : M →ₚ[ℂ] ℂ}
   have : Nonempty c := hne.to_subtype
   have : IsDirectedOrder c := ⟨hdir.directed_val⟩
   have hφe : Tendsto (fun q : c ↦ φ (e - q)) atTop (𝓝 0) := by
-    have := (tendsto_const_nhds (x := φ e)).sub (tendsto_of_scottContinuousOn hφ hdp hne hdir he)
+    have := (tendsto_const_nhds (x := φ e)).sub
+      (tendsto_of_scottContinuousOn hφ ⟨hdp, hchain⟩ hne hdir he)
     simpa [map_sub] using this
   have h₀ : Tendsto (fun q : c ↦ √(‖φL‖ * ‖φ (e - q)‖)) atTop (𝓝 0) := by
     have h₁ : Tendsto (fun q : c ↦ ‖φL‖ * ‖φ (e - q)‖) atTop (𝓝 0) := by
@@ -226,8 +226,8 @@ include P in
 there is a nonzero subprojection `p₁ ≤ p` such that `φ q < ψ q` for every nonzero
 subprojection `q ≤ p₁`. -/
 lemma exists_forall_lt {φ ψ : M →ₚ[ℂ] ℂ}
-    (hφ : ScottContinuousOn {d : Set M | ∀ q ∈ d, IsStarProjection q} φ)
-    (hψ : ScottContinuousOn {d : Set M | ∀ q ∈ d, IsStarProjection q} ψ)
+    (hφ : ScottContinuousOn {d : Set M | (∀ q ∈ d, IsStarProjection q) ∧ IsChain (· ≤ ·) d} φ)
+    (hψ : ScottContinuousOn {d : Set M | (∀ q ∈ d, IsStarProjection q) ∧ IsChain (· ≤ ·) d} ψ)
     {p : M} (hp : IsStarProjection p) (hlt : φ p < ψ p) :
     ∃ p₁, IsStarProjection p₁ ∧ p₁ ≠ 0 ∧ p₁ ≤ p ∧
       ∀ q, IsStarProjection q → q ≠ 0 → q ≤ p₁ → φ q < ψ q := by
@@ -245,8 +245,8 @@ lemma exists_forall_lt {φ ψ : M →ₚ[ℂ] ℂ}
     refine ⟨sSup c, ⟨hep, he.2 fun q hq ↦ (hc hq).2.1, ?_⟩, fun q hq ↦ he.1 hq⟩
     have : Nonempty c := hne.to_subtype
     have : IsDirectedOrder c := ⟨hdir.directed_val⟩
-    exact le_of_tendsto_of_tendsto' (tendsto_of_scottContinuousOn hψ hdp hne hdir he)
-      (tendsto_of_scottContinuousOn hφ hdp hne hdir he) fun q ↦ (hc q.2).2.2
+    exact le_of_tendsto_of_tendsto' (tendsto_of_scottContinuousOn hψ ⟨hdp, hchain⟩ hne hdir he)
+      (tendsto_of_scottContinuousOn hφ ⟨hdp, hchain⟩ hne hdir he) fun q ↦ (hc q.2).2.2
   /- Since `φ p < ψ p`, we have `q₀ ≠ p`, so `p - q₀` is a nonzero projection, and it has a
   nonzero subprojection `q` with `ψ q ≤ φ q`. But then `q₀ + q` contradicts maximality. -/
   have hq₀ne : q₀ ≠ p := by
@@ -300,10 +300,10 @@ lemma map_le_map_of_forall_lt {φ ψ : M →ₚ[ℂ] ℂ} {p : M} (hp : IsStarPr
     exact mul_le_mul_of_nonneg_left hx (Complex.zero_le_real.mpr c.2)
 
 include P in
-/-- **Sakai 1.13.2**: a positive linear functional on a W⋆-algebra which is normal (in the sense
-that it preserves suprema of directed sets of projections) is ultraweakly continuous. -/
-theorem continuous_of_scottContinuousOn (φ : M →ₚ[ℂ] ℂ)
-    (hφ : ScottContinuousOn {d : Set M | ∀ q ∈ d, IsStarProjection q} φ) :
+/-- **Sakai 1.13.2**, in its strongest form: a positive linear functional on a W⋆-algebra which
+preserves suprema of chains of projections is ultraweakly continuous. -/
+theorem continuous_of_scottContinuousOn_chains (φ : M →ₚ[ℂ] ℂ)
+    (hφ : ScottContinuousOn {d : Set M | (∀ q ∈ d, IsStarProjection q) ∧ IsChain (· ≤ ·) d} φ) :
     Continuous fun x : σ(M, P) ↦ φ (ofUltraweak x) := by
   /- Let `p₀` be maximal among projections `p` for which `x ↦ φ (x * p)` is ultraweakly
   continuous. It suffices to show that `p₀ = 1`. -/
@@ -345,5 +345,22 @@ theorem continuous_of_scottContinuousOn (φ : M →ₚ[ℂ] ℂ)
     (hc₀.add hωc).congr fun x ↦ by simp [mul_add, ω]
   have := hmax ⟨hp₀.add hp₁ horth, hcont⟩ (le_add_of_nonneg_right hp₁.nonneg)
   exact hp₁0 (le_antisymm (by simpa using this) hp₁.nonneg)
+
+include P in
+/-- **Sakai 1.13.2**: a positive linear functional on a W⋆-algebra which is normal (in the sense
+that it preserves suprema of directed sets of projections) is ultraweakly continuous. -/
+theorem continuous_of_scottContinuousOn (φ : M →ₚ[ℂ] ℂ)
+    (hφ : ScottContinuousOn {d : Set M | ∀ q ∈ d, IsStarProjection q} φ) :
+    Continuous fun x : σ(M, P) ↦ φ (ofUltraweak x) :=
+  continuous_of_scottContinuousOn_chains φ <| hφ.mono fun _ hd ↦ hd.1
+
+include P in
+/-- A positive linear functional on a W⋆-algebra which preserves suprema of chains of projections
+is normal, i.e., it preserves suprema of all directed sets. Note that the statement does not involve
+the predual, but its proof uses the existence of one. -/
+theorem scottContinuous_of_scottContinuousOn_chains (φ : M →ₚ[ℂ] ℂ)
+    (hφ : ScottContinuousOn {d : Set M | (∀ q ∈ d, IsStarProjection q) ∧ IsChain (· ≤ ·) d} φ) :
+    ScottContinuous φ :=
+  scottContinuous_of_continuous (P := P) φ (continuous_of_scottContinuousOn_chains φ hφ)
 
 end Ultraweak

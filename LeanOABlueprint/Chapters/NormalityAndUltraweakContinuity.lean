@@ -217,7 +217,7 @@ positive $`a \in pMp` is a norm limit of nonnegative combinations of such projec
 where $`\varphi \le \psi` is a norm closed convex cone.
 :::
 
-:::theorem "thm:sigma_cts_of_normal_Sak_1_13_2" (lean := "Ultraweak.continuous_of_scottContinuousOn") (uses := "def:sigma_top, lem:zorn_base, lem:exists_uw_ge_normal, lem:msr_th_lemma, lem:corner_comparison, lem:dominated_sigma_cts, lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8")
+:::theorem "thm:sigma_cts_of_normal_Sak_1_13_2" (lean := "Ultraweak.continuous_of_scottContinuousOn, Ultraweak.continuous_of_scottContinuousOn_chains") (uses := "def:sigma_top, lem:zorn_base, lem:exists_uw_ge_normal, lem:msr_th_lemma, lem:corner_comparison, lem:dominated_sigma_cts, lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8")
 (Sakai 1.13.2) Every positive normal linear functional $`\varphi` on $`M` is
 $`\sigma(M, M_*)`-continuous.
 :::
@@ -250,7 +250,7 @@ predual.
 
 # Sakai's Theorem and the Uniqueness of the Predual
 
-:::theorem "thm:sakai_normal_iff" (lean := "Ultraweak.positive_tfae") (uses := "lem:sigma_cont_of_normal_Sak_1_7_4, thm:sigma_cts_of_normal_Sak_1_13_2, prop:loc_cvx_result")
+:::theorem "thm:sakai_normal_iff" (lean := "Ultraweak.positive_tfae, Ultraweak.scottContinuous_of_scottContinuousOn_chains") (uses := "lem:sigma_cont_of_normal_Sak_1_7_4, thm:sigma_cts_of_normal_Sak_1_13_2, prop:loc_cvx_result")
 For a positive linear functional $`\varphi` on a $`W^*`-algebra $`M` with predual $`M_*`, the
 following are equivalent:
 
