@@ -1,5 +1,6 @@
 module
 
+public import Mathlib.Analysis.LocallyConvex.Polar
 public import Mathlib.Analysis.LocallyConvex.Separation
 public import Mathlib.Analysis.LocallyConvex.SeparatingDual
 public import Mathlib.Analysis.LocallyConvex.WeakDual
@@ -34,6 +35,9 @@ mirror each other.
   convex space over `ℝ` or `ℂ`, the coannihilator of the annihilator of `W` is the closure of `W`.
 + `Submodule.strongDualCoannihilator_strongDualAnnihilator_eq_topologicalClosure`: over `ℝ` or `ℂ`,
   the annihilator of the coannihilator of `Φ` is the weak⋆ closure of `Φ`.
++ `Submodule.strongDualAnnihilator_eq_polarSubmodule`,
+  `Submodule.strongDualCoannihilator_eq_polarSubmodule`: over a nontrivially normed field, these are
+  the polars with respect to `topDualPairing`.
 -/
 
 open Topology
@@ -241,6 +245,39 @@ theorem strongDualAnnihilator_eq_top_iff {W : Submodule R M} :
     ← le_strongDualAnnihilator_iff_le_strongDualCoannihilator, h]
 
 end SeparatingDual
+
+/-! ### Annihilators as polars
+
+Over a nontrivially normed field, annihilators are the polars of submodules with respect to the
+canonical pairings. -/
+
+section Polar
+
+variable {𝕜 M : Type*} [NontriviallyNormedField 𝕜] [AddCommMonoid M] [Module 𝕜 M]
+
+theorem dualAnnihilator_eq_polarSubmodule (W : Submodule 𝕜 M) :
+    W.dualAnnihilator = (LinearMap.id : Module.Dual 𝕜 M →ₗ[𝕜] _).flip.polarSubmodule W :=
+  SetLike.coe_injective <| by ext; simp [LinearMap.polarSubmodule, LinearMap.polar_subMulAction]
+
+theorem dualCoannihilator_eq_polarSubmodule (Φ : Submodule 𝕜 (Module.Dual 𝕜 M)) :
+    Φ.dualCoannihilator = (LinearMap.id : Module.Dual 𝕜 M →ₗ[𝕜] _).polarSubmodule Φ :=
+  SetLike.coe_injective <| by ext; simp [LinearMap.polarSubmodule, LinearMap.polar_subMulAction]
+
+variable [TopologicalSpace M]
+
+theorem strongDualAnnihilator_eq_polarSubmodule (W : Submodule 𝕜 M) :
+    W.strongDualAnnihilator = (topDualPairing 𝕜 M).flip.polarSubmodule W :=
+  SetLike.coe_injective <| by ext; simp [LinearMap.polarSubmodule, LinearMap.polar_subMulAction]
+
+theorem _root_.StrongDual.polarSubmodule_eq_strongDualAnnihilator (W : Submodule 𝕜 M) :
+    StrongDual.polarSubmodule 𝕜 W = W.strongDualAnnihilator :=
+  (strongDualAnnihilator_eq_polarSubmodule W).symm
+
+theorem strongDualCoannihilator_eq_polarSubmodule (Φ : Submodule 𝕜 (StrongDual 𝕜 M)) :
+    Φ.strongDualCoannihilator = (topDualPairing 𝕜 M).polarSubmodule Φ :=
+  SetLike.coe_injective <| by ext; simp [LinearMap.polarSubmodule, LinearMap.polar_subMulAction]
+
+end Polar
 
 section Topology
 
