@@ -9,10 +9,8 @@ public import LeanOA.CStarAlgebra.FiniteSpectrum
 public import LeanOA.CStarAlgebra.IsStarOrtho
 public import LeanOA.CStarAlgebra.OffDiagonal
 public import LeanOA.CStarAlgebra.ProperStar
-public import LeanOA.CStarAlgebra.UnitalCorner
 public import LeanOA.CStarModule.Standard
 public import LeanOA.ComplexOrder
-public import LeanOA.Corner
 public import LeanOA.ExtremallyDisconnected
 public import LeanOA.IsWeak
 public import LeanOA.KreinSmulian

@@ -3,6 +3,7 @@ module
 public import LeanOA.CStarAlgebra.Corner.Basic
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
+public import Mathlib.Analysis.CStarAlgebra.Projection
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 
 @[expose] public section
@@ -74,6 +75,38 @@ instance [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {p : A}
             mul_coe_mul_eq]
       · rintro ⟨s, rfl⟩
         simp [← zero_le_coe, star_mul_self_nonneg (s : A)]
+
+section Projection
+
+/-! ### Projections in the corner
+
+The projections in the corner of `p` are exactly the projections `q ≤ p` of `A`. -/
+
+variable [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {p : A}
+  {hp : IsStarProjection p}
+
+/-- A projection in the corner of `p` is a subprojection of `p`. -/
+lemma coe_le_of_isStarProjection {q : hp.Corner} (hq : IsStarProjection q) : (q : A) ≤ p := by
+  have := coe_le_coe.mpr hq.le_one
+  rwa [coe_one] at this
+
+/-- A subprojection `q ≤ p` lies in the corner `p * A * p`. -/
+lemma _root_.IsStarProjection.mul_mul_eq_of_le (hp : IsStarProjection p) {q : A}
+    (hq : IsStarProjection q) (hqp : q ≤ p) : p * q * p = q := by
+  have h₁ : p * q = q := (hq.le_iff_mul_eq_right hp).mp hqp
+  have h₂ : q * p = q := by
+    simpa [hp.isSelfAdjoint.star_eq, hq.isSelfAdjoint.star_eq] using congr(star $h₁)
+  rw [h₁, h₂]
+
+/-- The projections in the corner of `p` are exactly the subprojections of `p`. -/
+lemma exists_isStarProjection_coe_eq_iff {q : A} :
+    (∃ q' : hp.Corner, IsStarProjection q' ∧ (q' : A) = q) ↔ IsStarProjection q ∧ q ≤ p := by
+  refine ⟨?_, fun ⟨hq, hqp⟩ ↦ ⟨mk hp q (hp.mul_mul_eq_of_le hq hqp), ?_, rfl⟩⟩
+  · rintro ⟨q, hq, rfl⟩
+    exact ⟨isStarProjection_coe_iff.mpr hq, coe_le_of_isStarProjection hq⟩
+  · rwa [← isStarProjection_coe_iff, coe_mk]
+
+end Projection
 
 end Corner
 

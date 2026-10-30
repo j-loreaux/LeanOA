@@ -170,12 +170,12 @@ has an extreme point by the Krein-Milman Theorem. By
 {bpref "thm:cstar_unital_iff_extreme_Sak_1_6_1"}[], the result follows.
 :::
 
-:::lemma_ "lem:cut_down_sigma_closed_cts" (lean := "IsStarProjection.isClosed_corner_of_ultraweak, Ultraweak.instSeparatelyContinuousMul") (uses := "def:sigma_top")
+:::lemma_ "lem:cut_down_sigma_closed_cts" (lean := "IsStarProjection.isClosed_cornerSubmodule_of_ultraweak, Ultraweak.instSeparatelyContinuousMul") (uses := "def:sigma_top")
 (Sakai 1.7.6) Let $`p` be any projection in $`M`. Then the subalgebra $`pMp` is
 $`\sigma`-closed and the mapping $`x \mapsto pxp` is $`\sigma`-continuous.
 :::
 
-:::lemma_ "lem:cut_down_of_wstar" (lean := "IsStarProjection.cornerCStarAlgebra, IsStarProjection.cornerPredual") (uses := "def:sigma_top, lem:cut_down_sigma_closed_cts, lem:sigma_closed_star_subalg_wstar")
+:::lemma_ "lem:cut_down_of_wstar" (lean := "IsStarProjection.Corner.instCStarAlgebra, IsStarProjection.Corner.instPredual") (uses := "def:sigma_top, lem:cut_down_sigma_closed_cts, lem:sigma_closed_star_subalg_wstar")
 If $`p \in M` is a projection, then $`pMp` is also a $`W^*`-algebra with identity $`p`.
 :::
 

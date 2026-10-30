@@ -131,21 +131,23 @@ lemma isCompact_image_mul_left :
     hS.of_isClosed_subset
       (closure_subset_iff_isClosed.mp (closure_image_mul_mul_subset hp hq hpq hpq₁))
       (by rintro - ⟨y, hy, rfl⟩; exact h_norm _ _ _ hp'.norm_le hq'.norm_le hy)
-  have h_diag : IsCompact ((NonUnitalStarSubalgebra.corner ℂ p : Set σ(M, P)) ∩ S) :=
-    hS.inter_left hp.isClosed_corner_of_ultraweak
+  have h_diag : IsCompact (range (p * · * p) ∩ S) := by
+    refine hS.inter_left ?_
+    rw [← hp.coe_cornerSubmodule_eq_range_mul_mul (R := ℂ)]
+    exact hp.isClosed_cornerSubmodule_of_ultraweak
   /- `p * S = (p * S * p + p * S * q) ∩ S`. -/
   convert (h_diag.add h_off).inter_right (isClosed_closedBall ℂ P (0 : M) 1) using 1
   ext x
   constructor
   · rintro ⟨y, hy, rfl⟩
-    refine ⟨⟨p * y * p, ⟨⟨y, by rw [hp.isSelfAdjoint.star_eq]⟩,
+    refine ⟨⟨p * y * p, ⟨⟨y, rfl⟩,
       h_norm _ _ _ hp'.norm_le hp'.norm_le hy⟩, p * y * q, ⟨y, hy, rfl⟩, ?_⟩, ?_⟩
     · change p * y * p + p * y * q = p * y
       rw [← mul_add, hpq₁, mul_one]
     · exact (by simpa using h_norm p y 1 hp'.norm_le h_one hy : p * y ∈ S)
   · rintro ⟨⟨-, ⟨⟨z, rfl⟩, -⟩, -, ⟨y, -, rfl⟩, rfl⟩, hx⟩
     refine ⟨_, hx, ?_⟩
-    simp [hp.isSelfAdjoint.star_eq, mul_add, ← mul_assoc, hpp]
+    simp [mul_add, ← mul_assoc, hpp]
 
 end Projection
 

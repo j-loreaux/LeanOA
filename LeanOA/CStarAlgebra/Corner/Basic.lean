@@ -180,6 +180,10 @@ lemma nontrivial_iff : Nontrivial hp.Corner ↔ p ≠ 0 := by
   rw [← not_iff_not, not_nontrivial_iff_subsingleton, ← subsingleton_iff_zero_eq_one, ne_eq,
     not_not, ← coe_inj, coe_zero, coe_one, eq_comm]
 
+@[simp]
+lemma isStarProjection_coe_iff {q : hp.Corner} : IsStarProjection (q : A) ↔ IsStarProjection q := by
+  simp only [isStarProjection_iff', ← coe_mul, ← coe_star, coe_inj]
+
 end NonUnitalSemiring
 
 instance [NonUnitalCommSemiring A] [StarRing A] {p : A} {hp : IsStarProjection p} :
@@ -298,6 +302,62 @@ lemma toCorner_star (x : A) : hp.toCorner R (star x) = star (hp.toCorner R x) :=
 
 end toCorner
 
+section cornerSubmodule
+
+variable [NonUnitalSemiring A] [StarRing A] [CommSemiring R] [Module R A] [IsScalarTower R A A]
+  [SMulCommClass R A A] {p : A}
+
+variable (R) in
+/-- The corner `p * A * p` of a star projection `p`, as a submodule of `A`. This is the range of
+`IsStarProjection.Corner.subtype`, and it is linearly equivalent to `hp.Corner` via
+`IsStarProjection.cornerLinearEquiv`. -/
+@[nolint unusedArguments]
+def cornerSubmodule (_ : IsStarProjection p) : Submodule R A where
+  carrier := {x | p * x * p = x}
+  zero_mem' := by simp
+  add_mem' {x y} (hx : p * x * p = x) (hy : p * y * p = y) :=
+    show p * (x + y) * p = x + y by rw [mul_add, add_mul, hx, hy]
+  smul_mem' r x (hx : p * x * p = x) :=
+    show p * (r • x) * p = r • x by rw [mul_smul_comm, smul_mul_assoc, hx]
+
+variable (hp : IsStarProjection p)
+
+lemma mem_cornerSubmodule {x : A} : x ∈ hp.cornerSubmodule R ↔ p * x * p = x := .rfl
+
+lemma coe_cornerSubmodule :
+    (hp.cornerSubmodule R : Set A) = Set.range ((↑) : hp.Corner → A) :=
+  Corner.range_coe.symm
+
+lemma coe_mem_cornerSubmodule (x : hp.Corner) : (x : A) ∈ hp.cornerSubmodule R :=
+  Corner.mul_coe_mul_eq x
+
+lemma coe_cornerSubmodule_eq_range_mul_mul :
+    (hp.cornerSubmodule R : Set A) = Set.range (p * · * p) := by
+  ext x
+  refine ⟨fun hx ↦ ⟨x, (hp.mem_cornerSubmodule (R := R)).mp hx⟩, ?_⟩
+  rintro ⟨y, rfl⟩
+  simpa using hp.coe_mem_cornerSubmodule (R := R) (hp.toCorner R y)
+
+variable (R) in
+/-- The corner `hp.Corner` is linearly equivalent to the submodule `hp.cornerSubmodule R`. -/
+def cornerLinearEquiv : hp.Corner ≃ₗ[R] hp.cornerSubmodule R where
+  toFun x := ⟨x, coe_mem_cornerSubmodule hp x⟩
+  invFun x := Corner.mk hp x x.2
+  left_inv _ := rfl
+  right_inv _ := rfl
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+
+@[simp]
+lemma coe_cornerLinearEquiv_apply (x : hp.Corner) : (hp.cornerLinearEquiv R x : A) = x := rfl
+
+@[simp]
+lemma coe_cornerLinearEquiv_symm_apply (x : hp.cornerSubmodule R) :
+    ((hp.cornerLinearEquiv R).symm x : A) = x :=
+  rfl
+
+end cornerSubmodule
+
 namespace Corner
 
 section Normed
@@ -330,11 +390,13 @@ lemma isometry_coe : Isometry ((↑) : hp.Corner → A) :=
 instance [CStarRing A] : CStarRing hp.Corner where
   norm_mul_self_le x := CStarRing.norm_mul_self_le (x : A)
 
-instance [CompleteSpace A] : CompleteSpace hp.Corner := by
-  refine (completeSpace_iff_isComplete_range (f := ((↑) : hp.Corner → A))
-    isometry_coe.isUniformInducing).mpr ?_
+lemma isClosed_range_coe : IsClosed (Set.range ((↑) : hp.Corner → A)) := by
   rw [range_coe]
-  exact isClosed_eq (by fun_prop) continuous_id |>.isComplete
+  exact isClosed_eq (by fun_prop) continuous_id
+
+instance [CompleteSpace A] : CompleteSpace hp.Corner :=
+  (completeSpace_iff_isComplete_range (f := ((↑) : hp.Corner → A))
+    isometry_coe.isUniformInducing).mpr isClosed_range_coe.isComplete
 
 instance {𝕜 : Type*} [NormedField 𝕜] [NormedSpace 𝕜 A] [IsScalarTower 𝕜 A A]
     [SMulCommClass 𝕜 A A] : NormedAlgebra 𝕜 hp.Corner where
@@ -342,9 +404,42 @@ instance {𝕜 : Type*} [NormedField 𝕜] [NormedSpace 𝕜 A] [IsScalarTower �
 
 end Normed
 
+end Corner
+
+section Normed
+
+variable [NonUnitalNormedRing A] [StarRing A] {p : A} (hp : IsStarProjection p)
+
+lemma isClosed_cornerSubmodule {R : Type*} [CommSemiring R] [Module R A] [IsScalarTower R A A]
+    [SMulCommClass R A A] : IsClosed (hp.cornerSubmodule R : Set A) :=
+  hp.coe_cornerSubmodule (R := R) ▸ Corner.isClosed_range_coe
+
+variable (𝕜 : Type*) [NormedField 𝕜] [NormedSpace 𝕜 A] [IsScalarTower 𝕜 A A]
+  [SMulCommClass 𝕜 A A]
+
+/-- The corner `hp.Corner` is linearly isometrically equivalent to the submodule
+`hp.cornerSubmodule 𝕜`. -/
+def cornerLinearIsometryEquiv : hp.Corner ≃ₗᵢ[𝕜] hp.cornerSubmodule 𝕜 where
+  __ := hp.cornerLinearEquiv 𝕜
+  norm_map' _ := rfl
+
+@[simp]
+lemma coe_cornerLinearIsometryEquiv_apply (x : hp.Corner) :
+    (hp.cornerLinearIsometryEquiv 𝕜 x : A) = x :=
+  rfl
+
+@[simp]
+lemma coe_cornerLinearIsometryEquiv_symm_apply (x : hp.cornerSubmodule 𝕜) :
+    ((hp.cornerLinearIsometryEquiv 𝕜).symm x : A) = x :=
+  rfl
+
+end Normed
+
+namespace Corner
+
 /-- The corner `p * A * p` of a non-unital C⋆-algebra is a C⋆-algebra with unit `p`. -/
-noncomputable instance [NonUnitalCStarAlgebra A] {p : A} {hp : IsStarProjection p} :
-    CStarAlgebra hp.Corner where
+noncomputable instance instCStarAlgebra [NonUnitalCStarAlgebra A] {p : A}
+    {hp : IsStarProjection p} : CStarAlgebra hp.Corner where
 
 end Corner
 

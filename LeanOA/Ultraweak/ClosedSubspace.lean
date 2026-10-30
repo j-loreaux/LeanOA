@@ -1,7 +1,6 @@
 module
 
 public import LeanOA.Mathlib.Analysis.Normed.Module.DualQuotient
-public import LeanOA.CStarAlgebra.UnitalCorner
 public import LeanOA.Ultraweak.Corner
 
 @[expose] public section
@@ -10,17 +9,16 @@ public import LeanOA.Ultraweak.Corner
 
 If `N` is an ultraweakly closed subspace of `M`, then `N` is the dual of `P ⧸ N_⊥`, where `N_⊥` is
 the subspace of `P` annihilated by `N`. This is Sakai 1.1.4. In particular, if `p` is a projection
-in a W⋆-algebra `M`, the corner `p * M * p` (which is a unital C⋆-algebra with unit `p`) is again
+in a W⋆-algebra `M`, the corner `hp.Corner` (which is a unital C⋆-algebra with unit `p`) is again
 a W⋆-algebra.
 
 ## Main declarations
 
 + `Ultraweak.predualOfIsClosed`: the predual of an ultraweakly closed subspace.
-+ `IsStarProjection.cornerPredual`: the predual of the corner `p * M * p`.
++ `IsStarProjection.Corner.instPredual`: the predual of the corner `hp.Corner`.
 -/
 
 open scoped Ultraweak
-open NonUnitalStarSubalgebra
 
 namespace Ultraweak
 
@@ -85,15 +83,22 @@ variable {M P : Type*} [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M]
 
 variable (P) in
 /-- The corner `p * M * p` of a W⋆-algebra is ultraweakly closed. -/
-lemma isClosed_preimage_corner {p : M} (hp : IsStarProjection p) :
-    IsClosed (ofUltraweak ⁻¹' (corner ℂ p : Set M) : Set σ(M, P)) :=
-  IsStarProjection.isClosed_corner_of_ultraweak (e := toUltraweak ℂ P p) hp
+lemma isClosed_preimage_cornerSubmodule {p : M} (hp : IsStarProjection p) :
+    IsClosed (ofUltraweak ⁻¹' (hp.cornerSubmodule ℂ : Set M) : Set σ(M, P)) :=
+  IsStarProjection.isClosed_cornerSubmodule_of_ultraweak (e := toUltraweak ℂ P p) hp
 
-variable (P) in
-/-- The predual of the corner `p * M * p` of a W⋆-algebra `M` with predual `P`. Together with
-`IsStarProjection.cornerCStarAlgebra`, this makes `p * M * p` into a W⋆-algebra with unit `p`. -/
-noncomputable abbrev cornerPredual {p : M} (hp : IsStarProjection p) :
-    Predual ℂ (corner ℂ p) (Ultraweak.Subpredual P (corner ℂ p).toSubmodule) :=
-  Ultraweak.predualOfIsClosed (corner ℂ p).toSubmodule (hp.isClosed_preimage_corner P)
+/-- The predual of the corner `hp.Corner` of a W⋆-algebra `M` with predual `P`. Together with
+`IsStarProjection.Corner.instCStarAlgebra`, this makes `hp.Corner` into a W⋆-algebra with
+unit `p`. -/
+noncomputable instance Corner.instPredual {p : M} {hp : IsStarProjection p} :
+    Predual ℂ hp.Corner (Ultraweak.Subpredual P (hp.cornerSubmodule ℂ)) where
+  equivDual := (hp.cornerLinearIsometryEquiv ℂ).trans
+    (Ultraweak.predualOfIsClosed _ (hp.isClosed_preimage_cornerSubmodule P)).equivDual
+
+lemma Corner.predual_equivDual_apply_mk {p : M} {hp : IsStarProjection p} (x : hp.Corner)
+    (ρ : P) :
+    Predual.equivDual (P := Ultraweak.Subpredual P (hp.cornerSubmodule ℂ)) x
+      (Submodule.Quotient.mk ρ) = Predual.equivDual (𝕜 := ℂ) (x : M) ρ :=
+  Ultraweak.predualOfIsClosed_equivDual_apply_mk _ (hp.isClosed_preimage_cornerSubmodule P) _ ρ
 
 end IsStarProjection
