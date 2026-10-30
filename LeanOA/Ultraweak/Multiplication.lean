@@ -26,7 +26,7 @@ adjoints.
   so that `σ(M, P)` is a semitopological ring (`Ultraweak.instIsSemitopologicalRing`).
 -/
 
-open scoped Ultraweak NNReal Pointwise Topology
+open scoped Ultraweak NNReal Pointwise Topology StarRing
 open Metric Filter Set
 
 variable {M P : Type*} [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M]
@@ -40,7 +40,7 @@ variable {p q : σ(M, P)} (hp : IsStarProjection p) (hq : IsStarProjection q) (h
   (hpq₁ : p + q = 1)
 include hp hq hpq hpq₁
 
-omit [CompleteSpace P] in
+omit [PartialOrder M] [StarOrderedRing M] [CompleteSpace P] in
 /-- The intersection of the off-diagonal corner `p * M * q` with the closed unit ball is
 ultraweakly closed. -/
 lemma closure_image_mul_mul_subset :
@@ -49,7 +49,8 @@ lemma closure_image_mul_mul_subset :
   intro x hx
   have hp' : IsStarProjection (ofUltraweak p) := hp
   have hq' : IsStarProjection (ofUltraweak q) := hq
-  have hpq' : ofUltraweak p * ofUltraweak q = 0 := hpq
+  have hpq' : ofUltraweak p ⋆⟂ ofUltraweak q :=
+    (isStarOrtho_iff_mul_eq_zero hp'.isSelfAdjoint hq'.isSelfAdjoint).mpr hpq
   have hpq₁' : ofUltraweak p + ofUltraweak q = 1 := hpq₁
   set p' := ofUltraweak p
   set q' := ofUltraweak q
@@ -64,12 +65,11 @@ lemma closure_image_mul_mul_subset :
     simpa [x'] using (isClosed_closedBall ℂ P (0 : M) r).closure_subset this
   /- The diagonal corners of `x` vanish. -/
   have hpxp : p' * x' * p' = 0 :=
-    hp'.mul_mul_eq_zero_of_norm_add_smul_le hq' hpq₁' fun c ↦
+    hp'.mul_mul_eq_zero_of_norm_add_smul_le fun c ↦
       key (c • p') _ fun y hy ↦ hp'.norm_mul_mul_add_smul_le hq' hpq' hy c
   have hqxq : q' * x' * q' = 0 :=
-    hq'.mul_mul_eq_zero_of_norm_add_smul_le hp' (by rwa [add_comm]) fun c ↦
+    hq'.mul_mul_eq_zero_of_norm_add_smul_le fun c ↦
       key (c • q') _ fun y hy ↦ hp'.norm_mul_mul_add_smul_le' hq' hpq' hy c
-  have hqp' : q' * p' = 0 := hp'.mul_eq_zero_of_mul_eq_zero hq' hpq'
   have hx_dec : x' = p' * x' * q' + q' * x' * p' := by
     calc x' = (p' + q') * x' * (p' + q') := by rw [hpq₁', one_mul, mul_one]
       _ = _ := by
@@ -88,7 +88,7 @@ lemma closure_image_mul_mul_subset :
       rw [mul_assoc _ p' p', hp'.isIdempotentElem.eq]
     set b := (n : ℝ) • X
     have hb : q' * b * p' = b := by rw [mul_smul_comm, smul_mul_assoc, hX]
-    have h₁ := key b _ fun y hy ↦ hp'.norm_mul_mul_add_le_max hq' hpq' hy hb hpq₁'
+    have h₁ := key b _ fun y hy ↦ hp'.norm_mul_mul_add_le_max hq' hpq' hy hb
     have hbn : ‖b‖ = n * c := by simp [b, norm_smul, c, X]
     have h₂ : q' * (x' + b) * p' = ((n : ℝ) + 1) • X := by
       rw [mul_add, add_mul, hb, add_smul, one_smul, add_comm]
@@ -106,7 +106,8 @@ lemma closure_image_mul_mul_subset :
     refine (isClosed_closedBall ℂ P (0 : M) 1).closure_subset_iff.mpr ?_ hx
     rintro - ⟨y, hy, rfl⟩
     simp only [mem_preimage, mem_closedBall, dist_zero_right, ofUltraweak_mul] at hy ⊢
-    exact norm_mul₃_le_one hp'.norm_le hy hq'.norm_le
+    grw [norm_mul₃_le, hy]
+    bound
   refine ⟨x, hx_ball, ?_⟩
   apply ofUltraweak_injective
   simpa [hqxp] using hx_dec.symm
@@ -123,7 +124,8 @@ lemma isCompact_image_mul_left :
   have h_norm (a y b : σ(M, P)) (ha : ‖ofUltraweak a‖ ≤ 1) (hb : ‖ofUltraweak b‖ ≤ 1)
       (hy : y ∈ S) : a * y * b ∈ S := by
     simp only [S, mem_preimage, mem_closedBall, dist_zero_right, ofUltraweak_mul] at hy ⊢
-    exact norm_mul₃_le_one ha hy hb
+    grw [norm_mul₃_le, ha, hy, hb]
+    simp
   have h_one : ‖ofUltraweak (1 : σ(M, P))‖ ≤ 1 := (IsStarProjection.one M).norm_le
   have h_off : IsCompact ((fun y ↦ p * y * q) '' S) :=
     hS.of_isClosed_subset
