@@ -1,8 +1,13 @@
 module
 
 public import Mathlib.Analysis.Complex.Basic
+public import LeanOA.Mathlib.Topology.Algebra.ConstMulAction
 
 @[expose] public section
+
+instance {E : Type*} [TopologicalSpace E] [MulAction ℂ E] [SMul ℝ E] [IsScalarTower ℝ ℂ E]
+    [ContinuousConstSMul ℂ E] : ContinuousConstSMul ℝ E :=
+  .restrictScalars ℝ ℂ E
 
 namespace Complex
 
