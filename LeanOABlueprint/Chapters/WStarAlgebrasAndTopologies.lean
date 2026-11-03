@@ -222,7 +222,7 @@ $`W^*`-subalgebra of $`M`.
 
 In this section, let $`M` be a $`W^*`-algebra.
 
-:::proposition "prop:loc_cvx_result"
+:::proposition "prop:loc_cvx_result" (lean := "Ultraweak.continuous_iff_exists_eq, Ultraweak.continuous_iff_mem_range")
 The set of $`\sigma(M, M_*)`-continuous linear functionals is precisely $`M_*`.
 :::
 
