@@ -4,6 +4,8 @@ public import LeanOA.AbsConvex
 public import LeanOA.CFC
 public import LeanOA.CStarAlgebra.Extreme
 public import LeanOA.CStarAlgebra.FiniteSpectrum
+public import LeanOA.CStarAlgebra.IsStarOrtho
+public import LeanOA.CStarAlgebra.ProperStar
 public import LeanOA.CStarModule.Standard
 public import LeanOA.ComplexOrder
 public import LeanOA.Corner
