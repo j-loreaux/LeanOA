@@ -34,7 +34,8 @@ noncomputable abbrev dualSubmodule (N : Submodule 𝕜 M) : Submodule 𝕜 (Stro
 
 variable (P) in
 /-- The predual `P ⧸ N_⊥` of an ultraweakly closed subspace `N` of `M`. -/
-abbrev Subpredual (N : Submodule 𝕜 M) : Type _ := P ⧸ (dualSubmodule P N).strongDualCoannihilator
+abbrev Subpredual (N : Submodule 𝕜 M) : Type _ :=
+  P ⧸ (topDualPairing 𝕜 P).polarSubmodule (dualSubmodule P N)
 
 omit [Predual 𝕜 M P] in
 lemma ofUltraweak_weakDualCLE_symm_apply [Predual 𝕜 M P] (φ : WeakDual 𝕜 P) :
@@ -64,13 +65,13 @@ noncomputable abbrev predualOfIsClosed (N : Submodule 𝕜 M)
     (hN : IsClosed (ofUltraweak ⁻¹' (N : Set M) : Set (σ(M, P)_𝕜))) :
     Predual 𝕜 N (Subpredual P N) where
   equivDual := (LinearIsometryEquiv.submoduleMap N Predual.equivDual).trans
-    ((dualSubmodule P N).equivDualQuotientStrongDualCoannihilator (isClosed_dualSubmodule hN))
+    ((dualSubmodule P N).equivDualQuotientPolarSubmodule (isClosed_dualSubmodule hN))
 
 lemma predualOfIsClosed_equivDual_apply_mk (N : Submodule 𝕜 M)
     (hN : IsClosed (ofUltraweak ⁻¹' (N : Set M) : Set (σ(M, P)_𝕜))) (x : N) (ρ : P) :
     (predualOfIsClosed N hN).equivDual x (Submodule.Quotient.mk ρ) =
       Predual.equivDual (𝕜 := 𝕜) (x : M) ρ :=
-  Submodule.equivDualQuotientStrongDualCoannihilator_apply_mk _ (isClosed_dualSubmodule hN) _ ρ
+  Submodule.equivDualQuotientPolarSubmodule_apply_mk _ (isClosed_dualSubmodule hN) _ ρ
 
 end Subspace
 

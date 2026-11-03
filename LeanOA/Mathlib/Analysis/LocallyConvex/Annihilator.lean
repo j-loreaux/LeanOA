@@ -1,459 +1,429 @@
+/-
+Copyright (c) 2026 Jireh Loreaux. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Jireh Loreaux
+-/
 module
 
 public import Mathlib.Analysis.LocallyConvex.Polar
-public import Mathlib.Analysis.LocallyConvex.Separation
-public import Mathlib.Analysis.LocallyConvex.SeparatingDual
-public import Mathlib.Analysis.LocallyConvex.WeakDual
 public import Mathlib.LinearAlgebra.Dual.Defs
-public import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
+public import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 
-@[expose] public section
+/-! # Annihilators as polars of submodules
 
-/-! # Annihilators in the strong dual
+Given a bilinear form `B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜` over a nontrivially normed field, the polar of a
+submodule `W` of `E` is the submodule `B.polarSubmodule W` of `F` consisting of those `y` for which
+`B x y = 0` for all `x ∈ W`. This file develops the API of `LinearMap.polarSubmodule`, which plays
+the role of the *annihilator* of `W`, while `B.flip.polarSubmodule Φ` plays the role of the
+*coannihilator* of a submodule `Φ` of `F`.
 
-This file defines the annihilator in `StrongDual R M` of a submodule `W` of a topological module
-`M`, and the coannihilator in `M` of a submodule `Φ` of `StrongDual R M`. These are the analogues
-for the strong dual of `Submodule.dualAnnihilator` and `Submodule.dualCoannihilator`, and they are
-defined in terms of those via the canonical pairing `topDualPairing R M`, so that the two APIs
-mirror each other.
+Since both are instances of the same construction (applied to `B` and `B.flip`, respectively), most
+results need only be stated once. For example, `LinearMap.polarSubmodule_sup` gives both the
+annihilator and the coannihilator of a supremum.
 
-## Main definitions
-
-+ `Submodule.strongDualAnnihilator W`: the submodule of `StrongDual R M` consisting of those
-  continuous linear functionals which vanish on `W`.
-+ `Submodule.strongDualCoannihilator Φ`: the submodule of `M` on which every functional in `Φ`
-  vanishes.
+The usual annihilators in the (weak or strong) dual are recovered by specializing `B`:
+* `(topDualPairing 𝕜 E).flip : E →ₗ[𝕜] StrongDual 𝕜 E →ₗ[𝕜] 𝕜` for the annihilator in the strong
+  dual of a submodule of `E`; this satisfies `LinearMap.IsCompatibleDual` (see
+  `topDualPairing_flip_isCompatibleDual`).
+* `weakDualPairing 𝕜 E : WeakDual 𝕜 E →ₗ[𝕜] E →ₗ[𝕜] 𝕜` for the coannihilator of a submodule of the
+  weak dual; this satisfies `LinearMap.IsWeak`.
 
 ## Main statements
 
-+ `Submodule.strongDualAnnihilator_gc`: `strongDualAnnihilator` and `strongDualCoannihilator` form
-  an antitone Galois connection.
-+ `Submodule.isClosed_strongDualCoannihilator`: the coannihilator is closed.
-+ `Submodule.isClosed_toStrongDual_preimage_strongDualAnnihilator`: the annihilator is
-  weak⋆ closed.
-+ `Submodule.strongDualAnnihilator_strongDualCoannihilator_eq_topologicalClosure`: in a locally
-  convex space over `ℝ` or `ℂ`, the coannihilator of the annihilator of `W` is the closure of `W`.
-+ `Submodule.strongDualCoannihilator_strongDualAnnihilator_eq_topologicalClosure`: over `ℝ` or `ℂ`,
-  the annihilator of the coannihilator of `Φ` is the weak⋆ closure of `Φ`.
-+ `Submodule.strongDualAnnihilator_eq_polarSubmodule`,
-  `Submodule.strongDualCoannihilator_eq_polarSubmodule`: over a nontrivially normed field, these are
-  the polars with respect to `topDualPairing`.
+* `LinearMap.polarSubmodule_gc`: `B.polarSubmodule` and `B.flip.polarSubmodule` form an antitone
+  Galois connection.
+* `LinearMap.isClosed_polarSubmodule_of_continuous`: the polar of a submodule is closed when each
+  `B x` is continuous.
+* `LinearMap.IsWeak.flip_polarSubmodule_polarSubmodule`: if `E` carries the weak topology induced
+  by `B`, then the bipolar of a submodule `W` of `E` is its closure.
+* `LinearMap.IsCompatibleDual.flip_polarSubmodule_polarSubmodule`: if `E` is a locally convex space
+  whose topology is compatible with `B`, then the bipolar of a submodule `W` of `E` is its closure.
 -/
 
-open Topology
+@[expose] public section
+
+open Submodule
+
+variable {𝕜 E F : Type*}
 
 namespace Submodule
 
-section CommSemiring
+open scoped ComplexOrder
 
-variable {R M : Type*} [CommSemiring R] [TopologicalSpace R] [ContinuousAdd R]
-  [ContinuousConstSMul R R] [AddCommMonoid M] [TopologicalSpace M] [Module R M]
-variable {W : Submodule R M}
+/-- Submodules are absolutely convex. -/
+protected theorem absConvex [RCLike 𝕜] [AddCommMonoid E] [Module 𝕜 E] (W : Submodule 𝕜 E) :
+    AbsConvex 𝕜 (W : Set E) :=
+  ⟨fun a _ ↦ Set.smul_set_subset_iff.mpr fun _ hx ↦ W.smul_mem a hx, W.convex⟩
 
-/-- The `strongDualAnnihilator` of a submodule `W` is the submodule of continuous linear
-functionals `φ` such that `φ w = 0` for all `w ∈ W`. This is the analogue of
-`Submodule.dualAnnihilator` for the strong dual. -/
-def strongDualAnnihilator (W : Submodule R M) : Submodule R (StrongDual R M) :=
-  W.dualAnnihilator.comap (topDualPairing R M)
+theorem closedAbsConvexHull_eq_topologicalClosure [RCLike 𝕜] [AddCommMonoid E] [Module 𝕜 E]
+    [TopologicalSpace E] [ContinuousAdd E] [ContinuousConstSMul 𝕜 E] (W : Submodule 𝕜 E) :
+    closedAbsConvexHull 𝕜 (W : Set E) = W.topologicalClosure :=
+  subset_antisymm
+    (closedAbsConvexHull_min (W.topologicalClosure_coe ▸ subset_closure)
+      W.topologicalClosure.absConvex W.isClosed_topologicalClosure)
+    (W.topologicalClosure_coe ▸ closure_subset_closedAbsConvexHull)
 
-@[simp]
-theorem mem_strongDualAnnihilator (φ : StrongDual R M) :
-    φ ∈ W.strongDualAnnihilator ↔ ∀ w ∈ W, φ w = 0 :=
-  mem_dualAnnihilator (W := W) _
+end Submodule
 
-theorem comap_dualAnnihilator_eq_strongDualAnnihilator (W : Submodule R M) :
-    W.dualAnnihilator.comap (topDualPairing R M) = W.strongDualAnnihilator :=
+/-- The canonical pairing of `E` with its strong dual is compatible with the topology on `E`. -/
+instance topDualPairing_flip_isCompatibleDual [NontriviallyNormedField 𝕜] [AddCommGroup E]
+    [Module 𝕜 E] [TopologicalSpace E] : (topDualPairing 𝕜 E).flip.IsCompatibleDual :=
+  (LinearEquiv.refl 𝕜 (StrongDual 𝕜 E)).IsCompatibleDual _ rfl
+
+namespace LinearMap
+
+section NontriviallyNormedField
+
+variable [NontriviallyNormedField 𝕜] [AddCommMonoid E] [AddCommMonoid F] [Module 𝕜 E] [Module 𝕜 F]
+  (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+
+section SetLike
+
+variable {S : Type*} [SetLike S E] [SMulMemClass S 𝕜 E]
+
+theorem coe_polarSubmodule (m : S) : (B.polarSubmodule m : Set F) = B.polar m :=
   rfl
 
-theorem map_strongDualAnnihilator_le_dualAnnihilator (W : Submodule R M) :
-    W.strongDualAnnihilator.map (topDualPairing R M) ≤ W.dualAnnihilator :=
-  map_comap_le _ _
+@[simp]
+theorem mem_polarSubmodule {m : S} {y : F} : y ∈ B.polarSubmodule m ↔ ∀ x ∈ m, B x y = 0 := by
+  rw [← SetLike.mem_coe, coe_polarSubmodule, polar_subMulAction, Set.mem_ofPred_eq]
 
-/-- The `strongDualCoannihilator` of a submodule `Φ` of the strong dual is the submodule of `M`
-on which every functional in `Φ` vanishes. This is the analogue of `Submodule.dualCoannihilator`
-for the strong dual. -/
-def strongDualCoannihilator (Φ : Submodule R (StrongDual R M)) : Submodule R M :=
-  (Φ.map (topDualPairing R M)).dualCoannihilator
+theorem polarSubmodule_eq_biInf (m : S) : B.polarSubmodule m = ⨅ x ∈ m, ker (B x) := by
+  ext; simp
+
+end SetLike
+
+variable {B}
+
+theorem polarSubmodule_eq_comap_dualAnnihilator (W : Submodule 𝕜 E) :
+    B.polarSubmodule W = comap B.flip W.dualAnnihilator := by
+  ext; simp
+
+theorem flip_polarSubmodule_eq_dualCoannihilator_map (Φ : Submodule 𝕜 F) :
+    B.flip.polarSubmodule Φ = (map B.flip Φ).dualCoannihilator := by
+  ext; simp
+
+theorem map_polarSubmodule_le_dualAnnihilator (W : Submodule 𝕜 E) :
+    map B.flip (B.polarSubmodule W) ≤ W.dualAnnihilator := by
+  rw [polarSubmodule_eq_comap_dualAnnihilator]
+  exact map_comap_le _ _
+
+theorem dualCoannihilator_le_flip_polarSubmodule_comap (Φ : Submodule 𝕜 (Module.Dual 𝕜 E)) :
+    Φ.dualCoannihilator ≤ B.flip.polarSubmodule (comap B.flip Φ) := by
+  rw [flip_polarSubmodule_eq_dualCoannihilator_map]
+  exact dualCoannihilator_anti (map_comap_le _ _)
+
+variable (B) in
+/-- `B.polarSubmodule` and `B.flip.polarSubmodule` form an antitone Galois connection between the
+submodules of `E` and the submodules of `F`. -/
+theorem polarSubmodule_gc :
+    GaloisConnection (OrderDual.toDual ∘ B.polarSubmodule (S := Submodule 𝕜 E))
+      (B.flip.polarSubmodule (S := Submodule 𝕜 F) ∘ OrderDual.ofDual) := fun W Φ ↦ by
+  induction Φ using OrderDual.rec
+  grind [OrderDual.toDual_le_toDual, OrderDual.ofDual_toDual,
+    SetLike.le_def, mem_polarSubmodule, flip_apply]
+
+theorem le_polarSubmodule_iff {Φ : Submodule 𝕜 F} {W : Submodule 𝕜 E} :
+    Φ ≤ B.polarSubmodule W ↔ W ≤ B.flip.polarSubmodule Φ :=
+  (polarSubmodule_gc B).le_iff_le
 
 @[simp]
-theorem mem_strongDualCoannihilator {Φ : Submodule R (StrongDual R M)} (x : M) :
-    x ∈ Φ.strongDualCoannihilator ↔ ∀ φ ∈ Φ, φ x = 0 := by
-  simp [strongDualCoannihilator]
+theorem polarSubmodule_bot : B.polarSubmodule (⊥ : Submodule 𝕜 E) = ⊤ :=
+  (polarSubmodule_gc B).l_bot
 
-theorem dualCoannihilator_map_eq_strongDualCoannihilator (Φ : Submodule R (StrongDual R M)) :
-    (Φ.map (topDualPairing R M)).dualCoannihilator = Φ.strongDualCoannihilator :=
-  rfl
-
-theorem dualCoannihilator_le_strongDualCoannihilator_comap (Φ : Submodule R (Module.Dual R M)) :
-    Φ.dualCoannihilator ≤ (Φ.comap (topDualPairing R M)).strongDualCoannihilator :=
-  dualCoannihilator_anti (map_comap_le _ _)
-
-variable (R M) in
-theorem strongDualAnnihilator_gc :
-    GaloisConnection
-      (OrderDual.toDual ∘
-        (strongDualAnnihilator : Submodule R M → Submodule R (StrongDual R M)))
-      (strongDualCoannihilator ∘ OrderDual.ofDual) := by
-  intro a b
-  induction b using OrderDual.rec
-  simp only [Function.comp_apply, OrderDual.toDual_le_toDual, OrderDual.ofDual_toDual,
-    SetLike.le_def, mem_strongDualAnnihilator, mem_strongDualCoannihilator]
-  grind
-
-theorem le_strongDualAnnihilator_iff_le_strongDualCoannihilator
-    {U : Submodule R (StrongDual R M)} {V : Submodule R M} :
-    U ≤ V.strongDualAnnihilator ↔ V ≤ U.strongDualCoannihilator :=
-  (strongDualAnnihilator_gc R M).le_iff_le
+theorem polarSubmodule_top : B.polarSubmodule (⊤ : Submodule 𝕜 E) = ker B.flip := by
+  ext; simp [LinearMap.ext_iff]
 
 @[simp]
-theorem strongDualAnnihilator_bot : (⊥ : Submodule R M).strongDualAnnihilator = ⊤ :=
-  (strongDualAnnihilator_gc R M).l_bot
+theorem polarSubmodule_top_eq_bot_iff :
+    B.polarSubmodule (⊤ : Submodule 𝕜 E) = ⊥ ↔ B.SeparatingRight := by
+  rw [polarSubmodule_top, separatingRight_iff_flip_ker_eq_bot]
 
-@[simp]
-theorem strongDualAnnihilator_top : (⊤ : Submodule R M).strongDualAnnihilator = ⊥ := by
-  rw [eq_bot_iff]
-  intro v
-  simp_rw [mem_strongDualAnnihilator, mem_bot, mem_top, forall_true_left]
-  exact fun h ↦ ContinuousLinearMap.ext h
+alias ⟨_, SeparatingRight.polarSubmodule_top⟩ := polarSubmodule_top_eq_bot_iff
 
-@[simp]
-theorem strongDualCoannihilator_bot :
-    (⊥ : Submodule R (StrongDual R M)).strongDualCoannihilator = ⊤ :=
-  (strongDualAnnihilator_gc R M).u_top
+theorem polarSubmodule_eq_top_iff (hB : B.SeparatingLeft) {W : Submodule 𝕜 E} :
+    B.polarSubmodule W = ⊤ ↔ W = ⊥ := by
+  refine ⟨fun h ↦ ?_, by simp +contextual⟩
+  rw [eq_bot_iff, ← (flip_separatingRight.mpr hB).polarSubmodule_top, ← le_polarSubmodule_iff, h]
 
 @[mono]
-theorem strongDualAnnihilator_anti {U V : Submodule R M} (hUV : U ≤ V) :
-    V.strongDualAnnihilator ≤ U.strongDualAnnihilator :=
-  (strongDualAnnihilator_gc R M).monotone_l hUV
+theorem polarSubmodule_anti {U V : Submodule 𝕜 E} (hUV : U ≤ V) :
+    B.polarSubmodule V ≤ B.polarSubmodule U :=
+  (polarSubmodule_gc B).monotone_l hUV
 
-@[mono]
-theorem strongDualCoannihilator_anti {U V : Submodule R (StrongDual R M)} (hUV : U ≤ V) :
-    V.strongDualCoannihilator ≤ U.strongDualCoannihilator :=
-  (strongDualAnnihilator_gc R M).monotone_u hUV
+theorem le_flip_polarSubmodule_polarSubmodule (W : Submodule 𝕜 E) :
+    W ≤ B.flip.polarSubmodule (B.polarSubmodule W) :=
+  (polarSubmodule_gc B).le_u_l W
 
-theorem le_strongDualAnnihilator_strongDualCoannihilator (U : Submodule R M) :
-    U ≤ U.strongDualAnnihilator.strongDualCoannihilator :=
-  (strongDualAnnihilator_gc R M).le_u_l U
-
-theorem le_strongDualCoannihilator_strongDualAnnihilator (U : Submodule R (StrongDual R M)) :
-    U ≤ U.strongDualCoannihilator.strongDualAnnihilator :=
-  (strongDualAnnihilator_gc R M).l_u_le U
-
-theorem strongDualAnnihilator_strongDualCoannihilator_strongDualAnnihilator (U : Submodule R M) :
-    U.strongDualAnnihilator.strongDualCoannihilator.strongDualAnnihilator =
-      U.strongDualAnnihilator :=
-  (strongDualAnnihilator_gc R M).l_u_l_eq_l U
-
-theorem strongDualCoannihilator_strongDualAnnihilator_strongDualCoannihilator
-    (U : Submodule R (StrongDual R M)) :
-    U.strongDualCoannihilator.strongDualAnnihilator.strongDualCoannihilator =
-      U.strongDualCoannihilator :=
-  (strongDualAnnihilator_gc R M).u_l_u_eq_u U
-
-theorem strongDualAnnihilator_sup_eq (U V : Submodule R M) :
-    (U ⊔ V).strongDualAnnihilator = U.strongDualAnnihilator ⊓ V.strongDualAnnihilator :=
-  (strongDualAnnihilator_gc R M).l_sup
-
-theorem strongDualCoannihilator_sup_eq (U V : Submodule R (StrongDual R M)) :
-    (U ⊔ V).strongDualCoannihilator = U.strongDualCoannihilator ⊓ V.strongDualCoannihilator :=
-  (strongDualAnnihilator_gc R M).u_inf
-
-theorem strongDualAnnihilator_iSup_eq {ι : Sort*} (U : ι → Submodule R M) :
-    (⨆ i : ι, U i).strongDualAnnihilator = ⨅ i : ι, (U i).strongDualAnnihilator :=
-  (strongDualAnnihilator_gc R M).l_iSup
-
-theorem strongDualCoannihilator_iSup_eq {ι : Sort*} (U : ι → Submodule R (StrongDual R M)) :
-    (⨆ i : ι, U i).strongDualCoannihilator = ⨅ i : ι, (U i).strongDualCoannihilator :=
-  (strongDualAnnihilator_gc R M).u_iInf
-
-/-- See also `Submodule.strongDualAnnihilator_inf_eq` for closed subspaces of locally convex
-spaces over `ℝ` or `ℂ`. -/
-theorem sup_strongDualAnnihilator_le_inf (U V : Submodule R M) :
-    U.strongDualAnnihilator ⊔ V.strongDualAnnihilator ≤ (U ⊓ V).strongDualAnnihilator := by
-  rw [le_strongDualAnnihilator_iff_le_strongDualCoannihilator, strongDualCoannihilator_sup_eq]
-  apply inf_le_inf <;> exact le_strongDualAnnihilator_strongDualCoannihilator _
-
-theorem iSup_strongDualAnnihilator_le_iInf {ι : Sort*} (U : ι → Submodule R M) :
-    ⨆ i : ι, (U i).strongDualAnnihilator ≤ (⨅ i : ι, U i).strongDualAnnihilator := by
-  rw [le_strongDualAnnihilator_iff_le_strongDualCoannihilator, strongDualCoannihilator_iSup_eq]
-  exact iInf_mono fun i ↦ le_strongDualAnnihilator_strongDualCoannihilator (U i)
+theorem le_polarSubmodule_flip_polarSubmodule (Φ : Submodule 𝕜 F) :
+    Φ ≤ B.polarSubmodule (B.flip.polarSubmodule Φ) :=
+  (polarSubmodule_gc B).l_u_le Φ
 
 @[simp]
-lemma coe_strongDualAnnihilator_span (s : Set M) :
-    ((span R s).strongDualAnnihilator : Set (StrongDual R M)) =
-      {f : StrongDual R M | s ⊆ LinearMap.ker (f : M →ₗ[R] R)} := by
-  ext f
-  simp only [SetLike.mem_coe, mem_strongDualAnnihilator, Set.mem_ofPred_eq]
-  exact span_le (p := LinearMap.ker (f : M →ₗ[R] R))
+theorem polarSubmodule_flip_polarSubmodule_polarSubmodule (W : Submodule 𝕜 E) :
+    B.polarSubmodule (B.flip.polarSubmodule (B.polarSubmodule W)) = B.polarSubmodule W :=
+  (polarSubmodule_gc B).l_u_l_eq_l W
 
 @[simp]
-lemma coe_strongDualCoannihilator_span (s : Set (StrongDual R M)) :
-    ((span R s).strongDualCoannihilator : Set M) = {x | ∀ f ∈ s, f x = 0} := by
-  ext x
-  simp only [SetLike.mem_coe, mem_strongDualCoannihilator, Set.mem_ofPred_eq]
-  exact span_le (p := LinearMap.ker ((topDualPairing R M).flip x))
+theorem flip_polarSubmodule_polarSubmodule_flip_polarSubmodule (Φ : Submodule 𝕜 F) :
+    B.flip.polarSubmodule (B.polarSubmodule (B.flip.polarSubmodule Φ)) = B.flip.polarSubmodule Φ :=
+  (polarSubmodule_gc B).u_l_u_eq_u Φ
 
-end CommSemiring
+theorem polarSubmodule_sup (U V : Submodule 𝕜 E) :
+    B.polarSubmodule (U ⊔ V) = B.polarSubmodule U ⊓ B.polarSubmodule V :=
+  (polarSubmodule_gc B).l_sup
 
-section LinearMap
+theorem polarSubmodule_iSup {ι : Sort*} (U : ι → Submodule 𝕜 E) :
+    B.polarSubmodule (⨆ i, U i) = ⨅ i, B.polarSubmodule (U i) :=
+  (polarSubmodule_gc B).l_iSup
 
-variable {R M₁ M₂ : Type*} [CommSemiring R] [TopologicalSpace R] [ContinuousAdd R]
-  [ContinuousConstSMul R R] [AddCommMonoid M₁] [TopologicalSpace M₁] [Module R M₁]
-  [AddCommMonoid M₂] [TopologicalSpace M₂] [Module R M₂]
+theorem polarSubmodule_sup_le_inf (U V : Submodule 𝕜 E) :
+    B.polarSubmodule U ⊔ B.polarSubmodule V ≤ B.polarSubmodule (U ⊓ V) :=
+  sup_le (polarSubmodule_anti inf_le_left) (polarSubmodule_anti inf_le_right)
 
-theorem _root_.ContinuousLinearMap.ker_lcomp_eq_strongDualAnnihilator_range
-    (f : M₁ →L[R] M₂) :
-    LinearMap.ker (f.lcomp R) = (LinearMap.range (f : M₁ →ₗ[R] M₂)).strongDualAnnihilator := by
-  ext φ
-  simp [ContinuousLinearMap.ext_iff]
+theorem iSup_polarSubmodule_le_iInf {ι : Sort*} (U : ι → Submodule 𝕜 E) :
+    ⨆ i, B.polarSubmodule (U i) ≤ B.polarSubmodule (⨅ i, U i) :=
+  iSup_le fun i ↦ polarSubmodule_anti (iInf_le U i)
 
-theorem _root_.ContinuousLinearMap.range_lcomp_le_strongDualAnnihilator_ker
-    (f : M₁ →L[R] M₂) :
-    LinearMap.range (f.lcomp R) ≤ (LinearMap.ker (f : M₁ →ₗ[R] M₂)).strongDualAnnihilator := by
-  rintro _ ⟨ψ, rfl⟩
-  simp +contextual
-
-omit [TopologicalSpace M₂] in
-theorem _root_.LinearMap.strongDualCoannihilator_range_eq_ker_flip
-    (B : M₂ →ₗ[R] StrongDual R M₁) :
-    (LinearMap.range B).strongDualCoannihilator =
-      LinearMap.ker (topDualPairing R M₁ ∘ₗ B).flip := by
-  ext x
-  simp [LinearMap.ext_iff (f := (topDualPairing R M₁ ∘ₗ B).flip x)]
-
-end LinearMap
-
-section SeparatingDual
-
-variable {R M : Type*} [CommRing R] [TopologicalSpace R] [ContinuousAdd R]
-  [ContinuousConstSMul R R] [AddCommGroup M] [TopologicalSpace M] [Module R M]
-  [SeparatingDual R M]
-
+/-- The polar of the `Submodule.span` of a set `s` consists of those `y` such that `B x y = 0` for
+all `x ∈ s`. -/
 @[simp]
-theorem strongDualCoannihilator_top :
-    (⊤ : Submodule R (StrongDual R M)).strongDualCoannihilator = ⊥ := by
-  rw [eq_bot_iff]
-  intro x hx
-  rw [mem_strongDualCoannihilator] at hx
-  exact (mem_bot R).mpr <| SeparatingDual.eq_zero_of_forall_dual_eq_zero fun φ ↦ hx φ trivial
+theorem coe_polarSubmodule_span (s : Set E) :
+    (B.polarSubmodule (span 𝕜 s) : Set F) = {y | ∀ x ∈ s, B x y = 0} := by
+  ext y
+  simp only [SetLike.mem_coe, mem_polarSubmodule, Set.mem_ofPred_eq]
+  exact span_le (p := ker (B.flip y))
 
-@[simp]
-theorem strongDualAnnihilator_eq_top_iff {W : Submodule R M} :
-    W.strongDualAnnihilator = ⊤ ↔ W = ⊥ := by
-  refine ⟨fun h ↦ ?_, fun h ↦ h ▸ strongDualAnnihilator_bot⟩
-  rw [eq_bot_iff, ← strongDualCoannihilator_top (R := R),
-    ← le_strongDualAnnihilator_iff_le_strongDualCoannihilator, h]
+theorem polarSubmodule_span (s : Set E) :
+    B.polarSubmodule (span 𝕜 s) = ⨅ x ∈ s, ker (B x) := by
+  simp [SetLike.ext'_iff, Set.ext_iff]
 
-end SeparatingDual
+section Maps
 
-/-! ### Annihilators as polars
+variable {E' F' : Type*} [AddCommMonoid E'] [Module 𝕜 E'] [AddCommMonoid F'] [Module 𝕜 F']
 
-Over a nontrivially normed field, annihilators are the polars of submodules with respect to the
-canonical pairings. -/
+variable (B) in
+/-- The polar of the range of `f` is the kernel of `(B ∘ₗ f).flip`. -/
+theorem polarSubmodule_range (f : E' →ₗ[𝕜] E) :
+    B.polarSubmodule (range f) = ker (B ∘ₗ f).flip := by
+  ext y
+  simp [LinearMap.ext_iff]
 
-section Polar
+/-- If `g` is adjoint to `f` relative to the bilinear forms `B` and `B'` (i.e.,
+`B' (f x) y = B x (g y)`), then the range of `g` is contained in the polar of the kernel of `f`.
 
-variable {𝕜 M : Type*} [NontriviallyNormedField 𝕜] [AddCommMonoid M] [Module 𝕜 M]
+The hypothesis is stated in the form of the right-hand side of
+`LinearMap.isAdjointPair_iff_comp_eq_compl₂`, since `LinearMap.IsAdjointPair` currently requires
+both bilinear forms to take their two arguments from the same module. -/
+theorem range_le_polarSubmodule_ker {B' : E' →ₗ[𝕜] F' →ₗ[𝕜] 𝕜} {f : E →ₗ[𝕜] E'}
+    {g : F' →ₗ[𝕜] F} (hfg : B' ∘ₗ f = B.compl₂ g) :
+    range g ≤ B.polarSubmodule (ker f) := by
+  rintro _ ⟨y, rfl⟩
+  simp +contextual [← compl₂_apply, ← hfg]
 
-theorem dualAnnihilator_eq_polarSubmodule (W : Submodule 𝕜 M) :
-    W.dualAnnihilator = (LinearMap.id : Module.Dual 𝕜 M →ₗ[𝕜] _).flip.polarSubmodule W :=
-  SetLike.coe_injective <| by ext; simp [LinearMap.polarSubmodule, LinearMap.polar_subMulAction]
-
-theorem dualCoannihilator_eq_polarSubmodule (Φ : Submodule 𝕜 (Module.Dual 𝕜 M)) :
-    Φ.dualCoannihilator = (LinearMap.id : Module.Dual 𝕜 M →ₗ[𝕜] _).polarSubmodule Φ :=
-  SetLike.coe_injective <| by ext; simp [LinearMap.polarSubmodule, LinearMap.polar_subMulAction]
-
-variable [TopologicalSpace M]
-
-theorem strongDualAnnihilator_eq_polarSubmodule (W : Submodule 𝕜 M) :
-    W.strongDualAnnihilator = (topDualPairing 𝕜 M).flip.polarSubmodule W :=
-  SetLike.coe_injective <| by ext; simp [LinearMap.polarSubmodule, LinearMap.polar_subMulAction]
-
-theorem _root_.StrongDual.polarSubmodule_eq_strongDualAnnihilator (W : Submodule 𝕜 M) :
-    StrongDual.polarSubmodule 𝕜 W = W.strongDualAnnihilator :=
-  (strongDualAnnihilator_eq_polarSubmodule W).symm
-
-theorem strongDualCoannihilator_eq_polarSubmodule (Φ : Submodule 𝕜 (StrongDual 𝕜 M)) :
-    Φ.strongDualCoannihilator = (topDualPairing 𝕜 M).polarSubmodule Φ :=
-  SetLike.coe_injective <| by ext; simp [LinearMap.polarSubmodule, LinearMap.polar_subMulAction]
-
-end Polar
+end Maps
 
 section Topology
 
-variable {R M : Type*} [CommSemiring R] [TopologicalSpace R] [ContinuousAdd R]
-  [ContinuousConstSMul R R] [T1Space R] [AddCommMonoid M] [TopologicalSpace M] [Module R M]
+variable [TopologicalSpace F]
 
-instance isClosed_strongDualCoannihilator (Φ : Submodule R (StrongDual R M)) :
-    IsClosed (Φ.strongDualCoannihilator : Set M) := by
-  have : (Φ.strongDualCoannihilator : Set M) = ⋂ φ ∈ Φ, (φ : M → R) ⁻¹' {0} := by
-    ext; simp
-  rw [this]
-  exact isClosed_biInter fun φ _ ↦ isClosed_singleton.preimage φ.continuous
+variable (B) in
+/-- The polar of a submodule is closed if each `B x` is continuous. -/
+theorem isClosed_polarSubmodule_of_continuous (hB : ∀ x, Continuous (B x)) {S : Type*}
+    [SetLike S E] [SMulMemClass S 𝕜 E] (m : S) : IsClosed (B.polarSubmodule m : Set F) := by
+  simp only [polarSubmodule_eq_biInf, coe_iInf]
+  exact isClosed_biInter fun x _ ↦ isClosed_singleton.preimage (hB x)
 
-/-- The `strongDualAnnihilator` of a submodule is weak⋆ closed. -/
-theorem isClosed_toStrongDual_preimage_strongDualAnnihilator (W : Submodule R M) :
-    IsClosed (WeakDual.toStrongDual ⁻¹' (W.strongDualAnnihilator : Set (StrongDual R M))) := by
-  have : WeakDual.toStrongDual ⁻¹' (W.strongDualAnnihilator : Set (StrongDual R M)) =
-      ⋂ w ∈ W, (fun φ : WeakDual R M ↦ φ w) ⁻¹' {0} := by
-    ext; simp
-  rw [this]
-  exact isClosed_biInter fun w _ ↦ isClosed_singleton.preimage (WeakDual.eval_continuous w)
+variable (B) in
+/-- The polar of a submodule is closed in the weak topology induced by `B.flip`. -/
+theorem isClosed_polarSubmodule [B.flip.IsWeak] {S : Type*} [SetLike S E] [SMulMemClass S 𝕜 E]
+    (m : S) : IsClosed (B.polarSubmodule m : Set F) :=
+  B.isClosed_polar m
 
-variable [ContinuousAdd M] [ContinuousConstSMul R M]
+variable [ContinuousAdd F] [ContinuousConstSMul 𝕜 F]
 
-theorem topologicalClosure_le_strongDualCoannihilator {W : Submodule R M}
-    {Φ : Submodule R (StrongDual R M)} (h : W ≤ Φ.strongDualCoannihilator) :
-    W.topologicalClosure ≤ Φ.strongDualCoannihilator :=
-  W.topologicalClosure_minimal h (isClosed_strongDualCoannihilator Φ)
+theorem topologicalClosure_le_polarSubmodule (hB : ∀ x, Continuous (B x)) {W : Submodule 𝕜 E}
+    {Φ : Submodule 𝕜 F} (h : Φ ≤ B.polarSubmodule W) :
+    Φ.topologicalClosure ≤ B.polarSubmodule W :=
+  Φ.topologicalClosure_minimal h (B.isClosed_polarSubmodule_of_continuous hB W)
 
 @[simp]
-theorem strongDualAnnihilator_topologicalClosure (W : Submodule R M) :
-    W.topologicalClosure.strongDualAnnihilator = W.strongDualAnnihilator :=
-  le_antisymm (strongDualAnnihilator_anti W.le_topologicalClosure) <|
-    le_strongDualAnnihilator_iff_le_strongDualCoannihilator.mpr <|
-      topologicalClosure_le_strongDualCoannihilator <|
-        le_strongDualAnnihilator_strongDualCoannihilator W
+theorem flip_polarSubmodule_topologicalClosure (hB : ∀ x, Continuous (B x)) (Φ : Submodule 𝕜 F) :
+    B.flip.polarSubmodule Φ.topologicalClosure = B.flip.polarSubmodule Φ :=
+  le_antisymm (polarSubmodule_anti Φ.le_topologicalClosure) <| by
+    rw [← le_polarSubmodule_iff]
+    exact topologicalClosure_le_polarSubmodule hB (le_polarSubmodule_flip_polarSubmodule Φ)
 
 end Topology
 
-section RCLike
+end NontriviallyNormedField
 
-open RCLike
+/-- The subspace of `E` on which every functional in `m` vanishes is closed. This is an instance
+so that, e.g., the quotient by it is a normed space when `E` is. -/
+instance _root_.isClosed_topDualPairing_polarSubmodule [NontriviallyNormedField 𝕜]
+    [AddCommMonoid E] [Module 𝕜 E] [TopologicalSpace E] {S : Type*} [SetLike S (StrongDual 𝕜 E)]
+    [SMulMemClass S 𝕜 (StrongDual 𝕜 E)] (m : S) :
+    IsClosed ((topDualPairing 𝕜 E).polarSubmodule m : Set E) :=
+  (topDualPairing 𝕜 E).isClosed_polarSubmodule_of_continuous (fun φ ↦ φ.continuous) m
 
-variable {𝕜 E : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
+/-! ### Topologies compatible with `B` -/
 
-/-- A linear functional whose real part is bounded below on a submodule vanishes on it. -/
-private lemma apply_eq_zero_of_forall_lt_re {f : E →ₗ[𝕜] 𝕜} {W : Submodule 𝕜 E} {u : ℝ}
-    (h : ∀ w ∈ W, u < re (f w)) {w : E} (hw : w ∈ W) : f w = 0 := by
-  by_contra hfw
-  have := h _ (W.smul_mem (((u - 1 : ℝ) : 𝕜) * (f w)⁻¹) hw)
-  simp [mul_assoc, inv_mul_cancel₀ hfw] at this
-  linarith
+namespace IsCompatibleDual
 
-section LocallyConvex
+section NontriviallyNormedField
 
-variable [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousSMul 𝕜 E] [Module ℝ E]
-  [IsScalarTower ℝ 𝕜 E] [LocallyConvexSpace ℝ E]
+variable [NontriviallyNormedField 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
+  [AddCommGroup F] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsCompatibleDual]
 
-/-- In a locally convex space over `ℝ` or `ℂ`, the `strongDualCoannihilator` of the
-`strongDualAnnihilator` of a submodule `W` is the closure of `W`. This is a consequence of the
-Hahn–Banach separation theorem. -/
-theorem strongDualAnnihilator_strongDualCoannihilator_eq_topologicalClosure (W : Submodule 𝕜 E) :
-    W.strongDualAnnihilator.strongDualCoannihilator = W.topologicalClosure := by
-  refine le_antisymm (fun x hx ↦ ?_) <|
-    topologicalClosure_le_strongDualCoannihilator <|
-      le_strongDualAnnihilator_strongDualCoannihilator W
-  by_contra h
-  obtain ⟨f, u, hfx, hf⟩ := RCLike.geometric_hahn_banach_point_closed (𝕜 := 𝕜)
-    (W.topologicalClosure.restrictScalars ℝ).convex W.isClosed_topologicalClosure h
-  have hf₀ : f ∈ W.strongDualAnnihilator := (mem_strongDualAnnihilator f).mpr fun w hw ↦
-    apply_eq_zero_of_forall_lt_re (f := f.toLinearMap) hf (W.le_topologicalClosure hw)
-  have := hf 0 (zero_mem _)
-  simp only [map_zero, (mem_strongDualCoannihilator x).mp hx f hf₀] at hfx this
-  linarith
+/-- If the topology on `E` is compatible with `B`, then `B.flip.polarSubmodule Φ` is closed. -/
+theorem isClosed_flip_polarSubmodule {S : Type*} [SetLike S F] [SMulMemClass S 𝕜 F] (m : S) :
+    IsClosed (B.flip.polarSubmodule m : Set E) :=
+  B.flip.isClosed_polarSubmodule_of_continuous (IsCompatibleDual.continuous B) m
 
-theorem strongDualAnnihilator_strongDualCoannihilator_eq {W : Submodule 𝕜 E}
-    (hW : IsClosed (W : Set E)) : W.strongDualAnnihilator.strongDualCoannihilator = W := by
-  rw [strongDualAnnihilator_strongDualCoannihilator_eq_topologicalClosure,
-    hW.submodule_topologicalClosure_eq]
+theorem separatingRight : B.SeparatingRight :=
+  separatingRight_iff_flip_ker_eq_bot.mpr <| ker_eq_bot.mpr hB.injective
 
-theorem forall_mem_strongDualAnnihilator_apply_eq_zero_iff (W : Submodule 𝕜 E) (v : E) :
-    (∀ φ ∈ W.strongDualAnnihilator, φ v = 0) ↔ v ∈ W.topologicalClosure := by
-  rw [← strongDualAnnihilator_strongDualCoannihilator_eq_topologicalClosure,
-    mem_strongDualCoannihilator]
-
-theorem strongDualAnnihilator_le_strongDualAnnihilator_iff {W W' : Submodule 𝕜 E} :
-    W.strongDualAnnihilator ≤ W'.strongDualAnnihilator ↔ W' ≤ W.topologicalClosure := by
-  rw [le_strongDualAnnihilator_iff_le_strongDualCoannihilator,
-    strongDualAnnihilator_strongDualCoannihilator_eq_topologicalClosure]
-
-theorem strongDualAnnihilator_inj {W W' : Submodule 𝕜 E} :
-    W.strongDualAnnihilator = W'.strongDualAnnihilator ↔
-      W.topologicalClosure = W'.topologicalClosure := by
-  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
-  · simp_rw [← strongDualAnnihilator_strongDualCoannihilator_eq_topologicalClosure, h]
-  · rw [← strongDualAnnihilator_topologicalClosure W, h, strongDualAnnihilator_topologicalClosure]
+variable [ContinuousAdd E] [ContinuousConstSMul 𝕜 E]
 
 @[simp]
-theorem strongDualAnnihilator_eq_bot_iff {W : Submodule 𝕜 E} :
-    W.strongDualAnnihilator = ⊥ ↔ Dense (W : Set E) := by
-  rw [← strongDualAnnihilator_top, strongDualAnnihilator_inj, dense_iff_topologicalClosure_eq_top,
-    top_unique (⊤ : Submodule 𝕜 E).le_topologicalClosure]
+theorem polarSubmodule_topologicalClosure (W : Submodule 𝕜 E) :
+    B.polarSubmodule W.topologicalClosure = B.polarSubmodule W := by
+  simpa using B.flip.flip_polarSubmodule_topologicalClosure (IsCompatibleDual.continuous B) W
 
-/-- The `strongDualAnnihilator` of the intersection of two closed submodules is the weak⋆ closure
-(see `Submodule.strongDualCoannihilator_strongDualAnnihilator_eq_topologicalClosure`) of the sum
-of their `strongDualAnnihilator`s. See also `Submodule.sup_strongDualAnnihilator_le_inf` for
-arbitrary submodules. -/
-theorem strongDualAnnihilator_inf_eq {U V : Submodule 𝕜 E} (hU : IsClosed (U : Set E))
+end NontriviallyNormedField
+
+section RCLike
+
+variable [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F]
+  [Module ℝ E] [IsScalarTower ℝ 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E]
+  [ContinuousSMul 𝕜 E] [LocallyConvexSpace ℝ E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.IsCompatibleDual]
+
+/-- If `E` is a locally convex space whose topology is compatible with `B`, then the bipolar of a
+submodule is its closure. -/
+theorem flip_polarSubmodule_polarSubmodule (W : Submodule 𝕜 E) :
+    B.flip.polarSubmodule (B.polarSubmodule W) = W.topologicalClosure :=
+  SetLike.coe_injective <| by
+    rw [coe_polarSubmodule, coe_polarSubmodule, IsCompatibleDual.flip_polar_polar B (s := W)
+      ⟨0, W.zero_mem⟩, W.closedAbsConvexHull_eq_topologicalClosure]
+
+theorem flip_polarSubmodule_polarSubmodule_of_isClosed {W : Submodule 𝕜 E}
+    (hW : IsClosed (W : Set E)) : B.flip.polarSubmodule (B.polarSubmodule W) = W := by
+  rw [flip_polarSubmodule_polarSubmodule, hW.submodule_topologicalClosure_eq]
+
+theorem forall_mem_polarSubmodule_apply_eq_zero_iff (W : Submodule 𝕜 E) (x : E) :
+    (∀ y ∈ B.polarSubmodule W, B x y = 0) ↔ x ∈ W.topologicalClosure := by
+  rw [← flip_polarSubmodule_polarSubmodule B, mem_polarSubmodule]
+  rfl
+
+theorem polarSubmodule_le_polarSubmodule_iff {W W' : Submodule 𝕜 E} :
+    B.polarSubmodule W ≤ B.polarSubmodule W' ↔ W' ≤ W.topologicalClosure := by
+  rw [le_polarSubmodule_iff, flip_polarSubmodule_polarSubmodule]
+
+theorem polarSubmodule_inj {W W' : Submodule 𝕜 E} :
+    B.polarSubmodule W = B.polarSubmodule W' ↔ W.topologicalClosure = W'.topologicalClosure := by
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · simp_rw [← flip_polarSubmodule_polarSubmodule B, h]
+  · rw [← polarSubmodule_topologicalClosure B W, h, polarSubmodule_topologicalClosure]
+
+@[simp]
+theorem polarSubmodule_eq_bot_iff {W : Submodule 𝕜 E} :
+    B.polarSubmodule W = ⊥ ↔ Dense (W : Set E) := by
+  rw [← (separatingRight B).polarSubmodule_top, polarSubmodule_inj,
+    dense_iff_topologicalClosure_eq_top, top_unique (⊤ : Submodule 𝕜 E).le_topologicalClosure]
+
+theorem polarSubmodule_inf {U V : Submodule 𝕜 E} (hU : IsClosed (U : Set E))
     (hV : IsClosed (V : Set E)) :
-    (U ⊓ V).strongDualAnnihilator = (U.strongDualAnnihilator ⊔
-      V.strongDualAnnihilator).strongDualCoannihilator.strongDualAnnihilator := by
-  rw [strongDualCoannihilator_sup_eq, strongDualAnnihilator_strongDualCoannihilator_eq hU,
-    strongDualAnnihilator_strongDualCoannihilator_eq hV]
+    B.polarSubmodule (U ⊓ V) =
+      B.polarSubmodule (B.flip.polarSubmodule (B.polarSubmodule U ⊔ B.polarSubmodule V)) := by
+  rw [polarSubmodule_sup, flip_polarSubmodule_polarSubmodule_of_isClosed B hU,
+    flip_polarSubmodule_polarSubmodule_of_isClosed B hV]
 
-/-- The `strongDualAnnihilator` of an intersection of closed submodules is the weak⋆ closure
-(see `Submodule.strongDualCoannihilator_strongDualAnnihilator_eq_topologicalClosure`) of the sum
-of their `strongDualAnnihilator`s. See also `Submodule.iSup_strongDualAnnihilator_le_iInf` for
-arbitrary submodules. -/
-theorem strongDualAnnihilator_iInf_eq {ι : Sort*} {U : ι → Submodule 𝕜 E}
+theorem polarSubmodule_iInf {ι : Sort*} {U : ι → Submodule 𝕜 E}
     (hU : ∀ i, IsClosed (U i : Set E)) :
-    (⨅ i, U i).strongDualAnnihilator =
-      (⨆ i, (U i).strongDualAnnihilator).strongDualCoannihilator.strongDualAnnihilator := by
-  simp_rw [strongDualCoannihilator_iSup_eq, strongDualAnnihilator_strongDualCoannihilator_eq (hU _)]
-
-end LocallyConvex
-
-section WeakDual
-
-variable [TopologicalSpace E]
-
-/-- Over `ℝ` or `ℂ`, the `strongDualAnnihilator` of the `strongDualCoannihilator` of a submodule
-`Φ` of the strong dual is the weak⋆ closure of `Φ`. This is a consequence of the Hahn–Banach
-separation theorem in `WeakDual 𝕜 E`. -/
-theorem strongDualCoannihilator_strongDualAnnihilator_eq_topologicalClosure
-    (Φ : Submodule 𝕜 (StrongDual 𝕜 E)) :
-    Φ.strongDualCoannihilator.strongDualAnnihilator =
-      ((Φ.comap (WeakDual.toStrongDual (𝕜 := 𝕜) (E := E)).toLinearMap).topologicalClosure
-        |>.comap (StrongDual.toWeakDual (𝕜 := 𝕜) (E := E)).toLinearMap) := by
-  set Φ' := Φ.comap (WeakDual.toStrongDual (𝕜 := 𝕜) (E := E)).toLinearMap
-  set Ψ := Φ'.topologicalClosure
-  have hΨ : Ψ ≤ Φ.strongDualCoannihilator.strongDualAnnihilator.comap
-      (WeakDual.toStrongDual (𝕜 := 𝕜) (E := E)).toLinearMap :=
-    topologicalClosure_minimal _ (comap_mono (le_strongDualCoannihilator_strongDualAnnihilator Φ))
-      (isClosed_toStrongDual_preimage_strongDualAnnihilator _)
-  refine le_antisymm (fun φ hφ ↦ ?_) fun φ hφ ↦ hΨ hφ
-  by_contra h
-  have : IsScalarTower ℝ 𝕜 (WeakDual 𝕜 E) := inferInstanceAs (IsScalarTower ℝ 𝕜 (StrongDual 𝕜 E))
-  have : LocallyConvexSpace ℝ (WeakDual 𝕜 E) := WeakBilin.locallyConvexSpace
-  obtain ⟨f, u, hfφ, hf⟩ := RCLike.geometric_hahn_banach_point_closed (𝕜 := 𝕜)
-    (Ψ.restrictScalars ℝ).convex Φ'.isClosed_topologicalClosure h
-  obtain ⟨x, rfl⟩ := LinearMap.dualEmbedding_surjective (topDualPairing 𝕜 E) f
-  have hx : x ∈ Φ.strongDualCoannihilator := (mem_strongDualCoannihilator x).mpr fun ψ hψ ↦
-    apply_eq_zero_of_forall_lt_re (f := (WeakBilin.eval (topDualPairing 𝕜 E) x).toLinearMap) hf
-      (Φ'.le_topologicalClosure (x := StrongDual.toWeakDual ψ) hψ)
-  have := hf 0 (zero_mem _)
-  simp only [map_zero] at this
-  change re (φ x) < u at hfφ
-  rw [(mem_strongDualAnnihilator φ).mp hφ x hx, map_zero] at hfφ
-  linarith
-
-/-- If `Φ` is a weak⋆ closed submodule of the strong dual over `ℝ` or `ℂ`, then the
-`strongDualAnnihilator` of its `strongDualCoannihilator` is `Φ` itself. -/
-theorem strongDualCoannihilator_strongDualAnnihilator_eq {Φ : Submodule 𝕜 (StrongDual 𝕜 E)}
-    (hΦ : IsClosed (WeakDual.toStrongDual ⁻¹' (Φ : Set (StrongDual 𝕜 E)))) :
-    Φ.strongDualCoannihilator.strongDualAnnihilator = Φ := by
-  rw [strongDualCoannihilator_strongDualAnnihilator_eq_topologicalClosure,
-    IsClosed.submodule_topologicalClosure_eq (s := Φ.comap _) hΦ]
-  ext; simp
-
-theorem forall_mem_strongDualCoannihilator_apply_eq_zero_iff {Φ : Submodule 𝕜 (StrongDual 𝕜 E)}
-    (hΦ : IsClosed (WeakDual.toStrongDual ⁻¹' (Φ : Set (StrongDual 𝕜 E))))
-    (φ : StrongDual 𝕜 E) : (∀ x ∈ Φ.strongDualCoannihilator, φ x = 0) ↔ φ ∈ Φ := by
-  rw [← mem_strongDualAnnihilator, strongDualCoannihilator_strongDualAnnihilator_eq hΦ]
-
-end WeakDual
+    B.polarSubmodule (⨅ i, U i) =
+      B.polarSubmodule (B.flip.polarSubmodule (⨆ i, B.polarSubmodule (U i))) := by
+  simp_rw [polarSubmodule_iSup, flip_polarSubmodule_polarSubmodule_of_isClosed B (hU _)]
 
 end RCLike
 
-end Submodule
+end IsCompatibleDual
+
+/-! ### The weak topology induced by `B` -/
+
+namespace IsWeak
+
+section NontriviallyNormedField
+
+variable [NontriviallyNormedField 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
+  [AddCommGroup F] [Module 𝕜 F] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [B.IsWeak]
+
+/-- If `E` carries the weak topology induced by `B`, then `B.flip.polarSubmodule Φ` is closed. -/
+theorem isClosed_flip_polarSubmodule {S : Type*} [SetLike S F] [SMulMemClass S 𝕜 F] (m : S) :
+    IsClosed (B.flip.polarSubmodule m : Set E) :=
+  B.flip.isClosed_polarSubmodule m
+
+variable [ContinuousAdd E] [ContinuousConstSMul 𝕜 E]
+
+@[simp]
+theorem polarSubmodule_topologicalClosure (W : Submodule 𝕜 E) :
+    B.polarSubmodule W.topologicalClosure = B.polarSubmodule W := by
+  simpa using B.flip.flip_polarSubmodule_topologicalClosure (IsWeak.continuous_eval B) W
+
+end NontriviallyNormedField
+
+section RCLike
+
+variable [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F]
+  [TopologicalSpace E] [ContinuousAdd E] [ContinuousConstSMul 𝕜 E] (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜)
+  [B.IsWeak]
+
+/-- If `E` carries the weak topology induced by `B`, then the bipolar of a submodule is its
+closure. -/
+theorem flip_polarSubmodule_polarSubmodule (W : Submodule 𝕜 E) :
+    B.flip.polarSubmodule (B.polarSubmodule W) = W.topologicalClosure :=
+  SetLike.coe_injective <| by
+    rw [coe_polarSubmodule, coe_polarSubmodule, B.flip_polar_polar (s := W) ⟨0, W.zero_mem⟩,
+      W.closedAbsConvexHull_eq_topologicalClosure]
+
+theorem flip_polarSubmodule_polarSubmodule_of_isClosed {W : Submodule 𝕜 E}
+    (hW : IsClosed (W : Set E)) : B.flip.polarSubmodule (B.polarSubmodule W) = W := by
+  rw [flip_polarSubmodule_polarSubmodule, hW.submodule_topologicalClosure_eq]
+
+theorem forall_mem_polarSubmodule_apply_eq_zero_iff (W : Submodule 𝕜 E) (x : E) :
+    (∀ y ∈ B.polarSubmodule W, B x y = 0) ↔ x ∈ W.topologicalClosure := by
+  rw [← flip_polarSubmodule_polarSubmodule B, mem_polarSubmodule]
+  rfl
+
+theorem polarSubmodule_le_polarSubmodule_iff {W W' : Submodule 𝕜 E} :
+    B.polarSubmodule W ≤ B.polarSubmodule W' ↔ W' ≤ W.topologicalClosure := by
+  rw [le_polarSubmodule_iff, flip_polarSubmodule_polarSubmodule]
+
+theorem polarSubmodule_inj {W W' : Submodule 𝕜 E} :
+    B.polarSubmodule W = B.polarSubmodule W' ↔ W.topologicalClosure = W'.topologicalClosure := by
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · simp_rw [← flip_polarSubmodule_polarSubmodule B, h]
+  · rw [← polarSubmodule_topologicalClosure B W, h, polarSubmodule_topologicalClosure]
+
+theorem polarSubmodule_eq_bot_iff (hB : B.SeparatingRight) {W : Submodule 𝕜 E} :
+    B.polarSubmodule W = ⊥ ↔ Dense (W : Set E) := by
+  rw [← hB.polarSubmodule_top, polarSubmodule_inj, dense_iff_topologicalClosure_eq_top,
+    top_unique (⊤ : Submodule 𝕜 E).le_topologicalClosure]
+
+theorem polarSubmodule_inf {U V : Submodule 𝕜 E} (hU : IsClosed (U : Set E))
+    (hV : IsClosed (V : Set E)) :
+    B.polarSubmodule (U ⊓ V) =
+      B.polarSubmodule (B.flip.polarSubmodule (B.polarSubmodule U ⊔ B.polarSubmodule V)) := by
+  rw [polarSubmodule_sup, flip_polarSubmodule_polarSubmodule_of_isClosed B hU,
+    flip_polarSubmodule_polarSubmodule_of_isClosed B hV]
+
+theorem polarSubmodule_iInf {ι : Sort*} {U : ι → Submodule 𝕜 E}
+    (hU : ∀ i, IsClosed (U i : Set E)) :
+    B.polarSubmodule (⨅ i, U i) =
+      B.polarSubmodule (B.flip.polarSubmodule (⨆ i, B.polarSubmodule (U i))) := by
+  simp_rw [polarSubmodule_iSup, flip_polarSubmodule_polarSubmodule_of_isClosed B (hU _)]
+
+end RCLike
+
+end IsWeak
+
+end LinearMap
