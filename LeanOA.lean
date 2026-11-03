@@ -2,11 +2,12 @@ module  -- shake: keep-all --deprecated_module: ignore
 
 public import LeanOA.AbsConvex
 public import LeanOA.CFC
+public import LeanOA.CStarAlgebra.Corner.Basic
+public import LeanOA.CStarAlgebra.Corner.Order
 public import LeanOA.CStarAlgebra.Extreme
 public import LeanOA.CStarAlgebra.FiniteSpectrum
 public import LeanOA.CStarModule.Standard
 public import LeanOA.ComplexOrder
-public import LeanOA.Corner
 public import LeanOA.ExtremallyDisconnected
 public import LeanOA.IsWeak
 public import LeanOA.KreinSmulian

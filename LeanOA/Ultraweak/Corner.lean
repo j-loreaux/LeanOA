@@ -1,6 +1,6 @@
 module
 
-public import LeanOA.Corner
+public import LeanOA.CStarAlgebra.Corner.Basic
 public import LeanOA.CFC
 public import LeanOA.Mathlib.Algebra.Group.Idempotent
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
@@ -14,11 +14,11 @@ variable {M P : Type*}
     [NormedAddCommGroup P] [NormedSpace ℂ P] [CompleteSpace P]
     [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M] [Predual ℂ M P]
 
-open NonUnitalStarSubalgebra Metric Ultraweak Set
+open Metric Ultraweak Set
 open scoped Ultraweak NNReal ComplexStarModule Pointwise
 
-lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarProjection e) :
-    IsClosed (corner ℂ e : Set σ(M, P)) := by
+lemma IsStarProjection.isClosed_cornerSubmodule_of_ultraweak {e : σ(M, P)}
+    (he : IsStarProjection e) : IsClosed (he.cornerSubmodule ℂ : Set σ(M, P)) := by
   /- By the Krein–Smulian theorem, it suffices to prove that the corner intersected with the
   closed unit ball is closed.
 
@@ -33,10 +33,8 @@ lemma IsStarProjection.isClosed_corner_of_ultraweak {e : σ(M, P)} (he : IsStarP
   ```
   Since subtraction is continuous, `S` is ultraweakly compact and `Icc 0 e` is closed, this is
   the continuous image of a compact set, and therefore closed. -/
-  apply Ultraweak.krein_smulian_of_submodule ((corner ℂ e).toSubmodule.restrictScalars ℝ≥0)
-  simp only [Submodule.coe_restrictScalars, Submodule.coe_set_mk,
-    NonUnitalSubsemiring.coe_toAddSubmonoid, NonUnitalSubalgebra.coe_toNonUnitalSubsemiring,
-    coe_toNonUnitalSubalgebra, corner_carrier, he.isSelfAdjoint.star_eq]
+  apply Ultraweak.krein_smulian_of_submodule ((he.cornerSubmodule ℂ).restrictScalars ℝ≥0)
+  rw [Submodule.coe_restrictScalars, he.coe_cornerSubmodule_eq_range_mul_mul]
   set B := closedBall (0 : M) 1
   /- Since `star` is continuous, and hence so are `ℜ` and `ℑ`, it suffices to show that the
   selfadjoint part of the corner intersected with the closed unit ball is closed. -/
