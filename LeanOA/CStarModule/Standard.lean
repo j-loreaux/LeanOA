@@ -82,7 +82,7 @@ lemma MemStandard.isBounded_norm {x : Π i, E i} (hx : MemStandard A x) :
   rw [MemStandard] at hx
   have := Metric.isBounded_range_of_tendsto_cofinite hx.tendsto_cofinite_zero
   rw [isBounded_iff_forall_norm_le] at this ⊢
-  peel this with C _
+  gconvert this using 1 with C
   rintro - ⟨i, rfl⟩
   specialize this _ ⟨i, rfl⟩
   simpa [norm_sq_eq A]
@@ -273,7 +273,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
       obtain ⟨N, hN⟩ := hx
       have hxN := (x N).memStandard
       rw [MemStandard, summable_iff_cauchySeq_finset, cauchySeq_finset_iff_vanishing_norm] at hxN
-      peel hxN (ε / 8) hε8 with s t ht hxN
+      gconvert hxN (ε / 8) hε8 using 3 with s t ht hxN
       simp only [Function.comp_def, tendsto_pi_nhds] at hy
       refine lt_of_le_of_lt ?_ (half_lt_self hε)
       refine le_of_tendsto (f := fun n ↦ ‖∑ i ∈ t, ⟪x n i, x n i⟫_A‖) (x := atTop) ?_ ?_
