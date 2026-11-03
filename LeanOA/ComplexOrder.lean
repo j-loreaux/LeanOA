@@ -122,7 +122,7 @@ open Filter Topology Complex
 lemma instSupConvergenceClass : SupConvergenceClass ℂ where
   tendsto_coe_atTop_isLUB z s h := by
     have h₁ : Tendsto (fun x : s ↦ re x) atTop (𝓝 (re z)) := by
-      refine tendsto_atTop_isLUB (monotone_re.comp (Subtype.mono_coe s)) ?_
+      refine tendsto_atTop_isLUB (monotone_re.comp (Subtype.mono_coe (· ∈ s))) ?_
       simpa [← Function.comp_def, Set.range_comp] using h.image_re
     have h₂ : Tendsto (fun x : s ↦ im x) atTop (𝓝 (im z)) := by
       convert! tendsto_const_nhds (x := z.im) using 3 with ⟨x, hx⟩

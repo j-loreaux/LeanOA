@@ -19,10 +19,7 @@ lemma convexJoin_eq_image {E : Type*} [AddCommGroup E] [Module ℝ E] {s t : Set
 lemma convexHull_rclike_eq_convexHull_real
     {K E : Type*} [RCLike K] [AddCommMonoid E] [Module K E] [Module ℝ E] [IsScalarTower ℝ K E]
     {s : Set E} : convexHull K s = convexHull ℝ s := by
-  simp only [convexHull]
-  congr!
-  funext
-  rw [convex_RCLike_iff_convex_real]
+  simp only [convexHull_eq_iInter, convex_RCLike_iff_convex_real]
 
 lemma IsCompact.convexHull_union {𝕜 E : Type*} [RCLike 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [TopologicalSpace E] [ContinuousAdd E] [ContinuousSMul 𝕜 E]
@@ -108,7 +105,7 @@ lemma RCLike.closedBall_subset_two_smul_convexHull (𝕜 : Type*) [RCLike 𝕜] 
     simp only [image_segment] at ha'''
     simpa [f] using ha'''
   have hb : (b * I : 𝕜) ∈ s := by
-    apply mem_preimage.mp <| h₂ ?_
+    apply h₂
     have := image_segment ℝ (LinearMap.mulRight (R := ℝ) (A := 𝕜) I).toAffineMap (-1 : ℝ) 1
     simp only [LinearMap.coe_toAffineMap, LinearMap.mulRight_apply, map_neg, map_one, one_mul]
       at this

@@ -55,7 +55,7 @@ def MemStandard (x : Π i, E i) : Prop := Summable fun i ↦ ⟪x i, x i⟫_A
 
 lemma MemStandard.subtype {x : Π i, E i} (hx : MemStandard A x) (s : Set ι) :
     MemStandard A (fun i : s ↦ x i) := by
-  simpa [Function.comp_def] using! Summable.subtype hx s
+  simpa [Function.comp_def] using! Summable.subtype hx (· ∈ s)
 
 lemma MemStandard.of_memℓp {x : Π i, E i} (hx : Memℓp (‖x ·‖) 2) :
     MemStandard A x :=
@@ -295,7 +295,9 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
         have h₂ : ‖∑ i ∈ t, ⟪x N i, (x m - x N) i⟫_A‖ ≤ ε / 8 := by
           classical
           let x' : ℓ²(A, E) := mk (fun i ↦ if i ∈ t then x N i else 0) <| by
-            refine (MemStandard.zero (E := E)).congr_cofinite ?_
+            have h₀ := MemStandard.zero (A := A) (E := E)
+            unfold MemStandard at h₀ ⊢
+            refine h₀.congr_cofinite ?_
             filter_upwards [show (tᶜ : Set ι) ∈ cofinite by simp] with i (hi : i ∉ t)
             simp [hi]
           calc
