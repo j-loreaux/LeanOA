@@ -23,6 +23,7 @@ public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.Projection
 public import LeanOA.Mathlib.Analysis.Complex.Basic
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
