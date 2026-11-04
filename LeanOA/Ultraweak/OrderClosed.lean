@@ -2,6 +2,7 @@ module
 
 public import LeanOA.Ultraweak.Basic
 public import LeanOA.KreinSmulian
+public import LeanOA.CStarAlgebra.NormAddAlgebraMap
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 
 @[expose] public section
@@ -34,17 +35,6 @@ end KreinSmulian
 variable {M P : Type*} [CStarAlgebra M]
 variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P] [CompleteSpace P]
 
-lemma tendsto_sqrt_one_add_sq_sub_self_atTop :
-    Tendsto (fun x : ℝ ↦ √(1 + x ^ 2) - x) atTop (𝓝 0) := by
-  -- `√(1 + x ^ 2) - x = (√(1 + x ^ 2) + x)⁻¹` and the denominator is at least `x`.
-  have key (x : ℝ) : √(1 + x ^ 2) - x = (√(1 + x ^ 2) + x)⁻¹ := by
-    refine eq_inv_of_mul_eq_one_left ?_
-    rw [mul_comm, ← sq_sub_sq, Real.sq_sqrt (by positivity)]
-    ring
-  simp only [key]
-  exact tendsto_inv_atTop_zero.comp <|
-    tendsto_atTop_mono (fun _ ↦ le_add_of_nonneg_left (Real.sqrt_nonneg _)) tendsto_id
-
 lemma IsSelfAdjoint.norm_add_I_smul_sq_of_commute {A : Type*}
     [NonUnitalCStarAlgebra A] {x y : A} (hx : IsSelfAdjoint x)
     (hy : IsSelfAdjoint y) (hxy : Commute x y) :
@@ -74,25 +64,6 @@ lemma IsSelfAdjoint.norm_isSelfAdjoint_add_I_smul_algebraMap
   gcongr
   rwa [sq_le_one_iff₀ (by positivity)]
 
--- this lemma seems a bit too technical? Maybe it's useful though.
-lemma IsSelfAdjoint.max_norm_add_sub_algebraMap_ge
-    {A : Type*} [NormedRing A] [StarRing A] [NormedAlgebra ℝ A]
-    [IsometricContinuousFunctionalCalculus ℝ A IsSelfAdjoint] {x : A}
-    (hx : IsSelfAdjoint x) (c : ℝ) (hc : c ∈ spectrum ℝ x) (r : ℝ) (hr : r ≥ 0) :
-    |c| + r ≤ max ‖x + algebraMap ℝ A r‖ ‖x - algebraMap ℝ A r‖ := by
-  obtain (hc' | hc') := le_total 0 c
-  · apply le_max_of_le_left
-    convert! norm_apply_le_norm_cfc (fun y : ℝ ↦ y + r) x hc using 1
-    · simp [abs_of_nonneg (a := c + r) (by positivity), abs_of_nonneg hc']
-    · rw [cfc_add .., cfc_const .., cfc_id' ..]
-  · apply le_max_of_le_right
-    convert! norm_apply_le_norm_cfc (fun y : ℝ ↦ -y + r) x hc using 1
-    · rw [abs_of_nonpos hc', Real.norm_eq_abs, abs_of_nonneg]
-      positivity [neg_nonneg.mpr hc']
-    · rw [cfc_add _ (- ·) _, cfc_neg_id .., cfc_const .., norm_sub_rev]
-      congr! 1
-      abel
-
 namespace Ultraweak
 
 set_option backward.isDefEq.respectTransparency false in
@@ -115,43 +86,30 @@ lemma isClosed_setOf_isSelfAdjoint : IsClosed {x : σ(M, P) | IsSelfAdjoint x} :
   case mem_ball =>
     exact isClosed_iff_forall_filter.mp (isClosed_closedBall ℂ P (0 : M) 1)
       x l hl_neBot (by aesop) hlx
-  /- To show `x` is self-adjoint, we show every element `c` of the `ℝ`-spectrum of
-  `ℑ (ofUltraweak x)` is zero. -/
+  /- To show `x` is self-adjoint, we show `ℑ x = 0`. By
+  `IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le_abs_add`, it suffices to show that
+  `‖ℑ x + t‖ ≤ ‖x + I • t‖ ≤ √(1 + t ^ 2)` for every real `t`, since
+  `√(1 + t ^ 2) - |t| → 0` as `|t| → ∞`. -/
   refine .of_ofUltraweak ?_
   rw [← imaginaryPart_eq_zero_iff, ← ZeroMemClass.coe_eq_zero]
-  refine CFC.eq_zero_of_spectrum_subset_zero _ (R := ℝ) (fun c hc ↦ ?_) (ℑ (ofUltraweak x)).2
-    -- missing `cfc_tac` lemma for the last argument on the previous line
-  rw [Set.mem_singleton_iff]
-  rw [← abs_eq_zero]
-  refine le_antisymm ?_ (abs_nonneg c)
-  -- To show `c ≤ 0` It suffices to show `Tendsto (fun n : ℕ ↦ √(1 + n ^ 2) - n) atTop (𝓝 0)`
-  refine ge_of_tendsto' (tendsto_sqrt_one_add_sq_sub_self_atTop.comp tendsto_natCast_atTop_atTop)
-    fun n ↦ ?_
-  /- By `IsSelfAdjoint.max_norm_add_sub_algebraMap_ge` it suffices to show that
-  `‖ℑ x ± n‖ ≤ √(1 + n ^ 2)`. -/
-  grw [Function.comp_apply, le_sub_iff_add_le,
-    IsSelfAdjoint.max_norm_add_sub_algebraMap_ge (ℑ (ofUltraweak x)).2 c hc n (by positivity)]
-  trans max ‖ofUltraweak x + I • algebraMap ℝ M n‖ ‖ofUltraweak x - I • algebraMap ℝ M n‖
-  · apply max_le_max
-    · convert! imaginaryPart.norm_le (ofUltraweak x + I • algebraMap ℝ M n) using 1
-      simp [IsSelfAdjoint.coe_realPart]
-    · convert! imaginaryPart.norm_le (ofUltraweak x - I • algebraMap ℝ M n) using 1
-      simp [IsSelfAdjoint.coe_realPart]
-  /- `fun m : σ(M, P) ↦ m + I • n` stays within the closed ball of radius `√(1 + n ^ 2)`
-  and converges to `x + I • n` along the filter `l`. -/
-  have h₃ (n : ℝ) : Tendsto (fun m : σ(M, P) ↦ m + I • algebraMap ℝ σ(M, P) n) l
-      (𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) √(1 + n ^ 2)) ⊓
-        𝓝 (x + I • algebraMap ℝ σ(M, P) n)) := by
+  refine (ℑ (ofUltraweak x)).2.eq_zero_of_norm_add_algebraMap_le_abs_add
+    (f := fun t ↦ √(1 + t ^ 2) - |t|)
+    (by simpa [sq_abs] using tendsto_sqrt_add_sq_norm_sub_norm_cobounded (E := ℝ) 1)
+    (.of_forall fun t ↦ ?_)
+  rw [add_sub_cancel]
+  trans ‖ofUltraweak x + I • algebraMap ℝ M t‖
+  · convert! imaginaryPart.norm_le (ofUltraweak x + I • algebraMap ℝ M t) using 1
+    simp [(IsSelfAdjoint.algebraMap M (.all t)).coe_realPart]
+  /- `fun m : σ(M, P) ↦ m + I • t` stays within the closed ball of radius `√(1 + t ^ 2)`
+  and converges to `x + I • t` along the filter `l`. -/
+  have h₃ : Tendsto (fun m : σ(M, P) ↦ m + I • algebraMap ℝ σ(M, P) t) l
+      (𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) √(1 + t ^ 2)) ⊓
+        𝓝 (x + I • algebraMap ℝ σ(M, P) t)) := by
     refine tendsto_inf.mpr ⟨.mono_left ?_ hl_sa, .add_const _ hlx⟩
     simpa using fun x hx hx_norm ↦
-      hx.ofUltraweak.norm_isSelfAdjoint_add_I_smul_algebraMap hx_norm n
-  apply max_le
-  · have := isClosed_iff_forall_filter.mp <| isClosed_closedBall ℂ P (0 : M) (√(1 + n ^ 2))
-    simpa using this _ _ inferInstance (tendsto_inf.mp (h₃ n) |>.1) (tendsto_inf.mp (h₃ n) |>.2)
-  · have := isClosed_iff_forall_filter.mp <| isClosed_closedBall ℂ P (0 : M) (√(1 + n ^ 2))
-    simpa [sub_eq_add_neg] using this _ _ inferInstance
-      (by simpa only [even_two, Even.neg_pow] using! (tendsto_inf.mp (h₃ (-n)) |>.1))
-      (tendsto_inf.mp (h₃ (-n)) |>.2)
+      hx.ofUltraweak.norm_isSelfAdjoint_add_I_smul_algebraMap hx_norm t
+  have := isClosed_iff_forall_filter.mp <| isClosed_closedBall ℂ P (0 : M) (√(1 + t ^ 2))
+  simpa using this _ _ inferInstance (tendsto_inf.mp h₃ |>.1) (tendsto_inf.mp h₃ |>.2)
 
 variable [PartialOrder M] [StarOrderedRing M]
 
