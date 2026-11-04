@@ -86,7 +86,7 @@ variable (P) in
 /-- The corner `p * M * p` of a W⋆-algebra is ultraweakly closed. -/
 lemma isClosed_preimage_cornerSubmodule {p : M} (hp : IsStarProjection p) :
     IsClosed (ofUltraweak ⁻¹' (hp.cornerSubmodule ℂ : Set M) : Set σ(M, P)) :=
-  IsStarProjection.isClosed_cornerSubmodule_of_ultraweak (e := toUltraweak ℂ P p) hp
+  hp.toUltraweak.isClosed_cornerSubmodule_of_ultraweak
 
 /-- The predual of the corner `hp.Corner` of a W⋆-algebra `M` with predual `P`. Together with
 `IsStarProjection.Corner.instCStarAlgebra`, this makes `hp.Corner` into a W⋆-algebra with
