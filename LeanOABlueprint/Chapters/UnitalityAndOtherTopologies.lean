@@ -74,7 +74,7 @@ $`\mathcal{A}^s \cap S` is the set of all self-adjoint unitary elements of $`\ma
 extreme point; indeed, it is the closed convex hull of its extreme points.
 :::
 
-:::lemma_ "lem:wstar_unital" (uses := "thm:cstar_unital_iff_extreme_Sak_1_6_1, thm:krein_milman, thm:Banach_Alaoglu, def:sigma_top")
+:::lemma_ "lem:wstar_unital" (lean := "CStarAlgebra.isUnital_iff, IsCompact.extremePoints_nonempty, Ultraweak.isCompact_closedBall") (uses := "thm:cstar_unital_iff_extreme_Sak_1_6_1, thm:krein_milman, thm:Banach_Alaoglu, def:sigma_top")
 Every $`W^*`-algebra is unital, even if it is not assumed to be so in {bpref "def:wstar_def"}[].
 :::
 
