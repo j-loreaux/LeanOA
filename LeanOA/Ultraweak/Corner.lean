@@ -86,9 +86,8 @@ lemma IsStarProjection.isClosed_cornerSubmodule_of_ultraweak {e : σ(M, P)}
     `{x | IsSelfAdjoint x} ∩ B = {x | 0 ≤ x} ∩ B - {x | 0 ≤ x} ∩ B` since `M` is a C⋆-algebra. -/
     _ = ofUltraweak ⁻¹' ((ofUltraweak e * · * ofUltraweak e) '' ({x | IsSelfAdjoint x} ∩ B)) := rfl
     _ = ofUltraweak ⁻¹' (Icc 0 (ofUltraweak e) ∩ B - Icc 0 (ofUltraweak e) ∩ B) := by
-      have he' : IsStarProjection (ofUltraweak e) := he
       have e_mul_e : (ofUltraweak e * · * ofUltraweak e) =
           LinearMap.mulLeftRight ℂ ⟨ofUltraweak e, ofUltraweak e⟩ := by ext; simp
-      rw [← he'.mem_image_mul_mul_nonneg_inter_unitClosedBall_iff, e_mul_e,
+      rw [← he.ofUltraweak.mem_image_mul_mul_nonneg_inter_unitClosedBall_iff, e_mul_e,
         setOfPred_isSelfAdjoint_inter_closedBall_eq, Set.image_sub]
     _ = _ := by rw [← Set.image2_sub, ← Set.image_uncurry_prod]; rfl

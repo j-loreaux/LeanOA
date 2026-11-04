@@ -133,6 +133,12 @@ def Ultraweak.equiv : σ(M, P)_𝕜 ≃ M where
   left_inv _ := rfl
   right_inv _ := rfl
 
+instance : CanLift (σ(M, P)_𝕜) M (toUltraweak 𝕜 P) (fun _ ↦ True) where
+  prf x _ := ⟨ofUltraweak x, rfl⟩
+
+instance : CanLift M (σ(M, P)_𝕜) ofUltraweak (fun _ ↦ True) where
+  prf x _ := ⟨toUltraweak 𝕜 P x, rfl⟩
+
 lemma ofUltraweak_bijective : Function.Bijective (ofUltraweak : σ(M, P)_𝕜 → M) :=
   Ultraweak.equiv 𝕜 M P |>.bijective
 
@@ -260,6 +266,22 @@ lemma ofUltraweak_mul (x y : σ(M, P)) :
 lemma toUltraweak_mul (x y : M) :
     toUltraweak ℂ P (x * y) = toUltraweak ℂ P x * toUltraweak ℂ P y := rfl
 
+@[simp]
+lemma isIdempotentElem_ofUltraweak {x : σ(M, P)} :
+    IsIdempotentElem (ofUltraweak x) ↔ IsIdempotentElem x := by
+  simp [IsIdempotentElem, ← ofUltraweak_mul]
+
+protected alias ⟨_root_.IsIdempotentElem.of_ofUltraweak, _root_.IsIdempotentElem.ofUltraweak⟩
+  := isIdempotentElem_ofUltraweak
+
+@[simp]
+lemma isIdempotentElem_toUltraweak {x : M} :
+    IsIdempotentElem (toUltraweak ℂ P x) ↔ IsIdempotentElem x := by
+  simp [IsIdempotentElem, ← toUltraweak_mul]
+
+protected alias ⟨_root_.IsIdempotentElem.of_toUltraweak, _root_.IsIdempotentElem.toUltraweak⟩
+  := isIdempotentElem_toUltraweak
+
 variable (M P) in
 /-- The canonical ring equivalence between `σ(M, P)` and `M`. -/
 @[simps]
@@ -313,6 +335,22 @@ lemma isSelfAdjoint_toUltraweak {x : M} :
 
 alias ⟨_root_.IsSelfAdjoint.of_toUltraweak, _root_.IsSelfAdjoint.toUltraweak⟩
   := isSelfAdjoint_toUltraweak
+
+@[simp]
+lemma isStarProjection_ofUltraweak {x : σ(M, P)} :
+    IsStarProjection (ofUltraweak x) ↔ IsStarProjection x := by
+  simp [isStarProjection_iff]
+
+protected alias ⟨_root_.IsStarProjection.of_ofUltraweak, _root_.IsStarProjection.ofUltraweak⟩
+  := isStarProjection_ofUltraweak
+
+@[simp]
+lemma isStarProjection_toUltraweak {x : M} :
+    IsStarProjection (toUltraweak ℂ P x) ↔ IsStarProjection x := by
+  simp [isStarProjection_iff]
+
+protected alias ⟨_root_.IsStarProjection.of_toUltraweak, _root_.IsStarProjection.toUltraweak⟩
+  := isStarProjection_toUltraweak
 
 variable (M P) in
 /-- The canonical ⋆-algebra equivalence between `σ(M, P)` and `M`.

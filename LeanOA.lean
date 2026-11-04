@@ -8,6 +8,7 @@ public import LeanOA.CStarAlgebra.Extreme
 public import LeanOA.CStarAlgebra.FiniteSpectrum
 public import LeanOA.CStarAlgebra.IsStarOrtho
 public import LeanOA.CStarAlgebra.NormAddAlgebraMap
+public import LeanOA.CStarAlgebra.OffDiagonal
 public import LeanOA.CStarModule.Standard
 public import LeanOA.ComplexOrder
 public import LeanOA.ExtremallyDisconnected
@@ -70,6 +71,7 @@ public import LeanOA.Ultraweak.Dual
 public import LeanOA.Ultraweak.FiniteSpectrum
 public import LeanOA.Ultraweak.LUB
 public import LeanOA.Ultraweak.Masa
+public import LeanOA.Ultraweak.Multiplication
 public import LeanOA.Ultraweak.OrderClosed
 public import LeanOA.Ultraweak.SeparatingDual
 public import LeanOA.Ultraweak.Uniformity
