@@ -1,7 +1,7 @@
 module
 
 public import LeanOA.CStarAlgebra.IsStarOrtho
-public import LeanOA.Ultraweak.OrderClosed
+public import LeanOA.CStarAlgebra.NormAddAlgebraMap
 public import LeanOA.CStarAlgebra.Corner.Basic
 
 @[expose] public section
@@ -37,15 +37,18 @@ include hp
 
 attribute [bound_forward] IsStarProjection.norm_le
 
-/-- If `‖x + c • p‖ ≤ √(1 + ‖c‖ ^ 2)` for every `c : ℂ`, then `p * x * p = 0`. -/
-lemma mul_mul_eq_zero_of_norm_add_smul_le {x : A}
-    (h : ∀ c : ℂ, ‖x + c • p‖ ≤ √(1 + ‖c‖ ^ 2)) : p * x * p = 0 := by
+/-- If, for some constant `C`, `‖x + c • p‖ ≤ √(C + ‖c‖ ^ 2)` for every `c : ℂ`, then
+`p * x * p = 0`. -/
+lemma mul_mul_eq_zero_of_norm_add_smul_le {x : A} (C : ℝ)
+    (h : ∀ c : ℂ, ‖x + c • p‖ ≤ √(C + ‖c‖ ^ 2)) : p * x * p = 0 := by
   /- In the corner `p * A * p`, which is a C⋆-algebra with unit `p`, the compression
-  `p * x * p` satisfies the hypotheses of `eq_zero_of_norm_add_algebraMap_le`. -/
+  `p * x * p` satisfies the hypotheses of `eq_zero_of_norm_add_algebraMap_le_norm_add`, since
+  `√(C + ‖c‖ ^ 2) - ‖c‖ → 0` as `‖c‖ → ∞`. -/
   rw [← hp.coe_toCorner (R := ℂ) x, Corner.coe_eq_zero]
-  refine eq_zero_of_norm_add_algebraMap_le (C := 1) fun c ↦ ?_
+  refine eq_zero_of_norm_add_algebraMap_le_norm_add
+    (tendsto_sqrt_add_sq_norm_sub_norm_cobounded C) (.of_forall fun c ↦ ?_)
   have hxp : p * x * p + c • p = p * (x + c • p) * p := by grind
-  rw [← Corner.norm_coe, Corner.coe_add, Corner.coe_algebraMap, coe_toCorner, hxp]
+  rw [add_sub_cancel, ← Corner.norm_coe, Corner.coe_add, Corner.coe_algebraMap, coe_toCorner, hxp]
   grw [norm_mul₃_le, hp.norm_le, one_mul, hp.norm_le, mul_one, h c]
 
 variable {q : A} (hq : IsStarProjection q) (hpq : p ⋆⟂ q)

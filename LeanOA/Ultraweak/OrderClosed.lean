@@ -2,6 +2,7 @@ module
 
 public import LeanOA.Ultraweak.Basic
 public import LeanOA.KreinSmulian
+public import LeanOA.CStarAlgebra.NormAddAlgebraMap
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 
 @[expose] public section
@@ -34,19 +35,6 @@ end KreinSmulian
 variable {M P : Type*} [CStarAlgebra M]
 variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P] [CompleteSpace P]
 
-lemma tendsto_sqrt_add_sq_sub_self_atTop (C : ℝ) :
-    Tendsto (fun x : ℝ ↦ √(C + x ^ 2) - x) atTop (𝓝 0) := by
-  /- For large `x`, `√(C + x ^ 2) - x = C / (√(C + x ^ 2) + x)`, and the denominator is at
-  least `x`. -/
-  have key : ∀ᶠ x in atTop, C / (√(C + x ^ 2) + x) = √(C + x ^ 2) - x := by
-    filter_upwards [eventually_ge_atTop (|C| + 1)] with x hx
-    have hx₀ : 0 < x := by linarith [abs_nonneg C]
-    have hCx : 0 ≤ C + x ^ 2 := by nlinarith [neg_abs_le C]
-    rw [div_eq_iff (add_pos_of_nonneg_of_pos (Real.sqrt_nonneg _) hx₀).ne']
-    linear_combination -Real.sq_sqrt hCx
-  refine .congr' key <| tendsto_const_nhds.div_atTop ?_
-  exact tendsto_atTop_mono (fun _ ↦ le_add_of_nonneg_left (Real.sqrt_nonneg _)) tendsto_id
-
 lemma IsSelfAdjoint.norm_add_I_smul_sq_of_commute {A : Type*}
     [NonUnitalCStarAlgebra A] {x y : A} (hx : IsSelfAdjoint x)
     (hy : IsSelfAdjoint y) (hxy : Commute x y) :
@@ -76,59 +64,6 @@ lemma IsSelfAdjoint.norm_isSelfAdjoint_add_I_smul_algebraMap
   gcongr
   rwa [sq_le_one_iff₀ (by positivity)]
 
--- this lemma seems a bit too technical? Maybe it's useful though.
-lemma IsSelfAdjoint.max_norm_add_sub_algebraMap_ge
-    {A : Type*} [NormedRing A] [StarRing A] [NormedAlgebra ℝ A]
-    [IsometricContinuousFunctionalCalculus ℝ A IsSelfAdjoint] {x : A}
-    (hx : IsSelfAdjoint x) (c : ℝ) (hc : c ∈ spectrum ℝ x) (r : ℝ) (hr : r ≥ 0) :
-    |c| + r ≤ max ‖x + algebraMap ℝ A r‖ ‖x - algebraMap ℝ A r‖ := by
-  obtain (hc' | hc') := le_total 0 c
-  · apply le_max_of_le_left
-    convert! norm_apply_le_norm_cfc (fun y : ℝ ↦ y + r) x hc using 1
-    · simp [abs_of_nonneg (a := c + r) (by positivity), abs_of_nonneg hc']
-    · rw [cfc_add .., cfc_const .., cfc_id' ..]
-  · apply le_max_of_le_right
-    convert! norm_apply_le_norm_cfc (fun y : ℝ ↦ -y + r) x hc using 1
-    · rw [abs_of_nonpos hc', Real.norm_eq_abs, abs_of_nonneg]
-      positivity [neg_nonneg.mpr hc']
-    · rw [cfc_add _ (- ·) _, cfc_neg_id .., cfc_const .., norm_sub_rev]
-      congr! 1
-      abel
-
-/-- A selfadjoint element `x` such that, for some constant `C`, `‖x + t‖ ≤ √(C + t ^ 2)` for
-every real `t`, is zero. -/
-lemma IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le
-    {A : Type*} [NormedRing A] [StarRing A] [NormedAlgebra ℝ A]
-    [IsometricContinuousFunctionalCalculus ℝ A IsSelfAdjoint] {x : A} (hx : IsSelfAdjoint x)
-    {C : ℝ} (h : ∀ t : ℝ, ‖x + algebraMap ℝ A t‖ ≤ √(C + t ^ 2)) : x = 0 := by
-  /- Every element `c` of the spectrum satisfies `|c| + n ≤ √(C + n ^ 2)` for every `n : ℕ`,
-  and hence `c = 0`. -/
-  refine CFC.eq_zero_of_spectrum_subset_zero (R := ℝ) x (fun c hc ↦ ?_) hx
-  rw [Set.mem_singleton_iff, ← abs_eq_zero]
-  refine le_antisymm ?_ (abs_nonneg c)
-  refine ge_of_tendsto' ((tendsto_sqrt_add_sq_sub_self_atTop C).comp tendsto_natCast_atTop_atTop)
-    fun n ↦ ?_
-  rw [Function.comp_apply, le_sub_iff_add_le]
-  refine hx.max_norm_add_sub_algebraMap_ge c hc n n.cast_nonneg |>.trans <| max_le (h n) ?_
-  simpa [sub_eq_add_neg] using h (-n)
-
-/-- An element `x` of a unital C⋆-algebra such that, for some constant `C`,
-`‖x + c‖ ≤ √(C + ‖c‖ ^ 2)` for every `c : ℂ`, is zero. -/
-lemma eq_zero_of_norm_add_algebraMap_le {A : Type*} [CStarAlgebra A] {x : A} {C : ℝ}
-    (h : ∀ c : ℂ, ‖x + algebraMap ℂ A c‖ ≤ √(C + ‖c‖ ^ 2)) : x = 0 := by
-  /- The real and imaginary parts of `x` satisfy the hypotheses of
-  `IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le`. -/
-  have hre : (ℜ x : A) = 0 := by
-    refine (ℜ x).2.eq_zero_of_norm_add_algebraMap_le (C := C) fun t ↦ ?_
-    simpa [Algebra.algebraMap_eq_smul_one, sq_abs, (IsSelfAdjoint.one (R := A)).coe_realPart] using
-      (realPart.norm_le (x + algebraMap ℂ A t)).trans (h t)
-  have him : (ℑ x : A) = 0 := by
-    refine (ℑ x).2.eq_zero_of_norm_add_algebraMap_le (C := C) fun t ↦ ?_
-    simpa [Algebra.algebraMap_eq_smul_one, sq_abs, mul_smul, imaginaryPart_I_smul,
-      (IsSelfAdjoint.one (R := A)).coe_realPart] using
-      (imaginaryPart.norm_le (x + algebraMap ℂ A (I * t))).trans (h (I * t))
-  rw [← realPart_add_I_smul_imaginaryPart x, hre, him, smul_zero, add_zero]
-
 namespace Ultraweak
 
 set_option backward.isDefEq.respectTransparency false in
@@ -152,11 +87,16 @@ lemma isClosed_setOf_isSelfAdjoint : IsClosed {x : σ(M, P) | IsSelfAdjoint x} :
     exact isClosed_iff_forall_filter.mp (isClosed_closedBall ℂ P (0 : M) 1)
       x l hl_neBot (by aesop) hlx
   /- To show `x` is self-adjoint, we show `ℑ x = 0`. By
-  `IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le`, it suffices to show that
-  `‖ℑ x + t‖ ≤ ‖x + I • t‖ ≤ √(1 + t ^ 2)` for every real `t`. -/
+  `IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le_abs_add`, it suffices to show that
+  `‖ℑ x + t‖ ≤ ‖x + I • t‖ ≤ √(1 + t ^ 2)` for every real `t`, since
+  `√(1 + t ^ 2) - |t| → 0` as `|t| → ∞`. -/
   refine .of_ofUltraweak ?_
   rw [← imaginaryPart_eq_zero_iff, ← ZeroMemClass.coe_eq_zero]
-  refine (ℑ (ofUltraweak x)).2.eq_zero_of_norm_add_algebraMap_le (C := 1) fun t ↦ ?_
+  refine (ℑ (ofUltraweak x)).2.eq_zero_of_norm_add_algebraMap_le_abs_add
+    (f := fun t ↦ √(1 + t ^ 2) - |t|)
+    (by simpa [sq_abs] using tendsto_sqrt_add_sq_norm_sub_norm_cobounded (E := ℝ) 1)
+    (.of_forall fun t ↦ ?_)
+  rw [add_sub_cancel]
   trans ‖ofUltraweak x + I • algebraMap ℝ M t‖
   · convert! imaginaryPart.norm_le (ofUltraweak x + I • algebraMap ℝ M t) using 1
     simp [(IsSelfAdjoint.algebraMap M (.all t)).coe_realPart]

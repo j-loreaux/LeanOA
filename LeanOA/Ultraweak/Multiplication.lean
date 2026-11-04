@@ -65,10 +65,10 @@ lemma closure_image_mul_mul_subset :
     simpa [x'] using (isClosed_closedBall ℂ P (0 : M) r).closure_subset this
   /- The diagonal corners of `x` vanish. -/
   have hpxp : p' * x' * p' = 0 :=
-    hp'.mul_mul_eq_zero_of_norm_add_smul_le fun c ↦
+    hp'.mul_mul_eq_zero_of_norm_add_smul_le 1 fun c ↦
       key (c • p') _ fun y hy ↦ hp'.norm_mul_mul_add_smul_le hq' hpq' hy c
   have hqxq : q' * x' * q' = 0 :=
-    hq'.mul_mul_eq_zero_of_norm_add_smul_le fun c ↦
+    hq'.mul_mul_eq_zero_of_norm_add_smul_le 1 fun c ↦
       key (c • q') _ fun y hy ↦ hp'.norm_mul_mul_add_smul_le' hq' hpq' hy c
   have hx_dec : x' = p' * x' * q' + q' * x' * p' := by
     calc x' = (p' + q') * x' * (p' + q') := by rw [hpq₁', one_mul, mul_one]
