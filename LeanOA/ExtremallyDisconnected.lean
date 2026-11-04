@@ -50,7 +50,7 @@ theorem ExtremallyDisconnected.ofConditionallyCompletePartialOrderSupContinuousM
     have key : (closure u)ᶜ = f ⁻¹' {0} := by
       ext x
       refine ⟨@h0 x, fun hx ↦ ?_⟩
-      contrapose! hx
+      contrapose hx
       simp [h1 (by simpa using hx)]
     simpa [← isClosed_compl_iff, key] using isClosed_singleton.preimage (map_continuous f)
   intro s hs hsn hb
