@@ -75,6 +75,7 @@ public import LeanOA.Ultraweak.FiniteSpectrum
 public import LeanOA.Ultraweak.LUB
 public import LeanOA.Ultraweak.Masa
 public import LeanOA.Ultraweak.Multiplication
+public import LeanOA.Ultraweak.Normal
 public import LeanOA.Ultraweak.OrderClosed
 public import LeanOA.Ultraweak.SeparatingDual
 public import LeanOA.Ultraweak.Uniformity
