@@ -47,9 +47,9 @@ attribute [local grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_se
 omit [PartialOrder M] [StarOrderedRing M] [CompleteSpace P] in
 /-- The intersection of the off-diagonal corner `p * M * q` with the closed unit ball is
 ultraweakly closed. -/
-lemma closure_image_mul_mul_subset :
-    closure ((fun y ↦ p * y * q) '' (ofUltraweak ⁻¹' closedBall (0 : M) 1)) ⊆
-      (fun y ↦ p * y * q) '' (ofUltraweak ⁻¹' closedBall (0 : M) 1) := by
+lemma isClosed_image_mul_mul_subset :
+    IsClosed ((fun y ↦ p * y * q) '' (ofUltraweak ⁻¹' closedBall (0 : M) 1)) := by
+  rw [← closure_subset_iff_isClosed]
   intro x hx
   lift p to M using trivial
   lift q to M using trivial
@@ -90,19 +90,17 @@ lemma closure_image_mul_mul_subset :
     calc
       ‖q * x * p‖ + 1 = ‖q * (x + u) * p‖ := by
         rw [mul_add, add_mul, hu, SameRay.norm_add, hu₁]
-        exact (.sameRay_nonneg_smul_right _ (by positivity))
+        exact .sameRay_nonneg_smul_right _ (by positivity)
       _ ≤ ‖x + u‖ := by grw [norm_mul₃_le, hq.norm_le, hp.norm_le]; simp
       _ ≤ 1 := by simpa [hu₁] using key u _ (fun y hy ↦ hp.norm_mul_mul_add_le_max hq hpq hy hu)
   /- Hence `x = p * x * q`, and `x` lies in the closed unit ball since it is closed. -/
-  have hx_ball : toUltraweak ℂ P x ∈ ofUltraweak ⁻¹' closedBall (0 : M) 1 := by
-    refine (isClosed_closedBall ℂ P (0 : M) 1).closure_subset_iff.mpr ?_ hx
-    rintro - ⟨y, hy, rfl⟩
-    simp only [mem_preimage, mem_closedBall, dist_zero_right, ofUltraweak_mul,
-      ofUltraweak_toUltraweak] at hy ⊢
-    grw [norm_mul₃_le, hy]
-    bound
-  refine ⟨_, hx_ball, ?_⟩
-  simpa [hqxp] using congr(toUltraweak ℂ P $hx_dec.symm)
+  refine ⟨toUltraweak ℂ P x, ?_, by simpa [hqxp] using congr(toUltraweak ℂ P $hx_dec.symm)⟩
+  refine (isClosed_closedBall ℂ P (0 : M) 1).closure_subset_iff.mpr ?_ hx
+  rintro - ⟨y, hy, rfl⟩
+  simp only [mem_preimage, mem_closedBall, dist_zero_right, ofUltraweak_mul,
+    ofUltraweak_toUltraweak] at hy ⊢
+  grw [norm_mul₃_le, hy]
+  bound
 
 /-- The intersection of `p * M` with the closed unit ball is ultraweakly compact. -/
 lemma isCompact_image_mul_left :
@@ -117,8 +115,7 @@ lemma isCompact_image_mul_left :
     grw [norm_mul₃_le, ha.ofUltraweak.norm_le, hy, hb.ofUltraweak.norm_le]
     simp
   have h_off : IsCompact ((fun y ↦ p * y * q) '' S) :=
-    hS.of_isClosed_subset
-      (closure_subset_iff_isClosed.mp (closure_image_mul_mul_subset hp hq hpq hpq₁))
+    hS.of_isClosed_subset (isClosed_image_mul_mul_subset hp hq hpq hpq₁)
       (by rintro - ⟨y, hy, rfl⟩; exact h_norm _ _ _ hp hq hy)
   have h_diag : IsCompact (range (p * · * p) ∩ S) := by
     refine hS.inter_left ?_
