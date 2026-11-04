@@ -19,6 +19,7 @@ a W⋆-algebra.
 -/
 
 open scoped Ultraweak
+open Submodule
 
 namespace Ultraweak
 
@@ -28,50 +29,40 @@ variable {𝕜 M P : Type*} [RCLike 𝕜] [NormedAddCommGroup M] [NormedSpace �
   [NormedAddCommGroup P] [NormedSpace 𝕜 P] [Predual 𝕜 M P]
 
 variable (P) in
-/-- The image of a subspace of `M` in the dual of the predual `P`. -/
-noncomputable abbrev dualSubmodule (N : Submodule 𝕜 M) : Submodule 𝕜 (StrongDual 𝕜 P) :=
-  N.map (Predual.equivDual (𝕜 := 𝕜) (M := M) (P := P) : M →ₗ[𝕜] StrongDual 𝕜 P)
-
-variable (P) in
 /-- The predual `P ⧸ N_⊥` of an ultraweakly closed subspace `N` of `M`. -/
 abbrev Subpredual (N : Submodule 𝕜 M) : Type _ :=
-  P ⧸ (topDualPairing 𝕜 P).polarSubmodule (dualSubmodule P N)
+  P ⧸ (topDualPairing 𝕜 P).polarSubmodule (map (Predual.equivDual (P := P)).toLinearMap N)
 
 omit [Predual 𝕜 M P] in
 lemma ofUltraweak_weakDualCLE_symm_apply [Predual 𝕜 M P] (φ : WeakDual 𝕜 P) :
-    ofUltraweak ((weakDualCLE 𝕜 M P).symm φ) =
-      (Predual.equivDual (𝕜 := 𝕜) (M := M) (P := P)).symm (WeakDual.toStrongDual φ) :=
+    ofUltraweak ((weakDualCLE 𝕜 M P).symm φ) = Predual.equivDual.symm (WeakDual.toStrongDual φ) :=
   rfl
 
-lemma isClosed_dualSubmodule {N : Submodule 𝕜 M}
+lemma isClosed_preimage_map_equivDual {N : Submodule 𝕜 M}
     (hN : IsClosed (ofUltraweak ⁻¹' (N : Set M) : Set (σ(M, P)_𝕜))) :
-    IsClosed (WeakDual.toStrongDual ⁻¹' (dualSubmodule P N : Set (StrongDual 𝕜 P)) :
+    IsClosed (WeakDual.toStrongDual ⁻¹' (map (Predual.equivDual (P := P)).toLinearMap N) :
       Set (WeakDual 𝕜 P)) := by
-  have : WeakDual.toStrongDual ⁻¹' (dualSubmodule P N : Set (StrongDual 𝕜 P)) =
-      (weakDualCLE 𝕜 M P).symm ⁻¹' (ofUltraweak ⁻¹' (N : Set M)) := by
-    ext φ
-    simp only [Set.mem_preimage, SetLike.mem_coe, Submodule.mem_map]
-    constructor
-    · rintro ⟨m, hm, hφ⟩
-      rw [ofUltraweak_weakDualCLE_symm_apply, ← hφ]
-      simpa using hm
-    · intro h
-      exact ⟨_, h, by rw [ofUltraweak_weakDualCLE_symm_apply]; simp⟩
-  rw [this]
-  exact hN.preimage (weakDualCLE 𝕜 M P).symm.continuous
+  have : comap WeakDual.toStrongDual.toLinearMap (map Predual.equivDual.toLinearMap N) =
+      comap (weakDualCLE 𝕜 M P).symm.toLinearMap
+        (comap (Ultraweak.linearEquiv 𝕜 M P).toLinearMap N) := by
+    simp only [comap_equiv_eq_map_symm, ← map_comp]
+    rfl
+  convert hN.preimage (weakDualCLE 𝕜 M P).symm.continuous using 1
+  exact congr(SetLike.coe $this)
 
 /-- **Sakai 1.1.4**: an ultraweakly closed subspace `N` of `M` is the dual of `P ⧸ N_⊥`. -/
 noncomputable abbrev predualOfIsClosed (N : Submodule 𝕜 M)
     (hN : IsClosed (ofUltraweak ⁻¹' (N : Set M) : Set (σ(M, P)_𝕜))) :
     Predual 𝕜 N (Subpredual P N) where
-  equivDual := (LinearIsometryEquiv.submoduleMap N Predual.equivDual).trans
-    ((dualSubmodule P N).equivDualQuotientPolarSubmodule (isClosed_dualSubmodule hN))
+  equivDual := Predual.equivDual.submoduleMap N |>.trans <|
+    (map Predual.equivDual.toLinearMap N).equivDualQuotientPolarSubmodule <| by
+      exact isClosed_preimage_map_equivDual hN
 
 lemma predualOfIsClosed_equivDual_apply_mk (N : Submodule 𝕜 M)
     (hN : IsClosed (ofUltraweak ⁻¹' (N : Set M) : Set (σ(M, P)_𝕜))) (x : N) (ρ : P) :
     (predualOfIsClosed N hN).equivDual x (Submodule.Quotient.mk ρ) =
       Predual.equivDual (𝕜 := 𝕜) (x : M) ρ :=
-  Submodule.equivDualQuotientPolarSubmodule_apply_mk _ (isClosed_dualSubmodule hN) _ ρ
+  equivDualQuotientPolarSubmodule_apply_mk _ (isClosed_preimage_map_equivDual hN) _ ρ
 
 end Subspace
 
