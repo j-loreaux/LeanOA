@@ -223,6 +223,12 @@ variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P]
 /-- The nonunital ring structure on `σ(M, P)` it inherits from `M`. -/
 noncomputable scoped instance : NonUnitalRing σ(M, P) := inferInstanceAs (NonUnitalRing M)
 
+scoped instance [IsScalarTower ℂ M M] : IsScalarTower ℂ σ(M, P) σ(M, P) :=
+  inferInstanceAs (IsScalarTower ℂ M M)
+
+scoped instance [SMulCommClass ℂ M M] : SMulCommClass ℂ σ(M, P) σ(M, P) :=
+  inferInstanceAs (SMulCommClass ℂ M M)
+
 @[simp]
 lemma ofUltraweak_mul (x y : σ(M, P)) :
     ofUltraweak (x * y) = ofUltraweak x * ofUltraweak y := rfl

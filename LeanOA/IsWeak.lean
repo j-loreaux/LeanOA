@@ -192,7 +192,7 @@ variable {𝕜 E F : Type*} [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E] 
 
 theorem withSeminorms (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak] :
     WithSeminorms (LinearMap.toSeminormFamily B : F → Seminorm 𝕜 E) :=
-  let e : F ≃ (Σ _ : F, Fin 1) := .symm <| .sigmaUnique _ _
+  let e : F ≃ (Σ _ : F, Unit) := .symm <| .sigmaUnique _ _
   hB.eq_induced ▸ withSeminorms_induced (withSeminorms_pi (fun _ ↦ norm_withSeminorms 𝕜 𝕜))
     (LinearMap.ltoFun 𝕜 F 𝕜 𝕜 ∘ₗ B : E →ₗ[𝕜] (F → 𝕜)) |>.congr_equiv e
 

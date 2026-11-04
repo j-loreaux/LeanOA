@@ -95,6 +95,8 @@ variable [PartialOrder M] [StarOrderedRing M]
 instance : ContinuousFunctionalCalculus ℝ≥0 σ(M, P) (0 ≤ ·) :=
   .transfer ((starAlgEquiv M P).symm.restrictScalars ℝ≥0) continuous_toUltraweak (fun _ ↦ Iff.rfl)
 
+instance : NonnegSpectrumClass ℝ σ(M, P) := inferInstanceAs (NonnegSpectrumClass ℝ M)
+
 /- The lemmas `{to,of}Ultraweak_cfc_nnreal` require a `ContinuousMap.UniqueHom ℝ≥0 σ(M, P)`
 instace, which requires that `σ(M, P)` is a topological algebra. So, we cannot establish those
 until we first show that multiplication is continuous in each variable separately. -/

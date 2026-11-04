@@ -14,7 +14,7 @@ lemma CStarAlgebra.dominated_convergence {x y : ι → A} (hx : Summable x)
   intro u hu
   obtain ⟨ε, ε_pos, hε⟩ := Metric.nhds_basis_closedBall.mem_iff.mp hu
   specialize hx (Metric.closedBall 0 ε) (Metric.closedBall_mem_nhds 0 ε_pos)
-  peel hx with s t hst _
+  gconvert hx with s t hst
   refine hε ?_
   simp only [Metric.mem_closedBall, dist_zero_right] at this ⊢
   refine le_trans ?_ this
