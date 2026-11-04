@@ -36,9 +36,14 @@ variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P] [CompleteS
 
 lemma tendsto_sqrt_one_add_sq_sub_self_atTop :
     Tendsto (fun x : ℝ ↦ √(1 + x ^ 2) - x) atTop (𝓝 0) := by
-  -- This can be solved instantaneously with `compute_asymptotics`,
-  -- but it isn't yet merged into Mathlib, so it's unavailable here.
-  sorry
+  -- `√(1 + x ^ 2) - x = (√(1 + x ^ 2) + x)⁻¹` and the denominator is at least `x`.
+  have key (x : ℝ) : √(1 + x ^ 2) - x = (√(1 + x ^ 2) + x)⁻¹ := by
+    refine eq_inv_of_mul_eq_one_left ?_
+    rw [mul_comm, ← sq_sub_sq, Real.sq_sqrt (by positivity)]
+    ring
+  simp only [key]
+  exact tendsto_inv_atTop_zero.comp <|
+    tendsto_atTop_mono (fun _ ↦ le_add_of_nonneg_left (Real.sqrt_nonneg _)) tendsto_id
 
 lemma IsSelfAdjoint.norm_add_I_smul_sq_of_commute {A : Type*}
     [NonUnitalCStarAlgebra A] {x y : A} (hx : IsSelfAdjoint x)
