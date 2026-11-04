@@ -30,6 +30,7 @@ public import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
 public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatibleDual
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
+public import LeanOA.Mathlib.Analysis.LocallyConvex.PolarSubmodule
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
