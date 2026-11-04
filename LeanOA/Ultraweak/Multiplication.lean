@@ -47,7 +47,7 @@ attribute [local grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_se
 omit [PartialOrder M] [StarOrderedRing M] [CompleteSpace P] in
 /-- The intersection of the off-diagonal corner `p * M * q` with the closed unit ball is
 ultraweakly closed. -/
-lemma isClosed_image_mul_mul_subset :
+private lemma isClosed_image_mul_mul_subset :
     IsClosed ((fun y ↦ p * y * q) '' (ofUltraweak ⁻¹' closedBall (0 : M) 1)) := by
   rw [← closure_subset_iff_isClosed]
   intro x hx
@@ -103,7 +103,7 @@ lemma isClosed_image_mul_mul_subset :
   bound
 
 /-- The intersection of `p * M` with the closed unit ball is ultraweakly compact. -/
-lemma isCompact_image_mul_left :
+private lemma isCompact_image_mul_left :
     IsCompact ((p * ·) '' (ofUltraweak ⁻¹' closedBall (0 : M) 1)) := by
   set S : Set σ(M, P) := ofUltraweak ⁻¹' closedBall (0 : M) 1
   have hS : IsCompact S := isCompact_closedBall ℂ P (0 : M) 1
@@ -143,12 +143,11 @@ variable {p : σ(M, P)} (hp : IsStarProjection p)
 include hp
 
 /-- For a projection `p`, the right ideal `p * M` is ultraweakly closed. -/
-lemma isClosed_range_mulLeft :
-    IsClosed (LinearMap.range (LinearMap.mulLeft ℂ p) : Set σ(M, P)) := by
-  have hpq : p * (1 - p) = 0 := by rw [mul_sub, mul_one, hp.isIdempotentElem.eq, sub_self]
+lemma isClosed_range_mulLeft : IsClosed ((LinearMap.mulLeft ℂ p).range : Set σ(M, P)) := by
   refine Ultraweak.krein_smulian_of_submodule
     ((LinearMap.range (LinearMap.mulLeft ℂ p)).restrictScalars ℝ≥0) ?_
-  convert (isCompact_image_mul_left hp hp.one_sub hpq (add_sub_cancel p 1)).isClosed using 1
+  convert isCompact_image_mul_left hp hp.one_sub hp.isIdempotentElem.mul_one_sub_self
+    (add_sub_cancel p 1) |>.isClosed using 1
   ext x
   simp only [Submodule.coe_restrictScalars, LinearMap.coe_range, LinearMap.mulLeft_apply,
     mem_inter_iff, mem_range, mem_image]
@@ -158,32 +157,30 @@ lemma isClosed_range_mulLeft :
   · rintro ⟨y, hy, rfl⟩
     refine ⟨⟨y, rfl⟩, ?_⟩
     simp only [mem_preimage, mem_closedBall, dist_zero_right, ofUltraweak_mul] at hy ⊢
-    exact (norm_mul_le _ _).trans <| by
-      simpa using mul_le_mul hp.ofUltraweak.norm_le hy (norm_nonneg _) zero_le_one
+    grw [norm_mul_le]
+    simpa using mul_le_mul hp.ofUltraweak.norm_le hy (norm_nonneg _) zero_le_one
 
+open LinearMap in
 /-- Left multiplication by a projection is ultraweakly continuous. -/
-lemma continuous_mul_left_of_isStarProjection : Continuous (fun x : σ(M, P) ↦ p * x) := by
-  have hpp := hp.isIdempotentElem.eq
-  refine continuous_of_isIdempotentElem (LinearMap.mulLeft ℂ p) ?_ 1 (fun x ↦ ?_)
-    (isClosed_range_mulLeft hp) ?_
-  · ext x
-    simp [← mul_assoc, hpp]
-  · change ‖ofUltraweak p * ofUltraweak x‖ ≤ 1 * ‖ofUltraweak x‖
-    exact (norm_mul_le _ _).trans <|
-      mul_le_mul_of_nonneg_right hp.ofUltraweak.norm_le (norm_nonneg (ofUltraweak x))
+private lemma continuous_mul_left_of_isStarProjection :
+    Continuous (fun x : σ(M, P) ↦ p * x) := by
+  have idem : IsIdempotentElem (mulLeft ℂ p) := by
+    simp [hp.isIdempotentElem.eq, IsIdempotentElem, Module.End.mul_eq_comp, ← mulLeft_mul]
+  refine continuous_of_isIdempotentElem (mulLeft ℂ p) idem 1 (fun _ ↦ ?norm)
+    (isClosed_range_mulLeft hp) ?closed
+  case norm => grw [mulLeft_apply, ofUltraweak_mul, norm_mul_le, hp.ofUltraweak.norm_le]
   /- The kernel of left multiplication by `p` is the range of left multiplication by `1 - p`. -/
-  · convert isClosed_range_mulLeft hp.one_sub using 1
-    ext x
-    simp only [SetLike.mem_coe, LinearMap.mem_ker, LinearMap.mulLeft_apply, LinearMap.mem_range]
-    constructor
-    · exact fun h ↦ ⟨x, by rw [sub_mul, one_mul, h, sub_zero]⟩
-    · rintro ⟨y, rfl⟩
-      rw [← mul_assoc, mul_sub, mul_one, hpp, sub_self, zero_mul]
+  case closed =>
+  convert isClosed_range_mulLeft hp.one_sub using 1
+  simp only [SetLike.coe_set_eq]
+  convert idem.ker_eq_range_one_sub
+  ext
+  simp [sub_mul]
 
 end LeftMulProjection
 
 /-- Left multiplication is ultraweakly continuous. -/
-private theorem continuous_mul_left (a : σ(M, P)) : Continuous (fun x : σ(M, P) ↦ a * x) := by
+private lemma continuous_mul_left (a : σ(M, P)) : Continuous (fun x : σ(M, P) ↦ a * x) := by
   /- For each `ρ : P`, let `Φ ρ : M →L[ℂ] StrongDual ℂ M` send `b` to `x ↦ equivDual (b * x) ρ`.
   Then the set `T` of those `b` for which left multiplication by `b` is ultraweakly continuous is
   the intersection of the preimages under the maps `Φ ρ` of the (norm closed) range of
@@ -192,8 +189,7 @@ private theorem continuous_mul_left (a : σ(M, P)) : Continuous (fun x : σ(M, P
   let Φ (ρ : P) : M →L[ℂ] StrongDual ℂ M :=
     (ContinuousLinearMap.compL ℂ M M ℂ (Predual.toDual ℂ M P ρ)).comp
       (ContinuousLinearMap.mul ℂ M)
-  let T : Submodule ℂ M :=
-    ⨅ ρ, (LinearMap.range (Predual.toDual ℂ M P).toLinearMap).comap (Φ ρ).toLinearMap
+  let T : Submodule ℂ M := ⨅ ρ, (Predual.toDual ℂ M P).toLinearMap.range.comap (Φ ρ).toLinearMap
   have hT_iff (b : M) : b ∈ T ↔ Continuous (fun x : σ(M, P) ↦ toUltraweak ℂ P b * x) := by
     simp only [T, Submodule.mem_iInf, Submodule.mem_comap, ContinuousLinearMap.coe_coe]
     refine ⟨fun h ↦ continuous_of_continuous_eval fun ρ ↦ ?_, fun h ρ ↦ ?_⟩
