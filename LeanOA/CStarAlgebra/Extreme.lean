@@ -319,7 +319,8 @@ theorem mem_extremePoints_isSelfAdjoint_and_mem_unitClosedBall_iff_isSelfAdjoint
     · grw [he.1.1.norm_add_eq_max hx.isSelfAdjoint this, he.1.2, hx.norm_le, max_self]
     · grw [he.1.1.norm_sub_eq_max hx.isSelfAdjoint this, he.1.2, hx.norm_le, max_self]
     simp [← one_div, smul_add, smul_sub, ← two_smul ℝ, smul_smul, mul_one_div_cancel]
-  · refine inter_extremePoints_subset_extremePoints_of_subset inter_subset_right
+  · rw [ofPred_and, ofPred_mem_eq]
+    refine inter_extremePoints_subset_extremePoints_of_subset inter_subset_right
       ⟨⟨he.1, ?_⟩, by simpa using Unitary.coe_mem_extremePoints_unitClosedBall ⟨e, he.2⟩⟩
     nontriviality A
     simp [he, CStarRing.norm_of_mem_unitary]

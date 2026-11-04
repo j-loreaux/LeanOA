@@ -247,6 +247,7 @@ example (ha : IsStarNormal a) :
 
 /- The shortcut `r • a = cfc (r * ·) a` is not taken at `r • a ^ 2`, where it would ask for the
 predicate at `a ^ 2`; with nothing deferred to it, the `=> ..` block has nothing to do. -/
+set_option linter.unusedTactic false in
 example (ha : IsStarNormal a) : (3 : ℂ) • a ^ 2 = cfc (fun x : ℂ ↦ 3 * x ^ 2) a := by
   cfc_pull ℂ a => skip
 

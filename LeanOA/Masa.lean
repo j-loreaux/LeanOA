@@ -103,8 +103,13 @@ theorem NonUnitalStarSubalgebra.IsMasa.mem_of_commute (B : NonUnitalStarSubalgeb
   have hx₂ : ∀ y : B, Commute (star x) y := by simpa [commute_star_comm] using hx₁
   have hB₀ := setLike_mul_comm (s := B)
   have hB₁ := setLike_mul_comm_star (s := B)
-  refine isMulCommutative_adjoin R ?_ ?_
-  all_goals simp [commute_iff_eq] at *; grind
+  refine isMulCommutative_adjoin R ?_ ?_ ?_
+  · rintro y (rfl | (hy : y ∈ B))
+    exacts [inferInstance, ⟨hB₀ (star_mem hy) hy⟩]
+  · rintro a (rfl | (ha : a ∈ B)) b (rfl | (hb : b ∈ B)) -
+    exacts [.refl _, hx b hb, (hx a ha).symm, hB₀ ha hb]
+  · rintro a (rfl | (ha : a ∈ B)) b (rfl | (hb : b ∈ B)) -
+    exacts [hx₀.symm, hx₁ ⟨b, hb⟩, (hx₂ ⟨a, ha⟩).symm, hB₁ ha hb]
 
 end NonUnitalStarSubalgebra
 
