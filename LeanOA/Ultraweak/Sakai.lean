@@ -273,8 +273,8 @@ nonnegative elements are norm limits of nonnegative combinations of projections.
 lemma map_le_map_of_forall_lt {φ ψ : M →ₚ[ℂ] ℂ} {p : M} (hp : IsStarProjection p)
     (h : ∀ q, IsStarProjection q → q ≠ 0 → q ≤ p → φ q < ψ q) {a : M} (ha : 0 ≤ a)
     (hpa : p * a * p = a) : φ a ≤ ψ a := by
-  have : CStarAlgebra.FiniteSpectrum hp.Corner :=
-    CStarAlgebra.finiteSpectrum_of_predual (P := Ultraweak.Subpredual P (hp.cornerSubmodule ℂ))
+  have : WStarAlgebra hp.Corner :=
+    .of_predual (P := Ultraweak.Subpredual P (hp.cornerSubmodule ℂ))
   /- The inclusion of the corner `p * M * p` into `M` is positive, and since the corner is FS,
   it suffices to compare `φ` and `ψ` on the projections of the corner, which are exactly the
   projections `q ≤ p` of `M`. -/

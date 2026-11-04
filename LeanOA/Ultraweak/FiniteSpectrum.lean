@@ -21,26 +21,29 @@ projections, and the span of the projections is norm dense
 open scoped IsMulCommutative
 open WeakDual
 
-variable {M P : Type*} [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M]
-  [NormedAddCommGroup P] [NormedSpace ℂ P] [CompleteSpace P] [Predual ℂ M P]
+variable {M : Type*} [CStarAlgebra M] [WStarAlgebra M]
 
-include P in
 /-- A W⋆-algebra is FS. -/
-theorem CStarAlgebra.finiteSpectrum_of_predual : CStarAlgebra.FiniteSpectrum M :=
-  CStarAlgebra.finiteSpectrum_iff_spectrum.mpr fun x hx ↦ by
-    /- Place `x` in a masa `S`, which is FS since its character space is extremally
-    disconnected, and approximate `x` within `S`. -/
-    have : IsStarNormal x := hx.isStarNormal
-    obtain ⟨S, hS, hS_masa⟩ := (StarAlgebra.elemental ℂ x).exists_le_isMasa
-    have hxS : x ∈ S := hS (StarAlgebra.elemental.self_mem ℂ x)
-    have : ExtremallyDisconnected (characterSpace ℂ S) :=
-      StarSubalgebra.IsMasa.extremallyDisconnected_characterSpace (P := P) S
-    let _ : CommCStarAlgebra S := IsMulCommutative.instCommCStarAlgebra
-    have : CStarAlgebra.FiniteSpectrum S := .of_starAlgEquiv (gelfandStarTransform S)
-    have hy : IsSelfAdjoint (⟨x, hxS⟩ : S) := Subtype.ext hx
-    have hmap : Set.MapsTo (S.subtype : S → M) {z : S | IsSelfAdjoint z ∧ (spectrum ℝ z).Finite}
-        {z : M | IsSelfAdjoint z ∧ (spectrum ℝ z).Finite} := fun z hz ↦
-      ⟨hz.1.map S.subtype,
-        IsSelfAdjoint.map_spectrum_real hz.1 S.subtype Subtype.val_injective ▸ hz.2⟩
-    simpa using map_mem_closure continuous_subtype_val
-      (CStarAlgebra.finiteSpectrum_iff_spectrum.mp inferInstance hy) hmap
+instance WStarAlgebra.instFiniteSpectrum : CStarAlgebra.FiniteSpectrum M := by
+  /- Choose a predual `P` of `M`, and equip `M` with its spectral order. -/
+  obtain ⟨P, _, _, _, ⟨e⟩⟩ := WStarAlgebra.exists_predual (M := M)
+  let _ : Predual ℂ M P := ⟨(starₗᵢ ℂ).trans e.symm⟩
+  let _ := CStarAlgebra.spectralOrder M
+  have := CStarAlgebra.spectralOrderedRing M
+  refine CStarAlgebra.finiteSpectrum_iff_spectrum.mpr fun x hx ↦ ?_
+  /- Place `x` in a masa `S`, which is FS since its character space is extremally
+  disconnected, and approximate `x` within `S`. -/
+  have : IsStarNormal x := hx.isStarNormal
+  obtain ⟨S, hS, hS_masa⟩ := (StarAlgebra.elemental ℂ x).exists_le_isMasa
+  have hxS : x ∈ S := hS (StarAlgebra.elemental.self_mem ℂ x)
+  have : ExtremallyDisconnected (characterSpace ℂ S) :=
+    StarSubalgebra.IsMasa.extremallyDisconnected_characterSpace (P := P) S
+  let _ : CommCStarAlgebra S := IsMulCommutative.instCommCStarAlgebra
+  have : CStarAlgebra.FiniteSpectrum S := .of_starAlgEquiv (gelfandStarTransform S)
+  have hy : IsSelfAdjoint (⟨x, hxS⟩ : S) := Subtype.ext hx
+  have hmap : Set.MapsTo (S.subtype : S → M) {z : S | IsSelfAdjoint z ∧ (spectrum ℝ z).Finite}
+      {z : M | IsSelfAdjoint z ∧ (spectrum ℝ z).Finite} := fun z hz ↦
+    ⟨hz.1.map S.subtype,
+      IsSelfAdjoint.map_spectrum_real hz.1 S.subtype Subtype.val_injective ▸ hz.2⟩
+  simpa using map_mem_closure continuous_subtype_val
+    (CStarAlgebra.finiteSpectrum_iff_spectrum.mp inferInstance hy) hmap

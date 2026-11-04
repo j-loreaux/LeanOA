@@ -2,6 +2,8 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.Classes
 public import Mathlib.Analysis.InnerProductSpace.Basic
+public import Mathlib.Analysis.Normed.Module.DoubleDual
+public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 public import Mathlib.Analysis.Normed.Module.WeakDual
 public import Mathlib.Analysis.RCLike.Extend
 
@@ -15,6 +17,27 @@ class Predual (𝕜 M P : Type*) [RCLike 𝕜]
   /-- A linear isometric equivalence between `M` and the dual of its predual `P`. -/
   equivDual : M ≃ₗᵢ[𝕜] StrongDual 𝕜 P
 
+open ContinuousLinearMap in
+/-- Precomposition with (the inverse of) a linear isometric equivalence is a linear isometric
+equivalence of the strong duals. -/
+noncomputable def LinearIsometryEquiv.strongDualCongr {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
+    [NormedAddCommGroup E] [NormedSpace 𝕜 E] [NormedAddCommGroup F] [NormedSpace 𝕜 F]
+    (e : E ≃ₗᵢ[𝕜] F) : StrongDual 𝕜 E ≃ₗᵢ[𝕜] StrongDual 𝕜 F :=
+  { (e.toContinuousLinearEquiv.arrowCongr (.refl 𝕜 𝕜)).toLinearEquiv with
+    norm_map' f := opNorm_comp_linearIsometryEquiv f e.symm }
+
+/-- A C⋆-algebra with a (complete) predual is a W⋆-algebra. Note that `P` may live in any
+universe: the predual witnessing `WStarAlgebra M` is the image of `P` in the dual of `M`. -/
+theorem WStarAlgebra.of_predual {M P : Type*} [CStarAlgebra M] [NormedAddCommGroup P]
+    [NormedSpace ℂ P] [CompleteSpace P] [Predual ℂ M P] : WStarAlgebra M := by
+  let e := Predual.equivDual (𝕜 := ℂ) (M := M) (P := P)
+  /- `P` embeds isometrically in the dual of `M`, via `P → P⋆⋆ ≃ M⋆`, and its (complete) range
+  is a predual of `M` in the universe of `M`. -/
+  let ι : P →ₗᵢ[ℂ] StrongDual ℂ M :=
+    e.symm.strongDualCongr.toLinearIsometry.comp (NormedSpace.inclusionInDoubleDualLi ℂ)
+  have : CompleteSpace (LinearMap.range ι.toLinearMap) :=
+    ι.isometry.isUniformInducing.isComplete_range.completeSpace_coe
+  exact ⟨_, _, _, this, ⟨(ι.equivRange.symm.strongDualCongr.trans e.symm).trans (starₗᵢ ℂ)⟩⟩
 
 set_option linter.unusedVariables false in
 /-- A type synonym of `M` equipped with the *ultraweak topology* (also known as the

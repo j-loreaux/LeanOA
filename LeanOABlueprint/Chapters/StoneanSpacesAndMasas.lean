@@ -101,7 +101,7 @@ $`\sup_\lambda a_\lambda \in C`. The result follows from
 transform.
 :::
 
-:::lemma_ "lem:wstar_pos_approx_proj" (lean := "CStarAlgebra.finiteSpectrum_of_predual, CStarAlgebra.FiniteSpectrum.mem_closure_hull_isStarProjection, CStarAlgebra.FiniteSpectrum.topologicalClosure_span_complex_isStarProjection") (uses := "lem:spec_masa_wstar_stonean_Sak_1_7_5, lem:fin_lin_approx_of_stonean_Sak_1_3_1")
+:::lemma_ "lem:wstar_pos_approx_proj" (lean := "WStarAlgebra.instFiniteSpectrum, CStarAlgebra.FiniteSpectrum.mem_closure_hull_isStarProjection, CStarAlgebra.FiniteSpectrum.topologicalClosure_span_complex_isStarProjection") (uses := "lem:spec_masa_wstar_stonean_Sak_1_7_5, lem:fin_lin_approx_of_stonean_Sak_1_3_1")
 In a $`W^*`-algebra $`M`, every positive element is a norm limit of finite linear combinations of
 projections with nonnegative coefficients. Consequently, the linear span of the projections of
 $`M` is norm dense.
