@@ -6,6 +6,7 @@ public import LeanOA.CStarAlgebra.Corner.Basic
 public import LeanOA.CStarAlgebra.Corner.Order
 public import LeanOA.CStarAlgebra.Extreme
 public import LeanOA.CStarAlgebra.FiniteSpectrum
+public import LeanOA.CStarAlgebra.IsStarOrtho
 public import LeanOA.CStarModule.Standard
 public import LeanOA.ComplexOrder
 public import LeanOA.ExtremallyDisconnected
