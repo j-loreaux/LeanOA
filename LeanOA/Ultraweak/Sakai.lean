@@ -115,41 +115,30 @@ lemma exists_maximal_continuous_mul_right {φ : M →ₚ[ℂ] ℂ}
   set e := sSup c
   have hep : IsStarProjection e := isStarProjection_of_isLUB (P := P) hne hdir hdp he
   refine ⟨e, ⟨hep, ?_⟩, fun q hq ↦ he.1 hq⟩
-  /- `F q` tends to `F e` in norm, since `‖F (e - q)‖ ^ 2 ≤ ‖φ‖ * ‖φ (e - q)‖`. -/
+  /- `F q` tends to `F e` in norm, since `‖F (e - q)‖ ≤ √‖φ‖ * √‖φ (e - q)‖`. -/
   have : Nonempty c := hne.to_subtype
   have : IsDirectedOrder c := ⟨hdir.directed_val⟩
-  have hφe : Tendsto (fun q : c ↦ φ (e - q)) atTop (𝓝 0) := by
+  have h₀ : Tendsto (fun q : c ↦ √‖φL‖ * √‖φ (e - q)‖) atTop (𝓝 0) := by
     have := (tendsto_const_nhds (x := φ e)).sub
       (hφ.tendsto_atTop_isLUB ⟨hdp, hchain⟩ hne hdir ((OrderHomClass.mono φ).monotoneOn _) he)
-    simpa [map_sub] using this
-  have h₀ : Tendsto (fun q : c ↦ √(‖φL‖ * ‖φ (e - q)‖)) atTop (𝓝 0) := by
-    have h₁ : Tendsto (fun q : c ↦ ‖φL‖ * ‖φ (e - q)‖) atTop (𝓝 0) := by
-      simpa using (tendsto_norm_zero.comp hφe).const_mul ‖φL‖
-    have := (Real.continuous_sqrt.tendsto 0).comp h₁
-    simpa only [Function.comp_def, Real.sqrt_zero] using this
+    simpa [map_sub, Function.comp_def] using
+      ((continuous_const.mul continuous_norm.sqrt).tendsto _).comp this
   have hFe : Tendsto (fun q : c ↦ F q) atTop (𝓝 (F e)) := by
     rw [tendsto_iff_norm_sub_tendsto_zero]
     refine squeeze_zero (fun _ ↦ norm_nonneg _) (fun q ↦ ?_) h₀
     have hr : IsStarProjection (e - q) := (hdp q q.2).le_iff_sub hep |>.mp (he.1 q.2)
-    set r := e - (q : M)
-    have hFr : F q - F e = -F r := by ext x; simp [hF, r, mul_sub]
-    rw [hFr, norm_neg]
-    refine ContinuousLinearMap.opNorm_le_bound _ (Real.sqrt_nonneg _) fun x ↦ ?_
-    rw [hF]
-    /- By Cauchy–Schwarz, `‖φ (x * r)‖ ^ 2 ≤ ‖φ (x * star x)‖ * ‖φ r‖`. -/
-    have hCS : ‖φ (x * r)‖ ^ 2 ≤ ‖φL‖ * ‖φ r‖ * ‖x‖ ^ 2 := by
-      have := PositiveLinearMap.norm_map_mul_star_sq_le φ x r
-      rw [hr.isSelfAdjoint.star_eq, hr.isIdempotentElem.eq] at this
-      refine this.trans ?_
-      have : ‖φ (x * star x)‖ ≤ ‖φL‖ * ‖x‖ ^ 2 :=
-        calc ‖φ (x * star x)‖ = ‖φL (x * star x)‖ := rfl
-          _ ≤ ‖φL‖ * ‖x * star x‖ := φL.le_opNorm _
-          _ = ‖φL‖ * ‖x‖ ^ 2 := by rw [CStarRing.norm_self_mul_star, sq]
-      nlinarith [norm_nonneg (φ r), norm_nonneg (φ (x * star x))]
-    calc ‖φ (x * r)‖ = √(‖φ (x * r)‖ ^ 2) := (Real.sqrt_sq (norm_nonneg _)).symm
-      _ ≤ √(‖φL‖ * ‖φ r‖ * ‖x‖ ^ 2) := Real.sqrt_le_sqrt hCS
-      _ = √(‖φL‖ * ‖φ r‖) * ‖x‖ := by
-        rw [Real.sqrt_mul (by positivity), Real.sqrt_sq (norm_nonneg _)]
+    rw [norm_sub_rev, show F e - F q = F (e - q) by ext; simp [hF, mul_sub]]
+    refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun x ↦ ?_
+    /- By Cauchy–Schwarz, `‖φ (x * r)‖ ≤ √‖φ (x * star x)‖ * √‖φ r‖` for `r = e - q`. -/
+    have hCS := PositiveLinearMap.norm_map_mul_star_le φ x (e - q)
+    rw [hr.isSelfAdjoint.star_eq, hr.isIdempotentElem.eq] at hCS
+    have hx : √‖φ (x * star x)‖ ≤ √‖φL‖ * ‖x‖ := by
+      rw [← Real.sqrt_sq (norm_nonneg x), ← Real.sqrt_mul (norm_nonneg _)]
+      gcongr
+      exact (φL.le_opNorm _).trans_eq (by rw [CStarRing.norm_self_mul_star, sq])
+    calc ‖F (e - q) x‖ ≤ √‖φ (x * star x)‖ * √‖φ (e - q)‖ := hCS
+      _ ≤ √‖φL‖ * ‖x‖ * √‖φ (e - q)‖ := by gcongr
+      _ = √‖φL‖ * √‖φ (e - q)‖ * ‖x‖ := mul_right_comm ..
   exact (isClosed_setOf_continuous (P := P)).mem_of_tendsto hFe
     (.of_forall fun q ↦ (hc q.2).2)
 
@@ -162,22 +151,11 @@ lemma exists_lt_of_ne_zero (φ : M →ₚ[ℂ] ℂ) {p : M} (hp : IsStarProjecti
     by_contra! h
     exact hp0 (eq_zero_of_forall_positiveCLM (toUltraweak ℂ P p) h)
   let ψ₁ : M →ₚ[ℂ] ℂ := (ψ₀.comp (toUltraweakPosCLM P)).toPositiveLinearMap
-  have hψ₁ : Continuous fun x : σ(M, P) ↦ ψ₁ (ofUltraweak x) := map_continuous ψ₀
-  have hpos : 0 < ψ₁ p := lt_of_le_of_ne (map_nonneg ψ₁ hp.nonneg) (Ne.symm hψ₀)
-  have hφp : 0 ≤ φ p := map_nonneg φ hp.nonneg
-  rw [Complex.lt_def] at hpos
-  rw [Complex.le_def] at hφp
-  obtain ⟨n, hn⟩ := exists_nat_gt ((φ p).re / (ψ₁ p).re)
-  have hsmul (x : M) : (n • ψ₁) x = (n : ℂ) * ψ₁ x := by
-    rw [← nsmul_eq_mul]
-    rfl
-  refine ⟨n • ψ₁, (continuous_const.mul hψ₁).congr fun x ↦ (hsmul _).symm, ?_⟩
-  rw [Complex.lt_def, hsmul]
-  simp only [Complex.mul_re, Complex.natCast_re, Complex.natCast_im, zero_mul, sub_zero,
-    Complex.mul_im, add_zero]
-  refine ⟨by rwa [div_lt_iff₀ hpos.1] at hn, ?_⟩
-  rw [← hφp.2, ← hpos.2]
-  simp
+  obtain ⟨n, hn⟩ := exists_nat_gt (‖φ p‖ / ‖ψ₁ p‖)
+  refine ⟨n • ψ₁, map_continuous (n • ψ₀), ?_⟩
+  rw [smul_apply, Complex.eq_coe_norm_of_nonneg (map_nonneg φ hp.nonneg),
+    Complex.eq_coe_norm_of_nonneg (map_nonneg ψ₁ hp.nonneg), nsmul_eq_mul]
+  exact_mod_cast (div_lt_iff₀ (norm_pos_iff.mpr hψ₀)).mp hn
 
 include P in
 /-- If `φ` and `ψ` are normal positive functionals and `φ p < ψ p` for a projection `p`, then
@@ -209,9 +187,7 @@ lemma exists_forall_lt {φ ψ : M →ₚ[ℂ] ℂ}
       fun q ↦ (hc q.2).2.2
   /- Since `φ p < ψ p`, we have `q₀ ≠ p`, so `p - q₀` is a nonzero projection, and it has a
   nonzero subprojection `q` with `ψ q ≤ φ q`. But then `q₀ + q` contradicts maximality. -/
-  have hq₀ne : q₀ ≠ p := by
-    rintro rfl
-    exact hq₀le.not_gt hlt
+  have hq₀ne : q₀ ≠ p := fun h ↦ hq₀le.not_gt (h ▸ hlt)
   have hr : IsStarProjection (p - q₀) := (hq₀.le_iff_sub hp).mp hq₀p
   obtain ⟨q, hq, hq0, hqr, hnlt⟩ :=
     h (p - q₀) hr (sub_ne_zero.mpr hq₀ne.symm) (sub_le_self _ hq₀.nonneg)
@@ -227,22 +203,21 @@ lemma exists_forall_lt {φ ψ : M →ₚ[ℂ] ℂ}
 
 open IsStarProjection in
 include P in
-/-- If `φ q < ψ q` for every nonzero subprojection `q` of a projection `p`, then `φ a ≤ ψ a` for
-every nonnegative `a` in the corner `p * M * p`. This uses that `p * M * p` is a W⋆-algebra in which
-nonnegative elements are norm limits of nonnegative combinations of projections. -/
+/-- If `φ q < ψ q` for every nonzero subprojection `q` of a projection `p`, then `φ ≤ ψ` on the
+nonnegative elements `p * a * p` of the corner `p * M * p`. This uses that `p * M * p` is a
+W⋆-algebra in which nonnegative elements are norm limits of nonnegative combinations of
+projections. -/
 lemma map_le_map_of_forall_lt {φ ψ : M →ₚ[ℂ] ℂ} {p : M} (hp : IsStarProjection p)
-    (h : ∀ q, IsStarProjection q → q ≠ 0 → q ≤ p → φ q < ψ q) {a : M} (ha : 0 ≤ a)
-    (hpa : p * a * p = a) : φ a ≤ ψ a := by
+    (h : ∀ q, IsStarProjection q → q ≠ 0 → q ≤ p → φ q < ψ q) {a : M} (ha : 0 ≤ a) :
+    φ (p * a * p) ≤ ψ (p * a * p) := by
   have : WStarAlgebra hp.Corner :=
     .of_predual (P := Ultraweak.Subpredual P (hp.cornerSubmodule ℂ))
   /- The inclusion of the corner `p * M * p` into `M` is positive, and since the corner is FS,
   it suffices to compare `φ` and `ψ` on the projections of the corner, which are exactly the
   projections `q ≤ p` of `M`. -/
-  let ι : hp.Corner →ₚ[ℂ] M :=
-    .mk₀ { toFun := (↑), map_add' := Corner.coe_add, map_smul' := Corner.coe_smul }
-      fun _ ↦ Corner.zero_le_coe.mpr
-  have ha' : 0 ≤ Corner.mk hp a hpa := by rwa [← Corner.zero_le_coe, Corner.coe_mk]
-  refine PositiveLinearMap.le_of_le_on_isStarProjection (φ.comp ι) (ψ.comp ι) (fun q hq ↦ ?_) ha'
+  let ι : hp.Corner →ₚ[ℂ] M := .ofClass (Corner.coeNonUnitalStarAlgHom ℂ hp)
+  refine PositiveLinearMap.le_of_le_on_isStarProjection (φ.comp ι) (ψ.comp ι) (fun q hq ↦ ?_)
+    (x := hp.toCorner ℂ a) (by simpa using hp.toCorner_mono ℂ ha)
   change φ (q : M) ≤ ψ (q : M)
   have hq' : IsStarProjection (q : M) := Corner.isStarProjection_coe_iff.mpr hq
   by_cases hq0 : (q : M) = 0
@@ -275,20 +250,14 @@ theorem continuous_of_scottContinuousOn_chains (φ : M →ₚ[ℂ] ℂ)
       (continuous_const_mul (toUltraweak ℂ P p₁)))
   let ω : StrongDual ℂ M := φ.toContinuousLinearMap ∘L (ContinuousLinearMap.mul ℂ M).flip p₁
   have hωc := continuous_of_norm_sq_le (P := P) ψ' hψ'c ω ‖φ 1‖ fun x ↦ by
+    have hx := star_mul_self_nonneg x
     have h₁ := PositiveLinearMap.norm_map_star_mul_sq_le φ 1 (x * p₁)
-    have hnn : 0 ≤ p₁ * (star x * x) * p₁ := by
-      simpa [hp₁.isSelfAdjoint.star_eq, mul_assoc] using
-        star_left_conjugate_nonneg (star_mul_self_nonneg x) p₁
-    have h₂ : φ (p₁ * (star x * x) * p₁) ≤ ψ (p₁ * (star x * x) * p₁) :=
-      map_le_map_of_forall_lt (P := P) hp₁ hall hnn
-        (by simp [← mul_assoc, hp₁.isIdempotentElem.eq, mul_assoc _ p₁ p₁])
-    have h₃ := CStarAlgebra.norm_le_norm_of_le_of_nonneg h₂ (map_nonneg φ hnn)
-    simp only [star_one, one_mul, star_mul, hp₁.isSelfAdjoint.star_eq, ← mul_assoc] at h₁
-    simp only [ω, ψ', ContinuousLinearMap.coe_comp, Function.comp_apply,
-      ContinuousLinearMap.flip_apply, ContinuousLinearMap.mul_apply',
-      PositiveLinearMap.toContinuousLinearMap_apply, PositiveLinearMap.comp_apply]
-    refine h₁.trans <| mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
-    simpa [mul_assoc, hp₁.isSelfAdjoint.star_eq] using h₃
+    have h₂ := CStarAlgebra.norm_le_norm_of_le_of_nonneg
+      (map_le_map_of_forall_lt (P := P) hp₁ hall hx)
+      (map_nonneg φ (hp₁.isSelfAdjoint.conjugate_nonneg hx))
+    simp only [star_one, one_mul, star_mul, mul_assoc, hp₁.isSelfAdjoint.star_eq] at h₁ h₂
+    simpa [ω, ψ', mul_assoc, hp₁.isSelfAdjoint.star_eq] using
+      h₁.trans (mul_le_mul_of_nonneg_left h₂ (norm_nonneg _))
   /- Hence `x ↦ φ (x * (p₀ + p₁))` is ultraweakly continuous, contradicting maximality. -/
   have horth : p₁ ⋆⟂ p₀ := hp₀.one_sub_isStarOrtho.of_le hp₁.nonneg hp₁le
   have hcont : Continuous fun x : σ(M, P) ↦ φ (ofUltraweak x * (p₀ + p₁)) :=
