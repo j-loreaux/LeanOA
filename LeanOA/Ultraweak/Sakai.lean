@@ -91,24 +91,6 @@ theorem continuous_of_norm_sq_le (ψ : M →ₚ[ℂ] ℂ)
 
 /-! ### Auxiliary lemmas for Sakai 1.13.2 -/
 
-/-- Nonnegative complex numbers are real, so they are totally ordered. -/
-private lemma _root_.Complex.le_of_not_lt_of_nonneg {a b : ℂ} (ha : 0 ≤ a) (hb : 0 ≤ b)
-    (h : ¬ a < b) : b ≤ a := by
-  rw [Complex.le_def] at ha hb ⊢
-  rw [Complex.lt_def] at h
-  refine ⟨?_, by simp_all⟩
-  by_contra! h'
-  exact h ⟨h', by simp_all⟩
-
-omit [StarOrderedRing M] in
-/-- If a positive functional `φ` is Scott continuous on a family `D` of sets, then along a
-nonempty directed `d ∈ D`, `φ` tends to its value at the supremum of `d`. -/
-lemma tendsto_of_scottContinuousOn {φ : M →ₚ[ℂ] ℂ} {D : Set (Set M)}
-    (hφ : ScottContinuousOn D φ) {d : Set M} (hd : d ∈ D) (hne : d.Nonempty)
-    (hdir : DirectedOn (· ≤ ·) d) {e : M} (he : IsLUB d e) :
-    Tendsto (fun q : d ↦ φ (q : M)) atTop (𝓝 (φ e)) :=
-  hφ.tendsto_atTop_isLUB hd hne hdir ((OrderHomClass.mono φ).monotoneOn d) he
-
 include P in
 /-- For a normal positive functional `φ`, there is a maximal projection `p₀` for which
 `x ↦ φ (x * p₀)` is ultraweakly continuous. -/
@@ -138,7 +120,7 @@ lemma exists_maximal_continuous_mul_right {φ : M →ₚ[ℂ] ℂ}
   have : IsDirectedOrder c := ⟨hdir.directed_val⟩
   have hφe : Tendsto (fun q : c ↦ φ (e - q)) atTop (𝓝 0) := by
     have := (tendsto_const_nhds (x := φ e)).sub
-      (tendsto_of_scottContinuousOn hφ ⟨hdp, hchain⟩ hne hdir he)
+      (hφ.tendsto_atTop_isLUB ⟨hdp, hchain⟩ hne hdir ((OrderHomClass.mono φ).monotoneOn _) he)
     simpa [map_sub] using this
   have h₀ : Tendsto (fun q : c ↦ √(‖φL‖ * ‖φ (e - q)‖)) atTop (𝓝 0) := by
     have h₁ : Tendsto (fun q : c ↦ ‖φL‖ * ‖φ (e - q)‖) atTop (𝓝 0) := by
@@ -221,8 +203,10 @@ lemma exists_forall_lt {φ ψ : M →ₚ[ℂ] ℂ}
     refine ⟨sSup c, ⟨hep, he.2 fun q hq ↦ (hc hq).2.1, ?_⟩, fun q hq ↦ he.1 hq⟩
     have : Nonempty c := hne.to_subtype
     have : IsDirectedOrder c := ⟨hdir.directed_val⟩
-    exact le_of_tendsto_of_tendsto' (tendsto_of_scottContinuousOn hψ ⟨hdp, hchain⟩ hne hdir he)
-      (tendsto_of_scottContinuousOn hφ ⟨hdp, hchain⟩ hne hdir he) fun q ↦ (hc q.2).2.2
+    exact le_of_tendsto_of_tendsto'
+      (hψ.tendsto_atTop_isLUB ⟨hdp, hchain⟩ hne hdir ((OrderHomClass.mono ψ).monotoneOn _) he)
+      (hφ.tendsto_atTop_isLUB ⟨hdp, hchain⟩ hne hdir ((OrderHomClass.mono φ).monotoneOn _) he)
+      fun q ↦ (hc q.2).2.2
   /- Since `φ p < ψ p`, we have `q₀ ≠ p`, so `p - q₀` is a nonzero projection, and it has a
   nonzero subprojection `q` with `ψ q ≤ φ q`. But then `q₀ + q` contradicts maximality. -/
   have hq₀ne : q₀ ≠ p := by
@@ -231,8 +215,8 @@ lemma exists_forall_lt {φ ψ : M →ₚ[ℂ] ℂ}
   have hr : IsStarProjection (p - q₀) := (hq₀.le_iff_sub hp).mp hq₀p
   obtain ⟨q, hq, hq0, hqr, hnlt⟩ :=
     h (p - q₀) hr (sub_ne_zero.mpr hq₀ne.symm) (sub_le_self _ hq₀.nonneg)
-  have hqle : ψ q ≤ φ q :=
-    Complex.le_of_not_lt_of_nonneg (map_nonneg φ hq.nonneg) (map_nonneg ψ hq.nonneg) hnlt
+  have hqle : ψ q ≤ φ q := by
+    grind [Complex.le_def, Complex.lt_def, map_nonneg φ hq.nonneg, map_nonneg ψ hq.nonneg]
   have horth : q ⋆⟂ q₀ :=
     hq₀.one_sub_isStarOrtho.of_le hq.nonneg (hqr.trans (sub_le_sub_right hp.le_one _))
   have hsum : q₀ + q ∈ s :=
