@@ -110,7 +110,8 @@ lemma continuous_seminorm [T2Space F] (s : Set F) (hs₁ : IsCompact s) (hs₂ :
 lemma directed_seminormFamily [T2Space F] : Directed (· ≤ ·) (seminormFamily B) :=
   have := LinearMap.IsWeak.isTopologicalAddGroup B.flip
   have := LinearMap.IsWeak.continuousSMul B.flip
-  PolarTopology.directed_seminormFamily (fun _s hs ↦ hs.1.isVonNBounded' B.flip)
+  PolarTopology.directed_seminormFamily
+    (fun _s (hs : _s ∈ {s : Set F | IsCompact s ∧ AbsConvex 𝕜 s}) ↦ hs.1.isVonNBounded' B.flip)
     (directedOn_setOf_isCompact_absConvex 𝕜 F)
 
 lemma withSeminorms [T2Space F] : WithSeminorms (seminormFamily B) :=

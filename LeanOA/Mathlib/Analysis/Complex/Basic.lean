@@ -15,7 +15,7 @@ lemma subset_slitPlane_of_subset_sphere {r : ℝ} {s : Set ℂ} (hs : s ⊆ sphe
       s ⊆ slitPlane := by
   intro z hz
   rw [Complex.mem_slitPlane_iff_not_le_zero]
-  by_contra! h
+  by_contra h
   have ⟨_, h_im⟩ := h
   apply hr
   convert hz
