@@ -50,8 +50,6 @@ instance {S : Type*} [SetLike S A] [NonUnitalSubringClass S A] [SMulMemClass S �
     [StarMemClass S A] (s : S) [IsClosed (s : Set A)] :
     StarOrderedRing s := by
   have : SMulMemClass S ℝ A := ⟨fun r _ h ↦ SMulMemClass.smul_mem (r : ℂ) h⟩
-  have : ContinuousConstSMul ℝ A :=
-    Topology.IsInducing.id.continuousConstSMul Complex.ofReal (by simp)
   infer_instance
 
 end IsStarNormal
