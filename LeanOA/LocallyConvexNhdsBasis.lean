@@ -13,23 +13,21 @@ lemma closedAbsConvexHull_eq_closedConvexHull_balancedHull
   rw [closedAbsConvexHull_eq_closure_absConvexHull, absConvexHull_eq_convexHull_balancedHull,
     closedConvexHull_eq_closure_convexHull]
 
-theorem LinearMap.image_balancedHull {𝕜 E F : Type*} [SeminormedRing 𝕜] [AddCommGroup E]
-    [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F] (f : E →ₗ[𝕜] F) (s : Set E) :
-    f '' balancedHull 𝕜 s = balancedHull 𝕜 (f '' s) := by
-  ext x
-  simp only [mem_balancedHull_iff, mem_image]
-  -- I want there to be a simpler proof of this
-  constructor
-  · rintro ⟨-, ⟨r, hr, ⟨x, hx, rfl⟩⟩, rfl⟩
-    exact ⟨r, hr, ⟨f x, ⟨x, hx, rfl⟩, by simp⟩⟩
-  · rintro ⟨r, hr, ⟨-, ⟨x, hx, rfl⟩, rfl⟩⟩
-    exact ⟨r • x, ⟨r, hr, ⟨x, hx, rfl⟩⟩, by simp⟩
-
 lemma Balanced.image {𝕜 E F : Type*} [SeminormedRing 𝕜] [AddCommGroup E] [Module 𝕜 E]
     [AddCommGroup F] [Module 𝕜 F] (f : E →ₗ[𝕜] F) {s : Set E} (hs : Balanced 𝕜 s) :
     Balanced 𝕜 (f '' s) := by
   rintro c hc - ⟨-, ⟨x, hx, rfl⟩, rfl⟩
   exact ⟨c • x, hs c hc ⟨x, hx, rfl⟩, map_smul f c x⟩
+
+theorem LinearMap.image_balancedHull {𝕜 E F : Type*} [SeminormedRing 𝕜] [AddCommGroup E]
+    [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F] (f : E →ₗ[𝕜] F) (s : Set E) :
+    f '' balancedHull 𝕜 s = balancedHull 𝕜 (f '' s) := by
+  refine subset_antisymm (image_subset_iff.mpr ?_) <|
+    ((balancedHull.balanced s).image f).balancedHull_subset_of_subset
+      (image_mono (subset_balancedHull 𝕜))
+  refine Balanced.balancedHull_subset_of_subset (balanced_iff_smul_mem.mpr fun a ha x hx ↦ ?_)
+    (image_subset_iff.mp (subset_balancedHull 𝕜))
+  simpa using (balancedHull.balanced (f '' s)).smul_mem ha hx
 
 theorem LinearMap.image_absConvexHull {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [PartialOrder 𝕜]
     [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F] (f : E →ₗ[𝕜] F) (s : Set E) :

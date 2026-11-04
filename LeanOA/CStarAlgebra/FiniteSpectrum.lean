@@ -49,7 +49,7 @@ lemma mem_hull_isStarProjection_of_finite [DiscreteTopology A] [Finite A] [Zero 
   rw [eq_sum_smul_single_of_finite f]
   let K := PointedCone.hull ℝ {p : C(A, ℝ)₀ | IsStarProjection p}
   have hi (i : A) : f i • single i 1 ∈ K := K.smul_mem (hf i) <| PointedCone.subset_hull <| by simp
-  rw [← PointedCone.toConvexCone_hull_of_zero_mem (.zero _), PointedCone.mem_toConvexCone]
+  rw [← PointedCone.toConvexCone_hull_of_zero_mem (by simp), PointedCone.mem_toConvexCone]
   induction (Finset.univ : Finset A) using Finset.induction_on with
   | empty => simp
   | insert => aesop
@@ -114,8 +114,8 @@ projections is exactly the submodule of the self-adjoint elements. -/
   refine le_antisymm (fun x hx ↦ closure_minimal (fun x hx ↦ ?_) ?_ hx) fun x hx ↦ ?_
   · refine Submodule.span_induction (fun _ hx ↦ hx.isSelfAdjoint) ?_ ?_ ?_ hx <;> aesop
   · exact isClosed_eq continuous_id'.star continuous_id'
-  · exact closure_mono (fun y hy ↦ hy.1.mem_span_isStarProjection_of_finite_quasispectrum hy.2)
-      (h.fs hx)
+  · refine closure_mono (fun y hy ↦ ?_) (h.fs hx)
+    exact hy.1.mem_span_isStarProjection_of_finite_quasispectrum hy.2
 
 open scoped ComplexStarModule in
 open Submodule in
@@ -168,7 +168,7 @@ theorem CStarAlgebra.FiniteSpectrum.of_surjective {B C : Type*} [NonUnitalCStarA
 theorem CStarAlgebra.FiniteSpectrum.of_starAlgEquiv {B C : Type*} [NonUnitalCStarAlgebra B]
     [NonUnitalCStarAlgebra C] [CStarAlgebra.FiniteSpectrum C] (e : B ≃⋆ₐ[ℂ] C) :
     CStarAlgebra.FiniteSpectrum B :=
-  .of_surjective (e.symm : C →⋆ₙₐ[ℂ] B) e.symm.surjective
+  .of_surjective e.symm.toNonUnitalStarAlgHom e.symm.surjective
 
 section CStarAlgebra
 

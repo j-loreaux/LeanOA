@@ -225,7 +225,7 @@ lemma isUniformEmbedding_toUniformConvergenceCLM (hB : B.SeparatingLeft) :
 --- this is a bit of a weird statement, but it also exists for `UniformConvergenceCLM`.
 lemma uniformSpace_mono (𝔖 𝔗 : Set (Set F)) (h𝔖𝔗 : 𝔖 ⊆ 𝔗) :
     instUniformSpace B 𝔗 ≤ instUniformSpace B 𝔖 :=
-  UniformSpace.comap_mono <| UniformConvergenceCLM.uniformSpace_mono _ _ h𝔖𝔗
+  UniformSpace.comap_monotone <| UniformConvergenceCLM.uniformSpace_mono _ _ h𝔖𝔗
 
 --- this is a bit of a weird statement, but it also exists for `UniformConvergenceCLM`.
 lemma topologicalSpace_mono (𝔖 𝔗 : Set (Set F))

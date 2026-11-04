@@ -58,10 +58,7 @@ theorem continuous_of_norm_sq_le (ψ : M →ₚ[ℂ] ℂ)
       simpa using hbound (ψ.ofPreGNS x)
   let ω₁ : StrongDual ℂ ψ.GNS := ω₀.extend UniformSpace.Completion.toComplL
   have hω₁ (x : M) : ω₁ (ψ.toPreGNS x : ψ.GNS) = ω x := by
-    have := ω₀.extend_eq (e := UniformSpace.Completion.toComplL)
-      UniformSpace.Completion.denseRange_coe (UniformSpace.Completion.isUniformInducing_coe _)
-      (ψ.toPreGNS x)
-    simpa [ω₀] using this
+    simp [ω₀, ω₁]
   set η := (InnerProductSpace.toDual ℂ ψ.GNS).symm ω₁
   have hη (x : M) : ⟪η, (ψ.toPreGNS x : ψ.GNS)⟫_ℂ = ω x := by
     rw [InnerProductSpace.toDual_symm_apply, hω₁]
@@ -149,6 +146,9 @@ lemma exists_maximal_continuous_mul_right {φ : M →ₚ[ℂ] ℂ}
   /- `F a` is the functional `x ↦ φ (x * a)`. -/
   let F (a : M) : StrongDual ℂ M := φL ∘L (ContinuousLinearMap.mul ℂ M).flip a
   have hF (a x : M) : F a x = φ (x * a) := rfl
+  suffices ∃ p₀, Maximal (· ∈ {p | IsStarProjection p ∧
+      Continuous fun x : σ(M, P) ↦ φ (ofUltraweak x * p)}) p₀ by
+    simpa only [Set.mem_ofPred_eq] using this
   refine zorn_le₀ _ fun c hc hchain ↦ ?_
   rcases c.eq_empty_or_nonempty with rfl | hne
   · exact ⟨0, ⟨.zero _, by simpa using continuous_const⟩, by simp⟩

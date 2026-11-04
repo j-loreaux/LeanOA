@@ -1,6 +1,6 @@
 module
 
-public import LeanOA.Mathlib.Analysis.LocallyConvex.Annihilator
+public import LeanOA.Mathlib.Analysis.LocallyConvex.PolarSubmodule
 public import Mathlib.Analysis.Normed.Group.Quotient
 public import Mathlib.Analysis.Normed.Module.WeakDual
 public import Mathlib.Topology.Algebra.Module.Complement

@@ -55,7 +55,7 @@ def MemStandard (x : Π i, E i) : Prop := Summable fun i ↦ ⟪x i, x i⟫_A
 
 lemma MemStandard.subtype {x : Π i, E i} (hx : MemStandard A x) (s : Set ι) :
     MemStandard A (fun i : s ↦ x i) := by
-  simpa [Function.comp_def] using! Summable.subtype hx s
+  simpa [Function.comp_def] using! Summable.subtype hx (· ∈ s)
 
 lemma MemStandard.of_memℓp {x : Π i, E i} (hx : Memℓp (‖x ·‖) 2) :
     MemStandard A x :=
@@ -82,7 +82,7 @@ lemma MemStandard.isBounded_norm {x : Π i, E i} (hx : MemStandard A x) :
   rw [MemStandard] at hx
   have := Metric.isBounded_range_of_tendsto_cofinite hx.tendsto_cofinite_zero
   rw [isBounded_iff_forall_norm_le] at this ⊢
-  peel this with C _
+  gconvert this using 1 with C
   rintro - ⟨i, rfl⟩
   specialize this _ ⟨i, rfl⟩
   simpa [norm_sq_eq A]
@@ -273,7 +273,7 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
       obtain ⟨N, hN⟩ := hx
       have hxN := (x N).memStandard
       rw [MemStandard, summable_iff_cauchySeq_finset, cauchySeq_finset_iff_vanishing_norm] at hxN
-      peel hxN (ε / 8) hε8 with s t ht hxN
+      gconvert hxN (ε / 8) hε8 using 3 with s t ht hxN
       simp only [Function.comp_def, tendsto_pi_nhds] at hy
       refine lt_of_le_of_lt ?_ (half_lt_self hε)
       refine le_of_tendsto (f := fun n ↦ ‖∑ i ∈ t, ⟪x n i, x n i⟫_A‖) (x := atTop) ?_ ?_
@@ -295,7 +295,9 @@ instance instCompletSpace [∀ i, CompleteSpace (E i)] : CompleteSpace ℓ²(A, 
         have h₂ : ‖∑ i ∈ t, ⟪x N i, (x m - x N) i⟫_A‖ ≤ ε / 8 := by
           classical
           let x' : ℓ²(A, E) := mk (fun i ↦ if i ∈ t then x N i else 0) <| by
-            refine (MemStandard.zero (E := E)).congr_cofinite ?_
+            have h₀ := MemStandard.zero (A := A) (E := E)
+            unfold MemStandard at h₀ ⊢
+            refine h₀.congr_cofinite ?_
             filter_upwards [show (tᶜ : Set ι) ∈ cofinite by simp] with i (hi : i ∉ t)
             simp [hi]
           calc

@@ -9,20 +9,19 @@ public import Mathlib.RingTheory.Idempotents
 
 /-! # The corner of a star projection
 
-If `p` is a star projection in a (possibly non-unital) star ring `A`, then the *corner*
-`p * A * p` is a unital star ring with unit `p`. Following `IsIdempotentElem.Corner`, we realize
-it as a type `hp.Corner` depending on the proof `hp : IsStarProjection p`. Because `hp` appears
-in the type, all of the structure on the corner can be provided by instances, and the unit is
-`p` *by definition*. In particular, when `A` is a (non-unital) C⋆-algebra, `hp.Corner` is a
-(unital) C⋆-algebra.
+If `p` is a star projection in a star ring `A`, then the *corner* `p * A * p` (i.e.,
+`{p * a * p | (a : A)}`) is a unital star ring with unit `p`. We mimic `IsIdempotentElem.Corner`
+and create for this a bespoke type `IsStarProjection.Corner` which takes a proof of
+`IsStarProjection p` as input. When `A` is a non-unital C⋆-algebra, the corner is a unital
+C⋆-algebra, and we will later show that the corner is a W⋆-algebra when `A` itself is.
 
 ## Main declarations
 
 + `IsStarProjection.Corner`: the corner `p * A * p` of a star projection `p`.
 + `IsStarProjection.Corner.mk`: an element `x : A` with `p * x * p = x`, as an element of the
   corner.
-+ `IsStarProjection.Corner.subtype`: the inclusion of the corner as a non-unital star algebra
-  homomorphism.
++ `IsStarProjection.Corner.coeNonUnitalStarAlgHom`: the inclusion of the corner as a non-unital
+  star algebra homomorphism.
 + `IsStarProjection.toCorner`: the compression `x ↦ p * x * p` as a linear map onto the corner.
 -/
 
@@ -31,8 +30,8 @@ variable {R A : Type*}
 namespace IsStarProjection
 
 set_option linter.unusedVariables false in
-/-- The corner associated to a star projection `p` in a star ring without `1` is the star ring
-with `p` as `1` consisting of all elements of the form `p * x * p`. -/
+/-- The corner associated to a star projection `p` is the star ring of elements of
+the form `p * x * p`. -/
 @[nolint unusedArguments]
 def Corner [Semigroup A] [Star A] {p : A} (hp : IsStarProjection p) : Type _ :=
   Subsemigroup.corner p
@@ -248,10 +247,21 @@ instance : Algebra R hp.Corner := .ofModule smul_mul_assoc mul_smul_comm
 
 lemma coe_algebraMap (r : R) : (algebraMap R hp.Corner r : A) = r • p := rfl
 
+variable (hp) in
+/-- The inclusion of the corner `p * A * p` into `A`, as a non-unital ring homomorphism. -/
+def coeNonUnitalRingHom : hp.Corner →ₙ+* A where
+  toFun := (↑)
+  map_zero' := rfl
+  map_add' _ _ := rfl
+  map_mul' _ _ := rfl
+
+@[simp]
+lemma coe_coeNonUnitalRingHom : ⇑(coeNonUnitalRingHom hp) = (↑) := rfl
+
 variable (R hp) in
 /-- The inclusion of the corner `p * A * p` into `A`, as a non-unital star algebra
 homomorphism. -/
-def subtype : hp.Corner →⋆ₙₐ[R] A where
+def coeNonUnitalStarAlgHom : hp.Corner →⋆ₙₐ[R] A where
   toFun := (↑)
   map_smul' _ _ := rfl
   map_zero' := rfl
@@ -260,9 +270,10 @@ def subtype : hp.Corner →⋆ₙₐ[R] A where
   map_star' _ := rfl
 
 @[simp]
-lemma coe_subtype : ⇑(subtype R hp) = (↑) := rfl
+lemma coe_coeNonUnitalStarAlgHom : ⇑(coeNonUnitalStarAlgHom R hp) = (↑) := rfl
 
-lemma subtype_injective : Function.Injective (subtype R hp) := coe_injective
+lemma coeNonUnitalStarAlgHom_injective : Function.Injective (coeNonUnitalStarAlgHom R hp) :=
+  coe_injective
 
 end Module
 
@@ -309,7 +320,7 @@ variable [NonUnitalSemiring A] [StarRing A] [CommSemiring R] [Module R A] [IsSca
 
 variable (R) in
 /-- The corner `p * A * p` of a star projection `p`, as a submodule of `A`. This is the range of
-`IsStarProjection.Corner.subtype`, and it is linearly equivalent to `hp.Corner` via
+`IsStarProjection.Corner.coeNonUnitalStarAlgHom`, and it is linearly equivalent to `hp.Corner` via
 `IsStarProjection.cornerLinearEquiv`. -/
 @[nolint unusedArguments]
 def cornerSubmodule (_ : IsStarProjection p) : Submodule R A where
@@ -364,16 +375,9 @@ section Normed
 
 variable [NonUnitalNormedRing A] [StarRing A] {p : A} {hp : IsStarProjection p}
 
-variable (hp) in
-/-- The inclusion of the corner into `A`, as a non-unital ring homomorphism. This is an auxiliary
-definition used to construct the normed ring structure; use `IsStarProjection.Corner.subtype`
-instead. -/
-def coeNonUnitalRingHom : hp.Corner →ₙ+* A where
-  toFun := (↑)
-  map_zero' := rfl
-  map_add' _ _ := rfl
-  map_mul' _ _ := rfl
-
+/- TODO: the topology and the uniform and metric structures on the corner should be pulled back
+from `A` separately, under much weaker assumptions on `A` (e.g., without a norm). As it stands, we
+can't consider topological properties of corners in `σ(M, P)`. -/
 noncomputable instance : NormedRing hp.Corner where
   __ : Ring hp.Corner := inferInstance
   __ := NonUnitalNormedRing.induced hp.Corner A (coeNonUnitalRingHom hp) coe_injective
@@ -438,7 +442,7 @@ end Normed
 namespace Corner
 
 /-- The corner `p * A * p` of a non-unital C⋆-algebra is a C⋆-algebra with unit `p`. -/
-noncomputable instance instCStarAlgebra [NonUnitalCStarAlgebra A] {p : A}
+noncomputable instance instCStarAlgebra [NonUnitalCStarAlgebra A] (p : A)
     {hp : IsStarProjection p} : CStarAlgebra hp.Corner where
 
 end Corner

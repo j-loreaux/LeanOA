@@ -7,7 +7,6 @@ public import Mathlib.Analysis.CStarAlgebra.Basic
 public import Mathlib.Analysis.CStarAlgebra.Projection
 public import Mathlib.Analysis.CStarAlgebra.GelfandDuality
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Isometric
-public import LeanOA.CStarAlgebra.ProperStar
 
 open scoped Function StarRing
 open Finset
@@ -195,7 +194,7 @@ lemma IsStarOrtho.isStarProjection_add (h : p ⋆⟂ q) (hp : IsStarProjection p
   hp.add hq <| h.mul_eq_zero hq.isSelfAdjoint
 
 /-- The sum of star projections is a star projection if and only if they are star-orthogonal. -/
-lemma IsStarProjection.add_iff_isStarOrtho [IsCancelAdd R] [IsAddTorsionFree R]
+lemma IsStarProjection.add_iff_isStarOrtho [IsCancelAdd R] [HasUniqueDiv R]
     (hp : IsStarProjection p) (hq : IsStarProjection q) :
     IsStarProjection (p + q) ↔ p ⋆⟂ q := by
   refine ⟨fun h ↦ ?_, fun h ↦ h.isStarProjection_add hp hq⟩
@@ -572,8 +571,6 @@ lemma nnnorm_sum {ι : Type*} {s : Finset ι} {f : ι → A}
     suffices f j ⋆⟂ ∑ i ∈ s, f i by
       simp_all [this.nnnorm_add, ih h.1]
     exact .sum_right fun i hi ↦ h.2 i hi (by grind)
-
-variable [PartialOrder A] [StarOrderedRing A]
 
 end IsStarOrtho
 

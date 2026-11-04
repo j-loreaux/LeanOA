@@ -95,7 +95,7 @@ lemma IsMasa.extremallyDisconnected_characterSpace (S : StarSubalgebra ℂ M) [h
   refine .ofConditionallyCompletePartialOrderSupContinuousMap
     (𝕜 := ℝ) fun s hs hnon hbdd ↦ ?_
   let e := gelfandStarTransform S
-  let o : S ≃o C(characterSpace ℂ S, ℂ) := OrderIsoClass.toOrderIso e
+  let o : S ≃o C(characterSpace ℂ S, ℂ) := OrderIso.ofClass e
   let (eq := hf_eq) f : C(characterSpace ℂ S, ℝ) → M := Subtype.val ∘ o.symm ∘ realToRCLike ℂ
   have hf : Monotone f := fun _ _ ↦ by simp [f]
   replace hs : DirectedOn (· ≤ ·) (f '' s) := hs.mono_comp hf

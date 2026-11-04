@@ -8,7 +8,6 @@ public import LeanOA.CStarAlgebra.Extreme
 public import LeanOA.CStarAlgebra.FiniteSpectrum
 public import LeanOA.CStarAlgebra.IsStarOrtho
 public import LeanOA.CStarAlgebra.OffDiagonal
-public import LeanOA.CStarAlgebra.ProperStar
 public import LeanOA.CStarModule.Standard
 public import LeanOA.ComplexOrder
 public import LeanOA.ExtremallyDisconnected
@@ -26,12 +25,13 @@ public import LeanOA.Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.Module.Defs
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.MulNonneg
 public import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.Projection
 public import LeanOA.Mathlib.Analysis.Complex.Basic
-public import LeanOA.Mathlib.Analysis.LocallyConvex.Annihilator
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Bipolar
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Bounded
 public import LeanOA.Mathlib.Analysis.LocallyConvex.IsCompatibleDual
 public import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
+public import LeanOA.Mathlib.Analysis.LocallyConvex.PolarSubmodule
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform

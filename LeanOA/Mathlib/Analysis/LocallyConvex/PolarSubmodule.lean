@@ -121,7 +121,7 @@ theorem polarSubmodule_gc :
       (B.flip.polarSubmodule (S := Submodule 𝕜 F) ∘ OrderDual.ofDual) := fun W Φ ↦ by
   induction Φ using OrderDual.rec
   grind [OrderDual.toDual_le_toDual, OrderDual.ofDual_toDual,
-    SetLike.le_def, mem_polarSubmodule, flip_apply]
+    IsConcreteLE.le_iff, mem_polarSubmodule, flip_apply]
 
 theorem le_polarSubmodule_iff {Φ : Submodule 𝕜 F} {W : Submodule 𝕜 E} :
     Φ ≤ B.polarSubmodule W ↔ W ≤ B.flip.polarSubmodule Φ :=
