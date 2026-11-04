@@ -170,7 +170,7 @@ has an extreme point by the Krein-Milman Theorem. By
 {bpref "thm:cstar_unital_iff_extreme_Sak_1_6_1"}[], the result follows.
 :::
 
-:::lemma_ "lem:cut_down_sigma_closed_cts" (uses := "def:sigma_top")
+:::lemma_ "lem:cut_down_sigma_closed_cts" (lean := "IsStarProjection.isClosed_cornerSubmodule_of_ultraweak, Ultraweak.instSeparatelyContinuousMul") (uses := "def:sigma_top")
 (Sakai 1.7.6) Let $`p` be any projection in $`M`. Then the subalgebra $`pMp` is
 $`\sigma`-closed and the mapping $`x \mapsto pxp` is $`\sigma`-continuous.
 :::
@@ -189,14 +189,36 @@ then it is a $`W^*`-subalgebra of $`M`. But this is the result of
 {bpref "lem:cut_down_sigma_closed_cts"}[].
 :::
 
-:::lemma_ "lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7" (uses := "def:sigma_top")
+:::lemma_ "lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7" (lean := "Ultraweak.continuous_mul_left_of_isStarProjection") (uses := "def:sigma_top, lem:cut_down_sigma_closed_cts")
 (Sakai 1.7.7) If $`p` is any projection of $`M`, then the mappings $`x \mapsto px` and
 $`x \mapsto xp` are $`\sigma`-continuous.
 :::
 
-:::lemma_ "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8" (uses := "def:sigma_top")
+:::proof "lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7"
+We follow arXiv:2009.05825, §5.3. Let $`q = 1 - p` and let $`S` be the closed unit ball. For
+$`y \in S`, $`\lambda \in \mathbb{C}` and $`b \in qMp`, the $`C^*`-identity gives
+$`\|pyq + \lambda p\| \le (1 + |\lambda|^2)^{1/2}` and $`\|pyq + b\| \le \max(1, \|b\|)`.
+Since closed balls are $`\sigma`-closed, these estimates pass to $`\sigma`-limits $`x` of nets
+$`(p y_\alpha q)`, and force $`pxp = qxq = qxp = 0`, so that $`x \in pSq`. Thus $`pSq` is
+$`\sigma`-compact. Since also $`pSp` is $`\sigma`-compact ({bpref "lem:cut_down_sigma_closed_cts"}[]),
+so is $`pS = (pSp + pSq) \cap S`, and by the Krein–Smulian theorem $`pM` is $`\sigma`-closed;
+likewise $`qM`. Hence $`x \mapsto px` is a bounded idempotent map whose range $`pM` and kernel
+$`qM` are $`\sigma`-closed, and such a map is $`\sigma`-continuous (by compactness of the unit
+ball and the Krein–Smulian theorem). The claim for $`x \mapsto xp` follows by taking adjoints.
+:::
+
+:::lemma_ "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8" (lean := "Ultraweak.instSeparatelyContinuousMul, Ultraweak.instIsSemitopologicalRing") (uses := "def:sigma_top, lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7, lem:wstar_pos_approx_proj, prop:loc_cvx_result")
 (Sakai 1.7.8) The mappings $`x \mapsto x^*`, $`x \mapsto ax`, and $`x \mapsto xa` are
 $`\sigma`-continuous for $`x, a \in M`.
+:::
+
+:::proof "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8"
+The set of $`a` for which $`x \mapsto ax` is $`\sigma`-continuous is a linear subspace
+containing the projections ({bpref "lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7"}[]). It is
+norm closed, because the $`\sigma`-continuous functionals form a norm closed subspace of $`M^*`
+({bpref "prop:loc_cvx_result"}[]). Since the span of the projections is norm dense
+({bpref "lem:wstar_pos_approx_proj"}[]), it is all of $`M`. The claim for $`x \mapsto xa` follows
+by taking adjoints.
 :::
 
 :::corollary "cor:sig_clos_of_cstar_is_wstar_Sak_1_7_9" (uses := "lem:left_mul_proj_right_mul_proj_sig_cts_Sak_1_7_7, lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8, def:sigma_top")
