@@ -54,42 +54,21 @@ theorem isStarProjection_of_isLUB {d : Set M} (hne : d.Nonempty) (hd : DirectedO
   have h₁ := tendsto_toUltraweak_of_isLUB P he
   have hsa : IsSelfAdjoint e :=
     isClosed_setOf_isSelfAdjoint.mem_of_tendsto h₁ (.of_forall fun q ↦ (hdp q q.2).isSelfAdjoint)
-  have he₁ : e ≤ 1 := he.2 fun q hq ↦ (hdp q hq).le_one
-  /- The elements `e - q` for `q ∈ d` are nonnegative contractions tending ultraweakly to `0`;
-  hence so are their squares, since `(e - q) * (e - q) ≤ e - q`. -/
-  have hx (q : d) : 0 ≤ e - q ∧ ‖e - q‖ ≤ 1 := by
-    have h₀ : 0 ≤ e - q := sub_nonneg.mpr (he.1 q.2)
-    refine ⟨h₀, (CStarAlgebra.norm_le_iff_le_algebraMap _ zero_le_one h₀).mpr ?_⟩
-    simpa using (sub_le_self e (hdp q q.2).nonneg).trans he₁
-  have h₂ : Tendsto (fun q : d ↦ toUltraweak ℂ P ((e - q) * (e - q))) atTop (𝓝 0) := by
-    refine tendsto_of_forall_posCLM_of_eventually (r := 1) (.of_forall fun q ↦ ?_) fun φ ↦ ?_
-    · simp only [ofUltraweak_toUltraweak]
-      exact (norm_mul_le _ _).trans <| by nlinarith [norm_nonneg (e - q), (hx q).2]
-    have hφ : Tendsto (fun q : d ↦ φ (toUltraweak ℂ P (e - q))) atTop (𝓝 0) := by
-      have := ((map_continuous φ).tendsto _).comp
-        ((tendsto_const_nhds (x := toUltraweak ℂ P e)).sub h₁)
-      simpa only [Function.comp_def, sub_self, map_zero, ← toUltraweak_sub] using this
-    rw [map_zero]
-    refine squeeze_zero_norm (fun q ↦ ?_) (tendsto_zero_iff_norm_tendsto_zero.mp hφ)
-    exact CStarAlgebra.norm_le_norm_of_le_of_nonneg
-      (OrderHomClass.mono φ <| toUltraweak_le.mpr <|
-        CStarAlgebra.mul_self_le_of_nonneg_of_norm_le_one (hx q).1 (hx q).2)
-      (map_nonneg φ <| toUltraweak_nonneg.mpr (hx q).1.isSelfAdjoint.mul_self_nonneg)
-  /- On the other hand, `(e - q) * (e - q) = e * e - e * q - q * e + q` tends to `e - e * e`,
-  since multiplication is separately ultraweakly continuous. Hence `e * e = e`. -/
-  have hL := ((continuous_const_mul (toUltraweak ℂ P e)).tendsto _).comp h₁
-  have hR := ((continuous_mul_const (toUltraweak ℂ P e)).tendsto _).comp h₁
-  have h₃ := ((tendsto_const_nhds (x := toUltraweak ℂ P (e * e))).sub hL |>.sub hR).add h₁
-  have h₄ : Tendsto (fun q : d ↦ toUltraweak ℂ P ((e - q) * (e - q))) atTop
-      (𝓝 (toUltraweak ℂ P (e - e * e))) := by
-    refine h₃.congr' (.of_forall fun q ↦ ?_) |>.trans (le_of_eq ?_)
-    · simp [sub_mul, mul_sub, (hdp q q.2).isIdempotentElem.eq]
-      abel
-    · congr 1
-      simp only [← toUltraweak_mul, ← toUltraweak_sub, ← toUltraweak_add]
-      congr 1
-      abel
-  have := (toUltraweak_eq_zero (x := e - e * e)).mp (tendsto_nhds_unique h₄ h₂)
-  exact ⟨(sub_eq_zero.mp this).symm, hsa⟩
+  /- Each `q ∈ d` satisfies `q ≤ e ≤ 1`, so `0 ≤ q * (1 - e) * q ≤ q * (1 - q) * q = 0`, whence
+  `(1 - e) * q = 0`, i.e., `e * q = q`. -/
+  have h₂ (q : d) : e * q = q := by
+    have hq := hdp q q.2
+    have h₀ : 0 ≤ 1 - e := sub_nonneg.mpr <| he.2 fun q hq ↦ (hdp q hq).le_one
+    have : q * (1 - e) * q = 0 := le_antisymm
+      (by simpa [mul_sub, sub_mul, hq.isIdempotentElem.eq] using
+        hq.isSelfAdjoint.conjugate_le_conjugate (sub_le_sub_left (he.1 q.2) 1))
+      (hq.isSelfAdjoint.conjugate_nonneg h₀)
+    simpa [sub_mul, sub_eq_zero, hq.isSelfAdjoint.star_eq, eq_comm] using
+      mul_star_eq_zero_of_mul_mul_star_eq_zero h₀ (c := (q : M)) (by rwa [hq.isSelfAdjoint.star_eq])
+  /- Since multiplication is separately ultraweakly continuous, `e * q = q` tends to `e * e`, but
+  it also tends to `e`. -/
+  have h₃ := ((continuous_const_mul (toUltraweak ℂ P e)).tendsto _).comp h₁
+  simp only [Function.comp_def, ← toUltraweak_mul, h₂] at h₃
+  exact ⟨toUltraweak_injective (tendsto_nhds_unique h₃ h₁), hsa⟩
 
 end Ultraweak
