@@ -34,16 +34,18 @@ end KreinSmulian
 variable {M P : Type*} [CStarAlgebra M]
 variable [NormedAddCommGroup P] [NormedSpace ℂ P] [Predual ℂ M P] [CompleteSpace P]
 
-lemma tendsto_sqrt_one_add_sq_sub_self_atTop :
-    Tendsto (fun x : ℝ ↦ √(1 + x ^ 2) - x) atTop (𝓝 0) := by
-  -- `√(1 + x ^ 2) - x = (√(1 + x ^ 2) + x)⁻¹` and the denominator is at least `x`.
-  have key (x : ℝ) : √(1 + x ^ 2) - x = (√(1 + x ^ 2) + x)⁻¹ := by
-    refine eq_inv_of_mul_eq_one_left ?_
-    rw [mul_comm, ← sq_sub_sq, Real.sq_sqrt (by positivity)]
-    ring
-  simp only [key]
-  exact tendsto_inv_atTop_zero.comp <|
-    tendsto_atTop_mono (fun _ ↦ le_add_of_nonneg_left (Real.sqrt_nonneg _)) tendsto_id
+lemma tendsto_sqrt_add_sq_sub_self_atTop (C : ℝ) :
+    Tendsto (fun x : ℝ ↦ √(C + x ^ 2) - x) atTop (𝓝 0) := by
+  /- For large `x`, `√(C + x ^ 2) - x = C / (√(C + x ^ 2) + x)`, and the denominator is at
+  least `x`. -/
+  have key : ∀ᶠ x in atTop, C / (√(C + x ^ 2) + x) = √(C + x ^ 2) - x := by
+    filter_upwards [eventually_ge_atTop (|C| + 1)] with x hx
+    have hx₀ : 0 < x := by linarith [abs_nonneg C]
+    have hCx : 0 ≤ C + x ^ 2 := by nlinarith [neg_abs_le C]
+    rw [div_eq_iff (add_pos_of_nonneg_of_pos (Real.sqrt_nonneg _) hx₀).ne']
+    linear_combination -Real.sq_sqrt hCx
+  refine .congr' key <| tendsto_const_nhds.div_atTop ?_
+  exact tendsto_atTop_mono (fun _ ↦ le_add_of_nonneg_left (Real.sqrt_nonneg _)) tendsto_id
 
 lemma IsSelfAdjoint.norm_add_I_smul_sq_of_commute {A : Type*}
     [NonUnitalCStarAlgebra A] {x y : A} (hx : IsSelfAdjoint x)
@@ -93,17 +95,18 @@ lemma IsSelfAdjoint.max_norm_add_sub_algebraMap_ge
       congr! 1
       abel
 
-/-- A selfadjoint element `x` such that `‖x + t‖ ≤ √(1 + t ^ 2)` for every real `t` is zero. -/
+/-- A selfadjoint element `x` such that, for some constant `C`, `‖x + t‖ ≤ √(C + t ^ 2)` for
+every real `t`, is zero. -/
 lemma IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le
     {A : Type*} [NormedRing A] [StarRing A] [NormedAlgebra ℝ A]
     [IsometricContinuousFunctionalCalculus ℝ A IsSelfAdjoint] {x : A} (hx : IsSelfAdjoint x)
-    (h : ∀ t : ℝ, ‖x + algebraMap ℝ A t‖ ≤ √(1 + t ^ 2)) : x = 0 := by
-  /- Every element `c` of the spectrum satisfies `|c| + n ≤ √(1 + n ^ 2)` for every `n : ℕ`,
+    {C : ℝ} (h : ∀ t : ℝ, ‖x + algebraMap ℝ A t‖ ≤ √(C + t ^ 2)) : x = 0 := by
+  /- Every element `c` of the spectrum satisfies `|c| + n ≤ √(C + n ^ 2)` for every `n : ℕ`,
   and hence `c = 0`. -/
   refine CFC.eq_zero_of_spectrum_subset_zero (R := ℝ) x (fun c hc ↦ ?_) hx
   rw [Set.mem_singleton_iff, ← abs_eq_zero]
   refine le_antisymm ?_ (abs_nonneg c)
-  refine ge_of_tendsto' (tendsto_sqrt_one_add_sq_sub_self_atTop.comp tendsto_natCast_atTop_atTop)
+  refine ge_of_tendsto' ((tendsto_sqrt_add_sq_sub_self_atTop C).comp tendsto_natCast_atTop_atTop)
     fun n ↦ ?_
   rw [Function.comp_apply, le_sub_iff_add_le]
   refine hx.max_norm_add_sub_algebraMap_ge c hc n n.cast_nonneg |>.trans <| max_le (h n) ?_
@@ -136,7 +139,7 @@ lemma isClosed_setOf_isSelfAdjoint : IsClosed {x : σ(M, P) | IsSelfAdjoint x} :
   `‖ℑ x + t‖ ≤ ‖x + I • t‖ ≤ √(1 + t ^ 2)` for every real `t`. -/
   refine .of_ofUltraweak ?_
   rw [← imaginaryPart_eq_zero_iff, ← ZeroMemClass.coe_eq_zero]
-  refine (ℑ (ofUltraweak x)).2.eq_zero_of_norm_add_algebraMap_le fun t ↦ ?_
+  refine (ℑ (ofUltraweak x)).2.eq_zero_of_norm_add_algebraMap_le (C := 1) fun t ↦ ?_
   trans ‖ofUltraweak x + I • algebraMap ℝ M t‖
   · convert! imaginaryPart.norm_le (ofUltraweak x + I • algebraMap ℝ M t) using 1
     simp [(IsSelfAdjoint.algebraMap M (.all t)).coe_realPart]

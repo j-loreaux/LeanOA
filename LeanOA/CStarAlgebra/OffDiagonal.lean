@@ -2,7 +2,7 @@ module
 
 public import LeanOA.CStarAlgebra.IsStarOrtho
 public import LeanOA.Ultraweak.OrderClosed
-public import Mathlib.Analysis.CStarAlgebra.Unitization
+public import LeanOA.CStarAlgebra.Corner.Basic
 
 @[expose] public section
 
@@ -32,27 +32,6 @@ variable {A : Type*} [NonUnitalCStarAlgebra A]
 
 namespace IsStarProjection
 
-/-- The unital case of `IsStarProjection.eq_zero_of_norm_add_smul_le`. -/
-private lemma eq_zero_of_norm_add_smul_le_of_unital {B : Type*} [CStarAlgebra B] {p : B}
-    (hp : IsStarProjection p) {w : B} (hsa : IsSelfAdjoint w) (hw : p * w * p = w)
-    (h : ∀ t : ℝ, ‖w + t • p‖ ≤ √(1 + t ^ 2)) : w = 0 := by
-  /- We first show `‖w + t‖ ≤ √(1 + t ^ 2)` for every real `t`. Indeed,
-  `w + t = (w + t • p) + t • (1 - p)` is a sum of star-orthogonal elements, the first of norm at
-  most `√(1 + t ^ 2)` and the second of norm at most `|t|`. -/
-  have key (t : ℝ) : ‖w + algebraMap ℝ B t‖ ≤ √(1 + t ^ 2) := by
-    have hortho : (w + t • p) ⋆⟂ (t • (1 - p)) := by
-      refine .smul_right ?_ t
-      rw [hp.one_sub.isSelfAdjoint.isStarOrtho_iff]
-      grind
-    have heq : w + algebraMap ℝ B t = (w + t • p) + t • (1 - p) := by
-      rw [Algebra.algebraMap_eq_smul_one, smul_sub]
-      abel
-    rw [heq, hortho.norm_add]
-    refine max_le (h t) ?_
-    grw [norm_smul, hp.one_sub.norm_le, mul_one, Real.norm_eq_abs]
-    exact Real.abs_le_sqrt (by linarith)
-  exact hsa.eq_zero_of_norm_add_algebraMap_le key
-
 variable {p : A} (hp : IsStarProjection p)
 include hp
 
@@ -62,13 +41,13 @@ attribute [bound_forward] IsStarProjection.norm_le
 `‖w + t • p‖ ≤ √(1 + t ^ 2)` for every real `t`, then `w = 0`. -/
 lemma eq_zero_of_norm_add_smul_le {w : A} (hsa : IsSelfAdjoint w) (hw : p * w * p = w)
     (h : ∀ t : ℝ, ‖w + t • p‖ ≤ √(1 + t ^ 2)) : w = 0 := by
-  /- We pass to the unitization, where the unital case applies. -/
-  have hp' : IsStarProjection (p : Unitization ℂ A) :=
-    hp.map (Unitization.inrNonUnitalStarAlgHom ℂ A)
-  have := eq_zero_of_norm_add_smul_le_of_unital hp' (hsa.inr ℂ)
-    (by simp [← Unitization.inr_mul, hw]) fun t ↦ by
-      simpa [← Unitization.inr_smul, ← Unitization.inr_add, Unitization.norm_inr] using h t
-  exact Unitization.inr_injective (R := ℂ) (by simpa using this)
+  /- In the corner `p * A * p`, which is a C⋆-algebra with unit `p`, this is
+  `IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le`. -/
+  suffices Corner.mk hp w hw = 0 from Corner.coe_eq_zero.mpr this
+  refine IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le (C := 1)
+    (Corner.ext <| by simpa using hsa.star_eq) fun t ↦ ?_
+  rw [← Corner.norm_coe, Corner.coe_add, Corner.coe_algebraMap, Corner.coe_mk]
+  exact h t
 
 /-- If `‖x + c • p‖ ≤ √(1 + ‖c‖ ^ 2)` for every `c : ℂ`, then `p * x * p = 0`. -/
 lemma mul_mul_eq_zero_of_norm_add_smul_le {x : A}
