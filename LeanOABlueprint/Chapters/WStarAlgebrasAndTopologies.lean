@@ -146,7 +146,7 @@ It is premature to fix a notation like $`M_*` in the above, but the aim of this 
 prove that any two preduals of $`M` are isomorphic as Banach spaces, so we take the liberty
 with Sakai of fixing a reference predual at the outset.
 
-:::lemma_ "lem:sigma_closed_star_subalg_wstar" (uses := "def:wstar_def, def:sigma_top")
+:::lemma_ "lem:sigma_closed_star_subalg_wstar" (lean := "Ultraweak.predualOfIsClosed") (uses := "def:wstar_def, def:sigma_top")
 (Sakai 1.1.4) A self-adjoint, $`\sigma`-closed $`*`-subalgebra $`N` of a $`W^*`-algebra $`M`
 is also a $`W^*`-algebra, since $`(M_* / N^0)^* = N`, where $`N^0` is the polar
 (annihilator) of $`N` in $`M_*`, i.e. the set of $`\varphi \in M_*` such that
@@ -175,7 +175,7 @@ has an extreme point by the Krein-Milman Theorem. By
 $`\sigma`-closed and the mapping $`x \mapsto pxp` is $`\sigma`-continuous.
 :::
 
-:::lemma_ "lem:cut_down_of_wstar" (uses := "def:sigma_top, lem:cut_down_sigma_closed_cts, lem:sigma_closed_star_subalg_wstar")
+:::lemma_ "lem:cut_down_of_wstar" (lean := "IsStarProjection.Corner.instCStarAlgebra, IsStarProjection.Corner.instPredual") (uses := "def:sigma_top, lem:cut_down_sigma_closed_cts, lem:sigma_closed_star_subalg_wstar")
 If $`p \in M` is a projection, then $`pMp` is also a $`W^*`-algebra with identity $`p`.
 :::
 

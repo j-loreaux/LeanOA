@@ -35,7 +35,9 @@ public import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
 public import LeanOA.Mathlib.Analysis.LocallyConvex.PolarSubmodule
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
+public import LeanOA.Mathlib.Analysis.Normed.Group.Quotient
 public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
+public import LeanOA.Mathlib.Analysis.Normed.Module.DualQuotient
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.ComplexSqrt
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.Lemmas
@@ -64,6 +66,7 @@ public import LeanOA.TendstoZero.Defs
 public import LeanOA.TendstoZero.StrongDual
 public import LeanOA.Ultraweak.Basic
 public import LeanOA.Ultraweak.Bornology
+public import LeanOA.Ultraweak.ClosedSubspace
 public import LeanOA.Ultraweak.ContinuousFunctionalCalculus
 public import LeanOA.Ultraweak.ContinuousStar
 public import LeanOA.Ultraweak.Corner
