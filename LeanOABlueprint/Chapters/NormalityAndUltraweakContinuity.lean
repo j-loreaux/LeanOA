@@ -28,7 +28,7 @@ Every continuous bijection from a compact space to a Hausdorff space is a homeom
 in the weak-$`*` topology.
 :::
 
-:::theorem "lem:sigma_cont_of_normal_Sak_1_7_4" (uses := "thm:Banach_Alaoglu, lem:homeo_of_cts_bij_cpt_haus, lem:uw_pos_sep_pts, lem:selfadjoint_le_norm, def:sigma_top, thm:comm_cstar_cts_fcns_Sak_1_2_1")
+:::theorem "lem:sigma_cont_of_normal_Sak_1_7_4" (lean := "Ultraweak.DirectedOn.exists_isLUB, Ultraweak.DirectedOn.isLUB_star_right_conjugate") (uses := "thm:Banach_Alaoglu, lem:homeo_of_cts_bij_cpt_haus, lem:uw_pos_sep_pts, lem:selfadjoint_le_norm, def:sigma_top, thm:comm_cstar_cts_fcns_Sak_1_2_1")
 (Sakai 1.7.4) Every uniformly bounded, increasing net in $`M^s` converges to its least upper
 bound in the $`\sigma`-topology. Further, if $`x = \sup_\lambda x_\lambda` then
 $`a^* x a = \sup_\lambda a^* x_\lambda a`.
@@ -111,7 +111,7 @@ functional $`\psi_0` on $`M` such that $`\psi_0(p) \ne 0`. Rescale this function
 positive constant to obtain $`\psi` such that $`\varphi(p) < \psi(p)`.
 :::
 
-:::lemma_ "lem:msr_th_lemma" (uses := "lem:sigma_cont_of_normal_Sak_1_7_4, prop:proj_compl_lat_wstar_Sak_1_10_2, cor:proj_sub_of_subproj")
+:::lemma_ "lem:msr_th_lemma" (uses := "lem:sigma_cont_of_normal_Sak_1_7_4, lem:directed_sup_proj, cor:proj_sub_of_subproj")
 For all positive linear functionals $`\varphi, \psi` with $`\varphi` normal and $`\psi`
 $`\sigma(M, M_*)`-continuous and every nonzero $`p \in \mathcal{P}(M)` such that
 $`\varphi(p) < \psi(p)`, there exists a nonzero $`p_1 \in \mathcal{P}(M)` such that
@@ -126,7 +126,7 @@ $`\varphi(q) \ge \psi(q)`. In particular, (letting $`p_1 = q`) there is a $`q \l
 that $`\varphi(q) \ge \psi(q)`. If $`(q_\alpha)` is a chain of such nonzero projections, then
 $`q_\alpha \to \sup q_\alpha` in the $`\sigma`-topology by
 {bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[], and by
-{bpref "prop:proj_compl_lat_wstar_Sak_1_10_2"}[] we know this supremum is a subprojection of
+{bpref "lem:directed_sup_proj"}[] we know this supremum is a subprojection of
 $`p_1`. Since $`\varphi` is positive and normal, and $`\psi` is positive and
 $`\sigma`-continuous, we have
 $`\varphi(\sup q_\alpha) \ge \psi(\sup q_\alpha)`.
@@ -144,7 +144,7 @@ $`\varphi(p) < \psi(p)`.
 The following likely contains the most crucial use of the normality of $`\varphi` for the
 later proof of {bpref "thm:sigma_cts_of_normal_Sak_1_13_2"}[].
 
-:::lemma_ "lem:zorn_base" (uses := "cor:proj_sub_of_subproj, lem:selfadjoint_le_norm, lem:sigma_cont_of_normal_Sak_1_7_4, prop:proj_compl_lat_wstar_Sak_1_10_2, def:sigma_top")
+:::lemma_ "lem:zorn_base" (uses := "cor:proj_sub_of_subproj, lem:selfadjoint_le_norm, lem:sigma_cont_of_normal_Sak_1_7_4, lem:directed_sup_proj, def:sigma_top")
 Let $`\varphi` be a normal positive linear functional on $`M` and consider the predicate
 $`P : \mathcal{P}(M) \to \mathrm{Prop}` defined, for $`p \in \mathcal{P}(M)`, by
 "$`M \ni x \mapsto \varphi(xp)` is $`\sigma(M, M_*)`-continuous". If $`(p_\alpha)` is a chain
@@ -156,7 +156,7 @@ $`p_0 \in \mathcal{P}(M)` such that $`P(p_0)` is true.
 :::proof "lem:zorn_base"
 Let $`x` be on the unit sphere and let $`p` be the supremum of the $`p_\alpha`. By
 {bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[] and
-{bpref "prop:proj_compl_lat_wstar_Sak_1_10_2"}[] we know $`p_\alpha` converges in the
+{bpref "lem:directed_sup_proj"}[] we know $`p_\alpha` converges in the
 $`\sigma`-topology to $`p`, and $`p` is a projection. By
 {bpref "cor:proj_sub_of_subproj"}[] we know $`p - p_\alpha` is a projection. By the
 $`C^*`-property of the norm ($`\|x^* x\| = \|x\|^2`),
