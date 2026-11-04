@@ -217,7 +217,7 @@ lemma hasSum_single (x : c₀ E) :
   have hx := mem_tendstoZero_iff _ |>.mp x.2
   rw [HasSum]
   rw [Metric.nhds_basis_closedBall.tendsto_right_iff] at hx ⊢
-  peel hx with ε hε hx
+  gconvert hx with ε hε hx
   rw [Filter.eventually_cofinite] at hx
   simp only [Metric.mem_closedBall, dist_zero_right, norm_norm, not_le] at hx
   filter_upwards [Filter.atTop_basis.mem_of_mem (i := hx.toFinset) trivial] with s hs

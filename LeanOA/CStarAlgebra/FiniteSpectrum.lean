@@ -80,5 +80,5 @@ projections is exactly the submodule of the self-adjoint elements. -/
   refine le_antisymm (fun x hx ↦ closure_minimal (fun x hx ↦ ?_) ?_ hx) fun x hx ↦ ?_
   · refine Submodule.span_induction (fun _ hx ↦ hx.isSelfAdjoint) ?_ ?_ ?_ hx <;> aesop
   · exact isClosed_eq continuous_id'.star continuous_id'
-  · exact closure_mono (fun y hy ↦ hy.1.mem_span_isStarProjection_of_finite_quasispectrum hy.2)
-      (h.fs hx)
+  · refine closure_mono (fun y hy ↦ ?_) (h.fs hx)
+    exact hy.1.mem_span_isStarProjection_of_finite_quasispectrum hy.2
