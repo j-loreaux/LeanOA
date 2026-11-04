@@ -158,11 +158,10 @@ lemma exists_lt_of_ne_zero (φ : M →ₚ[ℂ] ℂ) {p : M} (hp : IsStarProjecti
   exact_mod_cast (div_lt_iff₀ (norm_pos_iff.mpr hψ₀)).mp hn
 
 include P in
-/-- If `φ` and `ψ` are normal positive functionals and `φ p < ψ p` for a projection `p`, then
-there is a nonzero subprojection `p₁ ≤ p` such that `φ q < ψ q` for every nonzero
+/-- If `φ` and `ψ` are positive functionals with `ψ` normal, and `φ p < ψ p` for a projection
+`p`, then there is a nonzero subprojection `p₁ ≤ p` such that `φ q < ψ q` for every nonzero
 subprojection `q ≤ p₁`. -/
 lemma exists_forall_lt {φ ψ : M →ₚ[ℂ] ℂ}
-    (hφ : ScottContinuousOn {d : Set M | (∀ q ∈ d, IsStarProjection q) ∧ IsChain (· ≤ ·) d} φ)
     (hψ : ScottContinuousOn {d : Set M | (∀ q ∈ d, IsStarProjection q) ∧ IsChain (· ≤ ·) d} ψ)
     {p : M} (hp : IsStarProjection p) (hlt : φ p < ψ p) :
     ∃ p₁, IsStarProjection p₁ ∧ p₁ ≠ 0 ∧ p₁ ≤ p ∧
@@ -178,13 +177,10 @@ lemma exists_forall_lt {φ ψ : M →ₚ[ℂ] ℂ}
     have hdp (q) (hq : q ∈ c) : IsStarProjection q := (hc hq).1
     have he := hdir.isLUB_csSup hne ⟨p, fun q hq ↦ (hc hq).2.1⟩
     have hep := isStarProjection_of_isLUB (P := P) hne hdir hdp he
+    /- `ψ (sSup c) = ⨆ q ∈ c, ψ q ≤ φ (sSup c)`, since `ψ q ≤ φ q ≤ φ (sSup c)` for `q ∈ c`. -/
     refine ⟨sSup c, ⟨hep, he.2 fun q hq ↦ (hc hq).2.1, ?_⟩, fun q hq ↦ he.1 hq⟩
-    have : Nonempty c := hne.to_subtype
-    have : IsDirectedOrder c := ⟨hdir.directed_val⟩
-    exact le_of_tendsto_of_tendsto'
-      (hψ.tendsto_atTop_isLUB ⟨hdp, hchain⟩ hne hdir ((OrderHomClass.mono ψ).monotoneOn _) he)
-      (hφ.tendsto_atTop_isLUB ⟨hdp, hchain⟩ hne hdir ((OrderHomClass.mono φ).monotoneOn _) he)
-      fun q ↦ (hc q.2).2.2
+    exact (hψ ⟨hdp, hchain⟩ hne hdir he).2 <| forall_mem_image.mpr fun q hq ↦
+      (hc hq).2.2.trans <| OrderHomClass.mono φ <| he.1 hq
   /- Since `φ p < ψ p`, we have `q₀ ≠ p`, so `p - q₀` is a nonzero projection, and it has a
   nonzero subprojection `q` with `ψ q ≤ φ q`. But then `q₀ + q` contradicts maximality. -/
   have hq₀ne : q₀ ≠ p := fun h ↦ hq₀le.not_gt (h ▸ hlt)
@@ -198,8 +194,7 @@ lemma exists_forall_lt {φ ψ : M →ₚ[ℂ] ℂ}
   have hsum : q₀ + q ∈ s :=
     ⟨horth.symm.isStarProjection_add hq₀ hq, le_sub_iff_add_le'.mp hqr,
       by simpa using add_le_add hq₀le hqle⟩
-  have := hmax hsum (le_add_of_nonneg_right hq.nonneg)
-  exact hq0 (le_antisymm (by simpa using this) hq.nonneg)
+  exact hq0 <| le_antisymm (by simpa using hmax hsum (le_add_of_nonneg_right hq.nonneg)) hq.nonneg
 
 open IsStarProjection in
 include P in
@@ -219,10 +214,9 @@ lemma map_le_map_of_forall_lt {φ ψ : M →ₚ[ℂ] ℂ} {p : M} (hp : IsStarPr
   refine PositiveLinearMap.le_of_le_on_isStarProjection (φ.comp ι) (ψ.comp ι) (fun q hq ↦ ?_)
     (x := hp.toCorner ℂ a) (by simpa using hp.toCorner_mono ℂ ha)
   change φ (q : M) ≤ ψ (q : M)
-  have hq' : IsStarProjection (q : M) := Corner.isStarProjection_coe_iff.mpr hq
   by_cases hq0 : (q : M) = 0
   · simp [hq0]
-  · exact (h q hq' hq0 (Corner.coe_le_of_isStarProjection hq)).le
+  · exact (h q (by simpa) hq0 (Corner.coe_le_of_isStarProjection hq)).le
 
 include P in
 /-- **Sakai 1.13.2**, in its strongest form: a positive linear functional on a W⋆-algebra which
@@ -239,7 +233,7 @@ theorem continuous_of_scottContinuousOn_chains (φ : M →ₚ[ℂ] ℂ)
   and a nonzero projection `p₁ ≤ 1 - p₀` such that `φ q < ψ q` for all nonzero `q ≤ p₁`. -/
   obtain ⟨ψ, hψc, hlt⟩ :=
     exists_lt_of_ne_zero (P := P) φ hp₀.one_sub (sub_ne_zero.mpr (Ne.symm hne))
-  obtain ⟨p₁, hp₁, hp₁0, hp₁le, hall⟩ := exists_forall_lt (P := P) hφ
+  obtain ⟨p₁, hp₁, hp₁0, hp₁le, hall⟩ := exists_forall_lt (P := P)
     (scottContinuous_of_continuous (P := P) ψ hψc).scottContinuousOn hp₀.one_sub hlt
   /- With `ψ' := ψ (p₁ * · * p₁)`, which is ultraweakly continuous, we have
   `‖φ (x * p₁)‖ ^ 2 ≤ ‖φ 1‖ * ‖φ (p₁ * (star x * x) * p₁)‖ ≤ ‖φ 1‖ * ‖ψ' (star x * x)‖`,
@@ -251,13 +245,14 @@ theorem continuous_of_scottContinuousOn_chains (φ : M →ₚ[ℂ] ℂ)
   let ω : StrongDual ℂ M := φ.toContinuousLinearMap ∘L (ContinuousLinearMap.mul ℂ M).flip p₁
   have hωc := continuous_of_norm_sq_le (P := P) ψ' hψ'c ω ‖φ 1‖ fun x ↦ by
     have hx := star_mul_self_nonneg x
-    have h₁ := PositiveLinearMap.norm_map_star_mul_sq_le φ 1 (x * p₁)
-    have h₂ := CStarAlgebra.norm_le_norm_of_le_of_nonneg
-      (map_le_map_of_forall_lt (P := P) hp₁ hall hx)
-      (map_nonneg φ (hp₁.isSelfAdjoint.conjugate_nonneg hx))
-    simp only [star_one, one_mul, star_mul, mul_assoc, hp₁.isSelfAdjoint.star_eq] at h₁ h₂
-    simpa [ω, ψ', mul_assoc, hp₁.isSelfAdjoint.star_eq] using
-      h₁.trans (mul_le_mul_of_nonneg_left h₂ (norm_nonneg _))
+    calc ‖ω x‖ ^ 2 ≤ ‖φ 1‖ * ‖φ (p₁ * (star x * x) * p₁)‖ := by
+          simpa [ω, mul_assoc, hp₁.isSelfAdjoint.star_eq] using
+            PositiveLinearMap.norm_map_star_mul_sq_le φ 1 (x * p₁)
+      _ ≤ ‖φ 1‖ * ‖ψ' (star x * x)‖ := by
+          gcongr
+          simpa [ψ', hp₁.isSelfAdjoint.star_eq] using
+            CStarAlgebra.norm_le_norm_of_le_of_nonneg (map_le_map_of_forall_lt (P := P) hp₁ hall hx)
+              (map_nonneg φ (hp₁.isSelfAdjoint.conjugate_nonneg hx))
   /- Hence `x ↦ φ (x * (p₀ + p₁))` is ultraweakly continuous, contradicting maximality. -/
   have horth : p₁ ⋆⟂ p₀ := hp₀.one_sub_isStarOrtho.of_le hp₁.nonneg hp₁le
   have hcont : Continuous fun x : σ(M, P) ↦ φ (ofUltraweak x * (p₀ + p₁)) :=
