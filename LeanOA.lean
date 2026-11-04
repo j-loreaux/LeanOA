@@ -35,6 +35,7 @@ public import LeanOA.Mathlib.Analysis.LocallyConvex.Polar
 public import LeanOA.Mathlib.Analysis.LocallyConvex.PolarSubmodule
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WeakBilin
 public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
+public import LeanOA.Mathlib.Analysis.Normed.Group.Quotient
 public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
 public import LeanOA.Mathlib.Analysis.Normed.Module.DualQuotient
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
