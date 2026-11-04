@@ -19,6 +19,7 @@ attribute [local grind =] star_mul star_add star_neg star_smul star_sub star_one
 
 -- we need a small grind set for non-unital rings
 attribute [local grind =] mul_assoc add_mul mul_add smul_mul_assoc mul_smul_comm smul_smul
+  sub_mul mul_sub
 
 -- only use in the simplifying direction
 attribute [local grind =>] IsIdempotentElem.mul_mul_self IsIdempotentElem.mul_self_mul
@@ -31,6 +32,27 @@ variable {A : Type*} [NonUnitalCStarAlgebra A]
 
 namespace IsStarProjection
 
+/-- The unital case of `IsStarProjection.eq_zero_of_norm_add_smul_le`. -/
+private lemma eq_zero_of_norm_add_smul_le_of_unital {B : Type*} [CStarAlgebra B] {p : B}
+    (hp : IsStarProjection p) {w : B} (hsa : IsSelfAdjoint w) (hw : p * w * p = w)
+    (h : ∀ t : ℝ, ‖w + t • p‖ ≤ √(1 + t ^ 2)) : w = 0 := by
+  /- We first show `‖w + t‖ ≤ √(1 + t ^ 2)` for every real `t`. Indeed,
+  `w + t = (w + t • p) + t • (1 - p)` is a sum of star-orthogonal elements, the first of norm at
+  most `√(1 + t ^ 2)` and the second of norm at most `|t|`. -/
+  have key (t : ℝ) : ‖w + algebraMap ℝ B t‖ ≤ √(1 + t ^ 2) := by
+    have hortho : (w + t • p) ⋆⟂ (t • (1 - p)) := by
+      refine .smul_right ?_ t
+      rw [hp.one_sub.isSelfAdjoint.isStarOrtho_iff]
+      grind
+    have heq : w + algebraMap ℝ B t = (w + t • p) + t • (1 - p) := by
+      rw [Algebra.algebraMap_eq_smul_one, smul_sub]
+      abel
+    rw [heq, hortho.norm_add]
+    refine max_le (h t) ?_
+    grw [norm_smul, hp.one_sub.norm_le, mul_one, Real.norm_eq_abs]
+    exact Real.abs_le_sqrt (by linarith)
+  exact hsa.eq_zero_of_norm_add_algebraMap_le key
+
 variable {p : A} (hp : IsStarProjection p)
 include hp
 
@@ -40,42 +62,13 @@ attribute [bound_forward] IsStarProjection.norm_le
 `‖w + t • p‖ ≤ √(1 + t ^ 2)` for every real `t`, then `w = 0`. -/
 lemma eq_zero_of_norm_add_smul_le {w : A} (hsa : IsSelfAdjoint w) (hw : p * w * p = w)
     (h : ∀ t : ℝ, ‖w + t • p‖ ≤ √(1 + t ^ 2)) : w = 0 := by
-  /- We pass to the unitization, where we first show `‖w + t‖ ≤ √(1 + t ^ 2)` for every real
-  `t`. Indeed, `w + t = (w + t • p) + t • (1 - p)` is a sum of star-orthogonal elements, the first
-  of norm at most `√(1 + t ^ 2)` and the second of norm at most `|t|`. -/
-  set w' := (w : Unitization ℂ A)
-  set p' := (p : Unitization ℂ A)
-  have hp' : IsStarProjection p' := hp.map (Unitization.inrNonUnitalStarAlgHom ℂ A)
-  have hw' : p' * w' * p' = w' := by simp [w', p', ← Unitization.inr_mul, hw]
-  have hpw : p' * w' = w' := by grind
-  have hwp : w' * p' = w' := by grind
-  have key (t : ℝ) : ‖w' + algebraMap ℝ _ t‖ ≤ √(1 + t ^ 2) := by
-    have hortho : (w' + t • p') ⋆⟂ (t • (1 - p')) := by
-      refine .smul_right ?_ t
-      rw [hp'.one_sub.isSelfAdjoint.isStarOrtho_iff]
-      constructor
-      · simp [mul_sub, add_mul, hwp, hp'.isIdempotentElem.eq]
-      · simp [sub_mul, mul_add, hpw, hp'.isIdempotentElem.eq]
-    have heq : w' + algebraMap ℝ _ t = (w' + t • p') + t • (1 - p') := by
-      rw [Algebra.algebraMap_eq_smul_one, smul_sub]
-      abel
-    rw [heq, hortho.norm_add]
-    refine max_le ?_ ?_
-    · simpa [w', p', ← Unitization.inr_smul, ← Unitization.inr_add, Unitization.norm_inr] using h t
-    · grw [norm_smul, hp'.one_sub.norm_le, mul_one, Real.norm_eq_abs]
-      exact Real.abs_le_sqrt (by linarith)
-  /- Every element `c` of the spectrum satisfies `|c| + n ≤ √(1 + n ^ 2)` for every `n : ℕ`,
-  and hence `c = 0`. -/
-  suffices w' = 0 from Unitization.inr_injective (R := ℂ) (by simpa [w'] using this)
-  refine CFC.eq_zero_of_spectrum_subset_zero (R := ℝ) w' (fun c hc ↦ ?_) (hsa.inr ℂ)
-  rw [Set.mem_singleton_iff, ← abs_eq_zero]
-  refine le_antisymm ?_ (abs_nonneg c)
-  refine ge_of_tendsto' (tendsto_sqrt_one_add_sq_sub_self_atTop.comp tendsto_natCast_atTop_atTop)
-    fun n ↦ ?_
-  rw [Function.comp_apply, le_sub_iff_add_le]
-  refine (hsa.inr ℂ).max_norm_add_sub_algebraMap_ge c hc n n.cast_nonneg |>.trans <|
-    max_le (key n) ?_
-  simpa [sub_eq_add_neg] using key (-n)
+  /- We pass to the unitization, where the unital case applies. -/
+  have hp' : IsStarProjection (p : Unitization ℂ A) :=
+    hp.map (Unitization.inrNonUnitalStarAlgHom ℂ A)
+  have := eq_zero_of_norm_add_smul_le_of_unital hp' (hsa.inr ℂ)
+    (by simp [← Unitization.inr_mul, hw]) fun t ↦ by
+      simpa [← Unitization.inr_smul, ← Unitization.inr_add, Unitization.norm_inr] using h t
+  exact Unitization.inr_injective (R := ℂ) (by simpa using this)
 
 /-- If `‖x + c • p‖ ≤ √(1 + ‖c‖ ^ 2)` for every `c : ℂ`, then `p * x * p = 0`. -/
 lemma mul_mul_eq_zero_of_norm_add_smul_le {x : A}

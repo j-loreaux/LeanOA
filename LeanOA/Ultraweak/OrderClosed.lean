@@ -93,6 +93,22 @@ lemma IsSelfAdjoint.max_norm_add_sub_algebraMap_ge
       congr! 1
       abel
 
+/-- A selfadjoint element `x` such that `‖x + t‖ ≤ √(1 + t ^ 2)` for every real `t` is zero. -/
+lemma IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le
+    {A : Type*} [NormedRing A] [StarRing A] [NormedAlgebra ℝ A]
+    [IsometricContinuousFunctionalCalculus ℝ A IsSelfAdjoint] {x : A} (hx : IsSelfAdjoint x)
+    (h : ∀ t : ℝ, ‖x + algebraMap ℝ A t‖ ≤ √(1 + t ^ 2)) : x = 0 := by
+  /- Every element `c` of the spectrum satisfies `|c| + n ≤ √(1 + n ^ 2)` for every `n : ℕ`,
+  and hence `c = 0`. -/
+  refine CFC.eq_zero_of_spectrum_subset_zero (R := ℝ) x (fun c hc ↦ ?_) hx
+  rw [Set.mem_singleton_iff, ← abs_eq_zero]
+  refine le_antisymm ?_ (abs_nonneg c)
+  refine ge_of_tendsto' (tendsto_sqrt_one_add_sq_sub_self_atTop.comp tendsto_natCast_atTop_atTop)
+    fun n ↦ ?_
+  rw [Function.comp_apply, le_sub_iff_add_le]
+  refine hx.max_norm_add_sub_algebraMap_ge c hc n n.cast_nonneg |>.trans <| max_le (h n) ?_
+  simpa [sub_eq_add_neg] using h (-n)
+
 namespace Ultraweak
 
 set_option backward.isDefEq.respectTransparency false in
@@ -115,43 +131,25 @@ lemma isClosed_setOf_isSelfAdjoint : IsClosed {x : σ(M, P) | IsSelfAdjoint x} :
   case mem_ball =>
     exact isClosed_iff_forall_filter.mp (isClosed_closedBall ℂ P (0 : M) 1)
       x l hl_neBot (by aesop) hlx
-  /- To show `x` is self-adjoint, we show every element `c` of the `ℝ`-spectrum of
-  `ℑ (ofUltraweak x)` is zero. -/
+  /- To show `x` is self-adjoint, we show `ℑ x = 0`. By
+  `IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le`, it suffices to show that
+  `‖ℑ x + t‖ ≤ ‖x + I • t‖ ≤ √(1 + t ^ 2)` for every real `t`. -/
   refine .of_ofUltraweak ?_
   rw [← imaginaryPart_eq_zero_iff, ← ZeroMemClass.coe_eq_zero]
-  refine CFC.eq_zero_of_spectrum_subset_zero _ (R := ℝ) (fun c hc ↦ ?_) (ℑ (ofUltraweak x)).2
-    -- missing `cfc_tac` lemma for the last argument on the previous line
-  rw [Set.mem_singleton_iff]
-  rw [← abs_eq_zero]
-  refine le_antisymm ?_ (abs_nonneg c)
-  -- To show `c ≤ 0` It suffices to show `Tendsto (fun n : ℕ ↦ √(1 + n ^ 2) - n) atTop (𝓝 0)`
-  refine ge_of_tendsto' (tendsto_sqrt_one_add_sq_sub_self_atTop.comp tendsto_natCast_atTop_atTop)
-    fun n ↦ ?_
-  /- By `IsSelfAdjoint.max_norm_add_sub_algebraMap_ge` it suffices to show that
-  `‖ℑ x ± n‖ ≤ √(1 + n ^ 2)`. -/
-  grw [Function.comp_apply, le_sub_iff_add_le,
-    IsSelfAdjoint.max_norm_add_sub_algebraMap_ge (ℑ (ofUltraweak x)).2 c hc n (by positivity)]
-  trans max ‖ofUltraweak x + I • algebraMap ℝ M n‖ ‖ofUltraweak x - I • algebraMap ℝ M n‖
-  · apply max_le_max
-    · convert! imaginaryPart.norm_le (ofUltraweak x + I • algebraMap ℝ M n) using 1
-      simp [IsSelfAdjoint.coe_realPart]
-    · convert! imaginaryPart.norm_le (ofUltraweak x - I • algebraMap ℝ M n) using 1
-      simp [IsSelfAdjoint.coe_realPart]
-  /- `fun m : σ(M, P) ↦ m + I • n` stays within the closed ball of radius `√(1 + n ^ 2)`
-  and converges to `x + I • n` along the filter `l`. -/
-  have h₃ (n : ℝ) : Tendsto (fun m : σ(M, P) ↦ m + I • algebraMap ℝ σ(M, P) n) l
-      (𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) √(1 + n ^ 2)) ⊓
-        𝓝 (x + I • algebraMap ℝ σ(M, P) n)) := by
+  refine (ℑ (ofUltraweak x)).2.eq_zero_of_norm_add_algebraMap_le fun t ↦ ?_
+  trans ‖ofUltraweak x + I • algebraMap ℝ M t‖
+  · convert! imaginaryPart.norm_le (ofUltraweak x + I • algebraMap ℝ M t) using 1
+    simp [(IsSelfAdjoint.algebraMap M (.all t)).coe_realPart]
+  /- `fun m : σ(M, P) ↦ m + I • t` stays within the closed ball of radius `√(1 + t ^ 2)`
+  and converges to `x + I • t` along the filter `l`. -/
+  have h₃ : Tendsto (fun m : σ(M, P) ↦ m + I • algebraMap ℝ σ(M, P) t) l
+      (𝓟 (ofUltraweak ⁻¹' Metric.closedBall (0 : M) √(1 + t ^ 2)) ⊓
+        𝓝 (x + I • algebraMap ℝ σ(M, P) t)) := by
     refine tendsto_inf.mpr ⟨.mono_left ?_ hl_sa, .add_const _ hlx⟩
     simpa using fun x hx hx_norm ↦
-      hx.ofUltraweak.norm_isSelfAdjoint_add_I_smul_algebraMap hx_norm n
-  apply max_le
-  · have := isClosed_iff_forall_filter.mp <| isClosed_closedBall ℂ P (0 : M) (√(1 + n ^ 2))
-    simpa using this _ _ inferInstance (tendsto_inf.mp (h₃ n) |>.1) (tendsto_inf.mp (h₃ n) |>.2)
-  · have := isClosed_iff_forall_filter.mp <| isClosed_closedBall ℂ P (0 : M) (√(1 + n ^ 2))
-    simpa [sub_eq_add_neg] using this _ _ inferInstance
-      (by simpa only [even_two, Even.neg_pow] using! (tendsto_inf.mp (h₃ (-n)) |>.1))
-      (tendsto_inf.mp (h₃ (-n)) |>.2)
+      hx.ofUltraweak.norm_isSelfAdjoint_add_I_smul_algebraMap hx_norm t
+  have := isClosed_iff_forall_filter.mp <| isClosed_closedBall ℂ P (0 : M) (√(1 + t ^ 2))
+  simpa using this _ _ inferInstance (tendsto_inf.mp h₃ |>.1) (tendsto_inf.mp h₃ |>.2)
 
 variable [PartialOrder M] [StarOrderedRing M]
 
