@@ -62,6 +62,7 @@ public import LeanOA.Ultraweak.Bornology
 public import LeanOA.Ultraweak.ContinuousFunctionalCalculus
 public import LeanOA.Ultraweak.ContinuousStar
 public import LeanOA.Ultraweak.Corner
+public import LeanOA.Ultraweak.Dual
 public import LeanOA.Ultraweak.LUB
 public import LeanOA.Ultraweak.Masa
 public import LeanOA.Ultraweak.OrderClosed
