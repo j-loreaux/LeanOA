@@ -112,6 +112,23 @@ lemma IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le
   refine hx.max_norm_add_sub_algebraMap_ge c hc n n.cast_nonneg |>.trans <| max_le (h n) ?_
   simpa [sub_eq_add_neg] using h (-n)
 
+/-- An element `x` of a unital C⋆-algebra such that, for some constant `C`,
+`‖x + c‖ ≤ √(C + ‖c‖ ^ 2)` for every `c : ℂ`, is zero. -/
+lemma eq_zero_of_norm_add_algebraMap_le {A : Type*} [CStarAlgebra A] {x : A} {C : ℝ}
+    (h : ∀ c : ℂ, ‖x + algebraMap ℂ A c‖ ≤ √(C + ‖c‖ ^ 2)) : x = 0 := by
+  /- The real and imaginary parts of `x` satisfy the hypotheses of
+  `IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le`. -/
+  have hre : (ℜ x : A) = 0 := by
+    refine (ℜ x).2.eq_zero_of_norm_add_algebraMap_le (C := C) fun t ↦ ?_
+    simpa [Algebra.algebraMap_eq_smul_one, sq_abs, (IsSelfAdjoint.one (R := A)).coe_realPart] using
+      (realPart.norm_le (x + algebraMap ℂ A t)).trans (h t)
+  have him : (ℑ x : A) = 0 := by
+    refine (ℑ x).2.eq_zero_of_norm_add_algebraMap_le (C := C) fun t ↦ ?_
+    simpa [Algebra.algebraMap_eq_smul_one, sq_abs, mul_smul, imaginaryPart_I_smul,
+      (IsSelfAdjoint.one (R := A)).coe_realPart] using
+      (imaginaryPart.norm_le (x + algebraMap ℂ A (I * t))).trans (h (I * t))
+  rw [← realPart_add_I_smul_imaginaryPart x, hre, him, smul_zero, add_zero]
+
 namespace Ultraweak
 
 set_option backward.isDefEq.respectTransparency false in

@@ -37,41 +37,16 @@ include hp
 
 attribute [bound_forward] IsStarProjection.norm_le
 
-/-- If `w` is a selfadjoint element of the corner `p * A * p` such that
-`‖w + t • p‖ ≤ √(1 + t ^ 2)` for every real `t`, then `w = 0`. -/
-lemma eq_zero_of_norm_add_smul_le {w : A} (hsa : IsSelfAdjoint w) (hw : p * w * p = w)
-    (h : ∀ t : ℝ, ‖w + t • p‖ ≤ √(1 + t ^ 2)) : w = 0 := by
-  /- In the corner `p * A * p`, which is a C⋆-algebra with unit `p`, this is
-  `IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le`. -/
-  suffices Corner.mk hp w hw = 0 from Corner.coe_eq_zero.mpr this
-  refine IsSelfAdjoint.eq_zero_of_norm_add_algebraMap_le (C := 1)
-    (Corner.ext <| by simpa using hsa.star_eq) fun t ↦ ?_
-  rw [← Corner.norm_coe, Corner.coe_add, Corner.coe_algebraMap, Corner.coe_mk]
-  exact h t
-
 /-- If `‖x + c • p‖ ≤ √(1 + ‖c‖ ^ 2)` for every `c : ℂ`, then `p * x * p = 0`. -/
 lemma mul_mul_eq_zero_of_norm_add_smul_le {x : A}
     (h : ∀ c : ℂ, ‖x + c • p‖ ≤ √(1 + ‖c‖ ^ 2)) : p * x * p = 0 := by
-  set z := p * x * p
-  have hz : p * z * p = z := by grind
-  have hz' (c : ℂ) : ‖z + c • p‖ ≤ √(1 + ‖c‖ ^ 2) := by
-    have : z + c • p = p * (x + c • p) * p := by grind
-    grw [this, norm_mul₃_le, hp.norm_le, one_mul, hp.norm_le, mul_one, h c]
-  /- The real and imaginary parts of `z` lie in the corner `p * A * p` and satisfy the hypotheses
-  of `eq_zero_of_norm_add_smul_le`. -/
-  have hstar : p * star z * p = star z := by
-    simpa [star_mul, hp.isSelfAdjoint.star_eq, mul_assoc] using congr(star $hz)
-  have hre : (ℜ z : A) = 0 := by
-    refine hp.eq_zero_of_norm_add_smul_le (ℜ z).2 ?_ fun t ↦ ?_
-    · simp [realPart_apply_coe, mul_add, add_mul, smul_mul_assoc, mul_smul_comm, hz, hstar]
-    · simpa [sq_abs, hp.isSelfAdjoint.coe_realPart] using
-        (realPart.norm_le (z + (t : ℂ) • p)).trans (hz' t)
-  have him : (ℑ z : A) = 0 := by
-    refine hp.eq_zero_of_norm_add_smul_le (ℑ z).2 ?_ fun t ↦ ?_
-    · simp [imaginaryPart_apply_coe, mul_sub, sub_mul, smul_mul_assoc, mul_smul_comm, hz, hstar]
-    · simpa [sq_abs, mul_smul, imaginaryPart_I_smul, hp.isSelfAdjoint.coe_realPart] using
-        (imaginaryPart.norm_le (z + (I * t) • p)).trans (hz' (I * t))
-  rw [← realPart_add_I_smul_imaginaryPart z, hre, him, smul_zero, add_zero]
+  /- In the corner `p * A * p`, which is a C⋆-algebra with unit `p`, the compression
+  `p * x * p` satisfies the hypotheses of `eq_zero_of_norm_add_algebraMap_le`. -/
+  rw [← hp.coe_toCorner (R := ℂ) x, Corner.coe_eq_zero]
+  refine eq_zero_of_norm_add_algebraMap_le (C := 1) fun c ↦ ?_
+  have hxp : p * x * p + c • p = p * (x + c • p) * p := by grind
+  rw [← Corner.norm_coe, Corner.coe_add, Corner.coe_algebraMap, coe_toCorner, hxp]
+  grw [norm_mul₃_le, hp.norm_le, one_mul, hp.norm_le, mul_one, h c]
 
 variable {q : A} (hq : IsStarProjection q) (hpq : p ⋆⟂ q)
 include hq hpq
