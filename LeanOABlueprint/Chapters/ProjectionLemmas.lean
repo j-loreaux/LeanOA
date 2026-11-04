@@ -104,9 +104,9 @@ In a $`W^*`-algebra $`M`, the supremum of a nonempty directed set of projections
 :::proof "lem:directed_sup_proj"
 Let $`e` be the supremum of the directed set $`(q_\alpha)` of projections; it is the
 $`\sigma`-limit of the $`q_\alpha` by {bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[], hence is
-self-adjoint by {bpref "lem:pos_sa_sigma_closed_Sak_1_7_1"}[]. Since $`0 \le e - q_\alpha \le 1`,
-we have $`(e - q_\alpha)^2 \le e - q_\alpha`, so $`\varphi((e - q_\alpha)^2) \to 0` for every
-$`\sigma`-continuous positive $`\varphi`, whence $`(e - q_\alpha)^2 \to 0`. On the other hand
-$`(e - q_\alpha)^2 = e^2 - e q_\alpha - q_\alpha e + q_\alpha \to e - e^2` by
-{bpref "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8"}[]. Hence $`e^2 = e`.
+self-adjoint by {bpref "lem:pos_sa_sigma_closed_Sak_1_7_1"}[]. Since $`q_\alpha \le e \le 1`, we
+have $`0 \le q_\alpha (1 - e) q_\alpha \le q_\alpha (1 - q_\alpha) q_\alpha = 0`, and so
+$`(1 - e) q_\alpha = 0` by the $`C^*`-identity, i.e., $`e q_\alpha = q_\alpha`. Multiplication is
+separately $`\sigma`-continuous ({bpref "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8"}[]), so
+$`q_\alpha = e q_\alpha \to e^2`, but also $`q_\alpha \to e`. Hence $`e^2 = e`.
 :::
