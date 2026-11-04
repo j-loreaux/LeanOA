@@ -15,7 +15,7 @@ self-adjoint elements of $`M`, respectively.
 $`P` is a convex cone in $`M`.
 :::
 
-:::lemma_ "lem:pos_sa_sigma_closed_Sak_1_7_1" (lean := "Ultraweak.isClosed_setOf_isSelfAdjoint, Ultraweak.isClosed_nonneg") (uses := "def:sigma_top")
+:::lemma_ "lem:pos_sa_sigma_closed_Sak_1_7_1" (lean := "Ultraweak.isClosed_setOf_isSelfAdjoint, Ultraweak.isClosed_nonneg") (uses := "def:sigma_top, thm:krein_smulian")
 (Sakai 1.7.1) $`P` and $`M^s` are $`\sigma`-closed.
 :::
 

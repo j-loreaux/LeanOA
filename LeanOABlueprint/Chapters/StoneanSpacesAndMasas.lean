@@ -9,7 +9,7 @@ open Informal
 Recall that a compact Hausdorff space is *Stonean* if the closure of every open set is open.
 We note that {bpref "lem:fin_lin_approx_of_stonean_Sak_1_3_1"}[] is only part of Sakai 1.3.1,
 since that is all we need for the proof of
-{bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[]. If $`K` is a topological space in which
+{bpref "lem:wstar_pos_approx_proj"}[]. If $`K` is a topological space in which
 singletons are closed, and $`p` is a projection in $`C(K)`, the spectrum of $`p` is its range
 and is contained in $`\{0, 1\}`. Furthermore, $`p^{-1}\{0\} = K \setminus p^{-1}\{1\}`, and
 so both of these sets are clopen, and identify connected components of $`K`. If $`K` is
@@ -62,7 +62,7 @@ The usual order is a partial order, and given $`f, g \in C(K)` supported on $`U`
 $`f \vee g \in C(K)`, supported on $`U`, where $`(f \vee g)(t) = \max\{f(t), g(t)\}`.
 :::
 
-:::proposition "prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2" (lean := "ExtremallyDisconnected.ofConditionallyCompletePartialOrderSupContinuousMap") (uses := "lem:cts_fns_ge_zero_le_one_directed, lem:selfadjoint_le_norm")
+:::proposition "prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2" (lean := "ExtremallyDisconnected.ofConditionallyCompletePartialOrderSupContinuousMap") (uses := "lem:selfadjoint_le_norm")
 (Sakai 1.3.2) Let $`K` be a compact Hausdorff space. Suppose every bounded increasing net of
 real-valued, non-negative functions in $`C(K)` has a least upper bound in $`C(K)`. Then $`K`
 is Stonean.
@@ -71,9 +71,10 @@ is Stonean.
 :::proof "prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2"
 Suppose for the sake of a contradiction that $`K` is not Stonean, i.e. that there exists an
 open set $`U` whose closure is not open, i.e. that $`\overline{U}^c` is not closed. Consider
-the set of $`f` in $`C(K)` with support contained in $`U` and such that $`0 \le f \le 1`. By
-{bpref "lem:selfadjoint_le_norm"}[] and {bpref "lem:cts_fns_ge_zero_le_one_directed"}[], this
-is a bounded, increasing net with respect to the order on $`C(K)`.
+the set of $`f` in $`C(K)` with support contained in $`U` and such that $`0 \le f \le 1`. It
+is directed ({bpref "lem:cts_fns_ge_zero_le_one_directed"}[]), and it is
+bounded by {bpref "lem:selfadjoint_le_norm"}[]; so it is a bounded, increasing net with respect
+to the order on $`C(K)`.
 
 For any point $`t \in U`, by Urysohn's Lemma (compact Hausdorff spaces are regular) there
 exists a continuous function $`g \in C(K)` such that $`g(t) = 1` and $`g` is zero on $`U^c`.
@@ -86,14 +87,15 @@ $`p \in \overline{U}`, and by continuity $`f_s(p) = 0`. But $`f_s(p) = 1` by the
 is a contradiction.
 :::
 
-:::lemma_ "lem:spec_masa_wstar_stonean_Sak_1_7_5" (lean := "StarSubalgebra.IsMasa.extremallyDisconnected_characterSpace") (uses := "prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2, def:cstar_def, thm:comm_cstar_cts_fcns_Sak_1_2_1")
+:::lemma_ "lem:spec_masa_wstar_stonean_Sak_1_7_5" (lean := "StarSubalgebra.IsMasa.extremallyDisconnected_characterSpace") (uses := "prop:stonean_of_cts_fcns_incr_cond_complete_Sak_1_3_2, def:cstar_def, thm:comm_cstar_cts_fcns_Sak_1_2_1, lem:sigma_cont_of_normal_Sak_1_7_4")
 (Sakai 1.7.5) If $`C` is any maximal commutative $`C^*`-subalgebra of the $`W^*`-algebra
 $`M`, its spectrum space (maximal ideal space) is Stonean.
 :::
 
 :::proof "lem:spec_masa_wstar_stonean_Sak_1_7_5"
 Suppose $`(a_\lambda)` is a uniformly bounded, increasing net of positive elements in $`C`
-with supremum $`a`. Given any unitary $`u \in C`, we have
+with supremum $`a` in $`M`, which exists by {bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[]. Given
+any unitary $`u \in C`, we have
 $`u^* \sup_\lambda a_\lambda u = \sup_\lambda u^* a_\lambda u`, and since every element in
 $`C` is a linear combination of unitary elements from $`C`, we have that
 $`\sup_\lambda a_\lambda \in C`. The result follows from

@@ -1,8 +1,10 @@
 import LeanOABlueprint.Base
 import LeanOABlueprint.Blueprint
+import LeanOABlueprint.Chapters.DualPairsAndWeakTopologies
 import LeanOABlueprint.Chapters.NormalityAndUltraweakContinuity
 import LeanOABlueprint.Chapters.OrderLemmas
 import LeanOABlueprint.Chapters.PositiveFunctionalsAndStates
 import LeanOABlueprint.Chapters.ProjectionLemmas
 import LeanOABlueprint.Chapters.StoneanSpacesAndMasas
+import LeanOABlueprint.Chapters.UnitalityAndOtherTopologies
 import LeanOABlueprint.Chapters.WStarAlgebrasAndTopologies

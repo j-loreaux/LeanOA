@@ -23,25 +23,37 @@ of $`T`. Let $`P` denote the set of positive elements of $`M`.
 Every continuous bijection from a compact space to a Hausdorff space is a homeomorphism.
 :::
 
-:::theorem "thm:Banach_Alaoglu" (tags := "mathlib") (lean := "WeakDual.isCompact_closedBall")
-(Banach-Alaoglu) The closed unit ball of the dual space of a normed vector space is compact
-in the weak-$`*` topology.
+:::lemma_ "lem:cauchy_schwarz" (tags := "mathlib") (lean := "PositiveLinearMap.norm_map_star_mul_le")
+(Cauchy–Schwarz) If $`\varphi` is a positive linear functional on a $`C^*`-algebra, then
+$`|\varphi(y^* x)|^2 \le \varphi(y^* y) \varphi(x^* x)` for all $`x, y`.
 :::
 
-:::theorem "lem:sigma_cont_of_normal_Sak_1_7_4" (lean := "Ultraweak.DirectedOn.exists_isLUB, Ultraweak.DirectedOn.isLUB_star_right_conjugate") (uses := "thm:Banach_Alaoglu, lem:homeo_of_cts_bij_cpt_haus, lem:uw_pos_sep_pts, lem:selfadjoint_le_norm, def:sigma_top, thm:comm_cstar_cts_fcns_Sak_1_2_1")
+:::lemma_ "lem:sigma_eq_weak_pos_on_bdd" (lean := "Ultraweak.cauchy_of_forall_posCLM_of_eventually, Ultraweak.tendsto_of_forall_posCLM_of_eventually, Ultraweak.continuousOn_of_forall_posCLM") (uses := "thm:Banach_Alaoglu, lem:homeo_of_cts_bij_cpt_haus, lem:uw_pos_sep_pts, def:sigma_top")
+On bounded subsets of $`M`, the $`\sigma`-topology coincides with the weak topology
+$`\sigma(M, E)` induced by the $`\sigma`-continuous positive linear functionals, and similarly
+for the uniform structures. In particular, a bounded net in $`M` is $`\sigma`-Cauchy (resp.
+$`\sigma`-convergent to $`x`) if and only if $`(\varphi(x_\lambda))` is Cauchy (resp. converges to
+$`\varphi(x)`) for every $`\varphi \in T`.
+:::
+
+:::proof "lem:sigma_eq_weak_pos_on_bdd"
+By {bpref "lem:uw_pos_sep_pts"}[] the subspace $`E` separates the points of $`M` and so
+$`\sigma(M, E)` is Hausdorff. By the Banach-Alaoglu Theorem ({bpref "thm:Banach_Alaoglu"}[]) the
+closed unit ball $`B` of $`M` is compact in the $`\sigma(M, M_*)`-topology. Since $`\sigma(M, E)`
+is weaker than $`\sigma(M, M_*)`, the identity map on $`B` is
+$`\sigma(M, M_*)`-$`\sigma(M, E)`-continuous, and therefore a homeomorphism, by
+{bpref "lem:homeo_of_cts_bij_cpt_haus"}[]; as $`B` is compact, it is even a uniform equivalence.
+The same holds for every closed ball, by scaling.
+:::
+
+:::theorem "lem:sigma_cont_of_normal_Sak_1_7_4" (lean := "Ultraweak.DirectedOn.exists_isLUB, Ultraweak.DirectedOn.isLUB_star_right_conjugate") (uses := "lem:sigma_eq_weak_pos_on_bdd, lem:non_pos_elem_neg_for_some_state_Sak_1_7_2, lem:star_conj_pos, lem:cauchy_schwarz, lem:selfadjoint_le_norm, def:sigma_top")
 (Sakai 1.7.4) Every uniformly bounded, increasing net in $`M^s` converges to its least upper
 bound in the $`\sigma`-topology. Further, if $`x = \sup_\lambda x_\lambda` then
 $`a^* x a = \sup_\lambda a^* x_\lambda a`.
 :::
 
 :::proof "lem:sigma_cont_of_normal_Sak_1_7_4"
-Letting $`T` denote the set of $`\sigma`-continuous positive functionals on $`M` and $`E` its
-linear span, by {bpref "lem:uw_pos_sep_pts"}[] the subspace $`E` separates the points of
-$`M` and so $`\sigma(M, E)` is Hausdorff. By the Banach-Alaoglu Theorem
-({bpref "thm:Banach_Alaoglu"}[]) the closed unit ball $`B` of $`M` is compact in the
-$`\sigma(M, M_*)`-topology. Since $`\sigma(M, E)` is weaker than $`\sigma(M, M_*)`, the
-identity map on $`B` is $`\sigma(M, M_*)`-$`\sigma(M, E)`-continuous, and therefore a
-homeomorphism, by {bpref "lem:homeo_of_cts_bij_cpt_haus"}[]. So, to prove that a uniformly
+By {bpref "lem:sigma_eq_weak_pos_on_bdd"}[], to prove that a uniformly
 bounded net $`(x_t)` is $`\sigma`-Cauchy, it is enough to check that for all
 $`\varepsilon > 0` and $`\varphi \in T` there is a $`\Lambda` such that
 $`\varphi(x_\lambda - x_\mu) \le \varepsilon` for $`\lambda \ge \mu \ge \Lambda`.
@@ -77,7 +89,7 @@ c^2 \varphi(x_\lambda) + c \varphi(a^* x_\lambda + x_\lambda a) + \varphi(a^* x_
 for all $`\varphi \in T`. It suffices to show that
 $`\varphi(a^* x_\lambda + x_\lambda a) \to \varphi(a^* x + x a)` for all $`\varphi \in T`,
 because then $`\varphi(a^* x_\lambda a) \to \varphi(a^* x a)` by the above. We can use
-Cauchy-Schwarz for this as follows. If $`\alpha \le \beta`, we have
+Cauchy-Schwarz ({bpref "lem:cauchy_schwarz"}[]) for this as follows. If $`\alpha \le \beta`, we have
 $`x_\beta - x_\alpha \ge 0`, and since the net $`(x_\lambda)` is uniformly bounded there
 exists $`M > 0` such that (using {bpref "lem:selfadjoint_le_norm"}[])
 
@@ -144,7 +156,7 @@ $`\varphi(p) < \psi(p)`.
 The following likely contains the most crucial use of the normality of $`\varphi` for the
 later proof of {bpref "thm:sigma_cts_of_normal_Sak_1_13_2"}[].
 
-:::lemma_ "lem:zorn_base" (lean := "Ultraweak.exists_maximal_continuous_mul_right") (uses := "cor:proj_sub_of_subproj, lem:selfadjoint_le_norm, lem:sigma_cont_of_normal_Sak_1_7_4, lem:directed_sup_proj, prop:loc_cvx_result, def:sigma_top")
+:::lemma_ "lem:zorn_base" (lean := "Ultraweak.exists_maximal_continuous_mul_right") (uses := "cor:proj_sub_of_subproj, lem:selfadjoint_le_norm, lem:sigma_cont_of_normal_Sak_1_7_4, lem:directed_sup_proj, lem:cauchy_schwarz, prop:loc_cvx_result, def:sigma_top")
 Let $`\varphi` be a normal positive linear functional on $`M` and consider the predicate
 $`P : \mathcal{P}(M) \to \mathrm{Prop}` defined, for $`p \in \mathcal{P}(M)`, by
 "$`M \ni x \mapsto \varphi(xp)` is $`\sigma(M, M_*)`-continuous". If $`(p_\alpha)` is a chain
@@ -162,7 +174,7 @@ $`\sigma`-topology to $`p`, and $`p` is a projection. By
 $`C^*`-property of the norm ($`\|x^* x\| = \|x\|^2`),
 {bpref "lem:selfadjoint_le_norm"}[] and the positivity of $`\varphi` we have
 $`\varphi(x^* x) \le \varphi(1)`. Now these facts together with Cauchy-Schwarz and the
-monotonicity of square roots give
+monotonicity of square roots ({bpref "lem:cauchy_schwarz"}[]) give
 
 $$`\begin{aligned}
 |\varphi(x(p - p_\alpha))|
@@ -176,12 +188,6 @@ right hand side converges to $`0` with $`\alpha` due to the normality of $`\varp
 therefore $`\varphi(\cdot\, p_\alpha)` converges to $`\varphi(\cdot\, p)` in norm. Since the
 set of $`\sigma`-continuous functionals on $`M` is norm closed, it follows that
 $`\varphi(\cdot\, p)` is $`\sigma`-continuous. We obtain a maximal $`p_0` by Zorn's Lemma.
-:::
-
-:::lemma_ "lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10" (uses := "def:sigma_top")
-(Sakai 1.8.10) A linear functional $`\rho` on $`M` is $`\sigma`-continuous on the unit sphere
-(hence $`\sigma`-continuous) if and only if it is $`s`-continuous on the unit sphere (hence
-$`s`-continuous).
 :::
 
 :::lemma_ "lem:dominated_sigma_cts" (lean := "Ultraweak.continuous_of_norm_sq_le") (uses := "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8, prop:loc_cvx_result")
@@ -200,9 +206,13 @@ $`\sigma`-continuous functionals form a norm closed subspace of $`M^*`
 ({bpref "prop:loc_cvx_result"}[]).
 :::
 
-This replaces the use of the $`s`-topology ({bpref "thm:sigma_le_s_le_tau"}[],
-{bpref "cor:sigma_eq_s_on_ball"}[] and {bpref "lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10"}[]) in
-Sakai's proof of {bpref "thm:sigma_cts_of_normal_Sak_1_13_2"}[].
+This replaces the use of the strong ($`s`-) topology in Sakai's proof of
+{bpref "thm:sigma_cts_of_normal_Sak_1_13_2"}[]: Sakai shows that $`\sigma(M, M_*)` and the
+$`s`-topology agree on bounded sets ({bpref "thm:sigma_le_s_le_tau"}[],
+{bpref "cor:sigma_eq_s_on_ball"}[], which need the Mackey topology and the Mackey–Arens theorem),
+so that a functional is $`\sigma`-continuous if and only if it is $`s`-continuous on the unit ball
+({bpref "lem:bdd_sigma_cts_iff_bdd_s_cts_Sak_1_8_10"}[]). The GNS argument above avoids all of
+this.
 
 :::lemma_ "lem:corner_comparison" (lean := "Ultraweak.map_le_map_of_forall_lt, PositiveLinearMap.le_of_le_on_isStarProjection") (uses := "lem:cut_down_of_wstar, lem:wstar_pos_approx_proj")
 Let $`\varphi, \psi` be positive linear functionals on $`M` and $`p` a projection such that
@@ -217,7 +227,7 @@ positive $`a \in pMp` is a norm limit of nonnegative combinations of such projec
 where $`\varphi \le \psi` is a norm closed convex cone.
 :::
 
-:::theorem "thm:sigma_cts_of_normal_Sak_1_13_2" (lean := "Ultraweak.continuous_of_scottContinuousOn, Ultraweak.continuous_of_scottContinuousOn_chains") (uses := "def:sigma_top, lem:zorn_base, lem:exists_uw_ge_normal, lem:msr_th_lemma, lem:corner_comparison, lem:dominated_sigma_cts, lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8")
+:::theorem "thm:sigma_cts_of_normal_Sak_1_13_2" (lean := "Ultraweak.continuous_of_scottContinuousOn, Ultraweak.continuous_of_scottContinuousOn_chains") (uses := "def:sigma_top, lem:zorn_base, lem:exists_uw_ge_normal, lem:msr_th_lemma, lem:corner_comparison, lem:dominated_sigma_cts, lem:cauchy_schwarz, lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8")
 (Sakai 1.13.2) Every positive normal linear functional $`\varphi` on $`M` is
 $`\sigma(M, M_*)`-continuous.
 :::
@@ -235,6 +245,7 @@ that $`\varphi(q) < \psi(q)` for every nonzero $`q \le p` in $`M`.
 By {bpref "lem:corner_comparison"}[], $`\varphi(p x^* x p) \le \psi(p x^* x p)` for every
 $`x \in M`. The functional $`\psi' = \psi(p \cdot p)` is positive and $`\sigma`-continuous by
 {bpref "lem:star_left_mul_right_mul_sig_cts_Sak_1_7_8"}[], and by the Cauchy–Schwarz inequality
+({bpref "lem:cauchy_schwarz"}[])
 
 $$`|\varphi(xp)|^2 \le \varphi(1) \varphi(p x^* x p) \le \varphi(1) \psi'(x^* x).`
 
@@ -266,7 +277,7 @@ following are equivalent:
 {bpref "thm:sigma_cts_of_normal_Sak_1_13_2"}[].
 :::
 
-:::theorem "thm:predual_unique" (lean := "Ultraweak.continuousLinearEquivOfPredual, Predual.uniqueEquiv") (uses := "thm:sakai_normal_iff, lem:sigma_cont_of_normal_Sak_1_7_4, prop:loc_cvx_result")
+:::theorem "thm:predual_unique" (lean := "Ultraweak.continuousLinearEquivOfPredual, Predual.uniqueEquiv") (uses := "thm:sakai_normal_iff, lem:sigma_eq_weak_pos_on_bdd, thm:krein_smulian, prop:loc_cvx_result")
 If $`P` and $`Q` are preduals of a $`W^*`-algebra $`M`, then $`\sigma(M, P) = \sigma(M, Q)`, and
 there is a canonical isometric isomorphism $`P \cong Q` compatible with the pairings with $`M`.
 :::
@@ -275,8 +286,8 @@ there is a canonical isometric isomorphism $`P \cong Q` compatible with the pair
 By {bpref "thm:sakai_normal_iff"}[], the positive $`\sigma(M, P)`-continuous functionals are the
 positive $`\sigma(M, Q)`-continuous functionals, since condition (4) does not mention the predual.
 On bounded sets, each ultraweak topology is the weak topology induced by its positive continuous
-functionals (see the proof of {bpref "lem:sigma_cont_of_normal_Sak_1_7_4"}[]), so the two
-topologies agree on the unit ball. By the Krein–Smulian theorem, the identity of $`M` is a
+functionals ({bpref "lem:sigma_eq_weak_pos_on_bdd"}[]), so the two topologies agree on the
+unit ball. By the Krein–Smulian theorem ({bpref "thm:krein_smulian"}[]), the identity of $`M` is a
 homeomorphism $`\sigma(M, P) \to \sigma(M, Q)`. Hence $`P` and $`Q` are identified, via their
 isometric embeddings into $`M^*`, with the same subspace of $`M^*`
 ({bpref "prop:loc_cvx_result"}[]).
