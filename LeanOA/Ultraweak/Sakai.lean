@@ -4,6 +4,7 @@ public import LeanOA.Ultraweak.Normal
 public import LeanOA.Ultraweak.ClosedSubspace
 public import LeanOA.CStarAlgebra.Corner.Order
 public import LeanOA.Ultraweak.FiniteSpectrum
+public import LeanOA.Mathlib.Topology.Order.MonotoneConvergence
 public import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import Mathlib.Analysis.InnerProductSpace.Dual
 public import Mathlib.Analysis.InnerProductSpace.Completion
@@ -23,9 +24,16 @@ sets of projections) is ultraweakly continuous.
   `x ↦ ψ (star x * x) ^ (1 / 2)` of an ultraweakly continuous positive functional `ψ` is
   ultraweakly continuous.
 + `Ultraweak.continuous_of_scottContinuousOn`: **Sakai 1.13.2**.
+
+## Implementation notes
+
+The declaration `Ultraweak.continuous_of_norm_sq_le` essentially amounts to a proof that every
+ultrastrongly continuous functional is also ultraweakly continuous. Since the ultraweak topology
+is weaker than the ultrastrong topology, this shows that the two topologies have the same continuous
+linear functionals. Crucially, we avoid developing the ultrastrong topology explicitly here.
 -/
 
-open scoped Ultraweak ComplexOrder Topology NNReal InnerProductSpace
+open scoped Ultraweak ComplexOrder Topology NNReal InnerProductSpace StarRing
 open Filter Set Metric
 
 variable {M P : Type*} [CStarAlgebra M] [PartialOrder M] [StarOrderedRing M]
@@ -51,46 +59,35 @@ theorem continuous_of_norm_sq_le (ψ : M →ₚ[ℂ] ℂ)
     rw [ψ.preGNS_norm_def', ψ.ofPreGNS_toPreGNS, ← Real.sqrt_mul' _ (norm_nonneg _),
       Real.le_sqrt (norm_nonneg _) (by positivity)]
     exact (hω x).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
-  /- `ω` defines a continuous functional on the GNS space, which is the inner product with
-  some `η`. -/
+  /- `ω` defines a continuous functional `ω₁` on the GNS space, so that `ω = ω₁ ∘ j`, where
+  `j : M → ψ.GNS` is the canonical (norm continuous) map. -/
   let ω₀ : ψ.PreGNS →L[ℂ] ℂ :=
     (ω.toLinearMap ∘ₗ ψ.ofPreGNS.toLinearMap).mkContinuous C' fun x ↦ by
       simpa using hbound (ψ.ofPreGNS x)
   let ω₁ : StrongDual ℂ ψ.GNS := ω₀.extend UniformSpace.Completion.toComplL
-  have hω₁ (x : M) : ω₁ (ψ.toPreGNS x : ψ.GNS) = ω x := by
-    simp [ω₀, ω₁]
-  set η := (InnerProductSpace.toDual ℂ ψ.GNS).symm ω₁
-  have hη (x : M) : ⟪η, (ψ.toPreGNS x : ψ.GNS)⟫_ℂ = ω x := by
-    rw [InnerProductSpace.toDual_symm_apply, hω₁]
-  /- `ω` lies in the norm closure of the ultraweakly continuous functionals. -/
   let ψL : StrongDual ℂ M := ψ.toContinuousLinearMap
-  set s := √‖ψL‖
-  have hj (x : M) : ‖(ψ.toPreGNS x : ψ.GNS)‖ ≤ s * ‖x‖ := by
-    rw [UniformSpace.Completion.norm_coe, ψ.preGNS_norm_def', ψ.ofPreGNS_toPreGNS,
-      ← Real.sqrt_sq (norm_nonneg x), ← Real.sqrt_mul (norm_nonneg _)]
-    refine Real.sqrt_le_sqrt <| (ψL.le_opNorm _).trans_eq ?_
-    rw [CStarRing.norm_star_mul_self, sq]
-  refine (isClosed_setOf_continuous (P := P)).closure_subset <|
-    Metric.mem_closure_iff.mpr fun ε hε ↦ ?_
-  /- Approximate `η` within `ε / (s + 1)` by the image of some `y : M`. -/
-  obtain ⟨z, hz⟩ := UniformSpace.Completion.denseRange_coe.exists_dist_lt η
-    (show 0 < ε / (s + 1) by positivity)
-  set y := ψ.ofPreGNS z
-  have hy : ‖η - (ψ.toPreGNS y : ψ.GNS)‖ < ε / (s + 1) := by
-    simpa [y, dist_eq_norm] using hz
-  let g : StrongDual ℂ M := ψL ∘L ContinuousLinearMap.mul ℂ M (star y)
-  refine ⟨g, hψ.comp (continuous_const_mul (toUltraweak ℂ P (star y))), ?_⟩
-  rw [dist_eq_norm]
-  set r := ‖η - (ψ.toPreGNS y : ψ.GNS)‖
-  refine (ContinuousLinearMap.opNorm_le_bound (ω - g) (show 0 ≤ r * s by positivity)
-    fun x ↦ ?_).trans_lt ?_
-  · have : (ω - g) x = ⟪η - (ψ.toPreGNS y : ψ.GNS), (ψ.toPreGNS x : ψ.GNS)⟫_ℂ := by
-      rw [inner_sub_left, hη, UniformSpace.Completion.inner_coe, ψ.preGNS_inner_def]
-      simp [g, ψL]
-    rw [this, mul_assoc]
-    exact (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_left (hj x) (norm_nonneg _))
-  · calc r * s ≤ r * (s + 1) := by gcongr; linarith
-      _ < ε := by rwa [lt_div_iff₀ (by positivity)] at hy
+  let j : M →L[ℂ] ψ.GNS :=
+    (UniformSpace.Completion.toComplL.toLinearMap ∘ₗ ψ.toPreGNS.toLinearMap).mkContinuous
+      √‖ψL‖ fun x ↦ by
+        rw [LinearMap.comp_apply, ContinuousLinearMap.coe_coe, UniformSpace.Completion.coe_toComplL,
+          LinearEquiv.coe_coe, UniformSpace.Completion.norm_coe, ψ.preGNS_norm_def',
+          ψ.ofPreGNS_toPreGNS, ← Real.sqrt_sq (norm_nonneg x), ← Real.sqrt_mul (norm_nonneg _)]
+        refine Real.sqrt_le_sqrt <| (ψL.le_opNorm _).trans_eq ?_
+        rw [CStarRing.norm_star_mul_self, sq]
+  have hωj : ω = ω₁ ∘L j := by ext x; simp [ω₀, ω₁, j]
+  /- By the Riesz representation theorem, `ω₁ = ⟪η, ·⟫` for some `η`, and it suffices to show that
+  `x ↦ ⟪η, j x⟫` is ultraweakly continuous. This is a closed condition on `η`, so we may assume
+  `η` is the image of some `y : M`, in which case this is `x ↦ ψ (star y * x)`. -/
+  obtain ⟨η, hη⟩ := (InnerProductSpace.toDual ℂ ψ.GNS).surjective ω₁
+  rw [hωj, ← hη]
+  clear hη
+  induction η using UniformSpace.Completion.induction_on with
+  | hp =>
+    exact isClosed_setOf_continuous (P := P) |>.preimage <|
+      (ContinuousLinearMap.precomp ℂ j).continuous.comp (InnerProductSpace.toDual ℂ _).continuous
+  | ih z =>
+    simpa [j, ψ.preGNS_inner_def, Function.comp_def] using
+      hψ.comp (continuous_const_mul (toUltraweak ℂ P (star (ψ.ofPreGNS z))))
 
 /-! ### Auxiliary lemmas for Sakai 1.13.2 -/
 
@@ -109,30 +106,8 @@ nonempty directed `d ∈ D`, `φ` tends to its value at the supremum of `d`. -/
 lemma tendsto_of_scottContinuousOn {φ : M →ₚ[ℂ] ℂ} {D : Set (Set M)}
     (hφ : ScottContinuousOn D φ) {d : Set M} (hd : d ∈ D) (hne : d.Nonempty)
     (hdir : DirectedOn (· ≤ ·) d) {e : M} (he : IsLUB d e) :
-    Tendsto (fun q : d ↦ φ (q : M)) atTop (𝓝 (φ e)) := by
-  refine tendsto_atTop_isLUB ((OrderHomClass.mono φ).comp (Subtype.mono_coe _)) ?_
-  change IsLUB (Set.range (φ ∘ Subtype.val)) _
-  rw [Set.range_comp, Subtype.range_coe]
-  exact hφ hd hne hdir he
-
-/-- The positive linear map `x ↦ a * x * a` for a selfadjoint `a`. -/
-noncomputable def conjugatePLM {a : M} (ha : IsSelfAdjoint a) : M →ₚ[ℂ] M :=
-  .mk₀ (LinearMap.mulLeftRight ℂ (a, a)) fun x hx ↦ by
-    simpa [ha.star_eq] using star_left_conjugate_nonneg hx a
-
-@[simp]
-lemma conjugatePLM_apply {a : M} (ha : IsSelfAdjoint a) (x : M) :
-    conjugatePLM ha x = a * x * a :=
-  rfl
-
-/-- If `q ≤ 1 - p` for projections `p` and `q`, then `p * q = 0`. -/
-lemma _root_.IsStarProjection.mul_eq_zero_of_le_one_sub {p q : M} (hp : IsStarProjection p)
-    (hq : IsStarProjection q) (h : q ≤ 1 - p) : p * q = 0 := by
-  have h₁ : q * (1 - p) = q := (hq.le_iff_mul_eq_left hp.one_sub).mp h
-  have h₂ : q * p = 0 := by
-    rw [mul_sub, mul_one] at h₁
-    exact sub_eq_self.mp h₁
-  simpa [hp.isSelfAdjoint.star_eq, hq.isSelfAdjoint.star_eq] using congr(star $h₂)
+    Tendsto (fun q : d ↦ φ (q : M)) atTop (𝓝 (φ e)) :=
+  hφ.tendsto_atTop_isLUB hd hne hdir ((OrderHomClass.mono φ).monotoneOn d) he
 
 include P in
 /-- For a normal positive functional `φ`, there is a maximal projection `p₀` for which
@@ -258,10 +233,11 @@ lemma exists_forall_lt {φ ψ : M →ₚ[ℂ] ℂ}
     h (p - q₀) hr (sub_ne_zero.mpr hq₀ne.symm) (sub_le_self _ hq₀.nonneg)
   have hqle : ψ q ≤ φ q :=
     Complex.le_of_not_lt_of_nonneg (map_nonneg φ hq.nonneg) (map_nonneg ψ hq.nonneg) hnlt
-  have horth : q₀ * q = 0 :=
-    hq₀.mul_eq_zero_of_le_one_sub hq (hqr.trans (sub_le_sub_right hp.le_one _))
+  have horth : q ⋆⟂ q₀ :=
+    hq₀.one_sub_isStarOrtho.of_le hq.nonneg (hqr.trans (sub_le_sub_right hp.le_one _))
   have hsum : q₀ + q ∈ s :=
-    ⟨hq₀.add hq horth, le_sub_iff_add_le'.mp hqr, by simpa using add_le_add hq₀le hqle⟩
+    ⟨horth.symm.isStarProjection_add hq₀ hq, le_sub_iff_add_le'.mp hqr,
+      by simpa using add_le_add hq₀le hqle⟩
   have := hmax hsum (le_add_of_nonneg_right hq.nonneg)
   exact hq0 (le_antisymm (by simpa using this) hq.nonneg)
 
@@ -309,9 +285,9 @@ theorem continuous_of_scottContinuousOn_chains (φ : M →ₚ[ℂ] ℂ)
   /- With `ψ' := ψ (p₁ * · * p₁)`, which is ultraweakly continuous, we have
   `‖φ (x * p₁)‖ ^ 2 ≤ ‖φ 1‖ * ‖φ (p₁ * (star x * x) * p₁)‖ ≤ ‖φ 1‖ * ‖ψ' (star x * x)‖`,
   so `x ↦ φ (x * p₁)` is ultraweakly continuous. -/
-  let ψ' : M →ₚ[ℂ] ℂ := ψ.comp (conjugatePLM hp₁.isSelfAdjoint)
+  let ψ' : M →ₚ[ℂ] ℂ := ψ.comp (StarOrderedRing.conjPositiveLinearMap ℂ p₁)
   have hψ'c : Continuous fun x : σ(M, P) ↦ ψ' (ofUltraweak x) :=
-    hψc.comp ((continuous_mul_const (toUltraweak ℂ P p₁)).comp
+    hψc.comp ((continuous_mul_const (toUltraweak ℂ P (star p₁))).comp
       (continuous_const_mul (toUltraweak ℂ P p₁)))
   let ω : StrongDual ℂ M := φ.toContinuousLinearMap ∘L (ContinuousLinearMap.mul ℂ M).flip p₁
   have hωc := continuous_of_norm_sq_le (P := P) ψ' hψ'c ω ‖φ 1‖ fun x ↦ by
@@ -328,12 +304,12 @@ theorem continuous_of_scottContinuousOn_chains (φ : M →ₚ[ℂ] ℂ)
       ContinuousLinearMap.flip_apply, ContinuousLinearMap.mul_apply',
       PositiveLinearMap.toContinuousLinearMap_apply, PositiveLinearMap.comp_apply]
     refine h₁.trans <| mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
-    simpa [mul_assoc] using h₃
+    simpa [mul_assoc, hp₁.isSelfAdjoint.star_eq] using h₃
   /- Hence `x ↦ φ (x * (p₀ + p₁))` is ultraweakly continuous, contradicting maximality. -/
-  have horth : p₀ * p₁ = 0 := hp₀.mul_eq_zero_of_le_one_sub hp₁ hp₁le
+  have horth : p₁ ⋆⟂ p₀ := hp₀.one_sub_isStarOrtho.of_le hp₁.nonneg hp₁le
   have hcont : Continuous fun x : σ(M, P) ↦ φ (ofUltraweak x * (p₀ + p₁)) :=
     (hc₀.add hωc).congr fun x ↦ by simp [mul_add, ω]
-  have := hmax ⟨hp₀.add hp₁ horth, hcont⟩ (le_add_of_nonneg_right hp₁.nonneg)
+  have := hmax ⟨horth.symm.isStarProjection_add hp₀ hp₁, hcont⟩ (le_add_of_nonneg_right hp₁.nonneg)
   exact hp₁0 (le_antisymm (by simpa using this) hp₁.nonneg)
 
 include P in
