@@ -59,6 +59,7 @@ public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
 public import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
+public import LeanOA.Mathlib.Topology.Order.MonotoneConvergence
 public import LeanOA.MathlibTest.CFCPull
 public import LeanOA.Notation
 public import LeanOA.PositiveContinuousLinearMap
@@ -77,6 +78,8 @@ public import LeanOA.Ultraweak.Masa
 public import LeanOA.Ultraweak.Multiplication
 public import LeanOA.Ultraweak.Normal
 public import LeanOA.Ultraweak.OrderClosed
+public import LeanOA.Ultraweak.Sakai
 public import LeanOA.Ultraweak.SeparatingDual
 public import LeanOA.Ultraweak.Uniformity
+public import LeanOA.Ultraweak.UniquePredual
 public import LeanOA.WeakDual.UniformSpace

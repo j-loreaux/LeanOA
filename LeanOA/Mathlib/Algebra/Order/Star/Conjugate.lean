@@ -1,5 +1,6 @@
 module
 
+public import Mathlib.Algebra.Order.Module.PositiveLinearMap
 public import Mathlib.Algebra.Order.Star.Basic
 public import Mathlib.Order.Bounds.OrderIso
 public import LeanOA.Mathlib.Order.Hom.Basic
@@ -67,5 +68,25 @@ lemma _root_.IsLUB.conjugate_star_right_of_isUnit {s : Set R} {x : R}
 
 end Unital
 
---- we could also turn `conjOrderHom` into a `PositiveLinearMap`, which we should do.
+section PositiveLinearMap
+
+variable (S : Type*) {R : Type*} [Semiring S] [NonUnitalRing R] [StarRing R] [PartialOrder R]
+  [StarOrderedRing R] [Module S R] [SMulCommClass S R R] [IsScalarTower S R R]
+
+/-- The map `x ↦ r * x * star r` as a positive linear map in a star-ordered ring. -/
+def conjPositiveLinearMap (r : R) : R →ₚ[S] R where
+  toLinearMap := LinearMap.mulLeftRight S (r, star r)
+  monotone' := (conjOrderHom r).monotone
+
+@[simp]
+lemma conjPositiveLinearMap_apply (r x : R) : conjPositiveLinearMap S r x = r * x * star r :=
+  rfl
+
+@[simp]
+lemma toOrderHom_conjPositiveLinearMap (r : R) :
+    (conjPositiveLinearMap S r).toOrderHom = conjOrderHom r :=
+  rfl
+
+end PositiveLinearMap
+
 end StarOrderedRing
