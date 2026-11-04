@@ -162,7 +162,7 @@ lemma isClosed_range_mulLeft : IsClosed ((LinearMap.mulLeft ℂ p).range : Set �
 
 open LinearMap in
 /-- Left multiplication by a projection is ultraweakly continuous. -/
-private lemma continuous_mul_left_of_isStarProjection :
+lemma continuous_mul_left_of_isStarProjection :
     Continuous (fun x : σ(M, P) ↦ p * x) := by
   have idem : IsIdempotentElem (mulLeft ℂ p) := by
     simp [hp.isIdempotentElem.eq, IsIdempotentElem, Module.End.mul_eq_comp, ← mulLeft_mul]
@@ -204,7 +204,7 @@ private lemma continuous_mul_left (a : σ(M, P)) : Continuous (fun x : σ(M, P) 
   have hT_proj : Submodule.span ℂ {p : M | IsStarProjection p} ≤ T :=
     Submodule.span_le.mpr fun p hp ↦ (hT_iff p).mpr <|
       continuous_mul_left_of_isStarProjection hp.toUltraweak
-  have : CStarAlgebra.FiniteSpectrum M := CStarAlgebra.finiteSpectrum_of_predual (P := P)
+  have : WStarAlgebra M := .of_predual (P := P)
   have := Submodule.topologicalClosure_minimal _ hT_proj hT_closed
   rw [CStarAlgebra.FiniteSpectrum.topologicalClosure_span_complex_isStarProjection] at this
   exact (hT_iff (ofUltraweak a)).mp (this trivial)
