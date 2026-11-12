@@ -15,7 +15,7 @@ namespace WeakBilin
 
 lemma isVonNBounded_iff (s : Set (WeakBilin B)) :
     IsVonNBounded 𝕜 s ↔ ∀ y, IsVonNBounded 𝕜 (((pairing B).flip y) '' s) :=
-  WeakBilin.isInducing B |>.isVonNBounded_iff (pairing B).flip s
+  WeakBilin.isInducing B |>.isVonNBounded_iff s
 
 variable {B} in
 lemma isVonNBounded_iff_bddAbove {s : Set (WeakBilin B)} :

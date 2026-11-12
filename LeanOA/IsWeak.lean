@@ -204,7 +204,7 @@ open Bornology
 
 lemma isVonNBounded_iff (B : E →ₗ[𝕜] F →ₗ[𝕜] 𝕜) [hB : B.IsWeak] (s : Set E) :
     IsVonNBounded 𝕜 s ↔ ∀ y, IsVonNBounded 𝕜 (B.flip y '' s) :=
-  hB.isInducing B |>.isVonNBounded_iff B.flip s
+  hB.isInducing B |>.isVonNBounded_iff s
 
 variable {B} in
 lemma isVonNBounded_iff_bddAbove {𝕜 E F : Type*} [NontriviallyNormedField 𝕜] [AddCommGroup E]

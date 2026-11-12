@@ -48,10 +48,8 @@ public import LeanOA.Mathlib.Data.Set.Function
 public import LeanOA.Mathlib.Geometry.Convex.Cone.Pointed
 public import LeanOA.Mathlib.Lean.Elab.Tactic.Basic
 public import LeanOA.Mathlib.Misc
-public import LeanOA.Mathlib.Order.Hom.Basic
 public import LeanOA.Mathlib.Tactic.CFCPull.Attr
 public import LeanOA.Mathlib.Tactic.CFCPull.Core
-public import LeanOA.Mathlib.Topology.Algebra.ConstMulAction
 public import LeanOA.Mathlib.Topology.Algebra.Module.LinearMap
 public import LeanOA.Mathlib.Topology.Algebra.Module.PolarTopology
 public import LeanOA.Mathlib.Topology.Algebra.Module.Spaces.UniformConvergenceCLM
@@ -62,7 +60,6 @@ public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
 public import LeanOA.Mathlib.Topology.Order.MonotoneConvergence
 public import LeanOA.MathlibTest.CFCPull
 public import LeanOA.Notation
-public import LeanOA.PositiveContinuousLinearMap
 public import LeanOA.TendstoZero.Defs
 public import LeanOA.TendstoZero.StrongDual
 public import LeanOA.Ultraweak.Basic
