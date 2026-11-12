@@ -1,7 +1,7 @@
 module
 
 public import LeanOA.Ultraweak.ContinuousStar
-public import LeanOA.PositiveContinuousLinearMap
+public import LeanOA.Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import Mathlib.Analysis.LocallyConvex.WeakDual
 public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic

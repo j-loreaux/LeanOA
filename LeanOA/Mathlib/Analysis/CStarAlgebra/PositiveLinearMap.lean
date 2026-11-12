@@ -1,6 +1,6 @@
 module
 
-public import LeanOA.PositiveContinuousLinearMap
+public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Positive
 public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 
 @[expose] public section
@@ -21,7 +21,6 @@ def toPositiveContinuousLinearMap : A₁ →P[ℂ] A₂ where
 @[simp] lemma toPositiveContinuousLinearMap_id :
     (PositiveLinearMap.id ℂ A₁).toPositiveContinuousLinearMap = .id ℂ A₁ := rfl
 
--- maybe remove the following?
 /-- Lift a positive linear map between C⋆-algebras to a continuous linear map. -/
 abbrev toContinuousLinearMap : A₁ →L[ℂ] A₂ := f.toPositiveContinuousLinearMap.toContinuousLinearMap
 

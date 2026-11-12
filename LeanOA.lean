@@ -62,7 +62,6 @@ public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
 public import LeanOA.Mathlib.Topology.Order.MonotoneConvergence
 public import LeanOA.MathlibTest.CFCPull
 public import LeanOA.Notation
-public import LeanOA.PositiveContinuousLinearMap
 public import LeanOA.TendstoZero.Defs
 public import LeanOA.TendstoZero.StrongDual
 public import LeanOA.Ultraweak.Basic
