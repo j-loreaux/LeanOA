@@ -1,9 +1,9 @@
 module
 
+public import Mathlib.Algebra.Order.Group.End
 public import Mathlib.Algebra.Order.Module.PositiveLinearMap
 public import Mathlib.Algebra.Order.Star.Basic
 public import Mathlib.Order.Bounds.OrderIso
-public import LeanOA.Mathlib.Order.Hom.Basic
 
 @[expose] public section
 
@@ -54,7 +54,7 @@ lemma toMulHom_conjOrderHomMonoidHom :
 /-- The map  `r x ↦ r * x * star r` as a group homomorphism from `Rˣ` into `R ≃o R`
 in a star-ordered ring `R`. -/
 def conjUnitsOrderIso : Rˣ →* (R ≃o R) where
-  toFun r := .ofHomInv' (conjOrderHomMonoidHom (r : R)) (conjOrderHomMonoidHom (↑r⁻¹ : R))
+  toFun r := .ofHomInv (conjOrderHomMonoidHom (r : R)) (conjOrderHomMonoidHom (↑r⁻¹ : R))
     (by rw [← OrderHom.mul_eq_comp, ← map_mul]; simp)
     (by rw [← OrderHom.mul_eq_comp, ← map_mul]; simp)
   map_mul' _ _ := by ext; simp [mul_assoc]
