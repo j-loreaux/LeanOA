@@ -1,7 +1,7 @@
 module
 
 public import LeanOA.Mathlib.Analysis.LocallyConvex.PolarSubmodule
-public import LeanOA.Mathlib.Analysis.Normed.Group.Quotient
+public import LeanOA.Mathlib.Analysis.Normed.Operator.Quotient
 public import Mathlib.Analysis.Normed.Module.WeakDual
 public import Mathlib.Topology.Algebra.Module.Complement
 
@@ -53,14 +53,7 @@ noncomputable def dualQuotientPolarSubmodule :
   toFun g := g.comp ((topDualPairing 𝕜 X).polarSubmodule N).mkQL
   map_add' _ _ := rfl
   map_smul' _ _ := rfl
-  norm_map' g := by
-    refine le_antisymm ?_ ?_
-    · refine (g.opNorm_comp_le _).trans <| mul_le_of_le_one_right (norm_nonneg _) ?_
-      exact ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x ↦ by
-        simpa using Submodule.Quotient.norm_mk_le (S := (topDualPairing 𝕜 X).polarSubmodule N) x
-    · exact g.opNorm_le_bound (norm_nonneg _) <|
-        Quotient.norm_apply_le_of_forall_mk (norm_nonneg _)
-          (g.comp ((topDualPairing 𝕜 X).polarSubmodule N).mkQL).le_opNorm
+  norm_map' := ContinuousLinearMap.opNorm_comp_mkQL
 
 @[simp]
 lemma dualQuotientPolarSubmodule_apply
@@ -72,11 +65,8 @@ lemma dualQuotientPolarSubmodule_apply
 quotient. -/
 lemma exists_dualQuotientPolarSubmodule_eq {f : StrongDual 𝕜 X}
     (hf : ∀ x ∈ (topDualPairing 𝕜 X).polarSubmodule N, f x = 0) :
-    ∃ g, N.dualQuotientPolarSubmodule g = f := by
-  let g₀ : X ⧸ (topDualPairing 𝕜 X).polarSubmodule N →ₗ[𝕜] 𝕜 :=
-    ((topDualPairing 𝕜 X).polarSubmodule N).liftQ f.toLinearMap fun x hx ↦ hf x hx
-  exact ⟨g₀.mkContinuous ‖f‖ (Quotient.norm_apply_le_of_forall_mk (norm_nonneg f) f.le_opNorm),
-    by ext; rfl⟩
+    ∃ g, N.dualQuotientPolarSubmodule g = f :=
+  ⟨((topDualPairing 𝕜 X).polarSubmodule N).liftQL f hf, rfl⟩
 
 /-- If `N` is a weak⋆ closed subspace of the dual of `X`, then `N` is isometrically isomorphic to
 the dual of `X ⧸ (topDualPairing 𝕜 X).polarSubmodule N`. -/
