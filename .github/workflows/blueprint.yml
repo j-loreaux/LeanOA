@@ -51,7 +51,10 @@ jobs:
           ! (find LeanOA -name "*.lean" -type f -print0 | xargs -0 grep -E -n '^import Mathlib$')
 
   build_project:
-    runs-on: ubuntu-latest
+    # Pinned because `docgen-action` pins `ruby/setup-ruby` v1.237.0, which does not recognize the
+    # `ubuntu-26.04` image that `ubuntu-latest` now resolves to. Return to `ubuntu-latest` once
+    # `docgen-action` bumps `setup-ruby`.
+    runs-on: ubuntu-24.04
     name: Build project
     steps:
       - name: Cleanup to free disk space
