@@ -38,6 +38,8 @@ public import LeanOA.Mathlib.Analysis.LocallyConvex.WithSeminorms
 public import LeanOA.Mathlib.Analysis.Normed.Group.Quotient
 public import LeanOA.Mathlib.Analysis.Normed.Group.Uniform
 public import LeanOA.Mathlib.Analysis.Normed.Module.DualQuotient
+public import LeanOA.Mathlib.Analysis.Normed.Operator.Basic
+public import LeanOA.Mathlib.Analysis.Normed.Operator.Quotient
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.ComplexSqrt
 public import LeanOA.Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.CFCPull.Lemmas
@@ -50,11 +52,17 @@ public import LeanOA.Mathlib.Lean.Elab.Tactic.Basic
 public import LeanOA.Mathlib.Misc
 public import LeanOA.Mathlib.Tactic.CFCPull.Attr
 public import LeanOA.Mathlib.Tactic.CFCPull.Core
+public import LeanOA.Mathlib.Topology.Algebra.ConstMulAction
+public import LeanOA.Mathlib.Topology.Algebra.Group.Quotient
+public import LeanOA.Mathlib.Topology.Algebra.Group.Subgroup
+public import LeanOA.Mathlib.Topology.Algebra.Module.Basic
+public import LeanOA.Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Quotient
 public import LeanOA.Mathlib.Topology.Algebra.Module.LinearMap
 public import LeanOA.Mathlib.Topology.Algebra.Module.PolarTopology
 public import LeanOA.Mathlib.Topology.Algebra.Module.Spaces.UniformConvergenceCLM
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakBilin
 public import LeanOA.Mathlib.Topology.Algebra.Module.WeakDual
+public import LeanOA.Mathlib.Topology.Algebra.Ring.Ideal
 public import LeanOA.Mathlib.Topology.Algebra.UniformConvergence
 public import LeanOA.Mathlib.Topology.ContinuousMap.ContinuousMapZero
 public import LeanOA.Mathlib.Topology.Order.MonotoneConvergence
