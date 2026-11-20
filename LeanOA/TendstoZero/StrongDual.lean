@@ -1,7 +1,7 @@
 module
 
 public import Mathlib.Analysis.Normed.Operator.Mul
-public import LeanOA.Lp.Holder
+public import Mathlib.Analysis.Normed.Lp.lpHolder
 public import LeanOA.TendstoZero.Defs
 
 @[expose] public section

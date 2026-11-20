@@ -1,9 +1,7 @@
 module
 
-public import Mathlib.Analysis.Normed.Lp.lpSpace
 public import Mathlib.Topology.MetricSpace.UniformConvergence
-public import LeanOA.Lp.lpSpace
-public import LeanOA.Mathlib.Misc
+public import Mathlib.Analysis.Normed.Lp.lpHolder
 
 @[expose] public section
 
