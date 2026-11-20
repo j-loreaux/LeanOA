@@ -4,6 +4,7 @@ public import LeanOA.Ultraweak.Basic
 public import LeanOA.KreinSmulian
 public import LeanOA.CStarAlgebra.NormAddAlgebraMap
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+public import LeanOA.Mathlib.Misc
 
 @[expose] public section
 

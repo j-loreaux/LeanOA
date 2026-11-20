@@ -15,8 +15,6 @@ public import LeanOA.ExtremallyDisconnected
 public import LeanOA.IsWeak
 public import LeanOA.KreinSmulian
 public import LeanOA.LocallyConvexNhdsBasis
-public import LeanOA.Lp.Holder
-public import LeanOA.Lp.lpSpace
 public import LeanOA.Mackey
 public import LeanOA.Masa
 public import LeanOA.Mathlib.Algebra.Group.Idempotent

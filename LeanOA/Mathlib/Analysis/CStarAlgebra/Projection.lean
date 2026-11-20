@@ -13,4 +13,9 @@ lemma mul_mul_eq_of_le (hp : IsStarProjection p) (hq : IsStarProjection q) (h : 
     q * p * q = p := by
   rw [hp.le_iff_mul_eq_right hq |>.mp h, hp.le_iff_mul_eq_left hq |>.mp h]
 
+/-- If `p ≤ q` are star projections, then `p * q * p = p`. -/
+lemma mul_mul_eq_of_le' (hp : IsStarProjection p) (hq : IsStarProjection q) (h : p ≤ q) :
+    p * q * p = p := by
+  rw [hp.le_iff_mul_eq_left hq |>.mp h, hp.isIdempotentElem.eq]
+
 end IsStarProjection
